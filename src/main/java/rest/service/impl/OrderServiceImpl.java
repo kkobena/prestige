@@ -1373,7 +1373,7 @@ public class OrderServiceImpl implements OrderService {
         commande.setTotalQty(t.get("productCount", BigDecimal.class).intValue());
         commande.setMontantAchat(t.get("montantAchat", BigDecimal.class).intValue());
         commande.setMontantVente(t.get("montantVente", BigDecimal.class).intValue());
-        commande.setChecked(hasBeenChecked(commande.getLgORDERID()));
+        commande.setStatutTraitement(getCommandStatut(commande.getLgORDERID()));
 
         return commande;
     }
@@ -1569,7 +1569,7 @@ public class OrderServiceImpl implements OrderService {
                 json.put("dt_DATE_LIVRAISON", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON()));
                 json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtCREATED()));
                 json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtUPDATED()));
-                json.put("checked", bonHasBeenChecked(bonLivraison.getLgBONLIVRAISONID()));
+                json.put("statutTraitement", getBonStatut(bonLivraison.getLgBONLIVRAISONID()));
                 array.put(json);
             }
             return array;
@@ -2345,17 +2345,34 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private boolean hasBeenChecked(String id) {
+    private StatutTraitement getCommandStatut(String id) {
         Query q = getEmg().createNativeQuery(
-                "SELECT COUNT(d.lg_ORDERDETAIL_ID)>0 FROM  t_order_detail d WHERE d.checked=FALSE AND d.lg_ORDER_ID=?1");
+                "SELECT SUM(CASE WHEN d.checked THEN 1 ELSE 0 END) AS checkedCount,SUM(CASE WHEN d.checked IS FALSE THEN 1 ELSE 0 END) AS uncheckedCount FROM t_order_detail d WHERE  d.lg_ORDER_ID=?1");
         q.setParameter(1, id);
-        return ((Integer) q.getSingleResult()) == 0;
+
+        Object[] result = (Object[]) q.getSingleResult();
+
+        return getStatutTraitement(result);
     }
 
-    private boolean bonHasBeenChecked(String id) {
+    private StatutTraitement getBonStatut(String id) {
         Query q = getEmg().createNativeQuery(
-                "SELECT COUNT(d.lg_BON_LIVRAISON_DETAIL)>0 FROM  t_bon_livraison_detail d WHERE d.checked=FALSE AND d.lg_BON_LIVRAISON_ID=?1");
+                "SELECT SUM(CASE WHEN d.checked THEN 1 ELSE 0 END) AS checkedCount,SUM(CASE WHEN d.checked IS FALSE THEN 1 ELSE 0 END) AS uncheckedCount FROM t_bon_livraison_detail d WHERE d.lg_BON_LIVRAISON_ID=?1");
         q.setParameter(1, id);
-        return ((Integer) q.getSingleResult()) == 0;
+        Object[] result = (Object[]) q.getSingleResult();
+
+        return getStatutTraitement(result);
+    }
+
+    private StatutTraitement getStatutTraitement(Object[] result) {
+        int checkedCount = ((Number) result[0]).intValue();
+        int uncheckedCount = ((Number) result[1]).intValue();
+        if (uncheckedCount == 0) {
+            return StatutTraitement.TERMINE;
+        }
+        if (checkedCount == 0) {
+            return StatutTraitement.A_FAIRE;
+        }
+        return StatutTraitement.EN_COURS;
     }
 }

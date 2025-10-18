@@ -28,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.FicheArticleService;
 import rest.service.SuggestionService;
+import rest.service.dto.UpdateProduit;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
@@ -191,9 +192,16 @@ public class FicheArticleRessource {
 
     @POST
     @Path("add-lot")
-    public Response addLot(AddLot addLot) throws JSONException {
+    public Response addLot(AddLot addLot) {
 
         ficheArticleService.addLot(addLot);
+        return Response.accepted().build();
+    }
+
+    @POST
+    @Path("produit/update-lite-info")
+    public Response updateProduit(UpdateProduit updateProduit) {
+        ficheArticleService.updateProduitLiteInfo(updateProduit);
         return Response.accepted().build();
     }
 }

@@ -29,7 +29,7 @@ public class CommandeDTO {
     private String dtCREATED;
     private String lgGROSSISTEID;
     private String details = " ";
-    private boolean checked;
+    private StatutTraitement statutTraitement;
 
     public String getLgGROSSISTEID() {
         return lgGROSSISTEID;
@@ -200,12 +200,12 @@ public class CommandeDTO {
         return this;
     }
 
-    public boolean isChecked() {
-        return checked;
+    public StatutTraitement getStatutTraitement() {
+        return statutTraitement;
     }
 
-    public void setChecked(boolean checked) {
-        this.checked = checked;
+    public void setStatutTraitement(StatutTraitement statutTraitement) {
+        this.statutTraitement = statutTraitement;
     }
 
     public CommandeDTO() {
