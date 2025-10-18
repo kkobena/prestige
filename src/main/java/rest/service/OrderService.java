@@ -114,7 +114,7 @@ public interface OrderService {
 
     void changeGrossiste(String idCommande, String grossisteId);
 
-    JSONObject getListBons(String statut, String search);
+    JSONObject getListBons(String statut, String search, int start, int limit, String dtStart, String dtEnd);
 
     void deleteBonLivraison(String id);
 
