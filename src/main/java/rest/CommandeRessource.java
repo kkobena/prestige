@@ -274,10 +274,13 @@ public class CommandeRessource {
 
     @GET
     @Path("list-bons")
-    public Response getListBons(@QueryParam(value = "query") String query,
+    public Response getListBons(@QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
+            @DefaultValue("100") @QueryParam(value = "limit") int limit, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
             @DefaultValue("enable") @QueryParam(value = "statut") String statut) throws JSONException {
 
-        return Response.ok().entity(orderService.getListBons(statut, query).toString()).build();
+        return Response.ok().entity(orderService.getListBons(statut, query, start, limit, dtStart, dtEnd).toString())
+                .build();
     }
 
     @DELETE

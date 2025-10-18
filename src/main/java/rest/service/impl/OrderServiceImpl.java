@@ -1467,32 +1467,38 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public JSONObject getListBons(String statut, String search) {
+    public JSONObject getListBons(String statut, String search, int start, int limit, String dtStart, String dtEnd) {
         JSONObject json = new JSONObject();
-        int count = getListBonsCount(statut, search);
+        int count = getListBonsCount(statut, search, dtStart, dtEnd);
 
         json.put("total", count);
-        return json.put("data", buildListBons(statut, search));
+        return json.put("data", buildListBons(statut, search, start, limit, dtStart, dtEnd));
 
     }
 
     private List<Predicate> getListBonsPredicats(CriteriaBuilder cb, Root<TBonLivraison> root, String statut,
-            String search) {
+            String search, String dtStart, String dtEnd) {
         List<Predicate> predicates = new ArrayList<>();
-
         predicates.add(cb.equal(root.get(TBonLivraison_.strSTATUT), statut));
+        if (StringUtils.isNotEmpty(search)) {
+            predicates.add(cb.or(cb.like(root.get(TBonLivraison_.strREFLIVRAISON), search + "%")));
+        }
+        if (StringUtils.isNotEmpty(dtStart) && StringUtils.isNotEmpty(dtEnd)) {
+            predicates.add(cb.between(cb.function("DATE", Date.class, root.get(TBonLivraison_.dtUPDATED)),
+                    java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
+        }
 
         return predicates;
     }
 
-    private int getListBonsCount(String statut, String search) {
+    private int getListBonsCount(String statut, String search, String dtStart, String dtEnd) {
         try {
 
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TBonLivraison> root = cq.from(TBonLivraison.class);
             cq.select(cb.count(root));
-            List<Predicate> predicates = getListBonsPredicats(cb, root, statut, search);
+            List<Predicate> predicates = getListBonsPredicats(cb, root, statut, search, dtStart, dtEnd);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Long> q = getEmg().createQuery(cq);
 
@@ -1503,16 +1509,23 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private List<TBonLivraison> fetchListBons(String statut, String search) {
+    private List<TBonLivraison> fetchListBons(String statut, int start, int limit, String search, String dtStart,
+            String dtEnd) {
         try {
 
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
             CriteriaQuery<TBonLivraison> cq = cb.createQuery(TBonLivraison.class);
             Root<TBonLivraison> root = cq.from(TBonLivraison.class);
-            cq.select(root);
-            List<Predicate> predicates = getListBonsPredicats(cb, root, statut, search);
+
+            cq.select(root).orderBy(cb.desc(root.get(TBonLivraison_.dtUPDATED)));
+            List<Predicate> predicates = getListBonsPredicats(cb, root, statut, search, dtStart, dtEnd);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TBonLivraison> q = getEmg().createQuery(cq);
+            if (limit != 0) {
+
+                q.setFirstResult(start);
+                q.setMaxResults(limit);
+            }
 
             return q.getResultList();
         } catch (Exception e) {
@@ -1531,10 +1544,10 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private JSONArray buildListBons(String statut, String search) {
+    private JSONArray buildListBons(String statut, String search, int start, int limit, String dtStart, String dtEnd) {
         try {
             JSONArray array = new JSONArray();
-            List<TBonLivraison> datats = fetchListBons(statut, search);
+            List<TBonLivraison> datats = fetchListBons(statut, start, limit, search, dtStart, dtEnd);
 
             for (TBonLivraison bonLivraison : datats) {
                 JSONObject json = new JSONObject();
@@ -2356,6 +2369,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private StatutTraitement getBonStatut(String id) {
+
         Query q = getEmg().createNativeQuery(
                 "SELECT SUM(CASE WHEN d.checked THEN 1 ELSE 0 END) AS checkedCount,SUM(CASE WHEN d.checked IS FALSE THEN 1 ELSE 0 END) AS uncheckedCount FROM t_bon_livraison_detail d WHERE d.lg_BON_LIVRAISON_ID=?1");
         q.setParameter(1, id);
