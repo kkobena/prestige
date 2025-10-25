@@ -2562,27 +2562,15 @@ public class SalesServiceImpl implements SalesService {
             Root<TFamille> root = cq.from(TFamille.class);
             Join<TFamille, TFamilleGrossiste> st = root.join("tFamilleGrossisteCollection", JoinType.INNER);
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
-            Predicate predicate = cb.conjunction();
-            if (StringUtils.isNotEmpty(params.getQuery())) {
-                String search = params.getQuery() + "%";
-                predicate = cb.and(predicate,
-                        cb.or(cb.like(root.get(TFamille_.strNAME), search), cb.like(root.get(TFamille_.intCIP), search),
-                                cb.like(root.get(TFamille_.codeEanFabriquant), search),
-                                cb.like(root.get(TFamille_.intEAN13), search),
-                                cb.like(st.get("strCODEARTICLE"), search),
-                                cb.like(root.get(TFamille_.lgFAMILLEID), search),
-                                cb.like(root.get(TFamille_.strDESCRIPTION), search)));
-            }
-            predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
-            predicate = cb.and(predicate,
-                    cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), params.getEmplacementId()));
+
             cq.select(cb.construct(SearchDTO.class, root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.intCIP),
                     root.get(TFamille_.strNAME), root.get("lgZONEGEOID").get("strLIBELLEE"),
                     root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get(TFamille_.intPAF),
                     fa.get(TFamilleStock_.intNUMBER), root.get(TFamille_.boolDECONDITIONNE),
                     root.get(TFamille_.lgFAMILLEPARENTID), root.get(TFamille_.codeEanFabriquant)))
                     .orderBy(cb.asc(root.get(TFamille_.strNAME))).distinct(true);
-            cq.where(predicate);
+            List<Predicate> predicates = buildSearchProduitPredicats(cb, root, st, fa, params);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             q.setHint(QueryHints.HINT_CACHEABLE, false);
             if (!all) {
@@ -2599,6 +2587,25 @@ public class SalesServiceImpl implements SalesService {
         return json;
     }
 
+    private List<Predicate> buildSearchProduitPredicats(CriteriaBuilder cb, Root<TFamille> root,
+            Join<TFamille, TFamilleGrossiste> st, Join<TFamille, TFamilleStock> fa, QueryDTO params) {
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(root.get(TFamille_.strSTATUT), Constant.STATUT_ENABLE));
+        predicates.add(cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), params.getEmplacementId()));
+
+        if (StringUtils.isNotEmpty(params.getQuery())) {
+            String search = params.getQuery() + "%";
+
+            predicates.add(cb.or(cb.like(root.get(TFamille_.intCIP), search), cb.like(st.get("strCODEARTICLE"), search),
+                    cb.like(root.get(TFamille_.strNAME), search),
+                    cb.like(root.get(TFamille_.codeEanFabriquant), search),
+                    cb.like(root.get(TFamille_.intEAN13), search), cb.like(root.get(TFamille_.lgFAMILLEID), search)));
+
+        }
+
+        return predicates;
+    }
+
     private long produitsCount(QueryDTO params) {
 
         try {
@@ -2607,21 +2614,10 @@ public class SalesServiceImpl implements SalesService {
             Root<TFamille> root = cq.from(TFamille.class);
             Join<TFamille, TFamilleGrossiste> st = root.join("tFamilleGrossisteCollection", JoinType.INNER);
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
-            Predicate predicate = cb.conjunction();
-            if (StringUtils.isNotEmpty(params.getQuery())) {
-                String search = params.getQuery() + "%";
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), search),
-                        cb.like(root.get(TFamille_.intCIP), search), cb.like(root.get(TFamille_.intEAN13), search),
-                        cb.like(st.get("strCODEARTICLE"), search), cb.like(root.get(TFamille_.lgFAMILLEID), search),
-                        cb.like(root.get(TFamille_.strDESCRIPTION), search)));
-            }
-            predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
-            predicate = cb.and(predicate,
-                    cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), params.getEmplacementId()));
 
             cq.select(cb.countDistinct(root));
-
-            cq.where(predicate);
+            List<Predicate> predicates = buildSearchProduitPredicats(cb, root, st, fa, params);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
 
             Query q = this.getEm().createQuery(cq);
             return (Long) q.getSingleResult();
