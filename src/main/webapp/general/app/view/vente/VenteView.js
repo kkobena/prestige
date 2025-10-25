@@ -14,6 +14,26 @@ Ext.define('testextjs.view.vente.VenteView', {
     height: 'auto',
     minHeight: 570,
     cls: 'custompanel',
+    
+    title: 'VENTE AU COMPTANT',
+    
+    header: {
+        titlePosition: 0,
+        items: [{
+            xtype: 'textfield',
+            itemId: 'preventeSearchField',
+            emptyText: 'N° ticket Prévente / Scan',
+            width: 220,
+            enableKeyEvents: true,
+            margin: '0 5 0 0'
+        }, {
+            xtype: 'button',
+            itemId: 'preventeSearchBtn',
+            text: 'VALIDER',
+            margin: '0 0 0 5'
+        }]
+    },
+
     layout: {
         type: 'vbox',
         align: 'stretch',
@@ -157,5 +177,3 @@ Ext.define('testextjs.view.vente.VenteView', {
         me.callParent(arguments);
     }
 });
-
-

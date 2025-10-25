@@ -144,7 +144,7 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                         {
                             xtype: 'actioncolumn',
                             width: 30,
-                            sortable: false,
+                            sortable: true,
                             menuDisabled: true,
                             items: [{
                                     icon: 'resources/images/icons/fam/page_white_edit.png',
@@ -159,7 +159,7 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                                         }
 
 
-                                    },
+                                    }
 
                                 }]
                         },

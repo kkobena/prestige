@@ -50,6 +50,16 @@ Ext.define('testextjs.controller.VenteCtr', {
     refs: [
 
         {
+            ref: 'preventeSearchField',
+            selector: 'doventemanager #preventeSearchField'
+        },
+        {
+            ref: 'preventeSearchBtn',
+            selector: 'doventemanager #preventeSearchBtn'
+        },
+
+
+        {
             ref: 'doventemanager',
             selector: 'doventemanager'
         },
@@ -452,6 +462,14 @@ Ext.define('testextjs.controller.VenteCtr', {
     init: function () {
         this.control(
                 {
+
+                    'doventemanager #preventeSearchBtn': {
+                        click: this.onPreventeSearchClick
+                    },
+                    'doventemanager #preventeSearchField': {
+                        specialkey: this.onPreventeFieldSpecialKey
+                    },
+
                     'doventemanager': {
                         render: this.onReady
                     }, 'doventemanager #user': {
@@ -4724,6 +4742,147 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
 
         return reglements;
+    },
+
+/**
+ * Recherche une prévente par N° ticket (strREF) ou UUID et recharge via loadExistantSale(...).
+ */
+onPreventeSearchClick: function () {
+    var me = this,
+        field = me.getPreventeSearchField(),
+        value = (field && field.getValue ? Ext.String.trim(field.getValue()) : '');
+    if (!value) {
+        Ext.Msg.alert('Info', 'Saisissez un N° de ticket ou scannez un code.');
+        return;
     }
+    me.searchAndLoadPrevente(value);
+},
+
+onPreventeFieldSpecialKey: function (field, e) {
+    if (e.getKey() === e.ENTER) {
+        this.onPreventeSearchClick();
+    }
+},
+
+searchAndLoadPrevente: function (value) {
+    var me = this;
+
+    var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+    if (isUuid) {
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/ventestats/' + value,
+            success: function (response) {
+                var result = Ext.decode(response.responseText, true);
+                if (result && result.data && result.data.lgPREENREGISTREMENTID) {
+                    me.loadExistantSale(result.data.lgPREENREGISTREMENTID);
+                } else {
+                    Ext.Msg.alert('Info', 'Aucune prévente trouvée pour cet identifiant.');
+                }
+            },
+            failure: function () {
+                Ext.Msg.alert('Erreur', 'Impossible de récupérer la prévente demandée.');
+            }
+        });
+        return;
+    }
+
+    Ext.Ajax.request({
+        method: 'GET',
+        url: '../api/v1/ventestats/preventes',
+        params: {
+            statut: 'is_Process',
+            query: value,
+            page: 1,
+            start: 0,
+            limit: 50,
+            sort: Ext.encode([{ property: 'heure', direction: 'DESC' }])
+        },
+        success: function (response) {
+            var result = Ext.decode(response.responseText, true) || {},
+                data = result.data || [];
+
+            if (!data.length) {
+                Ext.Msg.alert('Info', 'Aucune prévente correspondante.');
+                return;
+            }
+            if (data.length === 1) {
+                me.loadExistantSale(data[0].lgPREENREGISTREMENTID);
+                return;
+            }
+            me.openPreventePicker(data);
+        },
+        failure: function () {
+            Ext.Msg.alert('Erreur', 'La recherche a échoué.');
+        }
+    });
+},
+
+openPreventePicker: function (rows) {
+    var me = this;
+
+    var store = Ext.create('Ext.data.Store', {
+        fields: [
+            'lgPREENREGISTREMENTID', 'strREF', 'userFullName', 'heure', 'intPRICE'
+        ],
+        data: rows
+    });
+
+    var grid = Ext.create('Ext.grid.Panel', {
+        store: store,
+        border: true,
+        columns: [{
+            text: 'N° Ticket',
+            dataIndex: 'strREF',
+            flex: 1
+        }, {
+            text: 'Heure',
+            dataIndex: 'heure',
+            width: 100
+        }, {
+            text: 'Caissier',
+            dataIndex: 'userFullName',
+            flex: 1
+        }, {
+            text: 'Montant',
+            dataIndex: 'intPRICE',
+            width: 110,
+            renderer: function (v) { return Ext.util.Format.number(v, '0,000') + ' F'; }
+        }],
+        listeners: {
+            itemdblclick: function (view, rec) {
+                me.loadExistantSale(rec.get('lgPREENREGISTREMENTID'));
+                view.up('window').close();
+            }
+        }
+    });
+
+    var win = Ext.create('Ext.window.Window', {
+        title: 'Sélectionnez une prévente',
+        modal: true,
+        width: 700,
+        height: 400,
+        layout: 'fit',
+        items: [grid],
+        buttons: [{
+            text: 'Charger',
+            handler: function () {
+                var rec = grid.getSelectionModel().getSelection()[0];
+                if (rec) {
+                    me.loadExistantSale(rec.get('lgPREENREGISTREMENTID'));
+                    win.close();
+                } else {
+                    Ext.Msg.alert('Info', 'Sélectionnez une ligne.');
+                }
+            }
+        }, {
+            text: 'Annuler',
+            handler: function () { win.close(); }
+        }]
+    });
+    win.show();
+}
+
 }
 );
