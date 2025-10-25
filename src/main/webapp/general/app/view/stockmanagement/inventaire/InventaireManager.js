@@ -120,6 +120,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
+                    hidden:true,
                     items: [{
                         icon: 'resources/images/icons/fam/chart_bar.png', // Nouvelle icône
                         tooltip: 'Effectuer une analyse avancée',
@@ -132,6 +133,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
+                    hidden:true,
                     items: [{
                         icon: 'resources/images/icons/fam/application_view_list.png',
                         tooltip: 'Effectuer une analyse simple',
