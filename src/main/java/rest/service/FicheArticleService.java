@@ -28,8 +28,9 @@ public interface FicheArticleService {
     JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
             String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
 
-    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart,
-            String dtEnd, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
+    Pair<commonTasks.dto.LotDTO, List<commonTasks.dto.LotDTO>> produitPerimes(String query, int nbreMois,
+            String dtStart, String dtEnd, String codeFamile, String codeRayon, String codeGrossiste, int start,
+            int limit, boolean all);
 
     JSONObject modifierArticleDatePeremption(String lgFAMILLEID, String dtperemption) throws JSONException;
 
