@@ -5113,9 +5113,10 @@ buildPreventeDetailPanel: function() {
                         xtype: 'fieldset',
                         title: 'Informations générales',
                         flex: 1,
-                        width:350,
-                        margin: '0 5 10 0', // AJOUTER marge en bas
+                        width: 350,
+                        margin: '0 5 10 3',
                         layout: 'anchor',
+                        cls: 'centered-fieldset-title', // Classe pour centrer le titre
                         defaults: {
                             anchor: '100%',
                             labelWidth: 120
@@ -5154,9 +5155,13 @@ buildPreventeDetailPanel: function() {
                         xtype: 'fieldset',
                         title: 'Informations client et assurance',
                         flex: 1,
-                        width:350,
-                        margin: '0 0 10 5', // AJOUTER marge en bas
+                        width: 350,
+                        margin: '0 5 10 0',
                         layout: 'anchor',
+                        cls: 'centered-fieldset-title', // Classe pour centrer le titre
+                        style: {
+                            'border-right': '1px solid #B5B8C8' // Forcer l'affichage du bord droit
+                        },
                         defaults: {
                             anchor: '100%',
                             labelWidth: 120

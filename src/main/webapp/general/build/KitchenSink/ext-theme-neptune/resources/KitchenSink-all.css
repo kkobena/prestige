@@ -22459,3 +22459,34 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
 .icon-cross {
     background-image: url('resources/images/icons/cross.png') !important;
 }
+/* Centrer les titres */
+.centered-fieldset-title .x-fieldset-header .x-fieldset-header-text {
+    text-align: center;
+    width: 100%;
+    display: block;
+}
+
+/* Correction complète des bordures */
+.custom-fieldset {
+    border: 1px solid #B5B8C8 !important;
+    border-radius: 3px !important;
+}
+
+.custom-fieldset .x-fieldset-body {
+    border: none !important;
+}
+
+/* Forcer la fermeture de toutes les bordures */
+.x-fieldset {
+    border: 1px solid #B5B8C8 !important;
+    border-top: 1px solid #B5B8C8 !important;
+    border-right: 1px solid #B5B8C8 !important;
+    border-bottom: 1px solid #B5B8C8 !important;
+    border-left: 1px solid #B5B8C8 !important;
+}
+
+/* S'assurer que le body n'a pas de bordures internes */
+.x-fieldset .x-fieldset-body {
+    border: none !important;
+    border-top: none !important;
+}
