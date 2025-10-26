@@ -5113,7 +5113,7 @@ buildPreventeDetailPanel: function() {
                         xtype: 'fieldset',
                         title: 'Informations générales',
                         flex: 1,
-                        width: 350,
+                        width:350,
                         margin: '0 5 10 0', // AJOUTER marge en bas
                         layout: 'anchor',
                         defaults: {
@@ -5154,7 +5154,7 @@ buildPreventeDetailPanel: function() {
                         xtype: 'fieldset',
                         title: 'Informations client et assurance',
                         flex: 1,
-                        width: 350,
+                        width:350,
                         margin: '0 0 10 5', // AJOUTER marge en bas
                         layout: 'anchor',
                         defaults: {
@@ -5481,7 +5481,7 @@ updateClientAssuranceInfo: function(preventeData, detailContainer) {
         return;
     }
     
-    // Vente assurance (VO)
+    // Vente assurance (VO) - Type 2
     if (preventeData.strTYPEVENTE === 'VO' || preventeData.lgTYPEVENTEID === '2') {
         console.log('Type VO détecté');
         
@@ -5570,7 +5570,56 @@ updateClientAssuranceInfo: function(preventeData, detailContainer) {
             console.log('Aucun client trouvé');
         }
     } 
-    // Vente au comptant (VNO) avec client
+    // Vente carnet (Type 3) - Part TP = Montant total
+    else if (preventeData.lgTYPEVENTEID === '3') {
+        console.log('Type CARNET détecté - Part TP = Montant total');
+        
+        if (preventeData.client) {
+            matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || '');
+            clientField.setValue(preventeData.client.fullName || '');
+            
+            // RECHERCHE DES DONNÉES ASSURANCE POUR CARNET
+            let tauxPourcentage = 0;
+            let nomAssurance = '';
+            let numeroBon = '';
+            let partTP = preventeData.intPRICE || 0; // Part TP = Montant total pour carnet
+            
+            console.log('=== RECHERCHE ASSURANCE CARNET ===');
+            
+            // Chercher dans différentes sources
+            if (preventeData.assurances && preventeData.assurances.length > 0) {
+                const assuranceInfo = preventeData.assurances[0];
+                nomAssurance = assuranceInfo.tiersPayant ? 
+                    (assuranceInfo.tiersPayant.strFULLNAME || assuranceInfo.tiersPayant.strNAME || '') : '';
+                tauxPourcentage = assuranceInfo.intPERCENT || assuranceInfo.taux || 0;
+                numeroBon = assuranceInfo.strREFBON || preventeData.strREFBON || '';
+            } 
+            else if (preventeData.client && preventeData.client.preenregistrementstp && preventeData.client.preenregistrementstp.length > 0) {
+                const assuranceInfo = preventeData.client.preenregistrementstp[0];
+                nomAssurance = assuranceInfo.tpFullName || '';
+                tauxPourcentage = assuranceInfo.taux || 0;
+                numeroBon = assuranceInfo.numBon || '';
+            }
+            
+            console.log('Résultats carnet:');
+            console.log('- Nom Assurance:', nomAssurance);
+            console.log('- Taux:', tauxPourcentage);
+            console.log('- Numéro Bon:', numeroBon);
+            console.log('- Part TP (montant total):', partTP);
+            
+            // AFFICHAGE FINAL POUR CARNET
+            if (assuranceField && pourcentageField && numBonField && partClientField && partTPField) {
+                assuranceField.setValue(nomAssurance);
+                pourcentageField.setValue(tauxPourcentage > 0 ? tauxPourcentage + '%' : '100%');
+                numBonField.setValue(numeroBon);
+                partClientField.setValue('0 F'); // Part client = 0 pour carnet
+                partTPField.setValue(Ext.util.Format.number(partTP, '0,000') + ' F');
+                
+                console.log('Champs carnet mis à jour avec succès');
+            }
+        }
+    }
+    // Vente au comptant (VNO) avec client - Type 1
     else if (preventeData.client && matriculeField && clientField) {
         console.log('Type VNO détecté');
         matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || '');
@@ -5588,116 +5637,6 @@ updateClientAssuranceInfo: function(preventeData, detailContainer) {
     
     console.log('=== FIN updateClientAssuranceInfo ===');
 },
-// FONCTION POUR GÉRER LES DONNÉES ASSURANCE - VERSION CORRIGÉE AVEC BON MAPPING
-populateAssuranceData: function(preventeData, fields) {
-    const me = this;
-    const {
-        matriculeField,
-        clientField,
-        assuranceField,
-        pourcentageField,
-        numBonField,
-        partClientField,
-        partTPField
-    } = fields;
-
-    console.log('=== RECHERCHE DONNÉES ASSURANCE ===');
-    console.log('Structure des données reçues:', preventeData);
-
-    // Vérifier si c'est une vente avec assurance
-    const isAssuranceVente = preventeData.strTYPEVENTE === 'VO' || 
-                            preventeData.lgTYPEVENTEID === '2' ||
-                            preventeData.lgTYPEVENTEID === '3' ||
-                            (preventeData.typeVente && preventeData.typeVente.libelle && 
-                             preventeData.typeVente.libelle.includes('ASSURANCE'));
-
-    if (!isAssuranceVente) {
-        console.log('Vente non-assurance détectée - Type:', preventeData.strTYPEVENTE, 'ID:', preventeData.lgTYPEVENTEID);
-        // Pour les ventes non-assurance, vider les champs spécifiques
-        assuranceField.setValue('');
-        pourcentageField.setValue('');
-        numBonField.setValue('');
-        partClientField.setValue('');
-        partTPField.setValue('');
-        return;
-    }
-
-    console.log('Vente assurance détectée, recherche des données...');
-
-    // RECHERCHE DES DONNÉES CLIENT
-    if (preventeData.client) {
-        console.log('Client trouvé:', preventeData.client);
-        matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || '');
-        clientField.setValue(preventeData.client.fullName || '');
-    } else {
-        console.log('Aucun client trouvé dans les données');
-        matriculeField.setValue('');
-        clientField.setValue('');
-    }
-
-    // RECHERCHE DES DONNÉES ASSURANCE - AVEC LE BON MAPPING
-    let tauxPourcentage = 0;
-    let nomAssurance = '';
-    let numeroBon = '';
-    let partClient = preventeData.intCUSTPART || 0;
-    let partTP = 0;
-
-    console.log('Recherche des données assurance dans:');
-    
-    // 1. Chercher dans assurances[0] (source principale avec la bonne structure)
-    if (preventeData.assurances && preventeData.assurances.length > 0) {
-        const assuranceInfo = preventeData.assurances[0];
-        console.log('Données trouvées dans assurances[0]:', assuranceInfo);
-        
-        // MAPPING CORRECT selon votre structure
-        nomAssurance = assuranceInfo.tiersPayant ? assuranceInfo.tiersPayant.strFULLNAME : '';
-        tauxPourcentage = assuranceInfo.intPERCENT || 0;
-        numeroBon = assuranceInfo.strREFBON || '';
-        partTP = assuranceInfo.intPRICE || 0;
-        
-        console.log('Données extraites avec bon mapping:');
-        console.log('- Assurance:', nomAssurance);
-        console.log('- Pourcentage:', tauxPourcentage);
-        console.log('- Numéro Bon:', numeroBon);
-        console.log('- Part TP:', partTP);
-        console.log('- Part Client:', partClient);
-    }
-    // 2. Fallback sur les autres sources (au cas où)
-    else if (preventeData.client && preventeData.client.preenregistrementstp && preventeData.client.preenregistrementstp.length > 0) {
-        const assuranceInfo = preventeData.client.preenregistrementstp[0];
-        console.log('Données trouvées dans preenregistrementstp:', assuranceInfo);
-        nomAssurance = assuranceInfo.tpFullName || '';
-        tauxPourcentage = assuranceInfo.taux || 0;
-        numeroBon = assuranceInfo.numBon || '';
-        partTP = (preventeData.intPRICE || 0) - partClient;
-    }
-    // 3. Fallback sur données directes
-    else {
-        console.log('Utilisation des données directes');
-        nomAssurance = preventeData.client ? (preventeData.client.tiersPayantName || '') : '';
-        tauxPourcentage = preventeData.client ? (preventeData.client.intPOURCENTAGE || 0) : 0;
-        numeroBon = preventeData.strREFBON || '';
-        partTP = (preventeData.intPRICE || 0) - partClient;
-    }
-
-    // AFFICHAGE FINAL
-    console.log('Données finales à afficher:', {
-        nomAssurance,
-        tauxPourcentage,
-        numeroBon,
-        partClient,
-        partTP
-    });
-
-    assuranceField.setValue(nomAssurance);
-    pourcentageField.setValue(tauxPourcentage > 0 ? tauxPourcentage + '%' : '');
-    numBonField.setValue(numeroBon);
-    partClientField.setValue(partClient > 0 ? Ext.util.Format.number(partClient, '0,000') + ' F' : '');
-    partTPField.setValue(partTP > 0 ? Ext.util.Format.number(partTP, '0,000') + ' F' : '');
-
-    console.log('=== FIN RECHERCHE ASSURANCE ===');
-},
-
 // FONCTION POUR AFFICHER LES DÉTAILS (séparée pour réutilisation)
 displayPreventeDetails: function(preventeData, detailContainer, fields, apiName) {
     const me = this;
@@ -5861,129 +5800,6 @@ populateAssuranceData: function(preventeData, fields) {
     console.log('Données assurance affichées:', { nomAssurance, tauxPourcentage, numeroBon, partClient, partTP });
 },
 
-// FONCTION POUR GÉRER LES DONNÉES ASSURANCE (inchangée)
-populateAssuranceData: function(preventeData, fields) {
-    const me = this;
-    const {
-        matriculeField,
-        clientField,
-        assuranceField,
-        pourcentageField,
-        numBonField,
-        partClientField,
-        partTPField
-    } = fields;
-
-    // Réinitialiser tous les champs d'assurance
-    [assuranceField, pourcentageField, numBonField, partClientField, partTPField].forEach(field => {
-        field.setValue('N/A');
-    });
-
-    // Vérifier si c'est une vente avec assurance (type 2 ou 3)
-    const isAssuranceVente = preventeData.lgTYPEVENTEID === '2' || 
-                            preventeData.lgTYPEVENTEID === '3' || 
-                            preventeData.strTYPEVENTE === 'VO';
-
-    if (!isAssuranceVente) {
-        console.log('Vente non-assurance détectée');
-        // Pour les ventes non-assurance, masquer ou vider les champs spécifiques
-        assuranceField.setValue('N/A');
-        pourcentageField.setValue('N/A');
-        numBonField.setValue('N/A');
-        partClientField.setValue('N/A');
-        partTPField.setValue('N/A');
-        return;
-    }
-
-    console.log('Vente assurance détectée, recherche des données...');
-
-    // 1. RECHERCHE DES DONNÉES CLIENT
-    if (preventeData.client) {
-        matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || 'N/A');
-        clientField.setValue(
-            preventeData.client.fullName || 
-            (preventeData.client.strFIRSTNAME && preventeData.client.strLASTNAME ? 
-             preventeData.client.strFIRSTNAME + ' ' + preventeData.client.strLASTNAME : 'N/A')
-        );
-    } else {
-        matriculeField.setValue('N/A');
-        clientField.setValue('N/A');
-    }
-
-    // 2. RECHERCHE HIÉRARCHISÉE DES DONNÉES ASSURANCE
-    let assuranceInfo = null;
-    let tauxPourcentage = 0;
-    let nomAssurance = '';
-    let numeroBon = '';
-    let partClient = preventeData.intCUSTPART || 0;
-    let partTP = 0;
-
-    // SOURCE 1: preenregistrementstp (priorité haute)
-    if (preventeData.client && preventeData.client.preenregistrementstp && preventeData.client.preenregistrementstp.length > 0) {
-        assuranceInfo = preventeData.client.preenregistrementstp[0];
-        console.log('Données trouvées dans preenregistrementstp:', assuranceInfo);
-    }
-    // SOURCE 2: tierspayants du client
-    else if (preventeData.client && preventeData.client.tiersPayants && preventeData.client.tiersPayants.length > 0) {
-        assuranceInfo = preventeData.client.tiersPayants[0];
-        console.log('Données trouvées dans tiersPayants:', assuranceInfo);
-    }
-    // SOURCE 3: tierspayants directs
-    else if (preventeData.tierspayants && preventeData.tierspayants.length > 0) {
-        assuranceInfo = preventeData.tierspayants[0];
-        console.log('Données trouvées dans tierspayants:', assuranceInfo);
-    }
-    // SOURCE 4: données directes du client
-    else if (preventeData.client && preventeData.client.intPOURCENTAGE) {
-        tauxPourcentage = preventeData.client.intPOURCENTAGE;
-        nomAssurance = preventeData.client.tiersPayantName || '';
-        numeroBon = preventeData.strREFBON || '';
-        console.log('Données trouvées dans client direct:', { tauxPourcentage, nomAssurance, numeroBon });
-    }
-
-    // 3. EXTRACTION ET AFFICHAGE DES DONNÉES
-    if (assuranceInfo) {
-        // Extraire les données de l'objet assuranceInfo
-        nomAssurance = assuranceInfo.tpFullName || 
-                      assuranceInfo.strFULLNAME || 
-                      assuranceInfo.nom || 
-                      'N/A';
-        
-        tauxPourcentage = assuranceInfo.taux || 
-                         assuranceInfo.intPOURCENTAGE || 
-                         preventeData.client?.intPOURCENTAGE || 
-                         0;
-        
-        numeroBon = assuranceInfo.numBon || 
-                   assuranceInfo.strREFBON || 
-                   preventeData.strREFBON || 
-                   'N/A';
-
-        // Calculer les parts
-        partClient = preventeData.intCUSTPART || 0;
-        partTP = assuranceInfo.tpnet || 
-                (preventeData.intPRICE || 0) - partClient;
-    } else {
-        // Utiliser les données par défaut si aucune info assurance trouvée
-        partTP = (preventeData.intPRICE || 0) - partClient;
-    }
-
-    // 4. AFFICHAGE FINAL DES DONNÉES
-    assuranceField.setValue(nomAssurance);
-    pourcentageField.setValue(tauxPourcentage + '%');
-    numBonField.setValue(numeroBon);
-    partClientField.setValue(Ext.util.Format.number(partClient, '0,000') + ' F');
-    partTPField.setValue(Ext.util.Format.number(partTP, '0,000') + ' F');
-
-    console.log('Données assurance affichées:', {
-        nomAssurance,
-        tauxPourcentage,
-        numeroBon,
-        partClient,
-        partTP
-    });
-},
-
 // Fallback avec les données de base
 updateWithBasicData: function(record, detailContainer) {
     const preventeData = record.data;
@@ -6118,9 +5934,9 @@ updatePreventeDetails: function(preventeData, detailContainer) {
     detailContainer.down('#recallPreventeBtn').enable();
 },
 
-// VERSION SIMPLIFIÉE ET DIRECTE
+// FONCTION AVEC LOGS DÉTAILLÉS POUR DIAGNOSTIQUER
 updateClientAssuranceInfo: function(preventeData, detailContainer) {
-    console.log('=== updateClientAssuranceInfo SIMPLIFIÉE ===');
+    const me = this;
     
     const matriculeField = detailContainer.down('#matriculeField');
     const clientField = detailContainer.down('#clientField');
@@ -6129,89 +5945,200 @@ updateClientAssuranceInfo: function(preventeData, detailContainer) {
     const numBonField = detailContainer.down('#numBonField');
     const partClientField = detailContainer.down('#partClientField');
     const partTPField = detailContainer.down('#partTPField');
-
-    // Afficher tous les champs trouvés
-    console.log('Champs détectés:', {
-        matricule: !!matriculeField,
-        client: !!clientField,
-        assurance: !!assuranceField,
-        pourcentage: !!pourcentageField,
-        numBon: !!numBonField,
-        partClient: !!partClientField,
-        partTP: !!partTPField
-    });
-
-    // TOUJOURS afficher les infos client si disponibles
-    if (preventeData.client && matriculeField && clientField) {
+    
+    console.log('=== DÉBUT updateClientAssuranceInfo ===');
+    console.log('Type de vente:', preventeData.strTYPEVENTE, 'ID:', preventeData.lgTYPEVENTEID);
+    console.log('Montant total:', preventeData.intPRICE);
+    console.log('Client présent:', !!preventeData.client);
+    console.log('Assurances présentes:', preventeData.assurances ? preventeData.assurances.length : 0);
+    console.log('Tiers payants présents:', preventeData.tierspayants ? preventeData.tierspayants.length : 0);
+    
+    // Vérifier que les champs existent avant de les utiliser
+    if (!matriculeField || !clientField) {
+        console.log('Champs manquants - matriculeField:', !!matriculeField, 'clientField:', !!clientField);
+        return;
+    }
+    
+    // DÉTECTION DU TYPE DE VENTE - PRIORITÉ À lgTYPEVENTEID
+    const typeVenteId = preventeData.lgTYPEVENTEID;
+    const typeVenteStr = preventeData.strTYPEVENTE;
+    const isCarnet = typeVenteId === '3' || typeVenteStr === 'CARNET';
+    const isVO = typeVenteId === '2' || typeVenteStr === 'VO';
+    const isVNO = typeVenteId === '1' || typeVenteStr === 'VNO';
+    
+    console.log('Détection type:', { typeVenteId, typeVenteStr, isCarnet, isVO, isVNO });
+    
+    // Vente carnet (Type 3) - Part TP = Montant total
+    if (isCarnet) {
+        console.log('Type CARNET détecté - Part TP = Montant total');
+        
+        if (preventeData.client) {
+            matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || '');
+            clientField.setValue(preventeData.client.fullName || '');
+            
+            // POUR CARNET : Part TP = Montant total, Part Client = 0
+            const montantTotal = preventeData.intPRICE || 0;
+            const partTP = montantTotal; // Part TP = Montant total
+            const partClient = 0; // Part client = 0
+            
+            // RECHERCHE DES INFORMATIONS ASSURANCE POUR CARNET
+            let tauxPourcentage = 100; // Par défaut 100% pour carnet
+            let nomAssurance = '';
+            let numeroBon = '';
+            
+            console.log('=== RECHERCHE ASSURANCE CARNET ===');
+            
+            // Chercher dans différentes sources pour le nom de l'assurance
+            if (preventeData.assurances && preventeData.assurances.length > 0) {
+                const assuranceInfo = preventeData.assurances[0];
+                nomAssurance = assuranceInfo.tiersPayant ? 
+                    (assuranceInfo.tiersPayant.strFULLNAME || assuranceInfo.tiersPayant.strNAME || '') : 
+                    (assuranceInfo.nom || '');
+                tauxPourcentage = assuranceInfo.intPERCENT || assuranceInfo.taux || 100;
+                numeroBon = assuranceInfo.strREFBON || preventeData.strREFBON || '';
+                console.log('Données trouvées dans assurances:', assuranceInfo);
+            } 
+            else if (preventeData.tierspayants && preventeData.tierspayants.length > 0) {
+                const assuranceInfo = preventeData.tierspayants[0];
+                nomAssurance = assuranceInfo.tpFullName || assuranceInfo.nom || '';
+                tauxPourcentage = assuranceInfo.taux || 100;
+                numeroBon = assuranceInfo.numBon || '';
+                console.log('Données trouvées dans tierspayants:', assuranceInfo);
+            }
+            else if (preventeData.client && preventeData.client.tiersPayants && preventeData.client.tiersPayants.length > 0) {
+                const assuranceInfo = preventeData.client.tiersPayants[0];
+                nomAssurance = assuranceInfo.tpFullName || '';
+                tauxPourcentage = assuranceInfo.taux || (preventeData.client.intPOURCENTAGE || 100);
+                numeroBon = preventeData.strREFBON || '';
+                console.log('Données trouvées dans client.tiersPayants:', assuranceInfo);
+            }
+            else {
+                // Fallback : utiliser le nom du client comme assurance pour carnet
+                nomAssurance = preventeData.client.fullName || 'CARNET CLIENT';
+                console.log('Utilisation du nom client comme assurance');
+            }
+            
+            console.log('Résultats carnet:');
+            console.log('- Montant total:', montantTotal);
+            console.log('- Nom Assurance:', nomAssurance);
+            console.log('- Taux:', tauxPourcentage);
+            console.log('- Numéro Bon:', numeroBon);
+            console.log('- Part TP (montant total):', partTP);
+            console.log('- Part Client:', partClient);
+            
+            // AFFICHAGE FINAL POUR CARNET
+            if (assuranceField && pourcentageField && numBonField && partClientField && partTPField) {
+                assuranceField.setValue(nomAssurance);
+                pourcentageField.setValue(tauxPourcentage + '%');
+                numBonField.setValue(numeroBon);
+                partClientField.setValue(Ext.util.Format.number(partClient, '0,000') + ' F');
+                partTPField.setValue(Ext.util.Format.number(partTP, '0,000') + ' F');
+                
+                console.log('Champs carnet mis à jour avec succès');
+            }
+        }
+    }
+    // Vente assurance (VO) - Type 2
+    else if (isVO) {
+        console.log('Type VO détecté');
+        
+        if (preventeData.client) {
+            matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || '');
+            clientField.setValue(preventeData.client.fullName || '');
+            
+            // RECHERCHE DÉTAILLÉE DES DONNÉES ASSURANCE
+            let tauxPourcentage = 0;
+            let nomAssurance = '';
+            let numeroBon = '';
+            let partTP = 0;
+            
+            console.log('=== RECHERCHE ASSURANCE DÉTAILLÉE ===');
+            
+            // 1. Chercher dans assurances[0] (NOUVELLE SOURCE)
+            if (preventeData.assurances && preventeData.assurances.length > 0) {
+                const assuranceInfo = preventeData.assurances[0];
+                console.log('Données assurances[0] COMPLÈTES:', assuranceInfo);
+                
+                // EXTRACTION AVEC FALLBACKS
+                nomAssurance = assuranceInfo.tiersPayant ? 
+                    (assuranceInfo.tiersPayant.strFULLNAME || assuranceInfo.tiersPayant.strNAME || '') : '';
+                tauxPourcentage = assuranceInfo.intPERCENT || assuranceInfo.taux || 0;
+                numeroBon = assuranceInfo.strREFBON || preventeData.strREFBON || '';
+                
+                // CORRECTION : Si intPRICE = 0, utiliser le calcul basé sur le pourcentage
+                if (assuranceInfo.intPRICE === 0 && tauxPourcentage > 0) {
+                    partTP = Math.round((preventeData.intPRICE || 0) * (tauxPourcentage / 100));
+                } else {
+                    partTP = assuranceInfo.intPRICE || 0;
+                }
+                
+                console.log('Résultats extraction:');
+                console.log('- Nom Assurance:', nomAssurance);
+                console.log('- Taux:', tauxPourcentage);
+                console.log('- Numéro Bon:', numeroBon);
+                console.log('- Part TP (calculée):', partTP);
+            } else {
+                console.log('Aucune donnée dans assurances');
+            }
+            
+            // 2. Fallback sur preenregistrementstp
+            if ((!nomAssurance || tauxPourcentage === 0) && preventeData.client.preenregistrementstp && preventeData.client.preenregistrementstp.length > 0) {
+                const assuranceInfo = preventeData.client.preenregistrementstp[0];
+                console.log('Fallback sur preenregistrementstp:', assuranceInfo);
+                
+                if (!nomAssurance) nomAssurance = assuranceInfo.tpFullName || '';
+                if (tauxPourcentage === 0) tauxPourcentage = assuranceInfo.taux || 0;
+                if (!numeroBon) numeroBon = assuranceInfo.numBon || '';
+                if (partTP === 0) partTP = assuranceInfo.tpnet || 0;
+                
+                console.log('Résultats après fallback:');
+                console.log('- Nom Assurance:', nomAssurance);
+                console.log('- Taux:', tauxPourcentage);
+                console.log('- Numéro Bon:', numeroBon);
+                console.log('- Part TP:', partTP);
+            }
+            
+            console.log('=== FIN RECHERCHE ASSURANCE ===');
+            
+            // AFFICHAGE FINAL
+            if (assuranceField && pourcentageField && numBonField && partClientField && partTPField) {
+                assuranceField.setValue(nomAssurance);
+                pourcentageField.setValue(tauxPourcentage > 0 ? tauxPourcentage + '%' : '0%');
+                numBonField.setValue(numeroBon);
+                partClientField.setValue(Ext.util.Format.number(preventeData.intCUSTPART || 0, '0,000') + ' F');
+                partTPField.setValue(Ext.util.Format.number(partTP || 0, '0,000') + ' F');
+            }
+        }
+    }
+    // Vente au comptant (VNO) avec client - Type 1
+    else if (isVNO && preventeData.client && matriculeField && clientField) {
+        console.log('Type VNO détecté');
         matriculeField.setValue(preventeData.client.strNUMEROSECURITESOCIAL || '');
         clientField.setValue(preventeData.client.fullName || '');
-        console.log('Infos client affichées');
+        
+        // Vider les champs assurance pour les ventes VNO
+        if (assuranceField && pourcentageField && numBonField && partClientField && partTPField) {
+            assuranceField.setValue('');
+            pourcentageField.setValue('');
+            numBonField.setValue('');
+            partClientField.setValue('');
+            partTPField.setValue('');
+        }
     }
-
-    // Pour les ventes assurance, essayer TOUTES les sources
-    if (preventeData.strTYPEVENTE === 'VO' || preventeData.lgTYPEVENTEID === '2') {
-        console.log('Tentative affichage assurance...');
-
-        // ESSAI 1: preenregistrementstp
-        if (preventeData.client && preventeData.client.preenregistrementstp && preventeData.client.preenregistrementstp.length > 0) {
-            const assuranceInfo = preventeData.client.preenregistrementstp[0];
-            console.log('Source: preenregistrementstp', assuranceInfo);
-            
-            if (assuranceField) assuranceField.setValue(assuranceInfo.tpFullName || 'ASSURANCE PREENREG');
-            if (pourcentageField) pourcentageField.setValue((assuranceInfo.taux || 0) + '%');
-            if (numBonField) numBonField.setValue(assuranceInfo.numBon || 'BON PREENREG');
-            if (partTPField) partTPField.setValue(Ext.util.Format.number(assuranceInfo.tpnet || 0, '0,000') + ' F');
-        }
-        // ESSAI 2: assurances
-        else if (preventeData.assurances && preventeData.assurances.length > 0) {
-            const assuranceInfo = preventeData.assurances[0];
-            console.log('Source: assurances', assuranceInfo);
-            
-            if (assuranceField) assuranceField.setValue(assuranceInfo.tiersPayant?.strFULLNAME || 'ASSURANCE DIRECTE');
-            if (pourcentageField) pourcentageField.setValue((assuranceInfo.intPERCENT || 0) + '%');
-            if (numBonField) numBonField.setValue(assuranceInfo.strREFBON || 'BON DIRECT');
-            if (partTPField) partTPField.setValue(Ext.util.Format.number(assuranceInfo.intPRICE || 0, '0,000') + ' F');
-        }
-        // ESSAI 3: données directes
-        else {
-            console.log('Source: données directes');
-            if (assuranceField) assuranceField.setValue('ASSURANCE PAR DÉFAUT');
-            if (pourcentageField) pourcentageField.setValue('70%');
-            if (numBonField) numBonField.setValue(preventeData.strREFBON || 'DÉFAUT');
-            if (partTPField) partTPField.setValue(Ext.util.Format.number((preventeData.intPRICE || 0) - (preventeData.intCUSTPART || 0), '0,000') + ' F');
-        }
-
-        // Part client toujours depuis la même source
-        if (partClientField) {
-            partClientField.setValue(Ext.util.Format.number(preventeData.intCUSTPART || 0, '0,000') + ' F');
-        }
-
-        console.log('Affichage assurance terminé');
-    } else {
-        console.log('Vente non-assurance - Nettoyage des champs');
-        // Nettoyer les champs pour les ventes non-assurance
+    // Aucun client trouvé
+    else {
+        console.log('Aucun client trouvé pour cette prévente');
+        // Vider tous les champs
+        if (matriculeField) matriculeField.setValue('');
+        if (clientField) clientField.setValue('');
         if (assuranceField) assuranceField.setValue('');
         if (pourcentageField) pourcentageField.setValue('');
         if (numBonField) numBonField.setValue('');
         if (partClientField) partClientField.setValue('');
         if (partTPField) partTPField.setValue('');
     }
-
+    
     console.log('=== FIN updateClientAssuranceInfo ===');
-},
-
-// Fonction utilitaire pour tester les URLs
-testAPI: function(url, callback) {
-    Ext.Ajax.request({
-        method: 'GET',
-        url: url,
-        success: function(response) {
-            callback(true, response);
-        },
-        failure: function(response) {
-            callback(false, response);
-        }
-    });
 },
 
 recallSelectedPrevente: function() {
@@ -6265,24 +6192,6 @@ recallSelectedPrevente: function() {
     me.loadExistantSale(preventeId);
     
     //Ext.Msg.alert('Succès', 'Prévente rappelée avec succès.');
-},
-onPreventeSearchBtnClick: function() {
-    const me = this;
-    
-    // Vérifier si une recherche directe est demandée via le champ
-    const searchField = me.getPreventeSearchField();
-    const searchValue = searchField ? Ext.String.trim(searchField.getValue()) : '';
-    
-    if (searchValue) {
-        // Si une valeur est saisie dans le champ, faire une recherche directe
-        me.searchAndLoadPrevente(searchValue);
-        // Optionnel : vider le champ après la recherche
-        searchField.setValue('');
-    } else {
-        // Sinon, ouvrir la fenêtre de recherche complète
-        me.openPreventeSearchWindow();
-        me.loadAllPreventes();
-    }
 },
 
 getPreventeSearchWindow: function() {
