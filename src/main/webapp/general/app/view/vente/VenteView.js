@@ -29,7 +29,7 @@ Ext.define('testextjs.view.vente.VenteView', {
         }, {
             xtype: 'button',
             itemId: 'preventeSearchBtn',
-            text: 'Validé',
+            text: 'VENTES EN ATTENTE',
             margin: '0 0 0 5'
         }]
     },

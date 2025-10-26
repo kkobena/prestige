@@ -5113,6 +5113,7 @@ buildPreventeDetailPanel: function() {
                         xtype: 'fieldset',
                         title: 'Informations générales',
                         flex: 1,
+                        width: 350,
                         margin: '0 5 10 0', // AJOUTER marge en bas
                         layout: 'anchor',
                         defaults: {
@@ -5153,6 +5154,7 @@ buildPreventeDetailPanel: function() {
                         xtype: 'fieldset',
                         title: 'Informations client et assurance',
                         flex: 1,
+                        width: 350,
                         margin: '0 0 10 5', // AJOUTER marge en bas
                         layout: 'anchor',
                         defaults: {
@@ -6263,6 +6265,24 @@ recallSelectedPrevente: function() {
     me.loadExistantSale(preventeId);
     
     //Ext.Msg.alert('Succès', 'Prévente rappelée avec succès.');
+},
+onPreventeSearchBtnClick: function() {
+    const me = this;
+    
+    // Vérifier si une recherche directe est demandée via le champ
+    const searchField = me.getPreventeSearchField();
+    const searchValue = searchField ? Ext.String.trim(searchField.getValue()) : '';
+    
+    if (searchValue) {
+        // Si une valeur est saisie dans le champ, faire une recherche directe
+        me.searchAndLoadPrevente(searchValue);
+        // Optionnel : vider le champ après la recherche
+        searchField.setValue('');
+    } else {
+        // Sinon, ouvrir la fenêtre de recherche complète
+        me.openPreventeSearchWindow();
+        me.loadAllPreventes();
+    }
 },
 
 getPreventeSearchWindow: function() {
