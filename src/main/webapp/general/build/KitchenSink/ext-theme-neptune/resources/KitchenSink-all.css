@@ -22440,3 +22440,22 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
   color: #0a7b22;
   font-weight: 900;
 }
+.prevente-detail-panel .x-panel-body {
+    background-color: #f9f9f9;
+}
+
+.prevente-list-panel .x-grid-row-selected .x-grid-cell {
+    background-color: #e6f3ff !important;
+}
+
+.prevente-detail-field .x-form-display-field {
+    font-weight: bold;
+    color: #333;
+}
+.icon-accept {
+    background-image: url('resources/images/icons/accept.png') !important;
+}
+
+.icon-cross {
+    background-image: url('resources/images/icons/cross.png') !important;
+}
