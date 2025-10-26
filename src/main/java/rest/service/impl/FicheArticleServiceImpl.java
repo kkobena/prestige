@@ -16,12 +16,15 @@ import dal.TFamille;
 import dal.TFamilleStock;
 import dal.TFamilleStock_;
 import dal.TFamille_;
+import dal.TFamillearticle;
 import dal.TFamillearticle_;
+import dal.TGrossiste;
 import dal.TGrossiste_;
 import dal.TInventaire;
 import dal.TInventaireFamille;
 import dal.TInventaire_;
 import dal.TLot;
+import dal.TLot_;
 import dal.TPreenregistrementDetail;
 import dal.TPreenregistrementDetail_;
 import dal.TPreenregistrement_;
@@ -89,78 +92,63 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     @Override
     public JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
             String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
-        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, nbreMois, dtStart, dtEnd, codeFamile,
-                codeRayon, codeGrossiste, start, limit, true);
-        List<VenteDetailsDTO> data = p.getRight();
-        return new JSONObject().put("total", data.size()).put("data", new JSONArray(data)).put("metaData",
-                new JSONObject(p.getLeft()));
+        Pair<commonTasks.dto.LotDTO, List<commonTasks.dto.LotDTO>> p = produitPerimes(query, nbreMois, dtStart, dtEnd,
+                codeFamile, codeRayon, codeGrossiste, start, limit, false);
+        List<commonTasks.dto.LotDTO> data = p.getRight();
+        return new JSONObject()
+                .put("total",
+                        produitPerimesCount(query, nbreMois, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste,
+                                sessionHelperService.getCurrentUser().getLgEMPLACEMENTID()))
+                .put("data", new JSONArray(data)).put("metaData", new JSONObject(p.getLeft()));
     }
 
-    private VenteDetailsDTO produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TEmplacement emp,
-            String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
+    private commonTasks.dto.LotDTO produitPerimes(String query, int nbreMois, String dtStart, String dtEnd,
+            TEmplacement emp, String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
-        Root<TFamilleStock> root = cq.from(TFamilleStock.class);
-        Join<TFamilleStock, TFamille> fa = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
-        List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois, dtStart, dtEnd, codeFamille,
-                codeRayon, codeGrossiste, emp);
-        cq.select(cb.construct(VenteDetailsDTO.class,
-                cb.sum(cb.prod(fa.get(TFamille_.intPAF), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
-                cb.sum(cb.prod(fa.get(TFamille_.intPRICE), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
-                cb.sumAsLong(root.get(TFamilleStock_.intNUMBERAVAILABLE))));
+        CriteriaQuery<commonTasks.dto.LotDTO> cq = cb.createQuery(commonTasks.dto.LotDTO.class);
+        Root<TLot> root = cq.from(TLot.class);
+        Join<TLot, TFamille> joinLot = root.join(TLot_.lgFAMILLEID);
+        Join<TFamille, TFamilleStock> fa = joinLot.join(TFamille_.tFamilleStockCollection);
+        Join<TFamille, TFamillearticle> joinFa = joinLot.join(TFamille_.lgFAMILLEARTICLEID);
+        Join<TFamille, TGrossiste> joinFaG = joinLot.join(TFamille_.lgGROSSISTEID);
+        Join<TFamille, TZoneGeographique> joinFaz = joinLot.join(TFamille_.lgZONEGEOID);
+
+        List<Predicate> predicates = perimePredicat(cb, root, fa, joinLot, joinFa, joinFaG, joinFaz, query, nbreMois,
+                dtStart, dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
+        cq.select(cb.construct(commonTasks.dto.LotDTO.class, cb.sum(root.get(TLot_.intNUMBER)),
+                cb.sum(cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPAF))),
+                cb.sum(cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPRICE)))));
         cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-        TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
+        TypedQuery<commonTasks.dto.LotDTO> q = getEntityManager().createQuery(cq);
         q.setMaxResults(1);
         return q.getSingleResult();
 
     }
 
     @Override
-    public Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart,
-            String dtEnd, String codeFamille, String codeRayon, String codeGrossiste, int start, int limit,
-            boolean all) {
+    public Pair<commonTasks.dto.LotDTO, List<commonTasks.dto.LotDTO>> produitPerimes(String query, int nbreMois,
+            String dtStart, String dtEnd, String codeFamille, String codeRayon, String codeGrossiste, int start,
+            int limit, boolean all) {
         try {
             TEmplacement emp = sessionHelperService.getCurrentUser().getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
-            Root<TFamilleStock> root = cq.from(TFamilleStock.class);
-            Join<TFamilleStock, TFamille> fa = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
-            List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois, dtStart, dtEnd, codeFamille,
-                    codeRayon, codeGrossiste, emp);
-            if (!StringUtils.isEmpty(codeFamille) && codeFamille.equals("ALL")) {
-                cq.select(cb.construct(VenteDetailsDTO.class, fa.get(TFamille_.intCIP), fa.get(TFamille_.strNAME),
-                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
-                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE),
-                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
-                        fa.get(TFamille_.dtPEREMPTION), fa.get(TFamille_.intPAF), fa.get(TFamille_.intPRICE),
-                        root.get(TFamilleStock_.intNUMBERAVAILABLE),
-                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID),
-                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
-                        fa.get(TFamille_.intSEUILMIN))).groupBy(fa.get(TFamille_.lgFAMILLEID))
-                        .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
+            CriteriaQuery<commonTasks.dto.LotDTO> cq = cb.createQuery(commonTasks.dto.LotDTO.class);
+            Root<TLot> root = cq.from(TLot.class);
+            Join<TLot, TFamille> joinLot = root.join(TLot_.lgFAMILLEID);
+            Join<TFamille, TFamilleStock> fa = joinLot.join(TFamille_.tFamilleStockCollection);
+            Join<TFamille, TFamillearticle> joinFa = joinLot.join(TFamille_.lgFAMILLEARTICLEID);
+            Join<TFamille, TGrossiste> joinFaG = joinLot.join(TFamille_.lgGROSSISTEID);
+            Join<TFamille, TZoneGeographique> joinFaz = joinLot.join(TFamille_.lgZONEGEOID);
 
-            } else if (!StringUtils.isEmpty(codeGrossiste) && codeGrossiste.equals("ALL")) {
-                cq.select(cb.construct(VenteDetailsDTO.class, fa.get(TFamille_.intCIP), fa.get(TFamille_.strNAME),
-                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
-                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE),
-                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
-                        fa.get(TFamille_.dtPEREMPTION), fa.get(TFamille_.intPAF), fa.get(TFamille_.intPRICE),
-                        root.get(TFamilleStock_.intNUMBERAVAILABLE),
-                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID),
-                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE), fa.get(TFamille_.intSEUILMIN)))
-                        .groupBy(fa.get(TFamille_.lgFAMILLEID)).orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
-            } else {
-                cq.select(cb.construct(VenteDetailsDTO.class, fa.get(TFamille_.intCIP), fa.get(TFamille_.strNAME),
-                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
-                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE),
-                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
-                        fa.get(TFamille_.dtPEREMPTION), fa.get(TFamille_.intPAF), fa.get(TFamille_.intPRICE),
-                        root.get(TFamilleStock_.intNUMBERAVAILABLE),
-                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID),
-                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
-                        fa.get(TFamille_.intSEUILMIN))).groupBy(fa.get(TFamille_.lgFAMILLEID))
-                        .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
-            }
+            List<Predicate> predicates = perimePredicat(cb, root, fa, joinLot, joinFa, joinFaG, joinFaz, query,
+                    nbreMois, dtStart, dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
+            cq.select(cb.construct(commonTasks.dto.LotDTO.class, joinLot.get(TFamille_.intCIP),
+                    joinFa.get(TFamillearticle_.strLIBELLE), joinFaz.get(TZoneGeographique_.strLIBELLEE),
+                    joinLot.get(TFamille_.strNAME), root.get(TLot_.intNUMLOT), root.get(TLot_.dtPEREMPTION),
+                    joinFaG.get(TGrossiste_.strLIBELLE), root.get(TLot_.intNUMBER),
+                    cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPAF)),
+                    cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPRICE))))
+                    .orderBy(cb.desc(root.get(TLot_.dtPEREMPTION)));
 
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
@@ -168,63 +156,66 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            List<VenteDetailsDTO> l = q.getResultList();
+            List<commonTasks.dto.LotDTO> l = q.getResultList();
             if (l.isEmpty()) {
-                return Pair.of(new VenteDetailsDTO(), Collections.emptyList());
+                return Pair.of(new commonTasks.dto.LotDTO(), Collections.emptyList());
             }
-            VenteDetailsDTO summary = produitPerimes(query, nbreMois, dtStart, dtEnd, emp, codeFamille, codeRayon,
-                    codeGrossiste);
+            commonTasks.dto.LotDTO summary = produitPerimes(query, nbreMois, dtStart, dtEnd, emp, codeFamille,
+                    codeRayon, codeGrossiste);
 
             return Pair.of(summary, l);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "produitPerimes", e);
-            return Pair.of(new VenteDetailsDTO(), Collections.emptyList());
+            return Pair.of(new commonTasks.dto.LotDTO(), Collections.emptyList());
         }
 
     }
 
-    private List<Predicate> perimePredicat(CriteriaBuilder cb, Root<TFamilleStock> root,
-            Join<TFamilleStock, TFamille> fa, String query, int nbreMois, String dtStart, String dtEnd,
+    private List<Predicate> perimePredicat(CriteriaBuilder cb, Root<TLot> root, Join<TFamille, TFamilleStock> fa,
+            Join<TLot, TFamille> joinLot, Join<TFamille, TFamillearticle> joinFa, Join<TFamille, TGrossiste> joinFaG,
+            Join<TFamille, TZoneGeographique> joinFaz, String query, int nbreMois, String dtStart, String dtEnd,
             String codeFamille, String codeRayon, String codeGrossiste, TEmplacement emp) {
         LocalDate today = LocalDate.now();
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.isNotNull(fa.get(TFamille_.dtPEREMPTION)));
-        predicates.add(cb.equal(fa.get(TFamille_.strSTATUT), Constant.STATUT_ENABLE));
-        predicates.add(cb.greaterThan(root.get(TFamilleStock_.intNUMBERAVAILABLE), 0));
-        predicates.add(cb.equal(root.get(TFamilleStock_.strSTATUT), DateConverter.STATUT_ENABLE));
-        predicates.add(cb.equal(root.get(TFamilleStock_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID),
+        predicates.add(cb.isNotNull(root.get(TLot_.dtPEREMPTION)));
+        predicates.add(cb.isNotNull(root.get(TLot_.intNUMLOT)));
+        predicates.add(cb.greaterThan(cb.diff(root.get(TLot_.intNUMBER), root.get(TLot_.intQTYVENDUE)), 0));
+        predicates.add(cb.equal(joinLot.get(TFamille_.strSTATUT), Constant.STATUT_ENABLE));
+        predicates.add(cb.greaterThan(fa.get(TFamilleStock_.intNUMBERAVAILABLE), 0));
+        predicates.add(cb.equal(fa.get(TFamilleStock_.strSTATUT), Constant.STATUT_ENABLE));
+        predicates.add(cb.equal(fa.get(TFamilleStock_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID),
                 emp.getLgEMPLACEMENTID()));
         if (!StringUtils.isEmpty(query)) {
-            predicates.add(cb.or(cb.like(fa.get(TFamille_.intCIP), query + "%"),
-                    cb.like(fa.get(TFamille_.strNAME), query + "%")));
+            query = query + "%";
+            predicates.add(cb.or(cb.like(joinLot.get(TFamille_.intCIP), query),
+                    cb.like(joinLot.get(TFamille_.strNAME), query)));
         }
         if (!StringUtils.isEmpty(codeFamille) && !codeFamille.equals("ALL")) {
-            predicates.add(cb.equal(fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID),
-                    codeFamille));
+            predicates.add(cb.equal(joinFa.get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamille));
         }
         if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
-            predicates.add(cb.equal(fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), codeRayon));
+            predicates.add(cb.equal(joinFaz.get(TZoneGeographique_.lgZONEGEOID), codeRayon));
         }
         if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
-            predicates.add(cb.equal(fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
+            predicates.add(cb.equal(joinFaG.get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
         }
         if (nbreMois > 0) {
-            predicates.add(cb.between(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)),
+            predicates.add(cb.between(cb.function("DATE", Date.class, root.get(TLot_.dtPEREMPTION)),
                     java.sql.Date.valueOf(today), java.sql.Date.valueOf(today.plusMonths(nbreMois))));
         } else {
             if (StringUtils.isEmpty(dtEnd) && StringUtils.isEmpty(dtStart)) {
-                predicates.add(cb.lessThanOrEqualTo(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)),
+                predicates.add(cb.lessThanOrEqualTo(cb.function("DATE", Date.class, root.get(TLot_.dtPEREMPTION)),
                         new Date()));
             } else {
                 if (!StringUtils.isEmpty(dtEnd) && !StringUtils.isEmpty(dtStart)) {
-                    predicates.add(cb.between(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)),
+                    predicates.add(cb.between(cb.function("DATE", Date.class, root.get(TLot_.dtPEREMPTION)),
                             java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
                 } else {
                     if (!StringUtils.isEmpty(dtStart)) {
-                        predicates.add(cb.equal(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)),
+                        predicates.add(cb.equal(cb.function("DATE", Date.class, root.get(TLot_.dtPEREMPTION)),
                                 java.sql.Date.valueOf(dtStart)));
                     } else if (!StringUtils.isEmpty(dtEnd)) {
-                        predicates.add(cb.equal(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)),
+                        predicates.add(cb.equal(cb.function("DATE", Date.class, root.get(TLot_.dtPEREMPTION)),
                                 java.sql.Date.valueOf(dtEnd)));
                     }
                 }
@@ -242,7 +233,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             getEntityManager().merge(famille);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "modifierArticleDatePeremption", e);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
         }
     }
@@ -329,7 +320,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             }).filter(x -> x.getQteSurplus() >= 0).collect(Collectors.toList());
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
@@ -425,14 +416,14 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                     cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID).get(TPreenregistrement_.lgUSERID)
                             .get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), emplId));
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Object[]> typedQuery = getEntityManager().createQuery(cq);
 
             List<Object[]> resultList = typedQuery.getResultList();
             return resultList.stream().collect(Collectors.toMap(e -> e[0] + "", e -> Integer.valueOf(e[1] + "")));
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyMap();
         }
     }
@@ -510,7 +501,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                     root.get(TFamilleStock_.intNUMBERAVAILABLE), stock.get(TFamille_.boolACCOUNT)))
                     .orderBy(cb.asc(stock.get(TFamille_.strNAME)));
             List<Predicate> predicates = produitAccounts(cb, root, stock, query, rayon, filtre, u);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleDTO> typedQuery = getEntityManager().createQuery(cq);
             typedQuery.setFirstResult(start);
             typedQuery.setMaxResults(limit);
@@ -519,7 +510,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             Long total = produitAccounts(query, u, rayon, filtre);
             return new JSONObject().put("total", total).put("data", new JSONArray(resultList));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
@@ -561,7 +552,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
             List<Predicate> predicates = comparaisonStock(cb, root, stock, filtreStock, filtreSeuil, query, codeFamile,
                     codeRayon, codeGrossiste, emId, qty, seuil);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<ArticleDTO> typedQuery = getEntityManager().createQuery(cq);
             if (!all) {
                 typedQuery.setFirstResult(start);
@@ -617,7 +608,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             cq.select(cb.countDistinct(root));
             List<Predicate> predicates = comparaisonStock(cb, root, fa, stockFiltre, filtreSeuil, query, codeFamile,
                     codeRayon, codeGrossiste, emplacementId, stock, seuil);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (q.getSingleResult() != null ? (Long) q.getSingleResult() : 0);
 
@@ -997,6 +988,34 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             famille.setLgZONEGEOID(geographique);
         }
         em.merge(famille);
+    }
+
+    private long produitPerimesCount(String query, int nbreMois, String dtStart, String dtEnd, String codeFamille,
+            String codeRayon, String codeGrossiste, TEmplacement emp) {
+
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TLot> root = cq.from(TLot.class);
+            Join<TLot, TFamille> joinLot = root.join(TLot_.lgFAMILLEID);
+            Join<TFamille, TFamilleStock> fa = joinLot.join(TFamille_.tFamilleStockCollection);
+            Join<TFamille, TFamillearticle> joinFa = joinLot.join(TFamille_.lgFAMILLEARTICLEID);
+            Join<TFamille, TGrossiste> joinFaG = joinLot.join(TFamille_.lgGROSSISTEID);
+            Join<TFamille, TZoneGeographique> joinFaz = joinLot.join(TFamille_.lgZONEGEOID);
+
+            cq.select(cb.count(root));
+            List<Predicate> predicates = perimePredicat(cb, root, fa, joinLot, joinFa, joinFaG, joinFaz, query,
+                    nbreMois, dtStart, dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            Query q = getEntityManager().createQuery(cq);
+            return (Long) q.getSingleResult();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0l;
+        }
+
     }
 
 }

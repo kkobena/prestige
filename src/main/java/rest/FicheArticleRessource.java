@@ -54,10 +54,11 @@ public class FicheArticleRessource {
             @QueryParam(value = "codeFamile") String codeFamile, @QueryParam(value = "query") String query,
             @QueryParam(value = "codeRayon") String codeRayon,
             @QueryParam(value = "codeGrossiste") String codeGrossiste, @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
 
         JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, codeFamile, codeRayon,
-                codeGrossiste, 0, 0);
+                codeGrossiste, start, limit);
         return Response.ok().entity(jsono.toString()).build();
     }
 
