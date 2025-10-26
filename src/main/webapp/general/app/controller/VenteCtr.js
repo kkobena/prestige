@@ -458,6 +458,10 @@ Ext.define('testextjs.controller.VenteCtr', {
             ref: 'btnCancelModeReglement',
             selector: 'reglementGrid #btnCancelModeReglement'
         }
+        ,{
+    ref: 'preventeSearchWindow',
+    selector: 'window[title="RÉSULTATS DE RECHERCHE DES PRÉVENTES"]'
+}
     ],
     init: function () {
         this.control(
@@ -5020,12 +5024,24 @@ buildPreventeListPanel: function() {
                 flex: 1
             }],
             listeners: {
-                selectionchange: function(selModel, selected) {
-                    if (selected.length > 0) {
-                        me.loadPreventeDetails(selected[0]);
-                    }
+        selectionchange: function(selModel, selected) {
+            if (selected.length > 0) {
+                const record = selected[0];
+                console.log('Prévente sélectionnée:', record.data);
+                console.log('ID de la prévente:', record.get('lgPREENREGISTREMENTID'));
+                
+                // VÉRIFICATION AVANT CHARGEMENT
+                const preventeId = record.get('lgPREENREGISTREMENTID');
+                if (!preventeId) {
+                    console.error('ID de prévente non trouvé dans le record:', record.data);
+                    Ext.Msg.alert('Erreur', 'Impossible de récupérer l\'identifiant de la prévente.');
+                    return;
                 }
-            },
+                
+                me.loadPreventeDetails(record);
+            }
+        }
+    },
             dockedItems: [{
                 xtype: 'pagingtoolbar',
                 dock: 'bottom',
@@ -5326,6 +5342,16 @@ loadPreventeDetails: function(record) {
     const me = this;
     const detailContainer = me.getPreventeSearchWindow().down('#preventeDetailContainer');
     
+    // STOCKER LES DONNÉES BRUTES DU RECORD
+    me.selectedPreventeData = record.data;
+    
+    console.log('Record sélectionné:', record);
+    console.log('Record data:', record.data);
+    console.log('ID du record:', record.get('lgPREENREGISTREMENTID'));
+    
+    // RÉCUPÉRER L'ID CORRECTEMENT
+    const preventeId = record.get('lgPREENREGISTREMENTID'); // ← Déclarer la variable ici
+    
     // Réinitialiser les champs en attendant le chargement
     detailContainer.down('#preventeIdField').setValue('Chargement...');
     detailContainer.down('#typeField').setValue('Chargement...');
@@ -5352,11 +5378,9 @@ loadPreventeDetails: function(record) {
     partTPField.setValue('');
     
     // UTILISER L'API find-one QUI FONCTIONNE
-    const preventeId = record.get('lgPREENREGISTREMENTID');
-    
     Ext.Ajax.request({
         method: 'GET',
-        url: '../api/v1/ventestats/find-one/' + preventeId,
+        url: '../api/v1/ventestats/find-one/' + preventeId, // ← Utiliser la variable déclarée
         success: function(response) {
             const result = Ext.decode(response.responseText, true);
             console.log('Réponse API find-one:', result);
@@ -5395,7 +5419,7 @@ loadPreventeDetails: function(record) {
                 // UTILISER VOTRE FONCTION QUI FONCTIONNE POUR LES DONNÉES CLIENT/ASSURANCE
                 me.updateClientAssuranceInfo(preventeData, detailContainer);
                 
-                // CHARGEMENT DES ARTICLES (partie qui fonctionne déjà)
+                // CHARGEMENT DES ARTICLES
                 const articlesGrid = detailContainer.down('#articlesGrid');
                 if (preventeData.items && preventeData.items.length > 0) {
                     console.log('Articles à charger:', preventeData.items);
@@ -6190,13 +6214,55 @@ testAPI: function(url, callback) {
 
 recallSelectedPrevente: function() {
     const me = this;
-    if (me.selectedPreventeData) {
-        // Fermer la fenêtre de recherche
-        me.getPreventeSearchWindow().close();
-        
-        // Charger la prévente dans l'interface principale
-        me.loadExistantSale(me.selectedPreventeData.lgPREENREGISTREMENTID);
+    
+    console.log('Données de la prévente sélectionnée:', me.selectedPreventeData);
+    
+    if (!me.selectedPreventeData) {
+        Ext.Msg.alert('Erreur', 'Aucune prévente sélectionnée.');
+        return;
     }
+    
+    // Récupérer l'ID depuis différentes sources possibles
+    const preventeId = me.selectedPreventeData.lgPREENREGISTREMENTID || 
+                      me.selectedPreventeData.id ||
+                      (me.selectedPreventeData.data && me.selectedPreventeData.data.lgPREENREGISTREMENTID);
+    
+    console.log('ID récupéré:', preventeId);
+    
+    if (!preventeId) {
+        // Essayer de récupérer depuis la grille sélectionnée
+        const searchWindow = Ext.ComponentQuery.query('window[title="RÉSULTATS DE RECHERCHE DES PRÉVENTES"]')[0];
+        if (searchWindow) {
+            const grid = searchWindow.down('#preventeListGrid');
+            const selected = grid.getSelectionModel().getSelection();
+            if (selected.length > 0) {
+                const gridPreventeId = selected[0].get('lgPREENREGISTREMENTID');
+                console.log('ID récupéré depuis la grille:', gridPreventeId);
+                
+                if (gridPreventeId) {
+                    // Fermer la fenêtre et charger la prévente
+                    searchWindow.close();
+                    me.loadExistantSale(gridPreventeId);
+                    //Ext.Msg.alert('Succès', 'Prévente rappelée avec succès.');
+                    return;
+                }
+            }
+        }
+        
+        Ext.Msg.alert('Erreur', 'ID de prévente invalide. Impossible de rappeler cette prévente.');
+        return;
+    }
+    
+    // Fermer la fenêtre de recherche
+    const searchWindow = Ext.ComponentQuery.query('window[title="RÉSULTATS DE RECHERCHE DES PRÉVENTES"]')[0];
+    if (searchWindow) {
+        searchWindow.close();
+    }
+    
+    // Charger la prévente dans l'interface principale
+    me.loadExistantSale(preventeId);
+    
+    //Ext.Msg.alert('Succès', 'Prévente rappelée avec succès.');
 },
 
 getPreventeSearchWindow: function() {
