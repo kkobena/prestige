@@ -54,14 +54,14 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [
                 {str_TYPE_TRANSACTION: 'PRIX', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
-                {str_TYPE_TRANSACTION: 'QTEZERO', str_desc: 'QUANTITE RECU EGAL A ZERO'},
+                {str_TYPE_TRANSACTION: 'QTEZERO', str_desc: 'QUANTITE RECUE EGAL A ZERO'},
                 {str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}
             ]
         });
 
         var store_datecontrol = new Ext.data.Store({
             fields: ['name', 'value'],
-            data: [{name: true, value: 'Produits avec contrôl de date de péremption'}, {name: false, value: 'Tous'}]
+            data: [{name: true, value: 'Produits avec contrôle de date de péremption'}, {name: false, value: 'Tous'}]
         });
 
         const store_details_livraison = new Ext.data.Store({
@@ -440,7 +440,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     // NOUVELLE METHODE POUR AFFICHER LE POPUP
     displayFreeQtyPopup: function(products) {
         if (products.length === 0) {
-            Ext.Msg.alert('Information', 'Aucun produit avec quantité ug trouvé.');
+            Ext.Msg.alert('Information', 'Aucun produit avec quantité ug trouvée.');
             return;
         }
         
@@ -508,10 +508,14 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                     },
                     { 
                         text: 'UG', 
-                        dataIndex: 'lg_FAMILLE_PRIX_ACHAT', 
+                        //dataIndex: 'lg_FAMILLE_PRIX_ACHAT', 
+                        dataIndex: 'freeQty', 
                         flex: 1,
                         align: 'right',
-                        sortable: true
+                        sortable: true,
+                            renderer: function (value) {
+                                return '<span style="font-weight: bold; color: blue;">' + value + '</span>';
+                            }
                     }/*,
                     { 
                         text: 'QUANTITE LIBRE', 
