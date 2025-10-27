@@ -113,34 +113,39 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             text: 'AFFICHER NET A PAYER',
                             itemId: 'netBtn',
                             iconCls: 'afficheur_caisse',
-                            scope: this
+                            scope: this,
+                            cls: 'btn-primarya'
 
 
                         }, {
                             text: 'TERMINER LA VENTE',
                             itemId: 'btnCloture',
-                            iconCls: 'icon-clear-group',
-                            scope: this
+                            iconCls: 'valider-vente',
+                            scope: this,
+                            cls: 'btn-primary'
                         }, {
                             text: 'CLOTURER LA PRE-VENTE',
                             itemId: 'btnClosePrevente',
-                            cls: 'btn-prevente',
+                            //cls: 'btn-prevente',
                             hidden: true,
                             iconCls: 'icon-clear-group',
+                            cls: 'btn-primary',
                             scope: this
                         }
                         , {
                             text: 'METTRE EN ATTENTE',
                             itemId: 'btnStandBy',
-                            iconCls: 'icon-clear-group',
-                            scope: this
+                            iconCls: 'attente',
+                            scope: this,
+                            cls: 'btn-primarya'
                         },
 
                         {
                             text: 'RETOUR',
                             itemId: 'btnGoBack',
-                            iconCls: 'icon-clear-group',
-                            scope: this
+                            iconCls: 'retour',
+                            scope: this,
+                            cls: 'btn-secondary'
                         }
                     ]
                 }
@@ -652,6 +657,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                             tooltip: 'rechercher',
                                             scope: this,
                                             itemId: 'btnRecherche',
+                                            cls: 'btn-primarya',
                                             iconCls: 'searchicon'
 
                                         }
@@ -697,10 +703,13 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                 ,
                 {
                     xtype: 'fieldset',
-                    labelAlign: 'right',
+                    labelAlign: 'center',
                     title: '<span style="color:blue;">REGLEMENT</span>',
                     itemId: 'reglementContainer',
                     layout: 'anchor',
+                    minHeight: 70,
+                    
+                    //cls: 'pc-reglement',
                     cls: 'background_green',
                     defaults: {
                         anchor: '100%'
@@ -716,7 +725,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             border: true,
                             style: 'border-bottom:1px #9999ff solid;padding-bottom:3px;',
 
-                            margin: '0 0 2 0',
+                            margin: '0 0 5 0',
                             items: [
                                 {
                                     xtype: 'displayfield',
@@ -834,10 +843,19 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     hideTrigger: true,
                                     itemId: 'montantRecu',
                                     fieldLabel: 'MONTANT RECU',
+                                    labelClsExtra: 'pc-label-cash', // ← important
+                                    listeners: {// fallback si labelClsExtra absent
+                                        afterrender: function (f) {
+                                            f.labelEl && f.labelEl.addCls('pc-label-cash');
+                                        }
+                                    },
+                                      labelStyle: 'height:44px;line-height:44px', // label plus haut
+                                    fieldStyle: 'height:44px;line-height:44px;padding:8px 10px', // input plus haut
+                                    inputAttrTpl: 'style="height:44px"',
                                     emptyText: 'Montant reçu',
                                     flex: 1,
-                                    height: 30,
-                                    labelWidth: 120,
+                                    height: 50,
+                                    labelWidth: 160,
                                     regex: /[0-9.]/,
                                     margin: '0 30 0 0',
                                     minValue: 0,
