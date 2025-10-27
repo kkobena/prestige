@@ -40,10 +40,11 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                     dock: 'top',
                     items: [
                         {
-                            text: 'Nouvelle Vente',
+                            text: 'Nouvelle Pré Vente',
                             scope: this,
                             itemId: 'addBtn',
-                            iconCls: 'addicon'
+                            iconCls: 'addicon',
+                            cls: 'btn-primary'
 
                         }, '-',
 

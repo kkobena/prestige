@@ -26,12 +26,24 @@ Ext.define('testextjs.view.vente.VenteView', {
             width: 220,
             enableKeyEvents: true,
             margin: '0 5 0 0'
-        }, {
+        }, /*{
             xtype: 'button',
             itemId: 'preventeSearchBtn',
             text: 'VENTES EN ATTENTE',
+            cls: 'btn-primarya',
+            scope: this,
+            iconCls: 'btn-prevente',
             margin: '0 0 0 5'
-        }]
+        },*/
+        {
+         xtype: 'button',
+         text: 'VENTES EN ATTENTE',
+         scope: this,
+         itemId: 'preventeSearchBtn',
+         cls: 'btn-primarya',
+         iconCls: 'searchicon'
+        }
+    ]
     },
 
     layout: {
