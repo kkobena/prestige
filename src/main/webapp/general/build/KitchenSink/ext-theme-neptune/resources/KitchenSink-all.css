@@ -22440,3 +22440,53 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
   color: #0a7b22;
   font-weight: 900;
 }
+.prevente-detail-panel .x-panel-body {
+    background-color: #f9f9f9;
+}
+
+.prevente-list-panel .x-grid-row-selected .x-grid-cell {
+    background-color: #e6f3ff !important;
+}
+
+.prevente-detail-field .x-form-display-field {
+    font-weight: bold;
+    color: #333;
+}
+.icon-accept {
+    background-image: url('resources/images/icons/accept.png') !important;
+}
+
+.icon-cross {
+    background-image: url('resources/images/icons/cross.png') !important;
+}
+/* Centrer les titres */
+.centered-fieldset-title .x-fieldset-header .x-fieldset-header-text {
+    text-align: center;
+    width: 100%;
+    display: block;
+}
+
+/* Correction complète des bordures */
+.custom-fieldset {
+    border: 1px solid #B5B8C8 !important;
+    border-radius: 3px !important;
+}
+
+.custom-fieldset .x-fieldset-body {
+    border: none !important;
+}
+
+/* Forcer la fermeture de toutes les bordures */
+.x-fieldset {
+    border: 1px solid #B5B8C8 !important;
+    border-top: 1px solid #B5B8C8 !important;
+    border-right: 1px solid #B5B8C8 !important;
+    border-bottom: 1px solid #B5B8C8 !important;
+    border-left: 1px solid #B5B8C8 !important;
+}
+
+/* S'assurer que le body n'a pas de bordures internes */
+.x-fieldset .x-fieldset-body {
+    border: none !important;
+    border-top: none !important;
+}
