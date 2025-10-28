@@ -211,11 +211,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     text: 'Cr&eacute;er inventaire',
                     scope: this,
                     iconCls: 'addicon',
+                    cls: 'btn-primary',
                     handler: this.onAddClick
                 }, '-', {
                     text: 'Cr&eacute;er inventaire unitaire',
                     scope: this,
                     iconCls: 'addicon',
+                    cls: 'btn-primaryb',
                     handler: this.onAddUnitaireClick
                 }, '-', {
                     xtype: 'combobox',

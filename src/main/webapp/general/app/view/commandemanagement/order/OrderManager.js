@@ -78,14 +78,20 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 {
                     header: 'Grossiste',
                     dataIndex: 'str_GROSSISTE_LIBELLE',
-                    flex: 1
+                    flex: 1,
+                    renderer: function (value) {
+                        return '<div style="font-weight: bold; color: purple;">' + value + '</div>';
+                    }
                 },
 
                 {
                     header: 'Nbre.Ligne',
                     dataIndex: 'int_LINE',
                     align: 'right',
-                    flex: 0.5
+                    flex: 0.5,
+                    renderer: function (value) {
+                        return '<div style="font-weight: bold; color: green;">' + value + '</div>';
+                    }
                 },
 
                 {
@@ -99,14 +105,19 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     dataIndex: 'PRIX_ACHAT_TOTAL',
                     renderer: amountformat,
                     align: 'right',
-                    flex: 0.5
+                    flex: 0.5,
+                     renderer: function (value) {
+                         return '<span style="color:blue; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';            
+                    }
                 },
                 {
                     header: 'P.VENTE',
                     dataIndex: 'PRIX_VENTE_TOTAL',
-                    renderer: amountformat,
                     align: 'right',
-                    flex: 0.5
+                    flex: 0.5,
+                     renderer: function (value) {
+                         return '<span style="color:red; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';            
+                    }
                 },
                 {
                     header: 'Op&eacute;rateur',
@@ -117,11 +128,17 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 {
                     header: 'Date',
                     dataIndex: 'dt_CREATED',
-                    flex: 0.7
+                    flex: 0.7,
+                     renderer: function (value) {
+                         return '<span style="color:green; font-weight:bold; font-size:1em;">' +value+'</span>';            
+                    }
                 }, {
                     header: 'Heure',
                     dataIndex: 'dt_UPDATED',
-                    flex: 0.5
+                    flex: 0.5,
+                     renderer: function (value) {
+                         return '<span style="color:green; font-weight:bold; font-size:1em;">' +value+ '</span>';            
+                    }
                 },
                 {
                     text: '',
@@ -198,6 +215,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     text: 'NOUVELLE COMMANDE',
                     scope: this,
                     iconCls: 'addicon',
+                    cls: 'btn-primaryb',
                     handler: this.onAddClick
                 }, '-',
                 {
@@ -228,6 +246,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     tooltip: 'Importer une nouvelle commande',
                     scope: this,
                     iconCls: 'importicon',
+                    cls: 'btn-primary',
                     handler: function () {
                         new testextjs.view.commandemanagement.bonlivraison.ImportXLS();
                     }

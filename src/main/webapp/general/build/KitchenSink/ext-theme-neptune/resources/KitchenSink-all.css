@@ -22364,7 +22364,18 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
   box-shadow: 0 8px 18px rgba(20,184,166,.35);
 }
 
+.btn-primaryb{
+  background: linear-gradient(145deg, #090979, #00D4FF) !important;
+  color: #fff; /* texte blanc recommandé */
+  border: 1px solid rgba(0,0,0,.15) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 18px rgba(20,184,166,.35);
+}
+.btn-primaryb:hover { color: #fff; }
+
 .btn-primary .x-btn-inner{ color:#fff !important; font-weight:800; }
+
+.btn-primaryb .x-btn-inner{ color:#fff !important; font-weight:800; }
 
 /* --- layout 3 colonnes pour Infos Générales --- */
 .ig-columns{
