@@ -242,6 +242,60 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                 }], //appliquer le groupement
                             store: store_inventaire_famille,
                             height: Ext.getBody().getViewSize().height * 0.8,
+                            
+                             // AJOUT: Configuration de la vue
+                            viewConfig: {
+                                stripeRows: false,
+                                getRowClass: function(record, rowIndex, rowParams, store) {
+                                    // Cette méthode sera gérée via les événements
+                                    return '';
+                                }
+                            },
+
+                            // AJOUT: Listeners pour gérer le style d'édition
+                            listeners: {
+                                // Au début de l'édition
+                                beforeedit: function(editor, context) {
+                                    var grid = Ext.getCmp('gridpanelInventaireID');
+                                    // Retirer la classe de toutes les lignes
+                                    var rows = grid.getView().getEl().query('.x-grid-row');
+                                    rows.forEach(function(row) {
+                                        Ext.fly(row).removeCls('row-editing-active');
+                                    });
+
+                                    // Ajouter la classe à la ligne en cours d'édition
+                                    var row = context.row;
+                                    Ext.fly(row).addCls('row-editing-active');
+                                },
+
+                                // Quand l'édition est annulée
+                                canceledit: function(editor, context) {
+                                    var row = context.row;
+                                    Ext.fly(row).removeCls('row-editing-active');
+                                },
+
+                                // Quand l'édition est validée
+                                edit: function(editor, context) {
+                                    var row = context.row;
+                                    Ext.fly(row).removeCls('row-editing-active');
+
+                                    // Si vous voulez garder le style pendant la navigation, retirez la ligne ci-dessus
+                                    // et utilisez plutôt cette approche :
+                                    // Le style sera retiré automatiquement au début de la prochaine édition
+                                },
+
+                                // Nettoyer quand on quitte la grille
+                                destroy: function() {
+                                    var grid = Ext.getCmp('gridpanelInventaireID');
+                                    if (grid) {
+                                        var rows = grid.getView().getEl().query('.row-editing-active');
+                                        rows.forEach(function(row) {
+                                            Ext.fly(row).removeCls('row-editing-active');
+                                        });
+                                    }
+                                }
+                            },
+                            
                             columns: [{
                                     text: 'lg_INVENTAIRE_FAMILLE_ID',
                                     flex: 1,

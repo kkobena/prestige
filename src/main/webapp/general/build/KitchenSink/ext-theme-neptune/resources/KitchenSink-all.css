@@ -22856,3 +22856,25 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
     border: none !important;
     border-top: none !important;
 }
+
+.x-grid-row-editing {
+    background-color: #E6F3FF !important; /* Bleu ciel */
+    border: 1px solid #B3D9FF !important;
+}
+
+.row-editing-active {
+    background-color: #E6F3FF !important;
+    border: 1px solid #B3D9FF !important;
+}
+
+/* Style pour la ligne en cours d'édition */
+.x-grid-row.row-editing-active .x-grid-cell {
+    background-color: #E6F3FF !important;
+    border-color: #B3D9FF !important;
+}
+
+/* Conserver le style au survol */
+.x-grid-row-over .x-grid-cell {
+    background-color: #F0F8FF !important; /* Bleu très clair au survol */
+}
+
