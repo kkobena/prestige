@@ -246,7 +246,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                 {
                                     xtype: 'button',
                                     text: 'Verifier les UG saisies',
-                                    cls: 'btn-primarya',
+                                    cls: 'btn-primaryb',
                                     iconCls: 'btn-primary',
                                     margins: '0 0 0 10',
                                     handler: function() {

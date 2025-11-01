@@ -4965,7 +4965,11 @@ buildPreventeListPanel: function() {
                         root: 'data',
                         totalProperty: 'total'
                     }
-                }
+                    },
+                        sorters: [{
+                                property: 'heure',
+                                direction: 'DESC' // ou 'DESC' pour ordre décroissant
+                            }]
             }),
             columns: [{
                 text: 'N° Ticket',
@@ -5009,6 +5013,7 @@ buildPreventeListPanel: function() {
                 text: 'Heure',
                 dataIndex: 'heure',
                 width: 80,
+                sortable: true,
                 renderer: function(v, meta, record) {
                     if (v) return v;
                     // Extraire l'heure de dtUPDATED si disponible
