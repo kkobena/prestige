@@ -392,4 +392,66 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     }
 
+    @Override
+    public MontantAPaye calculeRepair(TPreenregistrement op,
+            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents,
+            Map<String, List<TiersPayantParams>> tpsBons) {
+
+        TRemise remise = null;
+
+        List<TPreenregistrementDetail> items = new ArrayList<>(op.getTPreenregistrementDetailCollection());
+        MontantAPaye montantAPaye = computeRemise(op, remise, items);
+
+        CalculationInput input = buildCalculationInput(op, items, compteClientTiersPayents, tpsBons);
+        input.setDiscountAmount(BigDecimal.valueOf(Objects.requireNonNullElse(montantAPaye.getMontantAccount(), 0)));
+        CalculationResult output = tiersPayantCalculationService.calculate(input);
+
+        Map<String, List<TPreenregistrementCompteClientTiersPayent>> maps = compteClientTiersPayents.stream().collect(
+                Collectors.groupingBy(e -> e.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTTIERSPAYANTID()));
+
+        int totalPatientShare = output.getTotalPatientShare().intValue();
+        op.setIntCUSTPART(totalPatientShare);
+
+        for (TiersPayantLineOutput lineResult : output.getTiersPayantLines()) {
+            TPreenregistrementCompteClientTiersPayent saleLine = maps.get(lineResult.getClientTiersPayantId()).get(0);
+
+            if (output.isHasPriceOption()) {
+                TCompteClientTiersPayant tcctp = saleLine.getLgCOMPTECLIENTTIERSPAYANTID();
+                saleLine.setIntPERCENT(tcctp.getIntPOURCENTAGE());
+            } else {
+                saleLine.setIntPERCENT(lineResult.getFinalTaux());
+            }
+            saleLine.setIntPRICE(lineResult.getMontant().intValue());
+            saleLine.setStrREFBON(lineResult.getNumBon());
+
+            em.merge(saleLine);
+            TiersPayantParams tp = new TiersPayantParams();
+            tp.setTaux(saleLine.getIntPERCENT());
+            tp.setCompteTp(lineResult.getClientTiersPayantId());
+            tp.setNumBon(saleLine.getStrREFBON());
+            tp.setTpnet(saleLine.getIntPRICE());
+            montantAPaye.getTierspayants().add(tp);
+
+        }
+        for (TPreenregistrementDetail saleLine : items) {
+
+            output.getItemShares().stream()
+                    .filter(s -> s.getSaleLineId().equals(saleLine.getLgPREENREGISTREMENTDETAILID())).findFirst()
+                    .ifPresent(itemShare -> {
+                        saleLine.setCalculationBasePrice(itemShare.getCalculationBasePrice());
+                        em.merge(saleLine);
+                        itemShare.getRates().forEach(em::persist);
+                    });
+        }
+        op.setHasPriceOption(output.isHasPriceOption());
+        em.merge(op);
+        montantAPaye.setMontantTp(output.getTotalTiersPayant().intValue());
+
+        montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
+        montantAPaye.setRestructuring(StringUtils.isNoneEmpty(output.getWarningMessage()));
+        montantAPaye.setMessage(output.getWarningMessage());
+
+        return montantAPaye;
+
+    }
 }
