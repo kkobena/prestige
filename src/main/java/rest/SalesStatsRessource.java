@@ -275,7 +275,7 @@ public class SalesStatsRessource {
             throws JSONException {
         SalesStatsParams body = buildParams(start, limit, query, dtStart, dtEnd, hStart, hEnd, sansBon, onlyAvoir,
                 typeVenteId, nature, depotOnly, typeDepotId, depotId);
-        JSONObject jsono = salesService.listeVentes(body);
+        JSONObject jsono = salesService.getVenteTerminees(body);
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -337,7 +337,7 @@ public class SalesStatsRessource {
 
         } catch (Exception e) {
         }
-        JSONObject jsono = salesService.listeVentes(body);
+        JSONObject jsono = salesService.getVenteTerminees(body);
         return Response.ok().entity(jsono.toString()).build();
     }
 
