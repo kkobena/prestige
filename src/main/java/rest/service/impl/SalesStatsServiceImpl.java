@@ -21,8 +21,6 @@ import dal.HMvtProduit;
 import dal.Medecin_;
 import dal.MvtTransaction;
 import dal.MvtTransaction_;
-import dal.PrixReferenceVente;
-import dal.PrixReferenceVente_;
 import dal.TAyantDroit;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
@@ -49,8 +47,10 @@ import dal.TUser_;
 import dal.TZoneGeographique_;
 import dal.enumeration.TypeTransaction;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,6 +106,27 @@ import util.Constant;
 public class SalesStatsServiceImpl implements SalesStatsService {
 
     private static final Logger LOG = Logger.getLogger(SalesStatsServiceImpl.class.getName());
+    private static final String PREVENTE_SQL = "SELECT DISTINCT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i:%s') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur,p.int_PRICE_REMISE AS  discount,p.remise AS remiseId,p.str_REF_TICKET AS transactionNumber,p.lg_TYPE_VENTE_ID AS typeVenteId,p.str_STATUT AS statut FROM  t_preenregistrement p JOIN t_preenregistrement_detail dd ON dd.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT IN(?1) AND p.lg_NATURE_VENTE_ID <> '3' AND DATE(p.dt_UPDATED)=DATE(NOW()) ";
+    private static final String USER_CLOSE = " AND p.lg_USER_ID='%s' ";
+    private static final String SEARCH_CLOSE = " AND ((p.lg_PREENREGISTREMENT_ID  IN (SELECT d.lg_PREENREGISTREMENT_ID FROM  t_preenregistrement_detail d JOIN t_famille f ON d.lg_FAMILLE_ID=f.lg_FAMILLE_ID WHERE f.int_CIP LIKE '%s' OR f.str_NAME LIKE '%s' )) OR p.str_REF LIKE '%s' )";
+    private static final String NATURE_CLOSE = " AND p.str_TYPE_VENTE='%s' ";
+    private static final String VENTE_SQL = "SELECT {distinct} p.lg_PREENREGISTREMENT_ID as lgPREENREGISTREMENTID,p.str_REF as strREF,p.str_REF_TICKET as strREFTICKET,p.int_PRICE as intPRICE,p.int_CUST_PART as intCUSTPART,p.int_PRICE_REMISE as intPRICEREMISE,p.str_STATUT as strSTATUT,p.dt_CREATED as dtCREATED, p.dt_UPDATED as dtUPDATED,p.str_TYPE_VENTE as strTYPEVENTE,p.b_IS_AVOIR as avoir,p.b_IS_CANCEL as cancel,p.b_WITHOUT_BON as sansbon, p.lg_TYPE_VENTE_ID as lgTYPEVENTEID,p.copy as copy,"
+            + "p.dt_ANNULER as dtANNULER,p.lg_USER_CAISSIER_ID as lgUSERCAISSIERID,CONCAT(caissier.str_FIRST_NAME,' ',caissier.str_LAST_NAME) AS userCaissierName,CONCAT(c.str_FIRST_NAME,' ',c.str_LAST_NAME) AS clientFullName, CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeurName,em.lg_EMPLACEMENT_ID AS  pkBrand from {select_placeholder} INNER JOIN t_user caissier ON caissier.lg_USER_ID=p.lg_USER_CAISSIER_ID LEFT JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID LEFT  JOIN  t_client c ON p.lg_CLIENT_ID=c.lg_CLIENT_ID "
+            + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where (timestamp(p.dt_UPDATED) between :dtStart and :dtEnd) and p.str_STATUT=:status";
+    private static final String NATURE_CLOSE2 = " and p.lg_NATURE_VENTE_ID=:natureVente";
+    private static final String TYPE_CLOSE = " and p.str_TYPE_VENTE=:typeVente";
+    private static final String SEARCH_CLOSE2 = " and (f.int_CIP like :searchTerm or p.str_REF_TICKET like :searchTerm or p.str_REF like :searchTerm or f.str_NAME like :searchTerm or f.int_EAN13 like :searchTerm) ";
+    private static final String SELECT_P = " t_preenregistrement p ";
+    private static final String ORDER_BY = " order by p.dt_UPDATED ";
+    private static final String LIMIT = " LIMIT :start,:limit";
+    private static final String PRODUIT_JOIN = "  JOIN t_famille f ON  f.lg_FAMILLE_ID=tpreenregi0_.lg_FAMILLE_ID ";
+    private static final String SELECT_DETAIL = " t_preenregistrement_detail tpreenregi0_ inner join t_preenregistrement p  on tpreenregi0_.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID ";
+
+    private static final String VENTE_SQL_COUNT = "SELECT COUNT({distinct} p.lg_PREENREGISTREMENT_ID)  from {select_placeholder} INNER JOIN t_user caissier ON caissier.lg_USER_ID=p.lg_USER_CAISSIER_ID LEFT  JOIN  t_client c ON p.lg_CLIENT_ID=c.lg_CLIENT_ID "
+            + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where (timestamp(p.dt_UPDATED) between :dtStart and :dtEnd) and p.str_STATUT=:status";
+
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -632,6 +653,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<VenteDTO> listVentes(SalesStatsParams params) {
+
+        if (1 == 1) {
+            return getListTerminees(params);
+        }
         boolean canexport = findpermission();
         try {
 
@@ -2291,28 +2316,249 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     private String buildPreVentesQuery(SalesStatsParams params) {
 
-        String query = preventeSql.replace("{user_join}", "");
+        String query = PREVENTE_SQL.replace("{user_join}", "");
 
         if (!this.sessionHelperService.getData().isShowAllVente()) {
-            query = query.concat(String.format(userClose, this.sessionHelperService.getCurrentUser().getLgUSERID()));
+            query = query.concat(String.format(USER_CLOSE, this.sessionHelperService.getCurrentUser().getLgUSERID()));
         }
         if (StringUtils.isNotEmpty(params.getTypeVenteId())) {
-            query = query.concat(String.format(natureClose, params.getTypeVenteId()));
+            query = query.concat(String.format(NATURE_CLOSE, params.getTypeVenteId()));
 
         }
         if (StringUtils.isNotEmpty(params.getQuery())) {
             String search = params.getQuery() + "%";
-            query = query.concat(String.format(searchClose, search, search, search));
+            query = query.concat(String.format(SEARCH_CLOSE, search, search, search));
 
         }
 
         return query;
     }
 
-    private final String preventeSql = "SELECT DISTINCT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i:%s') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur,p.int_PRICE_REMISE AS  discount,p.remise AS remiseId,p.str_REF_TICKET AS transactionNumber,p.lg_TYPE_VENTE_ID AS typeVenteId,p.str_STATUT AS statut FROM  t_preenregistrement p JOIN t_preenregistrement_detail dd ON dd.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT IN(?1) AND p.lg_NATURE_VENTE_ID <> '3' AND DATE(p.dt_UPDATED)=DATE(NOW()) ";
-    private final String userJoin = " JOIN t_user u ON u.lg_USER_ID=p.lg_USER_ID ";
-    private final String emplacementClose = " AND u.lg_EMPLACEMENT_ID='%s' ";
-    private final String userClose = " AND p.lg_USER_ID='%s' ";
-    private final String searchClose = " AND ((p.lg_PREENREGISTREMENT_ID  IN (SELECT d.lg_PREENREGISTREMENT_ID FROM  t_preenregistrement_detail d JOIN t_famille f ON d.lg_FAMILLE_ID=f.lg_FAMILLE_ID WHERE f.int_CIP LIKE '%s' OR f.str_NAME LIKE '%s' )) OR p.str_REF LIKE '%s' )";
-    private final String natureClose = " AND p.str_TYPE_VENTE='%s' ";
+    @Override
+    public JSONObject getVenteTerminees(SalesStatsParams params) {
+        JSONObject json = new JSONObject();
+        try {
+            long count = getVenteTermineesCount(params);
+
+            List<VenteDTO> datas = getListTerminees(params);
+            json.put("total", count);
+            json.put("data", new JSONArray(datas));
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            json.put("total", 0);
+            json.put("data", new JSONArray());
+        }
+        return json;
+    }
+
+    @Override
+    public List<VenteDTO> getListTerminees(SalesStatsParams params) {
+        boolean canexport = findpermission();
+        try {
+
+            return getTransformTuple(fetchTuples(params), canexport, params);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private List<Tuple> fetchTuples(SalesStatsParams params) {
+        try {
+            String sql = buildSqlQuery(params);
+            Query query = getEntityManager().createNativeQuery(sql, Tuple.class);
+
+            buildParameters(query, params);
+            if (!params.isAll()) {
+                query.setParameter("start", params.getStart());
+                query.setParameter("limit", params.getLimit());
+            }
+
+            return query.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private int getVenteTermineesCount(SalesStatsParams params) {
+        try {
+            String sql = buildSqlCountQuery(params);
+            Query query = getEntityManager().createNativeQuery(sql);
+
+            buildParameters(query, params);
+
+            return ((Number) query.getSingleResult()).intValue();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private void buildParameters(Query query, SalesStatsParams params) {
+
+        query.setParameter("dtStart", java.sql.Timestamp
+                .valueOf(params.getDtStart().atTime(LocalTime.parse(params.gethStart().toString().concat(":00")))));
+        query.setParameter("dtEnd", java.sql.Timestamp
+                .valueOf(params.getDtEnd().atTime(LocalTime.parse(params.gethEnd().toString().concat(":59")))));
+        query.setParameter("status", params.getStatut());
+
+        if (StringUtils.isNotEmpty(params.getNature())) {
+            query.setParameter("natureVente", params.getNature());
+        }
+        if (StringUtils.isNotEmpty(params.getTypeVenteId())) {
+            query.setParameter("typeVente", params.getTypeVenteId());
+        }
+        if (StringUtils.isNotEmpty(params.getQuery())) {
+            query.setParameter("searchTerm", params.getQuery() + "%");
+        }
+        String userId = params.getUser();
+
+        if (userId != null) {
+            query.setParameter("userId", userId);
+        }
+
+        if (StringUtils.isNotEmpty(params.getDepotId())) {
+            query.setParameter("depotId", params.getDepotId());
+        }
+    }
+
+    private List<VenteDTO> getTransformTuple(List<Tuple> tuples, boolean canexport, SalesStatsParams params) {
+        if (CollectionUtils.isEmpty(tuples)) {
+            return Collections.emptyList();
+        }
+        return tuples.stream().map(tuple -> tupleToVenteDTO(tuple, canexport, params)).collect(Collectors.toList());
+    }
+
+    private VenteDTO tupleToVenteDTO(Tuple tuple, boolean canexport, SalesStatsParams params) {
+        VenteDTO venteDTO = new VenteDTO();
+        venteDTO.setLgPREENREGISTREMENTID(tuple.get("lgPREENREGISTREMENTID", String.class));
+        venteDTO.setStrREF(tuple.get("strREF", String.class));
+        venteDTO.setStrREFTICKET(tuple.get("strREFTICKET", String.class));
+        venteDTO.setIntPRICE(tuple.get("intPRICE", Integer.class));
+        venteDTO.setIntCUSTPART(tuple.get("intCUSTPART", Integer.class));
+        venteDTO.setIntPRICEREMISE(tuple.get("intPRICEREMISE", Integer.class));
+        venteDTO.setStrSTATUT(tuple.get("strSTATUT", String.class));
+        venteDTO.setUserVendeurName(tuple.get("userVendeurName", String.class));
+        venteDTO.setCanexport(canexport);
+        venteDTO.setBeCancel(params.isCanCancel());
+
+        venteDTO.setModificationVenteDate(params.isModificationVenteDate());
+        Date dtUpdated = tuple.get("dtUPDATED", Date.class);
+        if (dtUpdated != null) {
+            venteDTO.setDtUPDATED(dateFormat.format(dtUpdated));
+            venteDTO.setHeure(heureFormat.format(dtUpdated));
+        }
+
+        Date dtCreated = tuple.get("dtCREATED", Date.class);
+        if (dtCreated != null) {
+            venteDTO.setDtCREATED(dateFormat.format(dtCreated));
+        }
+
+        venteDTO.setStrTYPEVENTE(tuple.get("strTYPEVENTE", String.class));
+        Boolean avoir = tuple.get("avoir", Boolean.class);
+        if (avoir != null) {
+            venteDTO.setAvoir(avoir);
+        }
+        Boolean cancel = tuple.get("cancel", Boolean.class);
+        if (cancel != null) {
+            venteDTO.setCancel(cancel);
+        }
+        Boolean sansbon = tuple.get("sansbon", Boolean.class);
+        if (sansbon != null) {
+            venteDTO.setSansbon(sansbon);
+        }
+
+        venteDTO.setLgTYPEVENTEID(tuple.get("lgTYPEVENTEID", String.class));
+        Boolean copy = tuple.get("copy", Boolean.class);
+        if (copy != null) {
+            venteDTO.setCopy(copy);
+        }
+
+        Date dtAnnuler = tuple.get("dtANNULER", Date.class);
+        if (dtAnnuler != null) {
+            venteDTO.setDateAnnulation(dateFormat.format(dtAnnuler));
+            venteDTO.setHeureAnnulation(heureFormat.format(dtAnnuler));
+        }
+
+        venteDTO.setLgUSERCAISSIERID(tuple.get("lgUSERCAISSIERID", String.class));
+        venteDTO.setUserCaissierName(tuple.get("userCaissierName", String.class));
+        venteDTO.setClientFullName(tuple.get("clientFullName", String.class));
+
+        String pkBrand = tuple.get("pkBrand", String.class);
+        if (StringUtils.isNotEmpty(pkBrand)) {
+            MagasinDTO magasin = new MagasinDTO(findEmplacementById(pkBrand));
+            venteDTO.setMagasin(magasin);
+        }
+        return venteDTO;
+    }
+
+    private String buildSqlCountQuery(SalesStatsParams params) {
+        return buildWhereClose(params, VENTE_SQL_COUNT).toString();
+    }
+
+    private String buildSqlQuery(SalesStatsParams params) {
+        StringBuilder finalSql = buildWhereClose(params, VENTE_SQL).append(ORDER_BY);
+
+        finalSql.append(LIMIT);
+
+        return finalSql.toString();
+    }
+
+    private StringBuilder buildWhereClose(SalesStatsParams params, String sqlQ) {
+        String produitJoin = "";
+        String selectPlaceholder;
+        boolean hasProductCriteria = StringUtils.isNotEmpty(params.getQuery());
+
+        if (hasProductCriteria) {
+            selectPlaceholder = SELECT_DETAIL;
+            produitJoin = PRODUIT_JOIN;
+        } else {
+            selectPlaceholder = SELECT_P;
+        }
+        String sql = sqlQ.replace("{select_placeholder}", selectPlaceholder);
+        if (hasProductCriteria) {
+            sql = sql.replace("{produit_join}", produitJoin);
+            sql = sql.replace("{distinct}", "distinct");
+        } else {
+            sql = sql.replace("{produit_join}", "");
+            sql = sql.replace("{distinct}", "");
+        }
+
+        StringBuilder finalSql = new StringBuilder(sql);
+
+        if (StringUtils.isNotEmpty(params.getNature())) {
+            finalSql.append(NATURE_CLOSE2);
+        }
+        if (StringUtils.isNotEmpty(params.getTypeVenteId())) {
+            finalSql.append(TYPE_CLOSE);
+        }
+        if (StringUtils.isNotEmpty(params.getQuery())) {
+            finalSql.append(SEARCH_CLOSE2);
+        }
+
+        if (StringUtils.isNotEmpty(params.getUser())) {
+            finalSql.append(" AND p.lg_USER_ID=:userId ");
+        }
+        if (params.isDepotOnly()) {
+            finalSql.append(" AND p.lg_NATURE_VENTE_ID = '3' ");
+        }
+        if (params.isSansBon()) {
+            finalSql.append(" AND p.b_WITHOUT_BON=TRUE ");
+        }
+        if (params.isOnlyAvoir()) {
+            finalSql.append(" AND p.b_IS_AVOIR=TRUE ");
+        }
+        if (StringUtils.isNotEmpty(params.getProduitId())) {
+            finalSql.append(" AND tpreenregi0_.lg_FAMILLE_ID=:produitId ");
+        }
+
+        if (StringUtils.isNotEmpty(params.getDepotId())) {
+            finalSql.append(" AND p.pk_BRAND=:depotId ");
+        }
+        return finalSql;
+
+    }
+
 }

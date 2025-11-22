@@ -133,4 +133,8 @@ public interface SalesStatsService {
     long montantDepot(SalesStatsParams params);
 
     JSONObject getPreVentes(SalesStatsParams params);
+
+    JSONObject getVenteTerminees(SalesStatsParams params);
+
+    List<VenteDTO> getListTerminees(SalesStatsParams params);
 }
