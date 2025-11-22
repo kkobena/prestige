@@ -285,13 +285,22 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                 },
 
                                 // Nettoyer quand on quitte la grille
-                                destroy: function() {
+                                destroy: function () {
                                     var grid = Ext.getCmp('gridpanelInventaireID');
-                                    if (grid) {
-                                        var rows = grid.getView().getEl().query('.row-editing-active');
-                                        rows.forEach(function(row) {
-                                            Ext.fly(row).removeCls('row-editing-active');
-                                        });
+                                    // PROTECTION : Vérifier que grid existe et a un getView valide
+                                    if (grid && grid.getView && grid.getView().getEl) {
+                                        try {
+                                            var view = grid.getView();
+                                            var el = view.getEl();
+                                            if (el && !el.destroyed && el.query) {
+                                                var rows = el.query('.row-editing-active');
+                                                rows.forEach(function (row) {
+                                                    Ext.fly(row).removeCls('row-editing-active');
+                                                });
+                                            }
+                                        } catch (e) {
+                                            console.warn('Safe cleanup during destruction:', e.message);
+                                        }
                                     }
                                 }
                             },
