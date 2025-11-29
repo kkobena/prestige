@@ -46,6 +46,7 @@ import dal.TTypeVente_;
 import dal.TUser_;
 import dal.TZoneGeographique_;
 import dal.enumeration.TypeTransaction;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -96,6 +97,8 @@ import rest.service.SessionHelperService;
 import rest.service.SuggestionService;
 import rest.service.VenteReglementService;
 import rest.service.dto.builder.VenteDTOBuilder;
+import rest.service.utils.CsvExportService;
+import rest.service.utils.ReportExcelExportService;
 import util.Constant;
 
 /**
@@ -138,6 +141,11 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private VenteReglementService venteReglementService;
     @EJB
     private SessionHelperService sessionHelperService;
+    @EJB
+    private CsvExportService csvExportService;
+
+    @EJB
+    private ReportExcelExportService reportExcelExportService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -1283,6 +1291,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
                     .get(TZoneGeographique_.lgZONEGEOID), param.getRayonId()));
         }
+
+        if (!StringUtils.isEmpty(param.getGrossisteId()) && !"ALL".equals(param.getGrossisteId())) {
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                    .get(TGrossiste_.lgGROSSISTEID), param.getGrossisteId()));
+        }
+
         predicates.add(cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmplacementId));
         if (!StringUtils.isEmpty(param.getTypeTransaction())) {
             switch (param.getTypeTransaction()) {
@@ -1435,6 +1449,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public JSONObject articlesVendus(SalesStatsParams params) throws JSONException {
+        params.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
         long count = getArticlesVendusCount(params);
         if (count == 0) {
@@ -1460,7 +1475,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.select(cb.count(root));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
 
@@ -1482,7 +1497,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
 
@@ -1552,6 +1567,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException {
+        params.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
         long count = getArticlesVendusCountRecap(params);
 
@@ -2559,6 +2575,49 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         return finalSql;
 
+    }
+
+    @Override
+    public byte[] exportArticlesVendusRecapCsv(SalesStatsParams params) throws IOException {
+        params.setUserId(this.sessionHelperService.getCurrentUser());
+        params.setAll(true);
+        List<VenteDetailsDTO> data = getArticlesVendusRecap(params);
+
+        String title = "Recapitulatif articles vendus du  - "
+                + params.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                + params.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String[] headers = { "Id", "Code CIP", "Libellé", "Qté Vendue", "Montant", "Stock", "Avoir", "Emplacement" };
+
+        byte[] csvData = csvExportService.createCsvReport(title, headers, data,
+                dto -> new String[] { dto.getLgFAMILLEID(), dto.getIntCIP(), dto.getStrNAME(),
+                        String.valueOf(dto.getIntQUANTITY()), String.valueOf(dto.getIntPRICE()),
+                        String.valueOf(dto.getCurrentStock()), String.valueOf(dto.getIntAVOIR()), dto.getLibelleRayon()
+
+                });
+
+        return csvExportService.addUtf8Bom(csvData);
+
+    }
+
+    @Override
+    public byte[] exportArticlesVendusRecapExcel(SalesStatsParams params) throws IOException {
+        params.setAll(true);
+        params.setUserId(this.sessionHelperService.getCurrentUser());
+        List<VenteDetailsDTO> data = getArticlesVendusRecap(params);
+        String title = "Recapitulatif articles vendus du  - "
+                + params.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                + params.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String[] headers = { "Id", "Code CIP", "Libellé", "Qté Vendue", "Montant", "Stock", "Avoir", "Emplacement" };
+        return reportExcelExportService.createExcelReport(title, headers, data, (row, dto) -> {
+            row.createCell(0).setCellValue(dto.getLgFAMILLEID());
+            row.createCell(1).setCellValue(dto.getIntCIP());
+            row.createCell(2).setCellValue(dto.getStrNAME());
+            row.createCell(3).setCellValue(dto.getIntQUANTITY());
+            row.createCell(4).setCellValue(dto.getIntPRICE());
+            row.createCell(5).setCellValue(dto.getCurrentStock());
+            row.createCell(6).setCellValue(dto.getIntAVOIR());
+            row.createCell(7).setCellValue(dto.getLibelleRayon());
+        });
     }
 
 }
