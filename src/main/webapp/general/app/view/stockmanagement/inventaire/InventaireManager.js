@@ -288,7 +288,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
 
     },
     onStoreLoad: function() {
-    },
+    },    
     onAddClick: function() {
 
         new testextjs.view.stockmanagement.inventaire.action.addBis({
