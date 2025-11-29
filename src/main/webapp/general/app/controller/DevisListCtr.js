@@ -68,7 +68,7 @@ Ext.define('testextjs.controller.DevisListCtr', {
                 toTransform: this.transformIntoVente,
                 toPdf: this.onExportPdf,
                 toClone: this.toClone,
-                toBonPdf:this.onbonPdf
+                toBonPdf: this.onbonPdf
             },
             'devismanager #query': {
                 specialkey: this.onSpecialKey
@@ -94,33 +94,33 @@ Ext.define('testextjs.controller.DevisListCtr', {
 
     },
     onPrintTicket: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS&venteId=" + rec.get('lgPREENREGISTREMENTID');
+        const linkUrl = "../FacturePdfServlet?mode=DEVIS&venteId=" + rec.get('lgPREENREGISTREMENTID');
         window.open(linkUrl);
 
     },
     onExportWord: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=WORD";
+        const linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=WORD";
         window.open(linkUrl);
 
     },
     onExportExcel: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=EXCEL";
+        const linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=EXCEL";
         window.open(linkUrl);
     },
     onExportPdf: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=PDF";
+        const linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=PDF";
         window.open(linkUrl);
 
     },
-     onbonPdf: function (view, rowIndex, colIndex, item, e, rec, row) {
-          var linkUrl = '../webservices/sm_user/detailsvente/ws_generate_devis__pdf.jsp?lg_PREENREGISTREMENT_ID=' + rec.get('lgPREENREGISTREMENTID');
+    onbonPdf: function (view, rowIndex, colIndex, item, e, rec, row) {
+        const linkUrl = '../webservices/sm_user/detailsvente/ws_generate_devis__pdf.jsp?lg_PREENREGISTREMENT_ID=' + rec.get('lgPREENREGISTREMENTID');
         window.open(linkUrl);
 
     },
     handleActionColumn: function (view, rowIndex, colIndex, item, e) {
-        var me = this;
-        var store = me.getDevisGrid().getStore(),
-                rec = store.getAt(colIndex);
+        const me = this;
+        const store = me.getDevisGrid().getStore();
+        const   rec = store.getAt(colIndex);
         if (parseInt(item) === 8) {
             me.onDelete(rec.get('lgPREENREGISTREMENTID'));
         } else if (parseInt(item) === 7) {
@@ -200,7 +200,7 @@ Ext.define('testextjs.controller.DevisListCtr', {
         var data = {'isEdit': true, 'record': rec.data, 'isDevis': true, 'categorie': 'VENTE'};
         var xtype = "doventemanager";
         testextjs.app.getController('App').onRedirectTo(xtype, data);
-    
+
     },
     onEdite: function (view, rowIndex, colIndex, item, e, rec, row) {
         var data = {'isEdit': true, 'record': rec.data};

@@ -16,6 +16,7 @@ import commonTasks.dto.VenteDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
@@ -137,4 +138,8 @@ public interface SalesStatsService {
     JSONObject getVenteTerminees(SalesStatsParams params);
 
     List<VenteDTO> getListTerminees(SalesStatsParams params);
+
+    byte[] exportArticlesVendusRecapCsv(SalesStatsParams params) throws IOException;
+
+    byte[] exportArticlesVendusRecapExcel(SalesStatsParams params) throws IOException;
 }
