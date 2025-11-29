@@ -421,7 +421,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                                     // --- VALIDATION DE LA SAISIE ---
                                                     var int_NUMBER = field.getValue();
                                                     if (isNaN(int_NUMBER) || String(int_NUMBER).trim() === '' || Number(int_NUMBER) < 0) {
-                                                        Ext.Msg.alert('Erreur', 'La quantité saisie est invalide.');
+                                                        //Ext.Msg.alert('Erreur', 'La quantité saisie est invalide.');
                                                         grid.getPlugin('inventaireEditor').startEdit(position.row, position.column);
                                                         return;
                                                     }
@@ -822,41 +822,34 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                             OGridStore.loadPage(1);
                                         }
                                     }
-                                }, '-', {
-    xtype: 'textfield',
-    id: 'rechecher',
-    name: 'rechecher',
-    selectOnFocus: true,
-    emptyText: 'Recherche article',
-    listeners: {
-        render: function (cmp) {
-            cmp.getEl().on('keypress', function (e) {
-                if (e.getKey() === e.ENTER) {
-                    Me.onfiltercheck(cmp.getValue());
-                    
-                    // Après la recherche, si des résultats sont trouvés, naviguer vers le premier
-                    setTimeout(function() {
-                        var grid = Ext.getCmp('gridpanelInventaireID');
-                        if (grid.getStore().getCount() > 0) {
-                            // Démarrer l'édition sur la première ligne, colonne "Stock Rayon" (index 7)
-                            grid.getPlugin('inventaireEditor').startEdit(0, 7);
-                        }
-                    }, 100);
-                }
-            });
-        },
-        // Navigation avec FLÈCHE BAS depuis la recherche
-        specialkey: function(field, e) {
-            if (e.getKey() === e.DOWN) {
-                e.stopEvent();
-                var grid = Ext.getCmp('gridpanelInventaireID');
-                if (grid.getStore().getCount() > 0) {
-                    grid.getPlugin('inventaireEditor').startEdit(0, 7);
-                }
-            }
-        }
-    }
-}
+                                }, '-', 
+                                {
+                                    xtype: 'textfield',
+                                    id: 'rechecher',
+                                    name: 'rechecher',
+                                    selectOnFocus: true,
+                                    emptyText: 'Recherche article',
+                                    listeners: {
+                                        render: function (cmp) {
+                                            cmp.getEl().on('keypress', function (e) {
+                                                if (e.getKey() === e.ENTER) {
+                                                    var searchValue = cmp.getValue();
+                                                    Me.onfiltercheck(searchValue);
+                                                }
+                                            });
+                                        },
+                                        // Navigation avec FLÈCHE BAS depuis la recherche
+                                        specialkey: function (field, e) {
+                                            if (e.getKey() === e.DOWN) {
+                                                e.stopEvent();
+                                                var grid = Ext.getCmp('gridpanelInventaireID');
+                                                if (grid.getStore().getCount() > 0) {
+                                                    grid.getPlugin('inventaireEditor').startEdit(0, 7);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             ],
                             bbar: {
                                 xtype: 'pagingtoolbar',
@@ -1092,9 +1085,46 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
         }
 
         var OGrid = Ext.getCmp('gridpanelInventaireID');
-        OGrid.getStore().getProxy().url = url_services_data_inventaire_famille + "&str_TYPE=" + str_TYPE + "&search_value=" + valeur + "&lg_FAMILLEARTICLE_ID=" + lg_FAMILLEARTICLE_ID + "&lg_ZONE_GEO_ID=" + lg_ZONE_GEO_ID + "&lg_GROSSISTE_ID=" + lg_GROSSISTE_ID + "&lg_USER_ID=" + lg_USER_ID;
-        OGrid.getStore().reload();
+        var searchField = Ext.getCmp('rechecher');
 
+        OGrid.getStore().getProxy().url = url_services_data_inventaire_famille + "&str_TYPE=" + str_TYPE + "&search_value=" + valeur + "&lg_FAMILLEARTICLE_ID=" + lg_FAMILLEARTICLE_ID + "&lg_ZONE_GEO_ID=" + lg_ZONE_GEO_ID + "&lg_GROSSISTE_ID=" + lg_GROSSISTE_ID + "&lg_USER_ID=" + lg_USER_ID;
+
+        OGrid.getStore().load({
+            callback: function (records, operation, success) {
+                // COURT DÉLAI pour laisser le temps au store de se mettre à jour
+                setTimeout(function () {
+                    if (records.length === 0) {
+                        // FORCER le focus et la sélection avec plusieurs tentatives
+                        if (searchField) {
+                            // 1ère tentative
+                            searchField.focus(false, 10);
+                            searchField.selectText();
+
+                            // 2ème tentative après un court délai
+                            setTimeout(function () {
+                                searchField.focus(true, 10);
+                                searchField.selectText();
+
+                                // 3ème tentative pour s'assurer
+                                setTimeout(function () {
+                                    searchField.focus(true, 10);
+                                    searchField.selectText();
+                                }, 50);
+                            }, 100);
+                        }
+
+                        // Message d'information
+                        Ext.toast('Aucun produit trouvé pour: ' + valeur, 3000);
+
+                    } else {
+                        // Résultats trouvés - navigation normale
+                        setTimeout(function () {
+                            OGrid.getPlugin('inventaireEditor').startEdit(0, 7);
+                        }, 100);
+                    }
+                }, 150); // Délai initial
+            }
+        });
     },
     onbtnprint: function () {
         str_NAME_FILE = "";
