@@ -410,46 +410,13 @@ public class SalesStatsRessource {
             @QueryParam(value = "nbre") int nbre, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "grossisteId") String grossisteId,
             @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
 
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-
-        SalesStatsParams body = new SalesStatsParams();
-        body.setUserId(tu);
-        body.setUser(user);
-        body.setLimit(limit);
-        body.setStart(start);
-        body.setQuery(query);
-        body.setTypeVenteId(null);
-        body.setStatut(Constant.STATUT_IS_CLOSED);
-        body.setAll(false);
-        body.setStock(stock);
-        body.setRayonId(rayonId);
-        body.setTypeTransaction(typeTransaction);
-        body.setStockFiltre(stockFiltre);
-        body.setPrixachatFiltre(prixachatFiltre);
-        body.setNbre(nbre);
-        body.setProduitId(produitId);
-        try {
-            body.setDtEnd(LocalDate.parse(dtEnd));
-        } catch (Exception e) {
-        }
-        try {
-            body.sethEnd(LocalTime.parse(hEnd));
-        } catch (Exception e) {
-        }
-        try {
-            body.sethStart(LocalTime.parse(hStart));
-        } catch (Exception e) {
-        }
-        try {
-            body.setDtStart(LocalDate.parse(dtStart));
-
-        } catch (Exception e) {
-        }
-        JSONObject jsono = salesService.articlesVendus(body);
+        JSONObject jsono = salesService
+                .articlesVendus(buildSalesStatsParams(dtStart, dtEnd, hStart, hEnd, user, query, typeTransaction, nbre,
+                        start, limit, stock, prixachatFiltre, stockFiltre, rayonId, null, produitId, grossisteId));
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -463,15 +430,20 @@ public class SalesStatsRessource {
             @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
-            @QueryParam(value = "qteVendu") Integer qteVendu) throws JSONException {
+            @QueryParam(value = "grossisteId") String grossisteId, @QueryParam(value = "qteVendu") Integer qteVendu)
+            throws JSONException {
 
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        JSONObject jsono = salesService
+                .articlesVendusRecap(buildSalesStatsParams(dtStart, dtEnd, hStart, hEnd, user, query, typeTransaction,
+                        nbre, start, limit, stock, prixachatFiltre, stockFiltre, rayonId, qteVendu, null, grossisteId));
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    private SalesStatsParams buildSalesStatsParams(String dtStart, String dtEnd, String hStart, String hEnd,
+            String user, String query, String typeTransaction, int nbre, int start, int limit, Integer stock,
+            String prixachatFiltre, String stockFiltre, String rayonId, Integer qteVendu, String produitId,
+            String grossisteId) {
         SalesStatsParams body = new SalesStatsParams();
-        body.setUserId(tu);
         body.setUser(user);
         body.setLimit(limit);
         body.setStart(start);
@@ -486,6 +458,8 @@ public class SalesStatsRessource {
         body.setPrixachatFiltre(prixachatFiltre);
         body.setQteVendu(qteVendu);
         body.setNbre(nbre);
+        body.setProduitId(produitId);
+        body.setGrossisteId(grossisteId);
         try {
             body.setDtEnd(LocalDate.parse(dtEnd));
         } catch (Exception e) {
@@ -504,8 +478,8 @@ public class SalesStatsRessource {
         } catch (Exception e) {
         }
         body.setDepotOnly(false);
-        JSONObject jsono = salesService.articlesVendusRecap(body);
-        return Response.ok().entity(jsono.toString()).build();
+        return body;
+
     }
 
     @GET
@@ -517,40 +491,13 @@ public class SalesStatsRessource {
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "stock") Integer stock, @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
-            @QueryParam(value = "qteVendu") Integer qteVendu, @QueryParam(value = "isReappro") Boolean isReappro) {
-        SalesStatsParams body = new SalesStatsParams();
-        body.setUser(user);
-        body.setLimit(limit);
-        body.setStart(start);
-        body.setQuery(query);
-        body.setTypeVenteId(null);
-        body.setStatut(Constant.STATUT_IS_CLOSED);
-        body.setAll(false);
-        body.setStock(stock);
-        body.setRayonId(rayonId);
-        body.setTypeTransaction(typeTransaction);
-        body.setStockFiltre(stockFiltre);
-        body.setPrixachatFiltre(prixachatFiltre);
-        body.setNbre(nbre);
-        body.setQteVendu(qteVendu);
-        try {
-            body.setDtEnd(LocalDate.parse(dtEnd));
-        } catch (Exception e) {
-        }
-        try {
-            body.sethEnd(LocalTime.parse(hEnd));
-        } catch (Exception e) {
-        }
-        try {
-            body.sethStart(LocalTime.parse(hStart));
-        } catch (Exception e) {
-        }
-        try {
-            body.setDtStart(LocalDate.parse(dtStart));
+            @QueryParam(value = "grossisteId") String grossisteId, @QueryParam(value = "qteVendu") Integer qteVendu,
+            @QueryParam(value = "isReappro") Boolean isReappro) {
 
-        } catch (Exception e) {
-        }
-        JSONObject json = salesService.articleVendusASuggerer(body, Objects.requireNonNullElse(isReappro, false));
+        JSONObject json = salesService.articleVendusASuggerer(
+                buildSalesStatsParams(dtStart, dtEnd, hStart, hEnd, user, query, typeTransaction, nbre, start, limit,
+                        stock, prixachatFiltre, stockFiltre, rayonId, qteVendu, null, grossisteId),
+                Objects.requireNonNullElse(isReappro, false));
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -613,4 +560,49 @@ public class SalesStatsRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
+    @GET
+    @Path("article-vendus-recap/csv")
+    @Produces("text/csv")
+    public Response exportArticlesVendusRecapCsv(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
+            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "grossisteId") String grossisteId, @QueryParam(value = "qteVendu") Integer qteVendu)
+            throws IOException {
+
+        byte[] data = salesService.exportArticlesVendusRecapCsv(
+                buildSalesStatsParams(dtStart, dtEnd, hStart, hEnd, user, query, typeTransaction, nbre, start, limit,
+                        stock, prixachatFiltre, stockFiltre, rayonId, qteVendu, null, grossisteId));
+        String filename = "article-vendus-recap_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".csv";
+        return Response.ok(data, "text/csv; charset=UTF-8").encoding("UTF-8")
+                .header("content-disposition", "attachment; filename = " + filename).build();
+    }
+
+    @GET
+    @Path("article-vendus-recap/excel")
+    @Produces("application/vnd.ms-excel")
+    public Response exportArticlesVendusRecapExcel(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
+            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "grossisteId") String grossisteId, @QueryParam(value = "qteVendu") Integer qteVendu)
+            throws IOException {
+
+        byte[] data = salesService.exportArticlesVendusRecapExcel(
+                buildSalesStatsParams(dtStart, dtEnd, hStart, hEnd, user, query, typeTransaction, nbre, start, limit,
+                        stock, prixachatFiltre, stockFiltre, rayonId, qteVendu, null, grossisteId));
+        String filename = "article-vendus-recap_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".xls";
+        return Response.ok(data, "application/vnd.ms-excel").encoding("UTF-8")
+                .header("content-disposition", "attachment; filename = " + filename).build();
+    }
 }
