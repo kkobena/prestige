@@ -134,7 +134,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.6,
                     renderer: function (v, m, r) {
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
@@ -151,7 +151,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     renderer: function (v, m, r) {
 
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
@@ -169,7 +169,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     renderer: function (v, m, r) {
 
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
@@ -188,7 +188,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     renderer: function (v, m, r) {
 
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
@@ -209,7 +209,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         if (stock < 0) {
                             // Valeurs négatives : texte en rouge, fond rosé
                             m.style = 'color:red; font-weight:bold; background-color:#F5BCA9;font-size: 18px;';
-                        } else if (stock === 0) {
+                        } else if (stock == 0) {
                             // Valeur zéro : texte en noir, fond verdâtre
                             m.style = 'color:blue; font-weight:bold; background-color:#B0F2B6;font-size: 18px;';
                         } else {
@@ -227,7 +227,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     renderer: function (v, m, r) {
 
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
@@ -245,7 +245,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     renderer: function (v, m, r) {
 
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
@@ -263,7 +263,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     renderer: function (v, m, r) {
 
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock === 0) {
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (stock > 0) {
                             m.style = 'font-weight:800;';
