@@ -92,6 +92,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CaisseService;
+import rest.service.InventaireService;
 import rest.service.SalesStatsService;
 import rest.service.SessionHelperService;
 import rest.service.SuggestionService;
@@ -146,6 +147,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @EJB
     private ReportExcelExportService reportExcelExportService;
+    @EJB
+    private InventaireService inventaireService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -662,9 +665,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     @Override
     public List<VenteDTO> listVentes(SalesStatsParams params) {
 
-        if (1 == 1) {
-            return getListTerminees(params);
-        }
         boolean canexport = findpermission();
         try {
 
@@ -2618,6 +2618,43 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             row.createCell(6).setCellValue(dto.getIntAVOIR());
             row.createCell(7).setCellValue(dto.getLibelleRayon());
         });
+    }
+
+    public List<String> getArticlesVendusIds(SalesStatsParams params) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<String> cq = cb.createQuery(String.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            cq.select(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<String> q = getEntityManager().createQuery(cq);
+
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public JSONObject createInventaire(SalesStatsParams params) {
+        params.setAll(true);
+        params.setUserId(this.sessionHelperService.getCurrentUser());
+        List<String> data = getArticlesVendusIds(params);
+        if (CollectionUtils.isEmpty(data)) {
+            return new JSONObject().put("count", 0);
+        }
+        String title = "Inventaire articles vendus du "
+                + params.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                + params.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        int count = inventaireService.create(Set.copyOf(data), title);
+        return new JSONObject().put("count", count);
+
     }
 
 }
