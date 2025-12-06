@@ -2,6 +2,7 @@ package rest.service;
 
 import dal.TUser;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.Local;
 import org.json.JSONObject;
 import rest.service.inventaire.dto.DetailInventaireDTO;
@@ -27,4 +28,6 @@ public interface InventaireService {
     void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire);
 
     void refreshStockLigneInventaire(String inventaireId);
+
+    int create(Set<String> produitIds, String description);
 }

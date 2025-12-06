@@ -605,4 +605,24 @@ public class SalesStatsRessource {
         return Response.ok(data, "application/vnd.ms-excel").encoding("UTF-8")
                 .header("content-disposition", "attachment; filename = " + filename).build();
     }
+
+    @GET
+    @Path("create-invenatire")
+    public Response createInventaire(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
+            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "grossisteId") String grossisteId, @QueryParam(value = "qteVendu") Integer qteVendu)
+            throws IOException {
+
+        JSONObject count = salesService
+                .createInventaire(buildSalesStatsParams(dtStart, dtEnd, hStart, hEnd, user, query, typeTransaction,
+                        nbre, start, limit, stock, prixachatFiltre, stockFiltre, rayonId, qteVendu, null, grossisteId));
+
+        return Response.ok(count.toString()).build();
+    }
 }
