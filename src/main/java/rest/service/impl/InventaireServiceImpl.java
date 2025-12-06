@@ -1,5 +1,7 @@
 package rest.service.impl;
 
+import dal.TEmplacement;
+import dal.TFamilleStock;
 import dal.TInventaire;
 import dal.TInventaireFamille;
 import dal.TUser;
@@ -8,21 +10,26 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.InventaireService;
+import rest.service.SessionHelperService;
 import rest.service.inventaire.dto.DetailInventaireDTO;
 import rest.service.inventaire.dto.InventaireDTO;
 import rest.service.inventaire.dto.RayonDTO;
 import rest.service.inventaire.dto.UpdateInventaireDetailDTO;
 import util.Constant;
+import util.IdGenerator;
 
 /**
  *
@@ -32,7 +39,8 @@ import util.Constant;
 public class InventaireServiceImpl implements InventaireService {
 
     private static final Logger LOG = Logger.getLogger(InventaireServiceImpl.class.getName());
-
+    @EJB
+    private SessionHelperService sessionHelperService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     private static final String INVENTAIRE_QUERY = "INSERT INTO t_inventaire_famille(`lg_INVENTAIRE_ID`,`str_STATUT`,`dt_CREATED`,`bool_INVENTAIRE`,`lg_FAMILLE_ID`,`int_NUMBER`,`int_NUMBER_INIT`,`lg_FAMILLE_STOCK_ID`) "
@@ -147,5 +155,57 @@ public class InventaireServiceImpl implements InventaireService {
     public void refreshStockLigneInventaire(String inventaireId) {
         String query = "UPDATE t_inventaire_famille f SET f.int_NUMBER_INIT=(SELECT s.int_NUMBER_AVAILABLE FROM t_famille_stock s WHERE s.lg_FAMILLE_STOCK_ID= f.lg_FAMILLE_STOCK_ID ) WHERE f.lg_INVENTAIRE_ID=?1";
         em.createNativeQuery(query).setParameter(1, inventaireId).executeUpdate();
+    }
+
+    @Override
+    public int create(Set<String> produitIds, String description) {
+        if (CollectionUtils.isEmpty(produitIds)) {
+            return 0;
+        }
+        TInventaire oTInventaire = new TInventaire(IdGenerator.getComplexId());
+        TUser tUser = sessionHelperService.getCurrentUser();
+        TEmplacement emplacement = tUser.getLgEMPLACEMENTID();
+        oTInventaire.setStrNAME(description);
+        oTInventaire.setStrDESCRIPTION(description);
+        oTInventaire.setLgUSERID(tUser);
+        oTInventaire.setStrTYPE("emplacement");
+        oTInventaire.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTInventaire.setDtCREATED(new Date());
+        oTInventaire.setDtUPDATED(oTInventaire.getDtCREATED());
+        oTInventaire.setLgEMPLACEMENTID(emplacement);
+
+        em.persist(oTInventaire);
+
+        for (String produitId : produitIds) {
+            TFamilleStock familleStock = findByProduitId(produitId, emplacement.getLgEMPLACEMENTID());
+            saveInventaireFamille(oTInventaire, familleStock);
+        }
+
+        return produitIds.size();
+    }
+
+    private TFamilleStock findByProduitId(String produitId, String emplId) {
+        TypedQuery<TFamilleStock> tp = em.createQuery(
+                "SELECT o FROM  TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 AND o.strSTATUT='enable'",
+                TFamilleStock.class);
+        tp.setMaxResults(1);
+        tp.setParameter(1, produitId);
+        tp.setParameter(2, emplId);
+        return tp.getSingleResult();
+
+    }
+
+    private void saveInventaireFamille(TInventaire oTInventaire, TFamilleStock familleStock) {
+        TInventaireFamille inventaireFamille = new TInventaireFamille();
+        inventaireFamille.setDtCREATED(oTInventaire.getDtCREATED());
+        inventaireFamille.setLgFAMILLEID(familleStock.getLgFAMILLEID());
+        inventaireFamille.setBoolINVENTAIRE(Boolean.TRUE);
+        inventaireFamille.setLgFAMILLESTOCKID(familleStock);
+        inventaireFamille.setStrSTATUT(Constant.STATUT_ENABLE);
+        inventaireFamille.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
+        inventaireFamille.setIntNUMBERINIT(inventaireFamille.getIntNUMBER());
+        inventaireFamille.setLgINVENTAIREID(oTInventaire);
+        inventaireFamille.setStrUPDATEDID("");
+        em.persist(inventaireFamille);
     }
 }
