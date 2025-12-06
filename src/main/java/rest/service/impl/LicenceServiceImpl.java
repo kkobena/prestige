@@ -32,7 +32,7 @@ public class LicenceServiceImpl implements LicenceService {
         try {
             TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
             typedQuery.setMaxResults(1);
-            typedQuery.setParameter("typeLience", TypeLience.MOBILE);
+            typedQuery.setParameter("typeLicence", TypeLience.MOBILE);
             return typedQuery.getSingleResult().getId();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage());
