@@ -142,4 +142,6 @@ public interface SalesStatsService {
     byte[] exportArticlesVendusRecapCsv(SalesStatsParams params) throws IOException;
 
     byte[] exportArticlesVendusRecapExcel(SalesStatsParams params) throws IOException;
+
+    JSONObject createInventaire(SalesStatsParams params);
 }
