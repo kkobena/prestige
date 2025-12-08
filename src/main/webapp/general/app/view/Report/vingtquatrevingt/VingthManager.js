@@ -451,26 +451,33 @@ onCreateInventaire2080Click: function () {
                 url: '../api/v1/statfamillearticle/vingtQuatreVingt/inventaire',
                 method: 'GET',
                 params: params,
-                success: function (response) {
-                    var result = Ext.JSON.decode(response.responseText, true);
+                        success: function (response) {
+                            var result = Ext.JSON.decode(response.responseText, true) || {};
 
-                    if (result && Ext.isDefined(result.count) && result.count > 0) {
-                        Ext.Msg.alert(
-                            'Information',
-                            'Inventaire créé avec succès. Produits pris en compte : ' + result.count
-                        );
-                    } else if (result && Ext.isDefined(result.count) && result.count === 0) {
-                        Ext.Msg.alert(
-                            'Information',
-                            'Aucun article trouvé pour créer l\'inventaire.'
-                        );
-                    } else {
-                        Ext.Msg.alert(
-                            'Information',
-                            'Erreur lors de la création de l\'inventaire.'
-                        );
-                    }
-                },
+                            if (Ext.isDefined(result.count)) {
+                                Ext.Msg.show({
+                                    title: 'Inventaire 20/80',
+                                    width: 450, // 🔎 plus large pour bien voir le texte
+                                    icon: Ext.Msg.INFO,
+                                    buttons: Ext.Msg.OK,
+                                    msg:
+                                            'Inventaire créé avec succès.<br/><br/>' +
+                                            'Produits pris en compte : ' +
+                                            '<span style="font-size:18px;font-weight:bold;color:#0a2e3e;">'
+                                            + result.count +
+                                            '</span>'
+                                });
+                            } else {
+                                Ext.Msg.show({
+                                    title: 'Inventaire 20/80',
+                                    width: 450,
+                                    icon: Ext.Msg.WARNING,
+                                    buttons: Ext.Msg.OK,
+                                    msg: 'Réponse inattendue du serveur lors de la création de l\'inventaire.'
+                                });
+                            }
+                        }
+                        ,
                 failure: function (response) {
                     Ext.Msg.alert(
                         'Erreur',
