@@ -71,6 +71,21 @@ import rest.service.dto.UpdateProduit;
 import util.Constant;
 import util.DateCommonUtils;
 import util.DateConverter;
+import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import rest.service.InventaireService;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.Set;
+import org.json.JSONException;
+import rest.service.utils.CsvExportService;
+import rest.service.utils.ReportExcelExportService;
 
 /**
  *
@@ -88,6 +103,15 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @EJB
+    private CsvExportService csvExportService;
+
+    @EJB
+    private ReportExcelExportService reportExcelExportService;
+
+    @EJB
+    private InventaireService inventaireService;
 
     @Override
     public JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
@@ -1016,6 +1040,94 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             return 0l;
         }
 
+    }
+
+    @Override
+    public byte[] buildComparaisonExcel(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
+            String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException {
+
+        List<ArticleDTO> datas = comparaisonStock(u, query, filtreStock, filtreSeuil, codeFamile, codeRayon,
+                codeGrossiste, stock, seuil, 0, 0, true);
+
+        if (datas.isEmpty()) {
+            return new byte[0];
+        }
+
+        String title = "Comparaison stock du " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        String[] headers = new String[] { "CIP", "Libellé", "Prix vente", "Prix achat", "Stock", "Stock moyen",
+                "Seuil réappro", "Rayon", "Famille", "Dernière vente" };
+
+        try {
+            return reportExcelExportService.createExcelReport(title, headers, datas, (row, dto) -> {
+                int col = 0;
+                row.createCell(col++).setCellValue(dto.getCode());
+                row.createCell(col++).setCellValue(dto.getLibelle());
+                row.createCell(col++).setCellValue(dto.getPrixVente());
+                row.createCell(col++).setCellValue(dto.getPrixAchat());
+                row.createCell(col++).setCellValue(dto.getStock());
+                row.createCell(col++).setCellValue(dto.getStockMoyen());
+                row.createCell(col++).setCellValue(dto.getSeuiRappro());
+                row.createCell(col++).setCellValue(dto.getFilterLibelle());
+                row.createCell(col++).setCellValue(dto.getFamilleLibelle());
+                row.createCell(col++).setCellValue(dto.getLastDateVente() != null ? dto.getLastDateVente() : "");
+            });
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "buildComparaisonExcel error", e);
+            return new byte[0];
+        }
+    }
+
+    @Override
+    public byte[] buildComparaisonCsv(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
+            String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException {
+
+        List<ArticleDTO> datas = comparaisonStock(u, query, filtreStock, filtreSeuil, codeFamile, codeRayon,
+                codeGrossiste, stock, seuil, 0, 0, true);
+
+        if (datas.isEmpty()) {
+            return new byte[0];
+        }
+
+        String title = "Comparaison stock du " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        String[] headers = new String[] { "CIP", "Libellé", "Prix vente", "Prix achat", "Stock", "Stock moyen",
+                "Seuil réappro", "Rayon", "Famille", "Dernière vente" };
+
+        try {
+            byte[] raw = csvExportService.createCsvReport(title, headers, datas,
+                    dto -> new String[] { dto.getCode(), dto.getLibelle(), String.valueOf(dto.getPrixVente()),
+                            String.valueOf(dto.getPrixAchat()), String.valueOf(dto.getStock()),
+                            String.valueOf(dto.getStockMoyen()), String.valueOf(dto.getSeuiRappro()),
+                            dto.getFilterLibelle(), dto.getFamilleLibelle(),
+                            dto.getLastDateVente() != null ? dto.getLastDateVente() : "" });
+
+            return csvExportService.addUtf8Bom(raw);
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "buildComparaisonCsv error", e);
+            return new byte[0];
+        }
+    }
+
+    @Override
+    public JSONObject createInventaireComparaison(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
+            String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException {
+
+        List<ArticleDTO> datas = comparaisonStock(u, query, filtreStock, filtreSeuil, codeFamile, codeRayon,
+                codeGrossiste, stock, seuil, 0, 0, true);
+
+        if (datas.isEmpty()) {
+            return new JSONObject().put("count", 0);
+        }
+
+        java.util.Set<String> ids = datas.stream().map(ArticleDTO::getId).collect(Collectors.toSet());
+
+        String title = "Inventaire comparaison stock du "
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        int count = inventaireService.create(ids, title);
+
+        return new JSONObject().put("count", count);
     }
 
 }
