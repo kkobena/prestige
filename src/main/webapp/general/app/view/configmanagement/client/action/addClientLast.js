@@ -93,6 +93,7 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
             }
 
         });
+        /*
         var store_tierspays = new Ext.data.Store({
             model: 'testextjs.model.TiersPayant',
             pageSize: itemsPerPage,
@@ -108,6 +109,41 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
             }
 
         });
+        */
+       
+       var searchstore = Ext.create('Ext.data.Store', {
+            idProperty: 'lgTIERSPAYANTID',
+            fields:
+                    [
+                        {name: 'lgTIERSPAYANTID',
+                            type: 'string'
+
+                        },
+
+                        {name: 'strFULLNAME',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: false,
+            pageSize: 999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/client/tiers-payants',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+            
+
+        });
+        
+       
         var store_type_tierspays = new Ext.data.Store({
             model: 'testextjs.model.TypeTiersPayant',
             pageSize: itemsPerPage,
@@ -390,6 +426,28 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
                                     },
                                     items: [
                                         {
+                            xtype: 'combobox',
+                            itemId: 'tiersPayantId',
+                            flex: 1,
+                            store: searchstore,
+                            pageSize: 9999,
+                            valueField: 'lgTIERSPAYANTID',
+                            displayField: 'strFULLNAME',
+//                    minChars: 2,
+                            queryMode: 'remote',
+                            enableKeyEvents: true,
+                            emptyText: 'Selectionner tiers payant...',
+                            listConfig: {
+                                loadingText: 'Recherche...',
+                                emptyText: 'Pas de donn&eacute;es trouv&eacute;es.',
+                                getInnerTpl: function () {
+                                    return '<span>{strFULLNAME}</span>';
+                                }
+
+                            }
+                        },
+                                        /*
+                                        {
                                             xtype: 'combobox',
                                             fieldLabel: 'Tiers payant',
                                             name: 'lg_TIERS_PAYANT_ID',
@@ -416,7 +474,8 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
 
                                                 }
                                             }
-                                        },
+                                        }
+                                        */,
                                         {
                                             fieldLabel: 'Pourcentage',
                                             emptyText: 'Pourcentage',
