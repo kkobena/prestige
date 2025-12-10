@@ -25,6 +25,10 @@ public interface InventaireService {
 
     List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, Integer page, Integer maxResult);
 
+    List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, Integer page, Integer maxResult);
+
+    List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, Integer page, Integer maxResult);
+
     void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire);
 
     void refreshStockLigneInventaire(String inventaireId);

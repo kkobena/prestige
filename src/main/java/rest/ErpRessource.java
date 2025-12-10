@@ -186,6 +186,20 @@ public class ErpRessource {
         return Response.ok().entity(inventaireService.fetchDetails(idInventaire, idRayon, page, maxResult)).build();
     }
 
+    @GET
+    @Path("ws/inventaires/detailsAll")
+    public Response fetchDetailsAll(@QueryParam(value = "idInventaire") String idInventaire,
+            @QueryParam(value = "page") Integer page, @QueryParam(value = "maxResult") Integer maxResult) {
+        return Response.ok().entity(inventaireService.fetchDetailsAll(idInventaire, page, maxResult)).build();
+    }
+
+    @GET
+    @Path("ws/inventaires/detailsAllEcarts")
+    public Response fetchDetailsAllEcarts(@QueryParam(value = "idInventaire") String idInventaire,
+            @QueryParam(value = "page") Integer page, @QueryParam(value = "maxResult") Integer maxResult) {
+        return Response.ok().entity(inventaireService.fetchDetailsAllEcarts(idInventaire, page, maxResult)).build();
+    }
+
     @PUT
     @Path("ws/inventaires/details")
     public Response updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire) {
