@@ -50,4 +50,14 @@ public interface FamilleArticleService {
 
     Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParFamilleArticleVeto(String dtStart,
             String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste);
+
+    byte[] buildVingtQuatreVingtExcel(TUser u, String dtStart, String dtEnd, String codeFamille, String codeRayon,
+            String codeGrossiste, boolean qtyOrCa) throws JSONException;
+
+    byte[] buildVingtQuatreVingtCsv(TUser u, String dtStart, String dtEnd, String codeFamille, String codeRayon,
+            String codeGrossiste, boolean qtyOrCa) throws JSONException;
+
+    JSONObject createInventaireVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile,
+            String codeRayon, String codeGrossiste, boolean qtyOrCa) throws JSONException;
+
 }
