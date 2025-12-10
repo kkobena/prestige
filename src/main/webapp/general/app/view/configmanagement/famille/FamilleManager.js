@@ -355,6 +355,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             scope: this,
                             handler: function (grid, rowIndex, colIndex) {
                                 new testextjs.view.produits.PrixReference({produit: grid.getStore().getAt(rowIndex)});
+                                
                             }
 
                         }]
@@ -864,85 +865,69 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
 
     },
-    onDesableClick: function (grid, rowIndex) {
+    onEditClick: function (grid, rowIndex) {
+    const rec = grid.getStore().getAt(rowIndex);
+    const self = this; // Stocker la référence de 'this' pour l'utiliser dans les callbacks
 
-        var rec = grid.getStore().getAt(rowIndex);
+    if (rec.get('lg_EMPLACEMENT_ID') == "1") {
 
-        Ext.MessageBox.confirm('Message',
-                "Desactiver ce produit?" + "<br>Stock actuel: " + rec.get('int_NUMBER_AVAILABLE'),
-                function (btn) {
-                    if (btn === 'yes') {
-                        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-                        Ext.Ajax.request({
-                            method: 'POST',
-                            url: '../api/v1/produit/disable-produit/' + rec.get('lg_FAMILLE_ID'),
-                            success: function (response, options) {
-                                progress.hide();
-                                var result = Ext.JSON.decode(response.responseText, true);
-                                if (result.success) {
-                                    grid.getStore().reload();
-                                    Ext.getCmp('rechecher').focus(true, 100, function () {
-//                                                      Ext.getCmp('rechecher').selectText(0, 1);
-                                    });
-                                } else {
-                                    Ext.MessageBox.show({
-                                        title: 'Message d\'erreur',
-                                        width: 320,
-                                        msg: "L'opération a échouée",
-                                        buttons: Ext.MessageBox.OK,
-                                        icon: Ext.MessageBox.ERROR
-
-                                    });
-                                }
-                            },
-                            failure: function (response, options) {
-                                progress.hide();
-                                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
-                            }
-
-                        });
-
-
+        Ext.Ajax.request({
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/produit-search/produits/' + rec.data.lg_FAMILLE_ID,
+            success: function (response, options) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                const produit = result.data;
+                
+                // Créer la fenêtre de modification
+                new testextjs.view.configmanagement.famille.action.add({
+                    odatasource: produit,
+                    parentview: self, // Utiliser 'self' au lieu de 'this'
+                    mode: "update",
+                    type: "famillemanager",
+                    titre: "Modification Article [" + rec.get('str_DESCRIPTION') + "]",
+                    
+                    listeners: {
+                        close: function() {
+                            Ext.getCmp('rechecher').focus(true, 100, function() {
+                            });
+                        },
+                        afterSave: function() {
+                            Ext.getCmp('rechecher').focus(true, 100);
+                        }
                     }
                 });
+                
+            },
+            failure: function(response, options) {
+                // En cas d'erreur, redonner quand même le focus
+                Ext.getCmp('rechecher').focus(true, 100);
+                Ext.Msg.alert("Erreur", "Impossible de charger les données du produit");
+            }
+        });
 
+    } else {
 
-    },
-
-    onEditClick: function (grid, rowIndex) {
-        const rec = grid.getStore().getAt(rowIndex);
-
-        if (rec.get('lg_EMPLACEMENT_ID') == "1") {
-
-            Ext.Ajax.request({
-                method: 'GET',
-                headers: {'Content-Type': 'application/json'},
-                url: '../api/v1/produit-search/produits/' + rec.data.lg_FAMILLE_ID,
-                success: function (response, options) {
-                    const result = Ext.JSON.decode(response.responseText, true);
-                    const produit = result.data;
-                    new testextjs.view.configmanagement.famille.action.add({
-                        odatasource: produit,
-                        parentview: this,
-                        mode: "update",
-                        type: "famillemanager",
-                        titre: "Modification Article [" + rec.get('str_DESCRIPTION') + "]"
-                    });
+        new testextjs.view.configmanagement.famille.action.updatezonegeo({
+            odatasource: rec.data,
+            parentview: self,
+            mode: "update",
+            titre: "Modification de l'emplacement de Article [" + rec.get('str_DESCRIPTION') + "]",
+            
+            listeners: {
+                close: function() {
+                    Ext.getCmp('rechecher').focus(true, 100);
+                },
+                
+                afterSave: function() {
+                    Ext.getCmp('rechecher').focus(true, 100);
                 }
-
-            });
-        } else {
-
-            new testextjs.view.configmanagement.famille.action.updatezonegeo({
-                odatasource: rec.data,
-                parentview: this,
-                mode: "update",
-                titre: "Modification de l'emplacement de Article [" + rec.get('str_DESCRIPTION') + "]"
-            });
-        }
-
-
-    },
+            }
+        });
+        
+    }
+    
+},
     onDetailClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
         Ext.Ajax.request({
@@ -967,61 +952,121 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
     },
     onCreateDeconditionClick: function (grid, rowIndex) {
-        const rec = grid.getStore().getAt(rowIndex);
+    const rec = grid.getStore().getAt(rowIndex);
+    const self = this; // Sauvegarder la référence de 'this'
 
-        if (rec.get('bool_DECONDITIONNE') == "1") {
-            Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionne');
+    if (rec.get('bool_DECONDITIONNE') == "1") {
+        Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionne', function() {
+            // Donner le focus après fermeture de l'alerte
+            Ext.getCmp('rechecher').focus(true, 100);
+        });
+        
+    } else {
+        if (rec.get('bool_DECONDITIONNE_EXIST') == "1") {
+            Ext.MessageBox.alert('Alerte Message', 'La version deconditionne existe deja', function() {
+                // Donner le focus après fermeture de l'alerte
+                Ext.getCmp('rechecher').focus(true, 100);
+            });
+            
         } else {
-            if (rec.get('bool_DECONDITIONNE_EXIST') == "1") {
-                Ext.MessageBox.alert('Alerte Message', 'La version deconditionne existe deja');
-            } else {
-                Ext.Ajax.request({
-                    method: 'GET',
-                    headers: {'Content-Type': 'application/json'},
-                    url: '../api/v1/produit-search/produits/' + rec.data.lg_FAMILLE_ID,
-                    success: function (response, options) {
-                        const result = Ext.JSON.decode(response.responseText, true);
-                        const produit = result.data;
-                        new testextjs.view.configmanagement.famille.action.add({
-                            odatasource: produit,
-                            parentview: this,
-                            mode: "decondition",
-                            type: 'famillemanager',
-                            titre: "Creation Article [" + rec.get('str_DESCRIPTION') + "] DETAIL"
-                        });
-
-                    }
-
-                });
-
-            }
-        }
-
-    }, onDeconditionClick: function (grid, rowIndex) {
-        const rec = grid.getStore().getAt(rowIndex);
-
-        if (rec.get('bool_DECONDITIONNE') == "1") {
-            Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionné. Il ne peut pas etre deconditionné');
-        } else {
-            if (rec.get('bool_DECONDITIONNE_EXIST') == "0") {
-                Ext.MessageBox.alert('Alerte Message', 'Aucun détail existant pour ce produit');
-            } else {
-                if (rec.get('int_NUMBER_AVAILABLE') <= 0) {
-                    Ext.MessageBox.alert('Alerte Message', 'Stock insuffisant');
-                } else {
-                    new testextjs.view.configmanagement.famille.action.doDecondition({
-                        odatasource: rec.data,
-                        parentview: this,
-                        mode: "deconditionarticle",
+            Ext.Ajax.request({
+                method: 'GET',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/produit-search/produits/' + rec.data.lg_FAMILLE_ID,
+                success: function (response, options) {
+                    const result = Ext.JSON.decode(response.responseText, true);
+                    const produit = result.data;
+                    
+                    // Créer la fenêtre
+                    const deconditionWindow = new testextjs.view.configmanagement.famille.action.add({
+                        odatasource: produit,
+                        parentview: self, // Utiliser 'self' au lieu de 'this'
+                        mode: "decondition",
                         type: 'famillemanager',
-                        titre: "Article [" + rec.get('str_DESCRIPTION_DECONDITION') + "]"
+                        titre: "Creation Article [" + rec.get('str_DESCRIPTION') + "] DETAIL",
+                        
+                        // Ajouter des listeners pour le focus
+                        listeners: {
+                            close: function() {
+                                Ext.getCmp('rechecher').focus(true, 100);
+                            },
+                            
+                            // Si votre composant a un événement après création
+                            afterSave: function() {
+                                Ext.getCmp('rechecher').focus(true, 100);
+                                grid.getStore().reload();
+                            },
+                            
+                            created: function() {
+                                Ext.getCmp('rechecher').focus(true, 100);
+                                grid.getStore().reload();
+                            }
+                        }
+                    });
+                    
+                },
+                failure: function(response, options) {
+                    // En cas d'erreur Ajax, donner le focus
+                    Ext.MessageBox.alert('Erreur', 'Erreur lors du chargement des données', function() {
+                        Ext.getCmp('rechecher').focus(true, 100);
                     });
                 }
-            }
-
+            });
         }
+    }
+}, onDeconditionClick: function (grid, rowIndex) {
+    const rec = grid.getStore().getAt(rowIndex);
+    const self = this; // Stocker la référence pour les callbacks
 
-    },
+    if (rec.get('bool_DECONDITIONNE') == "1") {
+        Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionné. Il ne peut pas etre deconditionné');
+        // Donner le focus après l'alerte
+        Ext.getCmp('rechecher').focus(true, 100);
+        
+    } else {
+        if (rec.get('bool_DECONDITIONNE_EXIST') == "0") {
+            Ext.MessageBox.alert('Alerte Message', 'Aucun détail existant pour ce produit');
+            // Donner le focus après l'alerte
+            Ext.getCmp('rechecher').focus(true, 100);
+            
+        } else {
+            if (rec.get('int_NUMBER_AVAILABLE') <= 0) {
+                Ext.MessageBox.alert('Alerte Message', 'Stock insuffisant');
+                // Donner le focus après l'alerte
+                Ext.getCmp('rechecher').focus(true, 100);
+                
+            } else {
+                // Créer la fenêtre de déconditionnement
+                const deconditionWindow = new testextjs.view.configmanagement.famille.action.doDecondition({
+                    odatasource: rec.data,
+                    parentview: self,
+                    mode: "deconditionarticle",
+                    type: 'famillemanager',
+                    titre: "Article [" + rec.get('str_DESCRIPTION_DECONDITION') + "]",
+                    
+                    // Ajouter des listeners pour gérer le focus
+                    listeners: {
+                        close: function() {
+                            Ext.getCmp('rechecher').focus(true, 100);
+                        },
+                        
+                        // Si votre composant a un événement après déconditionnement
+                        afterDecondition: function() {
+                            Ext.getCmp('rechecher').focus(true, 100);
+                            grid.getStore().reload();
+                        },
+                        
+                        saved: function() {
+                            Ext.getCmp('rechecher').focus(true, 100);
+                            grid.getStore().reload();
+                        }
+                    }
+                });
+                
+            }
+        }
+    }
+},
     onRechClick: function () {
         const val = Ext.getCmp('rechecher');
 
@@ -1213,153 +1258,198 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         });
 
     },
+addPeremptiondate: function (grid, rowIndex) {
+    const rec = grid.getStore().getAt(rowIndex);
 
-    addPeremptiondate: function (grid, rowIndex) {
-        const rec = grid.getStore().getAt(rowIndex);
-
-        const win = Ext.create("Ext.window.Window", {
-            title: "[ " + rec.get('str_NAME') + " ]",
-            modal: true,
-            width: 420,
-            layout: {
-                type: 'anchor'
+    const win = Ext.create("Ext.window.Window", {
+        title: "[ " + rec.get('str_NAME') + " ]",
+        modal: true,
+        width: 420,
+        layout: {
+            type: 'anchor'
+        },
+        height: 270,
+        // Ajouter listener pour le bouton X
+        listeners: {
+            close: function() {
+                Ext.getCmp('rechecher').focus(true, 100);
             },
-            height: 270,
-            items: [{
-                    xtype: 'form',
-                    id: 'peremptionform',
-                    type: 'anchor',
-                    bodyPadding: 10,
-
-                    modelValidation: true,
-                    items: [
-                        {
-                            xtype: 'fieldset',
-                            bodyPadding: 10,
-                            anchor: '100%',
-
-                            title: 'Ajouter date de péremption',
-                            layout: 'anchor',
-                            defaults: {
-                                anchor: '100%',
-                                labelAlign: 'top'
-                            },
-                            items: [
-                                {
-                                    xtype: 'textfield',
-                                    fieldLabel: 'Numéro de lot',
-                                    name: 'numLot',
-                                    id: 'numLot',
-                                    autofocus: true,
-                                    allowBlank: false
-                                },
-                                {
-                                    xtype: 'datefield',
-                                    fieldLabel: 'Date de péremption',
-                                    name: 'datePeremption',
-                                    id: 'dt_peremption',
-                                    autofocus: true,
-                                    allowBlank: false,
-                                    submitFormat: 'Y-m-d',
-                                    format: 'd/m/Y'
-
-                                },
-
-                                {
-                                    xtype: 'numberfield',
-                                    fieldLabel: 'Quantité',
-                                    name: 'quantity',
-                                    id: 'quantity',
-                                    autofocus: true
-
-                                },
-                                {
-                                    xtype: 'hiddenfield',
-                                    name: 'produitId',
-                                    allowBlank: false,
-                                    value: rec.get('lg_FAMILLE_ID')
-
-                                }
-
-
-                            ]}]
-
-                }]
-            ,
-            dockedItems: [
-                {
-                    xtype: 'toolbar',
-                    dock: 'bottom',
-                    ui: 'footer',
-                    layout: {
-                        pack: 'end',
-                        type: 'hbox'
-                    },
-                    items: [
-                        {
-                            xtype: 'button',
-                            text: 'Valider',
-                            listeners: {
-                                click: function () {
-                                    const form = Ext.getCmp('peremptionform');
-                                    const formValues = form.getValues();
-                                    if (form && form.isValid()) {
-                                        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-                                        const value = Number(formValues.quantity);
-                                        const qty = Number.isNaN(value) ? 1 : value;
-                                        const datas = {
-                                            "produitId": formValues.produitId,
-                                            "numLot": formValues.numLot,
-                                            "datePeremption": formValues.datePeremption,
-                                            "quantity": qty > 0 ? qty : 1
-                                        };
-
-                                        Ext.Ajax.request({
-                                            headers: {'Content-Type': 'application/json'},
-                                            method: 'POST',
-                                            url: '../api/v1/fichearticle/add-lot',
-                                            params: Ext.JSON.encode(datas),
-                                            success: function (response)
-                                            {
-                                                progress.hide();
-                                                win.close();
-                                                grid.getStore().reload();
-
-                                            },
-                                            failure: function (response)
-                                            {
-                                                progress.hide();
-                                                Ext.MessageBox.alert('Error Message', response.responseText);
-
-                                            }
-                                        });
-
-
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'button',
-                            text: 'Annuler',
-                            listeners: {
-                                click: function () {
-                                    win.close();
-                                }
-
+            destroy: function() {
+                Ext.getCmp('rechecher').focus(true, 100);
+            }
+            
+        },
+        items: [{
+            xtype: 'form',
+            id: 'peremptionform',
+            type: 'anchor',
+            bodyPadding: 10,
+            modelValidation: true,
+            
+            // Ajouter la gestion des touches Entrée sur le formulaire
+            listeners: {
+                afterrender: function(form) {
+                    // Capturer la touche Entrée sur le formulaire
+                    form.getEl().on('keydown', function(e) {
+                        if (e.getKey() === e.ENTER) {
+                            e.stopEvent();
+                            
+                            // Trouver le bouton Valider et simuler un clic
+                            const validateBtn = win.down('button[text=Valider]');
+                            if (validateBtn) {
+                                validateBtn.fireHandler();
                             }
                         }
-                    ]
+                    });
                 }
-            ]
+            },
+            
+            items: [{
+                xtype: 'fieldset',
+                bodyPadding: 10,
+                anchor: '100%',
+                title: 'Ajouter date de péremption',
+                layout: 'anchor',
+                defaults: {
+                    anchor: '100%',
+                    labelAlign: 'top'
+                },
+                items: [
+                    {
+                        xtype: 'textfield',
+                        fieldLabel: 'Numéro de lot',
+                        name: 'numLot',
+                        id: 'numLot',
+                        autofocus: true,
+                        allowBlank: false,
+                        // Navigation avec Entrée vers datePeremption
+                        listeners: {
+                            afterrender: function(field) {
+                                field.getEl().on('keydown', function(e) {
+                                    if (e.getKey() === e.ENTER) {
+                                        e.stopEvent();
+                                        Ext.getCmp('dt_peremption').focus();
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    {
+                        xtype: 'datefield',
+                        fieldLabel: 'Date de péremption',
+                        name: 'datePeremption',
+                        id: 'dt_peremption',
+                        allowBlank: false,
+                        submitFormat: 'Y-m-d',
+                        format: 'd/m/Y',
+                        // Navigation avec Entrée vers quantity
+                        listeners: {
+                            afterrender: function(field) {
+                                field.getEl().on('keydown', function(e) {
+                                    if (e.getKey() === e.ENTER) {
+                                        e.stopEvent();
+                                        Ext.getCmp('quantity').focus();
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    {
+                        xtype: 'numberfield',
+                        fieldLabel: 'Quantité',
+                        name: 'quantity',
+                        id: 'quantity',
+                        // Navigation avec Entrée pour valider
+                        listeners: {
+                            afterrender: function(field) {
+                                field.getEl().on('keydown', function(e) {
+                                    if (e.getKey() === e.ENTER) {
+                                        e.stopEvent();
+                                        // Trouver et déclencher le bouton Valider
+                                        const validateBtn = win.down('button[text=Valider]');
+                                        if (validateBtn) {
+                                            validateBtn.fireHandler();
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    {
+                        xtype: 'hiddenfield',
+                        name: 'produitId',
+                        allowBlank: false,
+                        value: rec.get('lg_FAMILLE_ID')
+                    }
+                ]
+            }]
+        }],
+        dockedItems: [{
+            xtype: 'toolbar',
+            dock: 'bottom',
+            ui: 'footer',
+            layout: {
+                pack: 'end',
+                type: 'hbox'
+            },
+            items: [{
+                xtype: 'button',
+                text: 'Valider',
+                // Donner un id pour faciliter l'accès
+                itemId: 'validateBtn',
+                listeners: {
+                    click: function () {
+                        const form = Ext.getCmp('peremptionform');
+                        const formValues = form.getValues();
+                        if (form && form.isValid()) {
+                            const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                            const value = Number(formValues.quantity);
+                            const qty = Number.isNaN(value) ? 1 : value;
+                            const datas = {
+                                "produitId": formValues.produitId,
+                                "numLot": formValues.numLot,
+                                "datePeremption": formValues.datePeremption,
+                                "quantity": qty > 0 ? qty : 1
+                            };
 
-        });
-        win.show();
-        Ext.getCmp('numLot').focus(true, 100, function () {
-
-        });
-
-    },
+                            Ext.Ajax.request({
+                                headers: {'Content-Type': 'application/json'},
+                                method: 'POST',
+                                url: '../api/v1/fichearticle/add-lot',
+                                params: Ext.JSON.encode(datas),
+                                success: function (response) {
+                                    progress.hide();
+                                    win.close();
+                                    grid.getStore().reload();
+                                    Ext.getCmp('rechecher').focus(true, 100);
+                                },
+                                failure: function (response) {
+                                    progress.hide();
+                                    Ext.MessageBox.alert('Error Message', response.responseText);
+                                    // Donner le focus au champ recherche même en cas d'erreur
+                                    Ext.getCmp('rechecher').focus(true, 100);
+                                }
+                            });
+                        }
+                    }
+                }
+            }, {
+                xtype: 'button',
+                text: 'Annuler',
+                listeners: {
+                    click: function () {
+                        win.close();
+                        // Le focus sera géré par le listener 'close' de la fenêtre
+                    }
+                }
+            }]
+        }]
+    });
+    
+    win.show();
+    // Focus initial sur le champ numLot
+    Ext.getCmp('numLot').focus(true, 100);
+},
     buildDetail: function (id, dtStart, dtEnd, libelle) {
         var me = this;
         var storeProduits = new Ext.data.Store({
