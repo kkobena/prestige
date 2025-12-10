@@ -143,4 +143,64 @@ public class FamilleArticleRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
+    @GET
+    @Path("vingtQuatreVingt/excel")
+    @Produces("application/vnd.ms-excel")
+    public Response exportVingtQuatreVingtExcel(@QueryParam("dtStart") String dtStart,
+            @QueryParam("dtEnd") String dtEnd, @QueryParam("codeFamillle") String codeFamillle,
+            @QueryParam("codeRayon") String codeRayon, @QueryParam("codeGrossiste") String codeGrossiste,
+            @QueryParam("qtyOrCa") boolean qtyOrCa) throws JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        byte[] data = familleArticleService.buildVingtQuatreVingtExcel(tu, dtStart, dtEnd, codeFamillle, codeRayon,
+                codeGrossiste, qtyOrCa);
+
+        return Response.ok(data).header("Content-Disposition", "attachment; filename=\"vingtQuatreVingt.xls\"").build();
+    }
+
+    @GET
+    @Path("vingtQuatreVingt/csv")
+    @Produces("text/csv")
+    public Response exportVingtQuatreVingtCsv(@QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
+            @QueryParam("codeFamillle") String codeFamillle, @QueryParam("codeRayon") String codeRayon,
+            @QueryParam("codeGrossiste") String codeGrossiste, @QueryParam("qtyOrCa") boolean qtyOrCa)
+            throws JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        byte[] data = familleArticleService.buildVingtQuatreVingtCsv(tu, dtStart, dtEnd, codeFamillle, codeRayon,
+                codeGrossiste, qtyOrCa);
+
+        return Response.ok(data).header("Content-Disposition", "attachment; filename=\"vingtQuatreVingt.csv\"").build();
+    }
+
+    @GET
+    @Path("vingtQuatreVingt/inventaire")
+    public Response createInventaireVingtQuatreVingt(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "codeFamillle") String codeFamillle,
+            @QueryParam(value = "qtyOrCa") boolean qtyOrCa, @QueryParam(value = "codeRayon") String codeRayon,
+            @QueryParam(value = "codeGrossiste") String codeGrossiste) throws JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        JSONObject jsono = familleArticleService.createInventaireVingtQuatreVingt(dtStart, dtEnd, tu, codeFamillle,
+                codeRayon, codeGrossiste, qtyOrCa);
+
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
 }
