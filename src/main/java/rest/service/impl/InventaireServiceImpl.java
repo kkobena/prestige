@@ -122,6 +122,52 @@ public class InventaireServiceImpl implements InventaireService {
     }
 
     @Override
+    public List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, Integer page, Integer maxResult) {
+        try {
+            /*
+             * String id, String produitName, String produitCip, String produitEan, int produitPrixAchat, int
+             * produitPrixUni, int quantiteInitiale, int quantiteSaisie
+             */
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(
+                    "SELECT new rest.service.inventaire.dto.DetailInventaireDTO( o.lgINVENTAIREFAMILLEID,o.lgFAMILLEID.strNAME,o.lgFAMILLEID.intCIP,o.lgFAMILLEID.intPAF,o.lgFAMILLEID.intPRICE,o.intNUMBERINIT,o.intNUMBER ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1 ORDER BY o.lgFAMILLEID.strNAME ASC",
+                    DetailInventaireDTO.class);
+            q.setParameter(1, idInventaire);
+            if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
+                q.setFirstResult(page);
+                q.setMaxResults(maxResult);
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchDetails", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, Integer page, Integer maxResult) {
+        try {
+            /*
+             * String id, String produitName, String produitCip, String produitEan, int produitPrixAchat, int
+             * produitPrixUni, int quantiteInitiale, int quantiteSaisie
+             */
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(
+                    "SELECT new rest.service.inventaire.dto.DetailInventaireDTO( o.lgINVENTAIREFAMILLEID,o.lgFAMILLEID.strNAME,o.lgFAMILLEID.intCIP,o.lgFAMILLEID.intPAF,o.lgFAMILLEID.intPRICE,o.intNUMBERINIT,o.intNUMBER ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1 AND COALESCE(o.intNUMBERINIT, 0) <> COALESCE(o.intNUMBER, 0) ORDER BY o.lgFAMILLEID.strNAME ASC",
+                    DetailInventaireDTO.class);
+            q.setParameter(1, idInventaire);
+            if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
+                q.setFirstResult(page);
+                q.setMaxResults(maxResult);
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchDetails", e);
+            return List.of();
+        }
+    }
+
+    @Override
     public void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire) {
         TInventaireFamille inventaireFamille = em.find(TInventaireFamille.class, updateInventaire.getId());
         inventaireFamille.setIntNUMBER(updateInventaire.getQuantite());
