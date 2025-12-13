@@ -75,6 +75,7 @@ import rest.service.InventaireService;
 import rest.service.utils.CsvExportService;
 import rest.service.utils.ReportExcelExportService;
 import java.io.IOException;
+import rest.service.LotService;
 
 /**
  *
@@ -101,6 +102,8 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
     @EJB
     private InventaireService inventaireService;
+    @EJB
+    private LotService lotService;
 
     @Override
     public JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
@@ -128,9 +131,9 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         List<Predicate> predicates = perimePredicat(cb, root, fa, joinLot, joinFa, joinFaG, joinFaz, query, nbreMois,
                 dtStart, dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
-        cq.select(cb.construct(commonTasks.dto.LotDTO.class, cb.sum(root.get(TLot_.intNUMBER)),
-                cb.sum(cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPAF))),
-                cb.sum(cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPRICE)))));
+        cq.select(cb.construct(commonTasks.dto.LotDTO.class, cb.sum(root.get(TLot_.currentStock)),
+                cb.sum(cb.prod(root.get(TLot_.currentStock), joinLot.get(TFamille_.intPAF))),
+                cb.sum(cb.prod(root.get(TLot_.currentStock), joinLot.get(TFamille_.intPRICE)))));
         cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<commonTasks.dto.LotDTO> q = getEntityManager().createQuery(cq);
         q.setMaxResults(1);
@@ -192,7 +195,8 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isNotNull(root.get(TLot_.dtPEREMPTION)));
         predicates.add(cb.isNotNull(root.get(TLot_.intNUMLOT)));
-        predicates.add(cb.greaterThan(cb.diff(root.get(TLot_.intNUMBER), root.get(TLot_.intQTYVENDUE)), 0));
+        // predicates.add(cb.greaterThan(cb.diff(root.get(TLot_.intNUMBER), root.get(TLot_.intQTYVENDUE)), 0));
+        predicates.add(cb.greaterThan(root.get(TLot_.currentStock), 0));
         predicates.add(cb.equal(joinLot.get(TFamille_.strSTATUT), Constant.STATUT_ENABLE));
         predicates.add(cb.greaterThan(fa.get(TFamilleStock_.intNUMBERAVAILABLE), 0));
         predicates.add(cb.equal(fa.get(TFamilleStock_.strSTATUT), Constant.STATUT_ENABLE));
@@ -979,21 +983,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
     @Override
     public void addLot(AddLot addLot) {
-        TFamille famille = em.find(TFamille.class, addLot.getProduitId());
-        TLot lot = new TLot(UUID.randomUUID().toString());
-        lot.setDtCREATED(new Date());
-        lot.setIntNUMBER(addLot.getQuantity());
-        lot.setIntNUMBERGRATUIT(0);
-        lot.setIntQTYVENDUE(0);
-        lot.setIntNUMLOT(addLot.getNumLot());
-        lot.setDtUPDATED(lot.getDtCREATED());
-        lot.setLgFAMILLEID(famille);
-        lot.setLgGROSSISTEID(famille.getLgGROSSISTEID());
-        lot.setDtPEREMPTION(DateCommonUtils.convertLocalDateToDate(LocalDate.parse(addLot.getDatePeremption())));
-        lot.setLgUSERID(this.sessionHelperService.getCurrentUser());
-        lot.setStrSTATUT(Constant.STATUT_ENABLE);
-        lot.setDtSORTIEUSINE(lot.getDtCREATED());
-        em.persist(lot);
+        lotService.addLot(addLot);
     }
 
     @Override
