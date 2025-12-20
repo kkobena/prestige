@@ -26,25 +26,31 @@ public class LicenceServiceImpl implements LicenceService {
     private static final String SEPARATOR = "#";
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-
-    @Override
-    public String getLicence() {
-        try {
-            TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
-            typedQuery.setMaxResults(1);
-            typedQuery.setParameter("typeLicence", TypeLience.MOBILE);
-            return typedQuery.getSingleResult().getId();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, e.getMessage());
-            return null;
-        }
-    }
+    
+     @Override public String getLicenceOnly() { try { TypedQuery<Licence> typedQuery =
+     em.createNamedQuery("Licence.findByTypeLience", Licence.class); typedQuery.setMaxResults(1);
+     typedQuery.setParameter("typeLicence", TypeLience.MOBILE); return typedQuery.getSingleResult().getId(); } catch
+     (Exception e) { LOG.log(Level.SEVERE, e.getMessage()); return null; } }
+     
 
     private TOfficine getOfficine() {
         return em.find(TOfficine.class, Constant.OFFICINE);
     }
 
     private Licence findLicence() {
+        try {
+            TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
+            typedQuery.setMaxResults(1);
+            typedQuery.setParameter("typeLicence", TypeLience.MOBILE);
+            return typedQuery.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public Licence getLicence() {
         try {
             TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
             typedQuery.setMaxResults(1);
