@@ -28,11 +28,11 @@ public class LicenceServiceImpl implements LicenceService {
     private EntityManager em;
 
     @Override
-    public String getLicence() {
+    public String getLicenceOnly() {
         try {
             TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
             typedQuery.setMaxResults(1);
-            typedQuery.setParameter("typeLience", TypeLience.MOBILE);
+            typedQuery.setParameter("typeLicence", TypeLience.MOBILE);
             return typedQuery.getSingleResult().getId();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage());
@@ -45,6 +45,19 @@ public class LicenceServiceImpl implements LicenceService {
     }
 
     private Licence findLicence() {
+        try {
+            TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
+            typedQuery.setMaxResults(1);
+            typedQuery.setParameter("typeLicence", TypeLience.MOBILE);
+            return typedQuery.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public Licence getLicence() {
         try {
             TypedQuery<Licence> typedQuery = em.createNamedQuery("Licence.findByTypeLience", Licence.class);
             typedQuery.setMaxResults(1);

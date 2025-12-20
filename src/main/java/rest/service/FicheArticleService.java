@@ -84,4 +84,14 @@ public interface FicheArticleService {
     void addLot(AddLot addLot);
 
     void updateProduitLiteInfo(UpdateProduit updateProduit);
+
+    byte[] buildComparaisonExcel(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil, String codeFamile,
+            String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException;
+
+    byte[] buildComparaisonCsv(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil, String codeFamile,
+            String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException;
+
+    JSONObject createInventaireComparaison(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
+            String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException;
+
 }

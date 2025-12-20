@@ -1,12 +1,15 @@
 package rest.service.impl;
 
 import dal.TEmplacement;
+import dal.TFamille;
 import dal.TFamilleStock;
+import dal.TFamille_;
 import dal.TInventaire;
 import dal.TInventaireFamille;
 import dal.TUser;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -19,6 +22,12 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Predicate;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -97,23 +106,42 @@ public class InventaireServiceImpl implements InventaireService {
     }
 
     @Override
-    public List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, Integer page,
+    public List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, String query, Integer page,
             Integer maxResult) {
         try {
-            /*
-             * String id, String produitName, String produitCip, String produitEan, int produitPrixAchat, int
-             * produitPrixUni, int quantiteInitiale, int quantiteSaisie
-             */
+            StringBuilder jpql = new StringBuilder(
+                    "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
+                            + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon");
 
-            TypedQuery<DetailInventaireDTO> q = em.createQuery(
-                    "SELECT new rest.service.inventaire.dto.DetailInventaireDTO( o.lgINVENTAIREFAMILLEID,o.lgFAMILLEID.strNAME,o.lgFAMILLEID.intCIP,o.lgFAMILLEID.intPAF,o.lgFAMILLEID.intPRICE,o.intNUMBERINIT,o.intNUMBER ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1 AND  o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID=?2 ORDER BY o.lgFAMILLEID.strNAME ASC",
-                    DetailInventaireDTO.class);
-            q.setParameter(1, idInventaire);
-            q.setParameter(2, idRayon);
+            if (StringUtils.isNotBlank(query)) {
+                jpql.append(" AND (" + " o.lgFAMILLEID.intCIP LIKE :search "
+                        + " OR LOWER(o.lgFAMILLEID.strNAME) LIKE :searchLower "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.codeEanFabriquant)) LIKE :search "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.intEAN13)) LIKE :search "
+                        + " OR st.strCODEARTICLE LIKE :search " + " OR o.lgFAMILLEID.lgFAMILLEID LIKE :search " + ")");
+            }
+
+            jpql.append(" ORDER BY o.lgFAMILLEID.strNAME ASC");
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(jpql.toString(), DetailInventaireDTO.class);
+            q.setParameter("idInventaire", idInventaire);
+            q.setParameter("idRayon", idRayon);
+
+            if (StringUtils.isNotBlank(query)) {
+                String trimmed = query.trim();
+                q.setParameter("search", trimmed + "%");
+                q.setParameter("searchLower", trimmed.toLowerCase() + "%");
+            }
+
             if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
                 q.setFirstResult(page);
                 q.setMaxResults(maxResult);
             }
+
             return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "fetchDetails", e);
@@ -122,47 +150,86 @@ public class InventaireServiceImpl implements InventaireService {
     }
 
     @Override
-    public List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, Integer page, Integer maxResult) {
+    public List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, String query, Integer page,
+            Integer maxResult) {
         try {
-            /*
-             * String id, String produitName, String produitCip, String produitEan, int produitPrixAchat, int
-             * produitPrixUni, int quantiteInitiale, int quantiteSaisie
-             */
+            StringBuilder jpql = new StringBuilder(
+                    "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
+                            + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire");
 
-            TypedQuery<DetailInventaireDTO> q = em.createQuery(
-                    "SELECT new rest.service.inventaire.dto.DetailInventaireDTO( o.lgINVENTAIREFAMILLEID,o.lgFAMILLEID.strNAME,o.lgFAMILLEID.intCIP,o.lgFAMILLEID.intPAF,o.lgFAMILLEID.intPRICE,o.intNUMBERINIT,o.intNUMBER ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1 ORDER BY o.lgFAMILLEID.strNAME ASC",
-                    DetailInventaireDTO.class);
-            q.setParameter(1, idInventaire);
+            if (StringUtils.isNotBlank(query)) {
+                jpql.append(" AND (" + " o.lgFAMILLEID.intCIP LIKE :search "
+                        + " OR LOWER(o.lgFAMILLEID.strNAME) LIKE :searchLower "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.codeEanFabriquant)) LIKE :search "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.intEAN13)) LIKE :search "
+                        + " OR st.strCODEARTICLE LIKE :search " + " OR o.lgFAMILLEID.lgFAMILLEID LIKE :search " + ")");
+            }
+
+            jpql.append(" ORDER BY o.lgFAMILLEID.strNAME ASC");
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(jpql.toString(), DetailInventaireDTO.class);
+            q.setParameter("idInventaire", idInventaire);
+
+            if (StringUtils.isNotBlank(query)) {
+                String trimmed = query.trim();
+                q.setParameter("search", trimmed + "%");
+                q.setParameter("searchLower", trimmed.toLowerCase() + "%");
+            }
+
             if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
                 q.setFirstResult(page);
                 q.setMaxResults(maxResult);
             }
+
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "fetchDetails", e);
+            LOG.log(Level.SEVERE, "fetchDetailsAll", e);
             return List.of();
         }
     }
 
     @Override
-    public List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, Integer page, Integer maxResult) {
+    public List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, String query, Integer page,
+            Integer maxResult) {
         try {
-            /*
-             * String id, String produitName, String produitCip, String produitEan, int produitPrixAchat, int
-             * produitPrixUni, int quantiteInitiale, int quantiteSaisie
-             */
+            StringBuilder jpql = new StringBuilder(
+                    "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
+                            + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + "AND COALESCE(o.intNUMBERINIT, 0) <> COALESCE(o.intNUMBER, 0)");
 
-            TypedQuery<DetailInventaireDTO> q = em.createQuery(
-                    "SELECT new rest.service.inventaire.dto.DetailInventaireDTO( o.lgINVENTAIREFAMILLEID,o.lgFAMILLEID.strNAME,o.lgFAMILLEID.intCIP,o.lgFAMILLEID.intPAF,o.lgFAMILLEID.intPRICE,o.intNUMBERINIT,o.intNUMBER ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1 AND COALESCE(o.intNUMBERINIT, 0) <> COALESCE(o.intNUMBER, 0) ORDER BY o.lgFAMILLEID.strNAME ASC",
-                    DetailInventaireDTO.class);
-            q.setParameter(1, idInventaire);
+            if (StringUtils.isNotBlank(query)) {
+                jpql.append(" AND (" + " o.lgFAMILLEID.intCIP LIKE :search "
+                        + " OR LOWER(o.lgFAMILLEID.strNAME) LIKE :searchLower "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.codeEanFabriquant)) LIKE :search "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.intEAN13)) LIKE :search "
+                        + " OR st.strCODEARTICLE LIKE :search " + " OR o.lgFAMILLEID.lgFAMILLEID LIKE :search " + ")");
+            }
+
+            jpql.append(" ORDER BY o.lgFAMILLEID.strNAME ASC");
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(jpql.toString(), DetailInventaireDTO.class);
+            q.setParameter("idInventaire", idInventaire);
+
+            if (StringUtils.isNotBlank(query)) {
+                String trimmed = query.trim();
+                q.setParameter("search", trimmed + "%");
+                q.setParameter("searchLower", trimmed.toLowerCase() + "%");
+            }
+
             if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
                 q.setFirstResult(page);
                 q.setMaxResults(maxResult);
             }
+
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "fetchDetails", e);
+            LOG.log(Level.SEVERE, "fetchDetailsAllEcarts", e);
             return List.of();
         }
     }
