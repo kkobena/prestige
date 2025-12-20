@@ -23,11 +23,12 @@ public interface InventaireService {
 
     List<RayonDTO> fetchRayon(String idInventaire, Integer page, Integer maxResult);
 
-    List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, Integer page, Integer maxResult);
+    List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, String query, Integer page,
+            Integer maxResult);
 
-    List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, Integer page, Integer maxResult);
+    List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, String query, Integer page, Integer maxResult);
 
-    List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, Integer page, Integer maxResult);
+    List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, String query, Integer page, Integer maxResult);
 
     void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire);
 
