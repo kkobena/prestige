@@ -350,7 +350,7 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
                                             }
                                             var CmboTierspayant = Ext.getCmp('lg_TIERS_PAYANT_ID');
                                             CmboTierspayant.enable();
-                                            CmboTierspayant.getStore().getProxy().url = url_services_data_tierspayant + "?lg_TYPE_TIERS_PAYANT_ID=" + value;
+                                            CmboTierspayant.getStore().getProxy().url = "../api/v1/client/tiers-payants?lg_TYPE_TIERS_PAYANT_ID=" + value;
                                             CmboTierspayant.getStore().reload();
                                         }
 
@@ -427,7 +427,10 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
                                     items: [
                                         {
                             xtype: 'combobox',
+                            name: 'lg_TIERS_PAYANT_ID',
+                            id: 'lg_TIERS_PAYANT_ID',
                             itemId: 'tiersPayantId',
+                            disabled: true,
                             flex: 1,
                             store: searchstore,
                             pageSize: 9999,
@@ -640,7 +643,8 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
                  Ext.getCmp('remiseId').show();
                 Ext.getCmp('InfosCltTierspayantID').show();
                 Ext.getCmp('int_POURCENTAGE').disable();
-                Ext.getCmp('lg_TIERS_PAYANT_ID').getStore().getProxy().url = url_services_data_tierspayant + "?lg_TYPE_TIERS_PAYANT_ID=" + this.getOdatasource().lg_TYPE_TIERS_PAYANT_ID;
+                Ext.getCmp('lg_TIERS_PAYANT_ID').getStore().getProxy().url = "../api/v1/client/tiers-payants?lg_TYPE_TIERS_PAYANT_ID=" + this.getOdatasource().lg_TYPE_TIERS_PAYANT_ID;
+                Ext.getCmp('lg_TIERS_PAYANT_ID').getStore().reload();
             } else {
                 Ext.getCmp('InfosCltTierspayantID').hide();
             }
