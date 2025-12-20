@@ -1951,7 +1951,7 @@ addPeremptiondate: function (grid, rowIndex) {
                     ]
                 });
 
-    },
+    }
 
   
 });
