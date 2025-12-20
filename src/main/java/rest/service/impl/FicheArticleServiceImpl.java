@@ -1120,7 +1120,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         }
     }
 
-        @Override
+    @Override
     public JSONObject createInventaireComparaison(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
             String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException {
 
@@ -1140,10 +1140,10 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         return new JSONObject().put("count", count);
     }
-    
+
     @Override
-    public byte[] exportSaisiePerimesCsv(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon,
-            String codeGrossiste) throws IOException {
+    public byte[] exportSaisiePerimesCsv(String query, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste) throws IOException {
 
         List<VenteDetailsDTO> data = saisiePerimesAll(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
 
@@ -1168,23 +1168,22 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         String title = "Saisie des périmés " + periode;
 
-        String[] headers = {"Id", "Code CIP", "Libellé", "Qté", "Montant", "Stock", "Avoir", "Emplacement"};
+        String[] headers = { "Id", "Code CIP", "Libellé", "Qté", "Montant", "Stock", "Avoir", "Emplacement" };
 
         // On réutilise le même mapping que pour les articles vendus (VenteDetailsDTO)
-        byte[] csvData = csvExportService.createCsvReport(title, headers, data, dto -> new String[]{
-            dto.getLgFAMILLEID(), // Id produit
-            dto.getIntCIP(), // Code CIP
-            dto.getStrNAME(), // Libellé
-            String.valueOf(dto.getIntQUANTITY()), // Quantité (ici : quantité périmée)
-            String.valueOf(dto.getIntPRICE()), // Montant (ou prix total)
-            String.valueOf(dto.getCurrentStock()), // Stock courant
-            String.valueOf(dto.getIntAVOIR()), // Avoir (si utilisé, sinon 0)
-            dto.getLibelleRayon() // Emplacement / rayon
-        });
+        byte[] csvData = csvExportService.createCsvReport(title, headers, data,
+                dto -> new String[] { dto.getLgFAMILLEID(), // Id produit
+                        dto.getIntCIP(), // Code CIP
+                        dto.getStrNAME(), // Libellé
+                        String.valueOf(dto.getIntQUANTITY()), // Quantité (ici : quantité périmée)
+                        String.valueOf(dto.getIntPRICE()), // Montant (ou prix total)
+                        String.valueOf(dto.getCurrentStock()), // Stock courant
+                        String.valueOf(dto.getIntAVOIR()), // Avoir (si utilisé, sinon 0)
+                        dto.getLibelleRayon() // Emplacement / rayon
+                });
 
         return csvExportService.addUtf8Bom(csvData);
     }
-
 
     @Override
     public byte[] exportSaisiePerimesExcel(String query, String dtStart, String dtEnd, String codeFamile,
