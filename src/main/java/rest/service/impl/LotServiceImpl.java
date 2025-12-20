@@ -155,23 +155,28 @@ public class LotServiceImpl implements LotService {
     }
 
     @Override
-    public void pickLot(String produitId, int quantitVendue) {
-        if (quantitVendue == 0) {
+    public void pickLot(String produitId, int quantiteVendue) {
+        if (quantiteVendue == 0) {
             return;
         }
-        List<TLot> lots = findOnlyAvaillableStockByProduitId(produitId, quantitVendue < 0);
-        int remaining = quantitVendue;
+        List<TLot> lots = findOnlyAvaillableStockByProduitId(produitId, quantiteVendue < 0);
+        int remaining = quantiteVendue;
+
         for (var lot : lots) {
-            if (quantitVendue == 0) {
+
+            if (quantiteVendue == 0) {
                 break;
             }
 
-            int take = Math.max(remaining, lot.getCurrentStock());
+            int take = Math.min(remaining, lot.getCurrentStock());
+
             lot.setCurrentStock(lot.getCurrentStock() - take);
+
             lot.setDtUPDATED(new Date());
             lot.setLgUSERID(sessionHelperService.getCurrentUser());
             em.merge(lot);
-            quantitVendue -= take;
+            quantiteVendue -= take;
+
         }
 
         // TODO 1 mettre le stock

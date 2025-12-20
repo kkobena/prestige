@@ -1,2 +1,0 @@
-
-ALTER TABLE `t_lot` ADD COLUMN IF NOT EXISTS  `current_stock` INT(6) NULL DEFAULT NULL;
