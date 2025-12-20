@@ -7,6 +7,7 @@ package rest;
 
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -181,23 +182,30 @@ public class ErpRessource {
     @GET
     @Path("ws/inventaires/details")
     public Response fetchDetails(@QueryParam(value = "idInventaire") String idInventaire,
-            @QueryParam(value = "idRayon") String idRayon, @QueryParam(value = "page") Integer page,
-            @QueryParam(value = "maxResult") Integer maxResult) {
-        return Response.ok().entity(inventaireService.fetchDetails(idInventaire, idRayon, page, maxResult)).build();
+            @QueryParam(value = "idRayon") String idRayon, @QueryParam(value = "query") @DefaultValue("") String query,
+            @QueryParam(value = "page") Integer page, @QueryParam(value = "maxResult") Integer maxResult) {
+
+        return Response.ok().entity(inventaireService.fetchDetails(idInventaire, idRayon, query, page, maxResult))
+                .build();
     }
 
     @GET
     @Path("ws/inventaires/detailsAll")
     public Response fetchDetailsAll(@QueryParam(value = "idInventaire") String idInventaire,
-            @QueryParam(value = "page") Integer page, @QueryParam(value = "maxResult") Integer maxResult) {
-        return Response.ok().entity(inventaireService.fetchDetailsAll(idInventaire, page, maxResult)).build();
+            @QueryParam(value = "query") @DefaultValue("") String query, @QueryParam(value = "page") Integer page,
+            @QueryParam(value = "maxResult") Integer maxResult) {
+
+        return Response.ok().entity(inventaireService.fetchDetailsAll(idInventaire, query, page, maxResult)).build();
     }
 
     @GET
     @Path("ws/inventaires/detailsAllEcarts")
     public Response fetchDetailsAllEcarts(@QueryParam(value = "idInventaire") String idInventaire,
-            @QueryParam(value = "page") Integer page, @QueryParam(value = "maxResult") Integer maxResult) {
-        return Response.ok().entity(inventaireService.fetchDetailsAllEcarts(idInventaire, page, maxResult)).build();
+            @QueryParam(value = "query") @DefaultValue("") String query, @QueryParam(value = "page") Integer page,
+            @QueryParam(value = "maxResult") Integer maxResult) {
+
+        return Response.ok().entity(inventaireService.fetchDetailsAllEcarts(idInventaire, query, page, maxResult))
+                .build();
     }
 
     @PUT

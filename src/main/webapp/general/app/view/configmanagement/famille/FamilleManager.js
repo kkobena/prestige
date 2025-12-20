@@ -1258,6 +1258,52 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         });
 
     },
+    
+    onDesableClick: function (grid, rowIndex) {
+
+        var rec = grid.getStore().getAt(rowIndex);
+
+        Ext.MessageBox.confirm('Message',
+                "Desactiver ce produit?" + "<br>Stock actuel: " + rec.get('int_NUMBER_AVAILABLE'),
+                function (btn) {
+                    if (btn === 'yes') {
+                        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                        Ext.Ajax.request({
+                            method: 'POST',
+                            url: '../api/v1/produit/disable-produit/' + rec.get('lg_FAMILLE_ID'),
+                            success: function (response, options) {
+                                progress.hide();
+                                var result = Ext.JSON.decode(response.responseText, true);
+                                if (result.success) {
+                                    grid.getStore().reload();
+                                    Ext.getCmp('rechecher').focus(true, 100, function () {
+//                                                      Ext.getCmp('rechecher').selectText(0, 1);
+                                    });
+                                } else {
+                                    Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 320,
+                                        msg: "L'opération a échouée",
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.ERROR
+
+                                    });
+                                }
+                            },
+                            failure: function (response, options) {
+                                progress.hide();
+                                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+                            }
+
+                        });
+
+
+                    }
+                });
+
+
+    },
+
 addPeremptiondate: function (grid, rowIndex) {
     const rec = grid.getStore().getAt(rowIndex);
 
@@ -1905,7 +1951,7 @@ addPeremptiondate: function (grid, rowIndex) {
                     ]
                 });
 
-    },
+    }
 
   
 });
