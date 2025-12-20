@@ -1,5 +1,6 @@
 package rest.service;
 
+import dal.Licence;
 import javax.ejb.Local;
 import rest.service.dto.LicenceDTO;
 
@@ -10,7 +11,9 @@ import rest.service.dto.LicenceDTO;
 @Local
 public interface LicenceService {
 
-    String getLicence();
+    String getLicenceOnly();
+
+    Licence getLicence();
 
     void save(String licence);
 
