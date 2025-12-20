@@ -32,6 +32,10 @@ import rest.service.SuggestionService;
 import rest.service.dto.UpdateProduit;
 import toolkits.parameters.commonparameter;
 import util.Constant;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import org.json.JSONException;
 
 /**
  *
@@ -190,6 +194,73 @@ public class FicheArticleRessource {
         JSONObject jsono = ficheArticleService.saisiePerimes(query, dtStart, dtEnd, tu, codeFamile, codeRayon,
                 codeGrossiste, start, limit);
         return Response.ok().entity(jsono.toString()).build();
+    }
+
+    @GET
+    @Path("saisieperimes/csv")
+    @Produces("text/csv")
+    public Response exportSaisiePerimesCsv(@QueryParam(value = "codeFamile") String codeFamile,
+            @QueryParam(value = "query") String query, @QueryParam(value = "codeRayon") String codeRayon,
+            @QueryParam(value = "codeGrossiste") String codeGrossiste, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws IOException, JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        byte[] data = ficheArticleService.exportSaisiePerimesCsv(query, dtStart, dtEnd, codeFamile, codeRayon,
+                codeGrossiste);
+
+        String filename = "saisie-perimes_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".csv";
+
+        return Response.ok(data, "text/csv; charset=UTF-8").encoding("UTF-8")
+                .header("content-disposition", "attachment; filename=" + filename).build();
+    }
+
+    @GET
+    @Path("saisieperimes/excel")
+    @Produces("application/vnd.ms-excel")
+    public Response exportSaisiePerimesExcel(@QueryParam(value = "codeFamile") String codeFamile,
+            @QueryParam(value = "query") String query, @QueryParam(value = "codeRayon") String codeRayon,
+            @QueryParam(value = "codeGrossiste") String codeGrossiste, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws IOException, JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        byte[] data = ficheArticleService.exportSaisiePerimesExcel(query, dtStart, dtEnd, codeFamile, codeRayon,
+                codeGrossiste);
+
+        String filename = "saisie-perimes_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".xls";
+
+        return Response.ok(data, "application/vnd.ms-excel").encoding("UTF-8")
+                .header("content-disposition", "attachment; filename=" + filename).build();
+    }
+
+    @GET
+    @Path("saisieperimes/create-inventaire")
+    public Response createInventaireSaisiePerimes(@QueryParam(value = "codeFamile") String codeFamile,
+            @QueryParam(value = "query") String query, @QueryParam(value = "codeRayon") String codeRayon,
+            @QueryParam(value = "codeGrossiste") String codeGrossiste, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        JSONObject json = ficheArticleService.createInventaireSaisiePerimes(query, dtStart, dtEnd, codeFamile,
+                codeRayon, codeGrossiste);
+
+        return Response.ok().entity(json.toString()).build();
     }
 
     @POST

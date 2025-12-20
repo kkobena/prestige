@@ -56,6 +56,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.FamilleArticleService;
 import util.DateConverter;
+import rest.service.InventaireService;
+import rest.service.utils.CsvExportService;
+import rest.service.utils.ReportExcelExportService;
+import java.io.IOException;
+import java.util.logging.Level;
+import javax.ejb.EJB;
+import static toolkits.parameters.enumExtentionFiles.LOG;
 
 /**
  *
@@ -70,6 +77,15 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @EJB
+    private CsvExportService csvExportService;
+
+    @EJB
+    private ReportExcelExportService reportExcelExportService;
+
+    @EJB
+    private InventaireService inventaireService;
 
     Comparator<FamilleArticleStatDTO> comparator = Comparator.comparing(FamilleArticleStatDTO::getCode);
     Comparator<VenteDetailsDTO> comparatorQty = Comparator.comparingInt(VenteDetailsDTO::getIntQUANTITY);
@@ -1165,4 +1181,99 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         return results;
 
     }
+
+    @Override
+    public byte[] buildVingtQuatreVingtExcel(TUser u, String dtStart, String dtEnd, String codeFamille,
+            String codeRayon, String codeGrossiste, boolean qtyOrCa) throws JSONException {
+        List<VenteDetailsDTO> datas = geVingtQuatreVingt(dtStart, dtEnd, u, codeFamille, codeRayon, codeGrossiste, 0, 0,
+                true, qtyOrCa);
+        if (datas.isEmpty())
+            return new byte[0];
+
+        String[] headers = { "CIP", "Libellé", "Montant", "Quantité", "Stock", "Famille" };
+        String title = "Rapport 20/80 du " + dtStart + " au " + dtEnd;
+
+        try {
+            return reportExcelExportService.createExcelReport(title, headers, datas, (row, d) -> {
+                int col = 0;
+                row.createCell(col++).setCellValue(d.getIntCIP());
+                row.createCell(col++).setCellValue(d.getStrNAME());
+                row.createCell(col++).setCellValue(d.getIntPRICE());
+                row.createCell(col++).setCellValue(d.getIntQUANTITY());
+                row.createCell(col++).setCellValue(d.getIntQUANTITYSERVED());
+                row.createCell(col++).setCellValue(d.getTicketName());
+            });
+        } catch (IOException e) {
+            // LOG.log(Level.SEVERE, "buildVingtQuatreVingtExcel error", e);
+            return new byte[0];
+        }
+    }
+
+    @Override
+    public byte[] buildVingtQuatreVingtCsv(TUser u, String dtStart, String dtEnd, String codeFamille, String codeRayon,
+            String codeGrossiste, boolean qtyOrCa) throws JSONException {
+        List<VenteDetailsDTO> datas = geVingtQuatreVingt(dtStart, dtEnd, u, codeFamille, codeRayon, codeGrossiste, 0, 0,
+                true, qtyOrCa);
+        if (datas.isEmpty())
+            return new byte[0];
+
+        String[] headers = { "CIP", "Libellé", "Montant", "Quantité", "Stock", "Famille" };
+        String title = "Rapport 20/80 du " + dtStart + " au " + dtEnd;
+
+        try {
+            byte[] raw = csvExportService.createCsvReport(title, headers, datas,
+                    d -> new String[] { d.getIntCIP(), d.getStrNAME(), String.valueOf(d.getIntPRICE()),
+                            String.valueOf(d.getIntQUANTITY()), String.valueOf(d.getIntQUANTITYSERVED()),
+                            d.getTicketName() });
+            return csvExportService.addUtf8Bom(raw);
+        } catch (IOException e) {
+            // LOG.log(Level.SEVERE, "buildVingtQuatreVingtCsv error", e);
+            return new byte[0];
+        }
+    }
+
+    @Override
+    public JSONObject createInventaireVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile,
+            String codeRayon, String codeGrossiste, boolean qtyOrCa) throws JSONException {
+
+        // Récupère TOUT le 20/80 correspondant aux filtres
+        List<VenteDetailsDTO> data = geVingtQuatreVingt(dtStart, dtEnd, u, codeFamile, codeRayon, codeGrossiste, 0, 0,
+                true, qtyOrCa);
+
+        if (data.isEmpty()) {
+            return new JSONObject().put("count", 0);
+        }
+
+        // On ne garde que les IDs produits uniques
+        java.util.Set<String> ids = data.stream().map(VenteDetailsDTO::getLgFAMILLEID)
+                .collect(java.util.stream.Collectors.toSet());
+
+        java.time.LocalDate d1 = null;
+        java.time.LocalDate d2 = null;
+
+        try {
+            d1 = java.time.LocalDate.parse(dtStart);
+        } catch (Exception e) {
+        }
+        try {
+            d2 = java.time.LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+
+        String periode;
+        if (d1 != null && d2 != null) {
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            periode = "du " + d1.format(fmt) + " au " + d2.format(fmt);
+        } else {
+            periode = "";
+        }
+
+        String type = qtyOrCa ? "Quantité" : "Chiffre d'affaires";
+        String title = "Inventaire produits 20/80 (" + type + ") " + periode;
+
+        int count = inventaireService.create(ids, title);
+
+        return new JSONObject().put("count", count);
+    }
+
 }

@@ -86,6 +86,10 @@ import java.util.Set;
 import org.json.JSONException;
 import rest.service.utils.CsvExportService;
 import rest.service.utils.ReportExcelExportService;
+import rest.service.InventaireService;
+import rest.service.utils.CsvExportService;
+import rest.service.utils.ReportExcelExportService;
+import java.io.IOException;
 
 /**
  *
@@ -981,6 +985,13 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         }
     }
 
+    private List<VenteDetailsDTO> saisiePerimesAll(String query, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste) {
+
+        // all = true, start/limit = 0 ignorés
+        return saisiePerimes(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste, null, 0, 0, true);
+    }
+
     @Override
     public void addLot(AddLot addLot) {
         TFamille famille = em.find(TFamille.class, addLot.getProduitId());
@@ -1124,6 +1135,123 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         String title = "Inventaire comparaison stock du "
                 + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    public byte[] exportSaisiePerimesCsv(String query, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste) throws IOException {
+
+        List<VenteDetailsDTO> data = saisiePerimesAll(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+
+        LocalDate d1 = null;
+        LocalDate d2 = null;
+        try {
+            d1 = LocalDate.parse(dtStart);
+        } catch (Exception e) {
+        }
+        try {
+            d2 = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+
+        String periode;
+        if (d1 != null && d2 != null) {
+            periode = "du " + d1.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                    + d2.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            periode = "";
+        }
+
+        String title = "Saisie des périmés " + periode;
+
+        String[] headers = { "Id", "Code CIP", "Libellé", "Qté", "Montant", "Stock", "Avoir", "Emplacement" };
+
+        // On réutilise le même mapping que pour les articles vendus (VenteDetailsDTO)
+        byte[] csvData = csvExportService.createCsvReport(title, headers, data,
+                dto -> new String[] { dto.getLgFAMILLEID(), // Id produit
+                        dto.getIntCIP(), // Code CIP
+                        dto.getStrNAME(), // Libellé
+                        String.valueOf(dto.getIntQUANTITY()), // Quantité (ici : quantité périmée)
+                        String.valueOf(dto.getIntPRICE()), // Montant (ou prix total)
+                        String.valueOf(dto.getCurrentStock()), // Stock courant
+                        String.valueOf(dto.getIntAVOIR()), // Avoir (si utilisé, sinon 0)
+                        dto.getLibelleRayon() // Emplacement / rayon
+                });
+
+        return csvExportService.addUtf8Bom(csvData);
+    }
+
+    @Override
+    public byte[] exportSaisiePerimesExcel(String query, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste) throws IOException {
+
+        List<VenteDetailsDTO> data = saisiePerimesAll(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+
+        LocalDate d1 = null;
+        LocalDate d2 = null;
+        try {
+            d1 = LocalDate.parse(dtStart);
+        } catch (Exception e) {
+        }
+        try {
+            d2 = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+
+        String periode;
+        if (d1 != null && d2 != null) {
+            periode = "du " + d1.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                    + d2.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            periode = "";
+        }
+
+        String title = "Saisie des périmés " + periode;
+
+        String[] headers = { "Id", "Code CIP", "Libellé", "Qté", "Montant", "Stock", "Avoir", "Emplacement" };
+
+        return reportExcelExportService.createExcelReport(title, headers, data, (row, dto) -> {
+            int col = 0;
+            row.createCell(col++).setCellValue(dto.getLgFAMILLEID());
+            row.createCell(col++).setCellValue(dto.getIntCIP());
+            row.createCell(col++).setCellValue(dto.getStrNAME());
+            row.createCell(col++).setCellValue(dto.getIntQUANTITY());
+            row.createCell(col++).setCellValue(dto.getIntPRICE());
+            row.createCell(col++).setCellValue(dto.getCurrentStock());
+            row.createCell(col++).setCellValue(dto.getIntAVOIR());
+            row.createCell(col++).setCellValue(dto.getLibelleRayon());
+        });
+    }
+
+    @Override
+    public JSONObject createInventaireSaisiePerimes(String query, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste) throws JSONException {
+
+        List<VenteDetailsDTO> data = saisiePerimesAll(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+
+        if (data.isEmpty()) {
+            return new JSONObject().put("count", 0);
+        }
+
+        java.util.Set<String> ids = data.stream().map(VenteDetailsDTO::getLgFAMILLEID).collect(Collectors.toSet());
+
+        LocalDate d1 = null;
+        LocalDate d2 = null;
+        try {
+            d1 = LocalDate.parse(dtStart);
+        } catch (Exception e) {
+        }
+        try {
+            d2 = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+
+        String periode;
+        if (d1 != null && d2 != null) {
+            periode = "du " + d1.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                    + d2.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            periode = "";
+        }
+
+        String title = "Inventaire produits saisis périmés " + periode;
 
         int count = inventaireService.create(ids, title);
 

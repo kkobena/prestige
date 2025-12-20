@@ -10,6 +10,7 @@ import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TUser;
 import enumeration.MargeEnum;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
@@ -70,6 +71,15 @@ public interface FicheArticleService {
 
     List<VenteDetailsDTO> saisiePerimes(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon,
             String codeGrossiste, Integer grouby, int start, int limit, boolean all);
+
+    byte[] exportSaisiePerimesCsv(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon,
+            String codeGrossiste) throws IOException;
+
+    byte[] exportSaisiePerimesExcel(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon,
+            String codeGrossiste) throws IOException;
+
+    JSONObject createInventaireSaisiePerimes(String query, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste) throws JSONException;
 
     void addLot(AddLot addLot);
 
