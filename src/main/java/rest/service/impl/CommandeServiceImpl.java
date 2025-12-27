@@ -213,6 +213,8 @@ public class CommandeServiceImpl implements CommandeService {
                     for (TLot item : lots) {
                         cmde += Objects.requireNonNullElse(item.getIntNUMBER(), 0);
                         qu += Objects.requireNonNullElse(item.getIntNUMBERGRATUIT(), 0);
+                        item.setCurrentStock(cmde);
+                        em.merge(item);
                     }
 
                     if (cmde < bn.getIntQTECMDE()) {
@@ -507,6 +509,7 @@ public class CommandeServiceImpl implements CommandeService {
             lot.setIntNUMBERGRATUIT(intUG);
             lot.setStrSTATUT(Constant.STATUT_ENABLE);
             lot.setIntQTYVENDUE(0);
+            lot.setCurrentStock(intNUMBER);
             this.getEm().persist(lot);
             addWarehouse(bn, u, oFamille, intNUMBER, grossiste, strRELIVRAISON, new Date(), null, 0, null, strREFORDER,
                     null);
