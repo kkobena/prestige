@@ -2507,6 +2507,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             MagasinDTO magasin = new MagasinDTO(findEmplacementById(pkBrand));
             venteDTO.setMagasin(magasin);
         }
+        venteDTO.setModification(params.isModification());
+        venteDTO.setModificationClientTp(params.isModificationClientTp());
         return venteDTO;
     }
 
