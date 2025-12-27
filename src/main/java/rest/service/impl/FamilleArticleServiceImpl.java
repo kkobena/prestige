@@ -7,8 +7,6 @@ package rest.service.impl;
 
 import commonTasks.dto.FamilleArticleStatDTO;
 import commonTasks.dto.VenteDetailsDTO;
-import dal.HMvtProduit;
-import dal.HMvtProduit_;
 import dal.TEmplacement;
 import dal.TFamille_;
 import dal.TFamillearticle;
@@ -22,14 +20,12 @@ import dal.TTypeVente_;
 import dal.TUser;
 import dal.TUser_;
 import dal.TZoneGeographique_;
-import dal.Typemvtproduit_;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -60,9 +56,7 @@ import rest.service.InventaireService;
 import rest.service.utils.CsvExportService;
 import rest.service.utils.ReportExcelExportService;
 import java.io.IOException;
-import java.util.logging.Level;
 import javax.ejb.EJB;
-import static toolkits.parameters.enumExtentionFiles.LOG;
 
 /**
  *
@@ -1126,10 +1120,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             montantttc += detail.getIntPRICE();
             montantTva += detail.getMontantTva();
         }
-        System.out.println("montantttc------->>>  " + montantttc);
-        System.out.println("montantTva------->>>  " + montantTva);
-        System.out.println("(montantttc - montantTva)------->>>  " + (montantttc - montantTva));
-        // return (montantttc - montantTva);
+
         return 0;
     }
 
@@ -1137,7 +1128,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         List<TPreenregistrementDetail> details = itemsFromAnnulationAnterieurs(dtStart, dtEnd, query, codeFamillle, u,
                 codeRayon, codeGrossiste);
-        System.out.println("buildArticleStatDTOs=====>>> " + details.size());
+
         Map<TFamillearticle, List<TPreenregistrementDetail>> groupeByFamille = details.stream()
                 .collect(Collectors.groupingBy(e -> e.getLgFAMILLEID().getLgFAMILLEARTICLEID()));
         List<FamilleArticleStatDTO> results = new ArrayList<>();
