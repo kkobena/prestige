@@ -2202,7 +2202,7 @@ public class GroupeTierspayantController implements Serializable {
 
             em = getEntityManager();
 
-            String query = "SELECT SUM(o.dblMONTANTRESTANT),SUM(o.dblMONTANTCMDE),SUM(o.dblMONTANTPAYE) FROM TFacture o JOIN  o.tiersPayant tp  JOIN   o.tFactureDetailCollection fd WHERE  FUNCTION('DATE',o.dtCREATED) BETWEEN ?3 AND ?4  ";
+            String query = "SELECT SUM(o.dblMONTANTRESTANT),SUM(o.dblMONTANTCMDE),SUM(o.dblMONTANTPAYE) FROM TFacture o JOIN  o.tiersPayant p  JOIN   o.tFactureDetailCollection fd WHERE  FUNCTION('DATE',o.dtCREATED) BETWEEN ?3 AND ?4  ";
 
             if (!"".equals(lgTP)) {
                 query += "AND o.strCUSTOMER LIKE ?1 ";
