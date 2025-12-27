@@ -25,7 +25,6 @@ import dal.HMvtProduit;
 import dal.Medecin;
 import dal.MvtTransaction;
 import dal.Notification;
-import dal.PrixReferenceVente;
 import dal.Reference;
 import dal.TAyantDroit;
 import dal.TClient;
@@ -1755,7 +1754,8 @@ public class SalesServiceImpl implements SalesService {
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_ORDONNANCE);
-            List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(tp);
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(tp);// TODO: utiliser directement la
+                                                                                      // collection
             int montant = tp.getIntPRICE();
             if (diffAmount(montant, lstTPreenregistrementDetail)) {
                 json.put("success", false);
@@ -3806,7 +3806,7 @@ public class SalesServiceImpl implements SalesService {
         newItem.setStrREFBON(numBon);
         newItem.setDblQUOTACONSOVENTE(0.0);
         newItem.setIntPERCENT(json.getInt("taux"));
-        newItem.setIntPRICERESTE(newItem.getIntPERCENT());
+        newItem.setIntPRICERESTE(newItem.getIntPRICERESTE());
         newItem.setStrSTATUTFACTURE("unpaid");
         getEm().persist(newItem);
         TCompteClient oCompteClient = payant.getLgCOMPTECLIENTID();
