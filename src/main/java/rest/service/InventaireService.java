@@ -28,6 +28,9 @@ public interface InventaireService {
 
     List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, String query, Integer page, Integer maxResult);
 
+    List<DetailInventaireDTO> fetchDetailsAllUntouched(String idInventaire, String query, Integer page,
+            Integer maxResult);
+
     List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, String query, Integer page, Integer maxResult);
 
     void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire);

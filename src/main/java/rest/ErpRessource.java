@@ -199,6 +199,16 @@ public class ErpRessource {
     }
 
     @GET
+    @Path("ws/inventaires/detailsAllUntouched")
+    public Response fetchDetailsAllUntouched(@QueryParam(value = "idInventaire") String idInventaire,
+            @QueryParam(value = "query") @DefaultValue("") String query, @QueryParam(value = "page") Integer page,
+            @QueryParam(value = "maxResult") Integer maxResult) {
+
+        return Response.ok().entity(inventaireService.fetchDetailsAllUntouched(idInventaire, query, page, maxResult))
+                .build();
+    }
+
+    @GET
     @Path("ws/inventaires/detailsAllEcarts")
     public Response fetchDetailsAllEcarts(@QueryParam(value = "idInventaire") String idInventaire,
             @QueryParam(value = "query") @DefaultValue("") String query, @QueryParam(value = "page") Integer page,
