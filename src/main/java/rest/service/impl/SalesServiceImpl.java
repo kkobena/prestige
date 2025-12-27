@@ -166,7 +166,7 @@ public class SalesServiceImpl implements SalesService {
     @EJB
     private CautionTiersPayantService cautionTiersPayantService;
     @EJB
-    private PrixReferenceService prixReferenceService;
+    private LotService lotService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -908,6 +908,7 @@ public class SalesServiceImpl implements SalesService {
         familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
         familleStock.setDtUPDATED(new Date());
         getEm().merge(familleStock);
+        lotService.pickLot(familleStock.getLgFAMILLEID().getLgFAMILLEID(), qty);
 
     }
 
