@@ -303,92 +303,45 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     @Override
     public List<VenteDetailsDTO> geVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile,
             String codeRayon, String codeGrossiste, int start, int limit, boolean all, boolean qtyOrCa) {
-        int valeur = valeurVinghtQuarteVinght(dtStart, dtEnd, u, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
+        List<VenteDetailsDTO> list = new ArrayList<>();
         try {
-            List<Predicate> predicates = new ArrayList<>();
-            TEmplacement emp = u.getLgEMPLACEMENTID();
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root
-                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            if (qtyOrCa) {
-                cq.select(cb.construct(VenteDetailsDTO.class,
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME),
-                        cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)),
-                        cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
-                                .get(TGrossiste_.lgGROSSISTEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
-                                .get(TFamillearticle_.strLIBELLE)))
-                        .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
-                        .orderBy(cb.desc(cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY))));
-
-            } else {
-                cq.select(cb.construct(VenteDetailsDTO.class,
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME),
-                        cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)),
-                        cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
-                                .get(TGrossiste_.lgGROSSISTEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
-                                .get(TFamillearticle_.strLIBELLE)))
-                        .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
-                        .orderBy(cb.desc(cb.sum(root.get(TPreenregistrementDetail_.intPRICE))));
-
+            String procedureName = qtyOrCa ? "analyse_20_80_par_quantite" : "analyse_20_80_par_ca";
+            if ("ALL".equals(codeFamile)) {
+                codeFamile = "";
             }
+            if ("ALL".equals(codeRayon)) {
+                codeRayon = "";
+            }
+            if ("ALL".equals(codeGrossiste)) {
+                codeGrossiste = "";
+            }
+            Query query = getEntityManager().createNativeQuery("CALL " + procedureName + "(?, ?, ?, ?, ?, ?)");
+            query.setParameter(1, dtStart);
+            query.setParameter(2, dtEnd);
+            query.setParameter(3, u.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            query.setParameter(4, codeFamile);
+            query.setParameter(5, codeRayon);
+            query.setParameter(6, codeGrossiste);
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
-                    java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
-            predicates.add(btw);
-            predicates.add(cb.equal(join.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID), emp));
-            predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-            predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
-            predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            if (!StringUtils.isEmpty(codeFamile) && !codeFamile.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID)
-                        .get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamile));
+            List<Object[]> resultList = query.getResultList();
+            for (Object[] row : resultList) {
+                VenteDetailsDTO dto = new VenteDetailsDTO();
+                dto.setIntCIP((String) row[0]);
+                dto.setStrNAME((String) row[1]);
+                Number price = (Number) row[2];
+                dto.setIntPRICE(price != null ? price.intValue() : 0);
+                Number quantity = (Number) row[3];
+                dto.setIntQUANTITY(quantity != null ? quantity.intValue() : 0);
+                dto.setLgFAMILLEID((String) row[4]);
+                dto.setGrossisteId((String) row[5]);
+                dto.setTicketName((String) row[6]);
+                Number marge = (Number) row[7];
+                dto.setMarge(marge != null ? marge.intValue() : 0);
+                Number stock = (Number) row[8];
+                dto.setIntQUANTITYSERVED(stock != null ? stock.intValue() : 0);
+                list.add(dto);
             }
-            if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
-                        .get(TZoneGeographique_.lgZONEGEOID), codeRayon));
-            }
-            if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
-                        .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
-            }
-            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
-            List<VenteDetailsDTO> _f = new ArrayList<>();
-            List<VenteDetailsDTO> data = q.getResultList();
-            if (qtyOrCa) {
-
-                for (VenteDetailsDTO x : data) {
-                    int stock = stockProduit(x.getLgFAMILLEID(), emp.getLgEMPLACEMENTID());
-                    x.setIntQUANTITYSERVED(stock);
-                    _f.add(x);
-                    valeur -= x.getIntQUANTITY();
-                    if (valeur <= 0) {
-                        break;
-                    }
-                }
-            } else {
-                for (VenteDetailsDTO x : data) {
-                    int stock = stockProduit(x.getLgFAMILLEID(), emp.getLgEMPLACEMENTID());
-                    x.setIntQUANTITYSERVED(stock);
-                    _f.add(x);
-                    valeur -= x.getIntPRICE();
-                    if (valeur <= 0) {
-                        break;
-                    }
-                }
-            }
-
-            return _f;
+            return list;
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
@@ -425,49 +378,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         return new JSONObject().put("total", total).put("data", new JSONArray(_f));
     }
 
-    private int valeurVinghtQuarteVinght(String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon,
-            String codeGrossiste, boolean qtyOrCa) {
-        try {
-            List<Predicate> predicates = new ArrayList<>();
-            TEmplacement emp = u.getLgEMPLACEMENTID();
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root
-                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            if (qtyOrCa) {
-                cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)));
-            } else {
-                cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)));
-            }
-            Predicate btw = cb.between(cb.function("DATE", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
-                    java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
-            predicates.add(btw);
-            predicates.add(cb.equal(join.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID), emp));
-            predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-            predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
-            predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            if (!StringUtils.isEmpty(codeFamile) && !codeFamile.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID)
-                        .get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamile));
-            }
-            if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
-                        .get(TZoneGeographique_.lgZONEGEOID), codeRayon));
-            }
-            if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
-                        .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
-            }
-            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            TypedQuery<Long> q = getEntityManager().createQuery(cq);
-            q.setMaxResults(1);
-            return (int) Math.ceil(q.getSingleResult() * 0.8);
-        } catch (Exception e) {
-            // e.printStackTrace(System.err);
-            return 0;
-        }
-    }
+
 
     List<FamilleArticleStatDTO> fetchDataForStatisticVenteRayons(LocalDate dtStart, LocalDate dtEnd, String query,
             String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
@@ -1037,7 +948,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
 
             List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
                     codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             return ((Number) q.getSingleResult()).longValue();
