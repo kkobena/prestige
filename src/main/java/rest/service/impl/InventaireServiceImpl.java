@@ -150,6 +150,50 @@ public class InventaireServiceImpl implements InventaireService {
     }
 
     @Override
+    public List<DetailInventaireDTO> fetchDetailsUntouchedRayon(String idInventaire, String idRayon, String query,
+            Integer page, Integer maxResult) {
+        try {
+            StringBuilder jpql = new StringBuilder(
+                    "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
+                            + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED IS NULL ");
+
+            if (StringUtils.isNotBlank(query)) {
+                jpql.append(" AND (" + " o.lgFAMILLEID.intCIP LIKE :search "
+                        + " OR LOWER(o.lgFAMILLEID.strNAME) LIKE :searchLower "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.codeEanFabriquant)) LIKE :search "
+                        + " OR TRIM(CONCAT('', o.lgFAMILLEID.intEAN13)) LIKE :search "
+                        + " OR st.strCODEARTICLE LIKE :search " + " OR o.lgFAMILLEID.lgFAMILLEID LIKE :search " + ")");
+            }
+
+            jpql.append(" ORDER BY o.lgFAMILLEID.strNAME ASC");
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(jpql.toString(), DetailInventaireDTO.class);
+            q.setParameter("idInventaire", idInventaire);
+            q.setParameter("idRayon", idRayon);
+
+            if (StringUtils.isNotBlank(query)) {
+                String trimmed = query.trim();
+                q.setParameter("search", trimmed + "%");
+                q.setParameter("searchLower", trimmed.toLowerCase() + "%");
+            }
+
+            if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
+                q.setFirstResult(page);
+                q.setMaxResults(maxResult);
+            }
+
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchDetailsUntouchedRayon", e);
+            return List.of();
+        }
+    }
+
+    @Override
     public List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, String query, Integer page,
             Integer maxResult) {
         try {

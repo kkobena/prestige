@@ -26,6 +26,9 @@ public interface InventaireService {
     List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, String query, Integer page,
             Integer maxResult);
 
+    List<DetailInventaireDTO> fetchDetailsUntouchedRayon(String idInventaire, String idRayon, String query,
+            Integer page, Integer maxResult);
+
     List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, String query, Integer page, Integer maxResult);
 
     List<DetailInventaireDTO> fetchDetailsAllUntouched(String idInventaire, String query, Integer page,
