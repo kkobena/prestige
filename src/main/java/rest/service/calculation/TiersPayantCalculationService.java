@@ -49,6 +49,7 @@ public class TiersPayantCalculationService {
         List<TiersPayantLineOutput> lineOutputs = new ArrayList<>();
         StringBuilder warnings = new StringBuilder();
         for (TiersPayantInput tpInput : input.getTiersPayants()) {
+            System.err.println("***************** " + tpInput);
             BigDecimal remainingAmountForTps = tiersPayants.getOrDefault(tpInput.getClientTiersPayantId(),
                     BigDecimal.ZERO);
             remainingAmountForTps = remainingAmountForTps.setScale(0, RoundingMode.HALF_UP);
@@ -65,9 +66,10 @@ public class TiersPayantCalculationService {
             lineOutputs.add(lineOutput);
         }
         calculationResult.setTotalTiersPayant(totalAmountAssurance);
+        calculationResult.setTiersPayantLines(lineOutputs);
         BigDecimal partAssure = calculatePatientShare(calculationResult, input.getNatureVente());
         calculationResult.setTotalPatientShare(partAssure);
-        calculationResult.setTiersPayantLines(lineOutputs);
+
         calculationResult.setWarningMessage(warnings.toString());
         return calculationResult;
     }
@@ -192,7 +194,7 @@ public class TiersPayantCalculationService {
                     .subtract(calculationResult.getDiscountAmount()).max(BigDecimal.ZERO)
                     .setScale(0, RoundingMode.HALF_UP);
             calculationResult.setTotalTiersPayant(partTiersPayant);
-
+            calculationResult.getTiersPayantLines().get(0).setMontant(partTiersPayant);
             return netAmount.max(BigDecimal.ZERO);
         }
 
