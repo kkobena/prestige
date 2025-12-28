@@ -256,23 +256,24 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         op.setIntCUSTPART(totalPatientShare);
 
         for (TiersPayantLineOutput lineResult : output.getTiersPayantLines()) {
-            TPreenregistrementCompteClientTiersPayent saleLine = maps.get(lineResult.getClientTiersPayantId()).get(0);
+            TPreenregistrementCompteClientTiersPayent venteTiersPayantItem = maps
+                    .get(lineResult.getClientTiersPayantId()).get(0);
 
             if (output.isHasPriceOption()) {
-                TCompteClientTiersPayant tcctp = saleLine.getLgCOMPTECLIENTTIERSPAYANTID();
-                saleLine.setIntPERCENT(tcctp.getIntPOURCENTAGE());
+                TCompteClientTiersPayant tcctp = venteTiersPayantItem.getLgCOMPTECLIENTTIERSPAYANTID();
+                venteTiersPayantItem.setIntPERCENT(tcctp.getIntPOURCENTAGE());
             } else {
-                saleLine.setIntPERCENT(lineResult.getFinalTaux());
+                venteTiersPayantItem.setIntPERCENT(lineResult.getFinalTaux());
             }
-            saleLine.setIntPRICE(lineResult.getMontant().intValue());
-            saleLine.setStrREFBON(lineResult.getNumBon());
+            venteTiersPayantItem.setIntPRICE(lineResult.getMontant().intValue());
+            venteTiersPayantItem.setStrREFBON(lineResult.getNumBon());
 
-            em.merge(saleLine);
+            em.merge(venteTiersPayantItem);
             TiersPayantParams tp = new TiersPayantParams();
-            tp.setTaux(saleLine.getIntPERCENT());
+            tp.setTaux(venteTiersPayantItem.getIntPERCENT());
             tp.setCompteTp(lineResult.getClientTiersPayantId());
-            tp.setNumBon(saleLine.getStrREFBON());
-            tp.setTpnet(saleLine.getIntPRICE());
+            tp.setNumBon(venteTiersPayantItem.getStrREFBON());
+            tp.setTpnet(venteTiersPayantItem.getIntPRICE());
             montantAPaye.getTierspayants().add(tp);
 
         }
