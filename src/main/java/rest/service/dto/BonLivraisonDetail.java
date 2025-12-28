@@ -59,5 +59,10 @@ public class BonLivraisonDetail {
     private Integer prixTarif;
 
     private Integer prixUni;
+    
     private int montantAvoir;
+    
+    private Integer quantiteControle;
+    
+    private String checked;
 }
