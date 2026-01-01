@@ -82,7 +82,7 @@ public final class EtatControlBonBuilder extends CommonBuilder {
                 .intQTERETURN(item.getIntQTERETURN()).intQTEUG(item.getIntQTEUG()).prixTarif(item.getPrixTarif())
                 .prixUni(item.getPrixUni()).produit(produit(item.getLgFAMILLEID()))
                 .lgBONLIVRAISONDETAIL(item.getLgBONLIVRAISONDETAIL()).quantiteControle(item.getCheckedQuantity())
-                .checked(item.isChecked()).build();
+                .lgZONEGEONom(item.getLgZONEGEOID().getStrLIBELLEE()).checked(item.isChecked()).build();
     }
 
     public static String buildItems(List<BonLivraisonDetail> bonLivraisonDetails) {
