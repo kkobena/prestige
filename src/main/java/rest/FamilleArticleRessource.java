@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -22,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.FamilleArticleService;
 import rest.service.SuggestionService;
+import rest.service.dto.VingtQuatreVingtType;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
@@ -61,16 +63,12 @@ public class FamilleArticleRessource {
     @Path("vingtQuatreVingt")
     public Response vingtQuatreVingt(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "codeFamillle") String codeFamillle,
-            @QueryParam(value = "qtyOrCa") boolean qtyOrCa, @QueryParam(value = "codeRayon") String codeRayon,
+            @DefaultValue("CA") @QueryParam(value = "vingtType") VingtQuatreVingtType vingtQuatreVingtType,
+            @QueryParam(value = "codeRayon") String codeRayon,
             @QueryParam(value = "codeGrossiste") String codeGrossiste) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        JSONObject jsono = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, tu, codeFamillle, codeRayon,
-                codeGrossiste, 0, 0, qtyOrCa);
+        JSONObject jsono = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, codeFamillle, codeRayon,
+                codeGrossiste, 0, 0, vingtQuatreVingtType);
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -78,16 +76,12 @@ public class FamilleArticleRessource {
     @Path("suggestionvingtQuatreVingt")
     public Response suggestionvingtQuatreVingt(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "codeFamillle") String codeFamillle,
-            @QueryParam(value = "qtyOrCa") boolean qtyOrCa, @QueryParam(value = "codeRayon") String codeRayon,
+            @DefaultValue("CA") @QueryParam(value = "vingtType") VingtQuatreVingtType vingtQuatreVingtType,
+            @QueryParam(value = "codeRayon") String codeRayon,
             @QueryParam(value = "codeGrossiste") String codeGrossiste) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        List<VenteDetailsDTO> datas = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, tu, codeFamillle,
-                codeRayon, codeGrossiste, 0, 0, true, qtyOrCa);
+        List<VenteDetailsDTO> datas = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, codeFamillle, codeRayon,
+                codeGrossiste, 0, 0, true, vingtQuatreVingtType);
         JSONObject jsono = suggestionService.makeSuggestion(datas);
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -149,16 +143,11 @@ public class FamilleArticleRessource {
     public Response exportVingtQuatreVingtExcel(@QueryParam("dtStart") String dtStart,
             @QueryParam("dtEnd") String dtEnd, @QueryParam("codeFamillle") String codeFamillle,
             @QueryParam("codeRayon") String codeRayon, @QueryParam("codeGrossiste") String codeGrossiste,
-            @QueryParam("qtyOrCa") boolean qtyOrCa) throws JSONException {
+            @DefaultValue("CA") @QueryParam(value = "vingtType") VingtQuatreVingtType vingtQuatreVingtType)
+            throws JSONException {
 
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
-        byte[] data = familleArticleService.buildVingtQuatreVingtExcel(tu, dtStart, dtEnd, codeFamillle, codeRayon,
-                codeGrossiste, qtyOrCa);
+        byte[] data = familleArticleService.buildVingtQuatreVingtExcel(dtStart, dtEnd, codeFamillle, codeRayon,
+                codeGrossiste, vingtQuatreVingtType);
 
         return Response.ok(data).header("Content-Disposition", "attachment; filename=\"vingtQuatreVingt.xls\"").build();
     }
@@ -168,17 +157,12 @@ public class FamilleArticleRessource {
     @Produces("text/csv")
     public Response exportVingtQuatreVingtCsv(@QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
             @QueryParam("codeFamillle") String codeFamillle, @QueryParam("codeRayon") String codeRayon,
-            @QueryParam("codeGrossiste") String codeGrossiste, @QueryParam("qtyOrCa") boolean qtyOrCa)
+            @QueryParam("codeGrossiste") String codeGrossiste,
+            @DefaultValue("CA") @QueryParam(value = "vingtType") VingtQuatreVingtType vingtQuatreVingtType)
             throws JSONException {
 
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
-        byte[] data = familleArticleService.buildVingtQuatreVingtCsv(tu, dtStart, dtEnd, codeFamillle, codeRayon,
-                codeGrossiste, qtyOrCa);
+        byte[] data = familleArticleService.buildVingtQuatreVingtCsv(dtStart, dtEnd, codeFamillle, codeRayon,
+                codeGrossiste, vingtQuatreVingtType);
 
         return Response.ok(data).header("Content-Disposition", "attachment; filename=\"vingtQuatreVingt.csv\"").build();
     }
@@ -187,18 +171,12 @@ public class FamilleArticleRessource {
     @Path("vingtQuatreVingt/inventaire")
     public Response createInventaireVingtQuatreVingt(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "codeFamillle") String codeFamillle,
-            @QueryParam(value = "qtyOrCa") boolean qtyOrCa, @QueryParam(value = "codeRayon") String codeRayon,
+            @DefaultValue("CA") @QueryParam(value = "vingtType") VingtQuatreVingtType vingtQuatreVingtType,
+            @QueryParam(value = "codeRayon") String codeRayon,
             @QueryParam(value = "codeGrossiste") String codeGrossiste) throws JSONException {
 
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
-        JSONObject jsono = familleArticleService.createInventaireVingtQuatreVingt(dtStart, dtEnd, tu, codeFamillle,
-                codeRayon, codeGrossiste, qtyOrCa);
+        JSONObject jsono = familleArticleService.createInventaireVingtQuatreVingt(dtStart, dtEnd, codeFamillle,
+                codeRayon, codeGrossiste, vingtQuatreVingtType);
 
         return Response.ok().entity(jsono.toString()).build();
     }
