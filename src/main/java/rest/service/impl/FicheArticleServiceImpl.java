@@ -179,7 +179,8 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                     joinFaG.get(TGrossiste_.strLIBELLE), root.get(TLot_.intNUMBER),
                     cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPAF)),
                     cb.prod(root.get(TLot_.intNUMBER), joinLot.get(TFamille_.intPRICE))))
-                    .orderBy(cb.desc(root.get(TLot_.dtPEREMPTION)));
+
+                    .orderBy(cb.asc(joinFaz.get(TZoneGeographique_.strLIBELLEE)), cb.asc(root.get(TLot_.dtPEREMPTION)));
 
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
