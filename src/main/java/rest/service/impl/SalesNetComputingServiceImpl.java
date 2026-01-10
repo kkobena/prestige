@@ -74,7 +74,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         List<MontantTp> montantTps = new ArrayList<>();
         MontantAPaye aPaye = new MontantAPaye();
         for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
-            // updateMontantTps(x, montantTps, aPaye);
             totalAmount += x.getIntPRICE();
             TFamille famille = x.getLgFAMILLEID();
             int remise = 0;
@@ -175,7 +174,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     }
 
     @Override
-    public MontantAPaye computeVONet(SalesParams params, boolean asPlafondActivated) {
+    public MontantAPaye computeVONet(SalesParams params) {
         return calcule(params);
 
     }
@@ -381,8 +380,9 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             }
             ti.setNumBon(tiersPayantParams.getNumBon());
             ti.setPriorite(ctp.getIntPRIORITY());
-            // Optional.ofNullable(tiersPayant.getDblPLAFONDCREDIT()).ifPresent(v ->
-            // ti.setPlafondConso(BigDecimal.valueOf(v))); // A voir sil faut ajouter les plafond sur la fiche du TP
+            Optional.ofNullable(tiersPayant.getDblPLAFONDCREDIT())
+                    .ifPresent(v -> ti.setPlafondCreditTiersPayant(BigDecimal.valueOf(v))); // plafond sur la fiche du
+                                                                                            // TP
             Optional.ofNullable(ctp.getDbPLAFONDENCOURS()).ifPresent(v -> ti.setPlafondConso(BigDecimal.valueOf(v)));
             Optional.ofNullable(ctp.getDbCONSOMMATIONMENSUELLE())
                     .ifPresent(v -> ti.setConsoMensuelle(BigDecimal.valueOf(v)));
