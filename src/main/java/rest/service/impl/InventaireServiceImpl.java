@@ -192,7 +192,7 @@ public class InventaireServiceImpl implements InventaireService {
             return List.of();
         }
     }
-    
+
     @Override
     public List<DetailInventaireDTO> fetchDetailsTouchedRayon(String idInventaire, String idRayon, String query,
             Integer page, Integer maxResult) {
@@ -203,7 +203,7 @@ public class InventaireServiceImpl implements InventaireService {
                             + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
-                            + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED <> NULL ");
+                            + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED IS NOT NULL ");
 
             if (StringUtils.isNotBlank(query)) {
                 jpql.append(" AND (" + " o.lgFAMILLEID.intCIP LIKE :search "
@@ -232,11 +232,10 @@ public class InventaireServiceImpl implements InventaireService {
 
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "fetchDetailsUntouchedRayon", e);
+            LOG.log(Level.SEVERE, "fetchDetailsTouchedRayon", e);
             return List.of();
         }
     }
-
 
     @Override
     public List<DetailInventaireDTO> fetchDetailsAll(String idInventaire, String query, Integer page,
@@ -325,8 +324,7 @@ public class InventaireServiceImpl implements InventaireService {
             return List.of();
         }
     }
-    
-    
+
     @Override
     public List<DetailInventaireDTO> fetchDetailsAllTouched(String idInventaire, String query, Integer page,
             Integer maxResult) {
@@ -336,10 +334,10 @@ public class InventaireServiceImpl implements InventaireService {
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
                             + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
-                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.dtUPDATED <> NULL" // ✅
-                                                                                                                   // filtre
-                                                                                                                   // “non
-                                                                                                                   // touché”
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.dtUPDATED IS NOT NULL" // ✅
+            // filtre
+            // “non
+            // touché”
             );
 
             if (StringUtils.isNotBlank(query)) {
@@ -368,7 +366,7 @@ public class InventaireServiceImpl implements InventaireService {
 
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "fetchDetailsAllUntouched", e);
+            LOG.log(Level.SEVERE, "fetchDetailsAllTouched", e);
             return List.of();
         }
     }

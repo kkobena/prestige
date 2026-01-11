@@ -199,7 +199,7 @@ public class ErpRessource {
                 .entity(inventaireService.fetchDetailsUntouchedRayon(idInventaire, idRayon, query, page, maxResult))
                 .build();
     }
-    
+
     @GET
     @Path("ws/inventaires/detailsTouchedRayon")
     public Response fetchDetailsTouchedRayon(@QueryParam(value = "idInventaire") String idInventaire,
@@ -229,7 +229,7 @@ public class ErpRessource {
         return Response.ok().entity(inventaireService.fetchDetailsAllUntouched(idInventaire, query, page, maxResult))
                 .build();
     }
-    
+
     @GET
     @Path("ws/inventaires/detailsAllTouched")
     public Response fetchDetailsAllTouched(@QueryParam(value = "idInventaire") String idInventaire,

@@ -28,10 +28,10 @@ public interface InventaireService {
 
     List<DetailInventaireDTO> fetchDetailsUntouchedRayon(String idInventaire, String idRayon, String query,
             Integer page, Integer maxResult);
-    
-    List<DetailInventaireDTO> fetchDetailsTouchedRayon(String idInventaire, String idRayon, String query,
-            Integer page, Integer maxResult);
-    
+
+    List<DetailInventaireDTO> fetchDetailsTouchedRayon(String idInventaire, String idRayon, String query, Integer page,
+            Integer maxResult);
+
     List<DetailInventaireDTO> fetchDetailsAllTouched(String idInventaire, String query, Integer page,
             Integer maxResult);
 
@@ -39,8 +39,6 @@ public interface InventaireService {
 
     List<DetailInventaireDTO> fetchDetailsAllUntouched(String idInventaire, String query, Integer page,
             Integer maxResult);
-    
-    
 
     List<DetailInventaireDTO> fetchDetailsAllEcarts(String idInventaire, String query, Integer page, Integer maxResult);
 
