@@ -49,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1245,7 +1246,7 @@ public class ClientServiceImpl implements ClientService {
 
     }
 
-    public TCompteClientTiersPayant findCompteClientTiersPayantByClientId(String clientId) {
+    private TCompteClientTiersPayant findCompteClientTiersPayantByClientId(String clientId) {
 
         try {
             TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery(
@@ -1552,5 +1553,59 @@ public class ClientServiceImpl implements ClientService {
 
         return this.excelGeneratorService.generate(
                 buildExeclData(isGroupe, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp), "bordereau");
+    }
+
+    @Override
+    public void updateTiersPayantPriority(TClient tc, List<TiersPayantParams> tierspayants) {
+        boolean hasPrincipal = tierspayants.stream().anyMatch(e -> e.isPrincipal());
+        if (!hasPrincipal) {
+            return;
+        }
+        List<TCompteClientTiersPayant> compteClientTiersPayants = getClientTiersPayants(tc.getLgCLIENTID());
+
+        int priority = 1;
+        TCompteClientTiersPayant ro = null;
+        for (TCompteClientTiersPayant compteClientTiersPayant : compteClientTiersPayants) {
+            String idCmp = compteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID();
+            TTiersPayant payant = compteClientTiersPayant.getLgTIERSPAYANTID();
+            String tiersPayntId = payant.getLgTIERSPAYANTID();
+            for (TiersPayantParams payantParams : tierspayants) {
+                if ((idCmp.equals(payantParams.getCompteTp()) || tiersPayntId.equals(payantParams.getCompteTp()))
+                        && payantParams.isPrincipal()) {
+                    compteClientTiersPayant.setIntPRIORITY(priority);
+                    compteClientTiersPayant.setBISRO(Boolean.TRUE);
+                    em.merge(compteClientTiersPayant);
+                    priority++;
+                    ro = compteClientTiersPayant;
+                    break;
+
+                }
+            }
+            if (Objects.nonNull(ro)) {
+                break;
+            }
+        }
+
+        for (TCompteClientTiersPayant compteClientTiersPayant : compteClientTiersPayants) {
+            if (Objects.nonNull(ro) && compteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID()
+                    .equals(ro.getLgCOMPTECLIENTTIERSPAYANTID())) {
+                continue;
+            }
+            compteClientTiersPayant.setBISRO(Boolean.FALSE);
+            compteClientTiersPayant.setIntPRIORITY(priority);
+            priority++;
+            em.merge(compteClientTiersPayant);
+        }
+    }
+
+    private List<TCompteClientTiersPayant> getClientTiersPayants(String clientId) {
+        try {
+            TypedQuery<TCompteClientTiersPayant> tq = em.createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 ORDER BY o.intPRIORITY ASC    ",
+                    TCompteClientTiersPayant.class).setParameter(1, clientId);
+            return tq.getResultList();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 }
