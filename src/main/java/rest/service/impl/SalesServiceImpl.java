@@ -1755,7 +1755,7 @@ public class SalesServiceImpl implements SalesService {
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_ORDONNANCE);
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(tp);// TODO: utiliser directement la
-                                                                                      // collection
+            // collection
             int montant = tp.getIntPRICE();
             if (diffAmount(montant, lstTPreenregistrementDetail)) {
                 json.put("success", false);
@@ -3505,7 +3505,7 @@ public class SalesServiceImpl implements SalesService {
             updateVente(venteModification, salesParams, tp);
             venteModification.setFinalClient(NumberUtils.formatIntToString(tp.getIntCUSTPART()));
         }
-
+        clientService.updateTiersPayantPriority(tp.getClient(), salesParams.getTierspayants());
         Map<String, Object> donneesMap = new HashMap<>();
         if (!venteModification.isEmpty()) {
             donneesMap.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(new JSONObject(venteModification)));
