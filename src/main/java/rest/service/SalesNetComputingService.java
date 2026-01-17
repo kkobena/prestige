@@ -16,7 +16,7 @@ import javax.ejb.Local;
 @Local
 public interface SalesNetComputingService {
 
-    MontantAPaye computeVONet(SalesParams params, boolean asPlafondActivated);
+    MontantAPaye computeVONet(SalesParams params);
 
     MontantAPaye calculeRepair(TPreenregistrement op,
             List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents,

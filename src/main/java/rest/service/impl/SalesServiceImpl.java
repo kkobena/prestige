@@ -4478,21 +4478,9 @@ public class SalesServiceImpl implements SalesService {
         updateCompteClientTiersPayantEncourAndPlafond(payent);
     }
 
-    private boolean checkPlafondVente() {
-        if (Objects.isNull(Utils.plafondVenteIsActive)) {
-            try {
-                TParameters tp = getEm().find(TParameters.class, "KEY_ACTIVATION_PLAFOND_VENTE");
-                Utils.plafondVenteIsActive = (tp != null && tp.getStrVALUE().trim().equals("1"));
-            } catch (Exception e) {
-                LOG.log(Level.SEVERE, null, e);
-            }
-        }
-        return Utils.plafondVenteIsActive;
-    }
-
     @Override
     public JSONObject computeVONet(SalesParams params) {
-        MontantAPaye montant = computingService.computeVONet(params, checkPlafondVente());
+        MontantAPaye montant = computingService.computeVONet(params);
         JSONObject json = new JSONObject();
         json.put("hasRestructuring", montant.isRestructuring());
         json.put("success", true).put("msg", montant.getMessage());
