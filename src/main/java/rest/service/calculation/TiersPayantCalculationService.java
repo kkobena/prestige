@@ -50,7 +50,7 @@ public class TiersPayantCalculationService {
         List<TiersPayantLineOutput> lineOutputs = new ArrayList<>();
         StringBuilder warnings = new StringBuilder();
         for (TiersPayantInput tpInput : input.getTiersPayants()) {
-            
+
             BigDecimal remainingAmountForTps = tiersPayants.getOrDefault(tpInput.getClientTiersPayantId(),
                     BigDecimal.ZERO);
             remainingAmountForTps = remainingAmountForTps.setScale(0, RoundingMode.HALF_UP);
