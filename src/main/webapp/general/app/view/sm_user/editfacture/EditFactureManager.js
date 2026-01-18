@@ -452,7 +452,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             },
             {
                 xtype: 'actioncolumn',
-                hidden: true,
+                hidden: false,
                 width: 30,
                 sortable: false,
                 menuDisabled: true,

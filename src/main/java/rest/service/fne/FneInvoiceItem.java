@@ -9,12 +9,12 @@ import javax.validation.constraints.NotNull;
 public class FneInvoiceItem {
 
     private final int quantity = 1;
-    private final String[] taxes = { "TVAD" };
+    private String[] taxes = { "TVAD" };
     private String reference;
     @NotNull
     private String description;
     @NotNull
-    private Integer amount;
+    private Double amount;// envoie double
     private String measurementUnit;
 
     public String getReference() {
@@ -27,6 +27,10 @@ public class FneInvoiceItem {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public void setTaxes(String[] taxes) {
+        this.taxes = taxes;
     }
 
     public void setReference(String reference) {
@@ -49,11 +53,11 @@ public class FneInvoiceItem {
         this.description = description;
     }
 
-    public Integer getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(Integer amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 
