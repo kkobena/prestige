@@ -87,9 +87,9 @@ public class FneServiceImpl implements FneService {
         fneInvoice.setItems(fneInvoiceItems);
 
         // Pour des logs de tests
-        // int montantTotalFne = fneInvoiceItems.stream().mapToInt(FneInvoiceItem::getAmount).sum();
-        // LOG.info(String.format("montantHt fne: %d monantFacture: %s", montantTotalFne, facture.getDblMONTANTCMDE() +
-        // ""));
+        // double montantTotalFne = fneInvoiceItems.stream().mapToDouble(FneInvoiceItem::getAmount).sum();
+        // LOG.info(String.format("montantHt fne: %s monantFacture: %s", montantTotalFne + "",
+        // facture.getDblMONTANTCMDE() + ""));
         // facture.getTFactureDetailCollection().forEach(t -> fneInvoice.getItems().add(buildFrom(t)));//Flatten by code
         // tva
         return fneInvoice;
@@ -106,10 +106,11 @@ public class FneServiceImpl implements FneService {
         em.persist(fne);
     }
 
-    private List<Item> getFactureMonatantByTva(String factureId) {
-        Query query = em.createNativeQuery(
-                "SELECT d.valeurTva AS codeTva ,SUM(d.int_PRICE) AS montantTTCByCodeTva,cp.int_PERCENT AS taux FROM t_facture_detail fd JOIN t_preenregistrement_detail d ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY JOIN t_preenregistrement_compte_client_tiers_payent cp ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY  WHERE fd.lg_FACTURE_ID=?1  GROUP  BY d.valeurTva,cp.int_PERCENT",
-                Tuple.class).setParameter(1, factureId);
+    private List<Item> getFactureMonatantByTva(String factureId, String tiersPayantId) {
+        String sqlQuery = "SELECT d.valeurTva AS codeTva ,SUM(d.int_PRICE) AS montantTTCByCodeTva,cp.int_PERCENT AS taux FROM t_facture_detail fd JOIN t_preenregistrement_detail d ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY JOIN t_preenregistrement_compte_client_tiers_payent cp JOIN t_compte_client_tiers_payant cpt ON cpt.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID "
+                + " JOIN t_tiers_payant tp ON tp.lg_TIERS_PAYANT_ID=cpt.lg_TIERS_PAYANT_ID ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY  WHERE fd.lg_FACTURE_ID=?1 AND tp.lg_TIERS_PAYANT_ID=?2 GROUP  BY d.valeurTva,cp.int_PERCENT ORDER BY d.valeurTva";
+        Query query = em.createNativeQuery(sqlQuery, Tuple.class).setParameter(1, factureId).setParameter(2,
+                tiersPayantId);
         List<Tuple> list = query.getResultList();
         return list.stream().map(t -> buildFromTuple(t)).collect(Collectors.toList());
 
@@ -117,11 +118,13 @@ public class FneServiceImpl implements FneService {
 
     private Item buildFromTuple(Tuple tuple) {
         return new Item(tuple.get("codeTva", Integer.class),
-                tuple.get("montantTTCByCodeTva", BigDecimal.class).intValue(), tuple.get("taux", Integer.class));
+                tuple.get("montantTTCByCodeTva", BigDecimal.class).intValue(),
+                arrondiTauxCouverture(tuple.get("taux", Integer.class)));
     }
 
     private List<FneInvoiceItem> buildFromProduitCodeTva(TFacture facture) {
-        List<Item> itemsByCodeTvaAndByTaux = getFactureMonatantByTva(facture.getLgFACTUREID());
+        List<Item> itemsByCodeTvaAndByTaux = getFactureMonatantByTva(facture.getLgFACTUREID(),
+                facture.getTiersPayant().getLgTIERSPAYANTID());
 
         List<FneInvoiceItem> fneInvoiceItems = new ArrayList<>();
         String codeFacture = facture.getStrCODEFACTURE();
@@ -166,6 +169,14 @@ public class FneServiceImpl implements FneService {
 
         });
         return montantAtomicHt.get();
+
+    }
+
+    public int arrondiTauxCouverture(int taux) {
+
+        int arrondi = Math.round(taux / 5f) * 5;
+
+        return Math.min(100, arrondi);
 
     }
 

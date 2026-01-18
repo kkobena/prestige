@@ -43,4 +43,10 @@ public class FneResponseTaxe {
         this.shortName = shortName;
     }
 
+    @Override
+    public String toString() {
+        return "FneResponseTaxe{" + "invoiceItemId=" + invoiceItemId + ", amount=" + amount + ", name=" + name
+                + ", shortName=" + shortName + '}';
+    }
+
 }
