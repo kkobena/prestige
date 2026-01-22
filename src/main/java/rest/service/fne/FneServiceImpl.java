@@ -115,14 +115,20 @@ public class FneServiceImpl implements FneService {
         JSONObject payload = new JSONObject(invoice);
 
         String template = payload.optString("template", "B2B").trim();
-        if (template.isEmpty()) {
+        if (template.isEmpty())
             template = "B2B";
-        }
         payload.put("template", template);
 
+        String ncc = payload.optString("clientNcc", "").trim();
+
         if ("B2C".equalsIgnoreCase(template)) {
-            // ✅ B2C: ne jamais envoyer clientNcc
-            payload.remove("clientNcc");
+
+            // ✅ B2C: NCC facultatif -> on l'envoie seulement s'il est renseigné
+            if (ncc.isEmpty()) {
+                payload.remove("clientNcc");
+            } else {
+                payload.put("clientNcc", ncc); // normalise (trim)
+            }
 
             String name = payload.optString("clientCompanyName", "").trim();
             if (name.isEmpty()) {
@@ -130,11 +136,12 @@ public class FneServiceImpl implements FneService {
             }
 
         } else if ("B2B".equalsIgnoreCase(template)) {
-            // ✅ B2B: clientNcc obligatoire
-            String ncc = payload.optString("clientNcc", "").trim();
+
+            // ✅ B2B: NCC obligatoire
             if (ncc.isEmpty()) {
                 throw new IllegalArgumentException("clientNcc obligatoire pour une facture B2B (assurance)");
             }
+            payload.put("clientNcc", ncc); // normalise (trim)
         }
 
         return payload;
@@ -181,6 +188,10 @@ public class FneServiceImpl implements FneService {
         fneInvoice.setClientPhone(tTiersPayant.getStrTELEPHONE());
 
         // 🚫 Pas de NCC en B2C (buildPayload supprime au cas où)
+        String ncc = tTiersPayant.getStrCOMPTECONTRIBUABLE();
+        if (ncc != null && !ncc.trim().isEmpty()) {
+            fneInvoice.setClientNcc(ncc.trim());
+        }
         fneInvoice.setItems(buildFromProduitsAvecTva(facture));
 
         return fneInvoice;
