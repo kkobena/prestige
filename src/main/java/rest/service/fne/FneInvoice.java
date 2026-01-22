@@ -10,14 +10,17 @@ import javax.validation.constraints.NotNull;
  */
 public class FneInvoice {
 
-    private final String invoiceType = "sale";
-    private final String paymentMethod = "check";
-    private final String template = "B2B";
+    // ✅ plus final : valeurs par défaut, mais modifiables selon B2B/B2C
+    private String invoiceType = "sale";
+    private String paymentMethod = "check";
+    private String template = "B2B";
+
+    // ✅ optionnel (obligatoire uniquement en B2B => contrôlé dans le service)
+    private String clientNcc;
 
     @NotNull
-    private String clientNcc;
-    @NotNull
     private String clientCompanyName;
+
     @NotNull
     private String clientPhone;
 
@@ -35,6 +38,32 @@ public class FneInvoice {
     private String footer;
 
     private List<FneInvoiceItem> items = new ArrayList<>();
+
+    // ======= Getters/Setters =======
+
+    public String getInvoiceType() {
+        return invoiceType;
+    }
+
+    public void setInvoiceType(String invoiceType) {
+        this.invoiceType = invoiceType;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
+    }
 
     public String getClientNcc() {
         return clientNcc;
@@ -106,18 +135,6 @@ public class FneInvoice {
 
     public void setItems(List<FneInvoiceItem> items) {
         this.items = items;
-    }
-
-    public String getInvoiceType() {
-        return invoiceType;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public String getTemplate() {
-        return template;
     }
 
 }

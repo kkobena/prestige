@@ -566,26 +566,73 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         ];
     },
     certify: function (grid, rowIndex) {
-        const rec = grid.getStore().getAt(rowIndex);
+    var rec = grid.getStore().getAt(rowIndex);
+    var factureId = rec.get('lg_FACTURE_ID');
 
-        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-        Ext.Ajax.request({
-            url: '../api/v1/fne/invoices/sign/' + rec.get('lg_FACTURE_ID'),
-            method: 'GET',
-            success: function (response)
-            {
-                progress.hide();
-                Ext.MessageBox.alert('Info', 'Opération effectuée ');
+    var win = Ext.create('Ext.window.Window', {
+        title: 'Certification FNE',
+        modal: true,
+        width: 380,
+        resizable: false,
+        layout: 'fit',
+        items: [{
+            xtype: 'form',
+            bodyPadding: 12,
+            defaults: { anchor: '100%', labelWidth: 90 },
+            items: [{
+                xtype: 'combo',
+                fieldLabel: 'Type',
+                itemId: 'typeClient',
+                editable: false,
+                forceSelection: true,
+                queryMode: 'local',
+                store: Ext.create('Ext.data.Store', {
+                    fields: ['value', 'label'],
+                    data: [
+                        { value: 'ASSURANCE', label: 'Assurance (B2B)' },
+                        { value: 'CARNET',   label: 'Carnet (B2C)' }
+                    ]
+                }),
+                displayField: 'label',
+                valueField: 'value',
+                value: 'ASSURANCE',
+                allowBlank: false
+            }]
+        }],
+        buttons: [{
+            text: 'Valider',
+            handler: function () {
+                var type = win.down('#typeClient').getValue();
 
-            },
-            failure: function (response)
-            {
-                progress.hide();
-                Ext.MessageBox.alert('Error Message', response.responseText);
+                var url = (type === 'CARNET')
+                    ? ('../api/v1/fne/invoices/sign-items/' + factureId)
+                    : ('../api/v1/fne/invoices/sign/' + factureId);
+
+                win.close();
+
+                var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                Ext.Ajax.request({
+                    url: url,
+                    method: 'GET',
+                    success: function () {
+                        progress.hide();
+                        Ext.MessageBox.alert('Info', 'Opération effectuée');
+                    },
+                    failure: function (response) {
+                        progress.hide();
+                        Ext.MessageBox.alert('Error Message', response.responseText);
+                    }
+                });
             }
-        });
+        }, {
+            text: 'Annuler',
+            handler: function () { win.close(); }
+        }]
+    });
 
-    },
+    win.show();
+}
+,
     onAddCreate: function () {
 
         testextjs.app.getController('App').onLoadNewComponent('addeditfacture', "Cr&eacute;er une facture", "0");

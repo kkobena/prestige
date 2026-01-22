@@ -11,4 +11,6 @@ import rest.service.exception.FneExeception;
 public interface FneService {
 
     void createInvoice(String idFacture) throws FneExeception;
+
+    void createInvoiceItems(String idFacture) throws FneExeception;
 }

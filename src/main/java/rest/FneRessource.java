@@ -34,4 +34,10 @@ public class FneRessource {
         return Response.ok().build();
     }
 
+    @GET
+    @Path("invoices/sign-items/{id}")
+    public Response getSignItems(@PathParam("id") String id) throws FneExeception {
+        fneService.createInvoiceItems(id);
+        return Response.ok().build();
+    }
 }

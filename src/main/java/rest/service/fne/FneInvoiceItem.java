@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
  */
 public class FneInvoiceItem {
 
-    private final int quantity = 1;
+    private int quantity = 1;
     private String[] taxes = { "TVAD" };
     private String reference;
     @NotNull
@@ -27,6 +27,10 @@ public class FneInvoiceItem {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = (quantity <= 0) ? 1 : quantity;
     }
 
     public void setTaxes(String[] taxes) {
