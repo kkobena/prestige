@@ -12,16 +12,13 @@ public class FneInvoice {
 
     private final String invoiceType = "sale";
     private final String paymentMethod = "check";
-    private final String template = "B2B";
-
-    @NotNull
+    private String template = "B2B";
     private String clientNcc;
     @NotNull
     private String clientCompanyName;
-    @NotNull
+
     private String clientPhone;
 
-    @NotNull
     private String clientEmail;
 
     @NotNull
@@ -114,6 +111,10 @@ public class FneInvoice {
 
     public String getPaymentMethod() {
         return paymentMethod;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
     }
 
     public String getTemplate() {
