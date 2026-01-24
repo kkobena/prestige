@@ -460,7 +460,30 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         icon: 'resources/images/icons/certication.png',
                         tooltip: 'Certification',
                         scope: this,
-                        handler: this.certify
+                        handler: this.shwoChoiceModal
+                    }]
+            },
+            {
+                xtype: 'actioncolumn',
+                hidden: false,
+                width: 30,
+                sortable: false,
+                menuDisabled: true,
+                items: [{
+
+                        getClass: function (v, meta, rec) {
+
+                            if (rec.get('fneUrl')) {
+                                return 'x-display-hide';
+                            } else {
+                                return 'x-hide-display';
+                            }
+                        },
+
+                        icon: 'resources/images/download.png',
+                        tooltip: 'Télécharger',
+                        scope: this,
+                        handler: this.onOpenFneLink
                     }]
             },
             {
@@ -565,17 +588,136 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             }
         ];
     },
-    certify: function (grid, rowIndex) {
+    onOpenFneLink: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
+        const fneUrl = rec.get('fneUrl');
+        if (fneUrl) {
+            window.open(fneUrl);
+        }
+
+    },
+    shwoChoiceModal: function (grid, rowIndex) {
+        const me = this;
+        const rec = grid.getStore().getAt(rowIndex);
+        const choice = new Ext.data.Store({
+            fields: ['code', 'libelle'],
+            data: [{code: 'GROUPE_TAUX_TVA', libelle: 'Facture'},
+                {code: 'PRODUIT_DETAIL', libelle: 'Produit'}]
+
+        });
+
+        const win = Ext.create('Ext.window.Window',
+                {
+                    extend: 'Ext.window.Window',
+                    autoShow: true,
+                    height: 200,
+                    width: '40%',
+                    modal: true,
+                    title: 'Choix du type fe facturation',
+                    closeAction: 'hide',
+                    closable: true,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            modelValidation: true,
+                            layout: {
+                                type: 'vbox',
+                                align: 'stretch'
+                            },
+                            items: [
+                                {
+                                    xtype: 'fieldset',
+                                    layout: {
+                                        type: 'hbox',
+                                        align: 'stretch'
+                                    },
+                                    title: 'Type de facturation',
+                                    items: [
+                                        {
+                                            xtype: 'combo',
+                                            fieldLabel: 'Type de facturation',
+                                            allowBlank: false,
+                                            name: 'typeInvoice',
+                                            flex: 1,
+                                            valueField: 'code',
+                                            displayField: 'libelle',
+                                            typeAhead: true,
+                                            queryMode: 'local',
+                                            pageSize: 2,
+                                            emptyText: 'Choisir un type...',
+                                            store: choice
+                                        }
+
+                                    ]
+
+                                }
+
+                            ],
+                            dockedItems: [
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    ui: 'footer',
+                                    layout: {
+                                        pack: 'end',
+                                        type: 'hbox'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'button',
+                                            text: 'Valider',
+                                            handler: function (btn) {
+                                                const formulaire = btn.up('form');
+                                                if (formulaire.isValid()) {
+
+                                                    const formValues = formulaire.getValues();
+                                                    me.certify(rec.get('lg_FACTURE_ID'), formValues.typeInvoice, win, grid);
+                                                }
+                                            }
+                                        },
+                                        {
+                                            xtype: 'button',
+                                            text: 'Annuler',
+                                            handler: function (btn) {
+                                                win.destroy();
+                                            }
+
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+
+                }
+
+
+        );
+
+
+
+
+
+    },
+
+    certify: function (idFacture, typeInvoice, win, grid) {
+
 
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
-            url: '../api/v1/fne/invoices/sign/' + rec.get('lg_FACTURE_ID'),
+            url: '../api/v1/fne/invoices/sign/' + idFacture + '/' + typeInvoice,
             method: 'GET',
             success: function (response)
             {
                 progress.hide();
+                win.destroy();
                 Ext.MessageBox.alert('Info', 'Opération effectuée ');
+                grid.getStore().reload();
 
             },
             failure: function (response)
@@ -752,7 +894,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             filtreImpayes = '';
         }
         var search_value = Ext.getCmp('rechecherFacture').getValue();
-        
+
         window.open("../webservices/sm_user/facturation/ws_data_relever_facture.jsp" + "?lg_customer_id=" + lg_customer_id + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin + "&search_value=" + search_value + "&impayes=" + filtreImpayes);
     },
     exportToExcel: function () {

@@ -104,7 +104,7 @@
     TOfficine oTOfficine = obllBase.getOdataManager().getEm().find(dal.TOfficine.class, "1");
     TTiersPayant OTiersPayant = obllBase.getOdataManager().getEm().find(TTiersPayant.class, lg_customer_id);
     JSONObject mtn = cn.getReleveFacture(dt_debut, dt_fin, search, lgTP, paid, all);
-    System.err.println("mtn ********  "+mtn);
+    
 
     String P_TOTAL_GENERAL = "";
 
