@@ -1,15 +1,16 @@
 package rest.service.fne;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import dal.FneTiersPayantInvoice;
 import dal.TFacture;
 import dal.TOfficine;
 import dal.TTiersPayant;
+import dal.TTypeTiersPayant;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -26,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.exception.FneExeception;
+import rest.service.impl.Utils;
 import util.Constant;
 import util.AppParameters;
 import util.DateCommonUtils;
@@ -43,20 +46,29 @@ public class FneServiceImpl implements FneService {
     private EntityManager em;
 
     @Override
-    public void createInvoice(String idFacture) throws FneExeception {
+    public void createInvoice(String idFacture, TypeInvoice typeInvoice) throws FneExeception {
 
         try {
-            createInvoice(em.find(TFacture.class, idFacture));
+
+            createInvoice(em.find(TFacture.class, idFacture), typeInvoice);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             throw new FneExeception(e.getLocalizedMessage());
         }
     }
 
-    private void createInvoice(TFacture facture) throws FneExeception {
+    @Override
+    public void createGroupeInvoice(Integer idFacture, TypeInvoice typeInvoice) {
+        fetchGroupeFactures(idFacture).forEach(facture -> {
+
+            createInvoice(facture, typeInvoice);
+        });
+    }
+
+    private void createInvoice(TFacture facture, TypeInvoice typeInvoice) throws FneExeception {
         TOfficine officine = getOfficine();
         Client client = getHttpClient();
-        JSONObject payload = new JSONObject(buildFromFacture(facture, officine));
+        JSONObject payload = new JSONObject(resolveFneInvoice(facture, officine, typeInvoice));
 
         WebTarget myResource = client.target(sp.fneUrl);
         Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.fnePkey))
@@ -73,9 +85,7 @@ public class FneServiceImpl implements FneService {
         return em.find(TOfficine.class, Constant.OFFICINE);
     }
 
-    private FneInvoice buildFromFacture(TFacture facture, TOfficine officine) {
-
-        TTiersPayant tTiersPayant = facture.getTiersPayant();
+    private FneInvoice buildCommonFneInvoice(TTiersPayant tTiersPayant, TOfficine officine) {
         FneInvoice fneInvoice = new FneInvoice();
         fneInvoice.setEstablishment(officine.getStrNOMCOMPLET());
         fneInvoice.setClientCompanyName(tTiersPayant.getStrFULLNAME());
@@ -83,16 +93,64 @@ public class FneServiceImpl implements FneService {
         fneInvoice.setClientPhone(tTiersPayant.getStrTELEPHONE());
         fneInvoice.setPointOfSale(sp.fnepointOfSale);
         fneInvoice.setClientNcc(tTiersPayant.getStrCOMPTECONTRIBUABLE());
-        List<FneInvoiceItem> fneInvoiceItems = buildFromProduitCodeTva(facture);
+        return fneInvoice;
+    }
+
+    private FneInvoice buildFneInvoiceForCarnet(TFacture facture, TOfficine officine, TTiersPayant tTiersPayant,
+            TypeInvoice typeInvoice) {
+        FneInvoice fneInvoice = buildCommonFneInvoice(tTiersPayant, officine);
+        fneInvoice.setTemplate("B2C");
+        List<FneInvoiceItem> fneInvoiceItems = resolveInvoiceItems(facture, tTiersPayant, typeInvoice);
         fneInvoice.setItems(fneInvoiceItems);
 
-        // Pour des logs de tests
-        // double montantTotalFne = fneInvoiceItems.stream().mapToDouble(FneInvoiceItem::getAmount).sum();
-        // LOG.info(String.format("montantHt fne: %s monantFacture: %s", montantTotalFne + "",
-        // facture.getDblMONTANTCMDE() + ""));
-        // facture.getTFactureDetailCollection().forEach(t -> fneInvoice.getItems().add(buildFrom(t)));//Flatten by code
-        // tva
         return fneInvoice;
+    }
+
+    private List<FneInvoiceItem> resolveInvoiceItems(TFacture facture, TTiersPayant tTiersPayant,
+            TypeInvoice typeInvoice) {
+        String tiersPayantId = tTiersPayant.getLgTIERSPAYANTID();
+        if (Objects.isNull(typeInvoice) || typeInvoice == TypeInvoice.GROUPE_TAUX_TVA) {
+            return buildFromProduitCodeTva(facture, tiersPayantId);
+        }
+        return buildFneInvoiceItemParProduit(facture, tiersPayantId);
+    }
+
+    private List<FneInvoiceItem> buildFneInvoiceItemParProduit(TFacture facture, String tiersPayantId) {
+        List<VenteDetail> venteDetails = fetchVenteDetail(facture.getLgFACTUREID(), tiersPayantId);
+
+        List<FneInvoiceItem> fneInvoiceItems = new ArrayList<>();
+        for (VenteDetail item : venteDetails) {
+            FneInvoiceItem invoiceItem = new FneInvoiceItem();
+            invoiceItem.setDescription(item.getLibelle());
+            invoiceItem.setReference(item.getCodeCip());
+            invoiceItem.setQuantity(item.getQuantity());
+            invoiceItem.setDiscount(item.getTauxRemise());
+            invoiceItem.setTaxes(new String[] { TaxeEnum.getByValue(item.getCodeTva()).name() });
+            // invoiceItem.setAmount(Utils.calculHt(item.getMontantTtc(), item.getCodeTva()));
+            invoiceItem.setAmount(computeTpAmount(item.getMontantTtc(), item.getCodeTva(), item.getTauxCouverture()));
+            fneInvoiceItems.add(invoiceItem);
+        }
+
+        return fneInvoiceItems;
+    }
+
+    private FneInvoice buildFromFacture(TFacture facture, TOfficine officine, TTiersPayant tTiersPayant,
+            TypeInvoice typeInvoice) {
+
+        FneInvoice fneInvoice = buildCommonFneInvoice(tTiersPayant, officine);
+        List<FneInvoiceItem> fneInvoiceItems = resolveInvoiceItems(facture, tTiersPayant, typeInvoice);
+        fneInvoice.setItems(fneInvoiceItems);
+        return fneInvoice;
+    }
+
+    private FneInvoice resolveFneInvoice(TFacture facture, TOfficine officine, TypeInvoice typeInvoice) {
+        TTiersPayant tTiersPayant = facture.getTiersPayant();
+        TTypeTiersPayant tTypeTiersPayant = tTiersPayant.getLgTYPETIERSPAYANTID();
+        if (Constant.TYPE_TIERS_PAYANT_CARNET_ID.equals(tTypeTiersPayant.getLgTYPETIERSPAYANTID())) {
+            return buildFneInvoiceForCarnet(facture, officine, tTiersPayant, typeInvoice);
+        }
+        return buildFromFacture(facture, officine, tTiersPayant, typeInvoice);
+
     }
 
     private Client getHttpClient() {
@@ -100,10 +158,11 @@ public class FneServiceImpl implements FneService {
     }
 
     private void saveResponse(FneResponse fneResponse, TFacture facture) {
-        FneTiersPayantInvoice fne = new FneTiersPayantInvoice();
-        fne.setFacture(facture);
-        fne.getResponses().add(fneResponse);
-        em.persist(fne);
+        if (Objects.nonNull(fneResponse)) {
+            facture.setFneUrl(fneResponse.getToken());
+            em.merge(facture);
+        }
+
     }
 
     private List<Item> getFactureMonatantByTva(String factureId, String tiersPayantId) {
@@ -116,15 +175,42 @@ public class FneServiceImpl implements FneService {
 
     }
 
+    private List<VenteDetail> fetchVenteDetail(String factureId, String tiersPayantId) {
+        String sqlQuery = "SELECT cp.int_PERCENT AS tauxCouverture,COALESCE(r.dbl_TAUX,0.0)  AS tauxRemise, d.int_PRICE_UNITAIR AS montantTtc,d.int_QUANTITY AS quantity,d.valeurTva AS codeTva,prod.int_CIP AS codeCip,prod.str_NAME AS libelle FROM t_preenregistrement_detail d JOIN t_famille prod ON d.lg_FAMILLE_ID=prod.lg_FAMILLE_ID "
+                + " JOIN t_facture_detail fd ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY  JOIN t_facture fact ON fact.lg_FACTURE_ID=fd.lg_FACTURE_ID LEFT JOIN t_grille_remise r ON r.lg_GRILLE_REMISE_ID=d.lg_GRILLE_REMISE_ID JOIN t_preenregistrement_compte_client_tiers_payent cp ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY WHERE fd.lg_FACTURE_ID=?1 AND fact.tiersPayant=?2 GROUP BY d.lg_PREENREGISTREMENT_DETAIL_ID";
+        Query query = em.createNativeQuery(sqlQuery, Tuple.class).setParameter(1, factureId).setParameter(2,
+                tiersPayantId);
+        List<Tuple> list = query.getResultList();
+        return list.stream().map(t -> buildarnetDetailFromTuple(t)).collect(Collectors.toList());
+
+    }
+
+    private List<TFacture> fetchGroupeFactures(Integer idGroupeFacture) {
+
+        TypedQuery<TFacture> typedQuery = em.createQuery(
+                "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.lgGROUPEID.lgGROUPEID=?1  ) ",
+                TFacture.class);
+        typedQuery.setParameter(1, idGroupeFacture);
+        return typedQuery.getResultList();
+
+    }
+
     private Item buildFromTuple(Tuple tuple) {
         return new Item(tuple.get("codeTva", Integer.class),
                 tuple.get("montantTTCByCodeTva", BigDecimal.class).intValue(),
-                arrondiTauxCouverture(tuple.get("taux", Integer.class)));
+                Utils.arrondiTauxCouverture(tuple.get("taux", Integer.class)));
     }
 
-    private List<FneInvoiceItem> buildFromProduitCodeTva(TFacture facture) {
-        List<Item> itemsByCodeTvaAndByTaux = getFactureMonatantByTva(facture.getLgFACTUREID(),
-                facture.getTiersPayant().getLgTIERSPAYANTID());
+    private VenteDetail buildarnetDetailFromTuple(Tuple tuple) {
+
+        return new VenteDetail(tuple.get("codeTva", Integer.class), tuple.get("montantTtc", Integer.class),
+                tuple.get("quantity", Integer.class), tuple.get("libelle", String.class),
+                tuple.get("codeCip", String.class), tuple.get("tauxRemise", Double.class),
+                tuple.get("tauxCouverture", Integer.class));
+    }
+
+    private List<FneInvoiceItem> buildFromProduitCodeTva(TFacture facture, String tiersPayantId) {
+        List<Item> itemsByCodeTvaAndByTaux = getFactureMonatantByTva(facture.getLgFACTUREID(), tiersPayantId);
 
         List<FneInvoiceItem> fneInvoiceItems = new ArrayList<>();
         String codeFacture = facture.getStrCODEFACTURE();
@@ -162,22 +248,17 @@ public class FneServiceImpl implements FneService {
         Map<Integer, List<Item>> tauxMap = itemsByTva.stream().collect(Collectors.groupingBy(Item::getTaux));
         tauxMap.forEach((tauxAssure, values) -> {
             int totalTtc = values.stream().mapToInt(Item::getMontantTtc).sum();
-            double montantHt = calculHt(totalTtc, codeTva);
-            double partAssurence = BigDecimal.valueOf(montantHt).multiply(BigDecimal.valueOf(tauxAssure / 100.f))
-                    .setScale(2, RoundingMode.HALF_UP).doubleValue();
-            montantAtomicHt.addAndGet(partAssurence);
+            montantAtomicHt.addAndGet(computeTpAmount(totalTtc, codeTva, tauxAssure));
 
         });
         return montantAtomicHt.get();
 
     }
 
-    public int arrondiTauxCouverture(int taux) {
-
-        int arrondi = Math.round(taux / 5f) * 5;
-
-        return Math.min(100, arrondi);
-
+    private double computeTpAmount(int totalTtc, int codeTva, int tauxAssure) {
+        double montantHt = Utils.calculHt(totalTtc, codeTva);
+        return BigDecimal.valueOf(montantHt).multiply(BigDecimal.valueOf(tauxAssure / 100.f))
+                .setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
     // 1428351F
@@ -186,7 +267,6 @@ public class FneServiceImpl implements FneService {
         private final int codeTva;
         private final int montantTtc;
         private final int taux;
-        // private final int remise;
 
         public int getCodeTva() {
             return codeTva;
@@ -196,16 +276,13 @@ public class FneServiceImpl implements FneService {
             return montantTtc;
         }
 
-        public Item(int codeTva, int montantTtc, int taux/* , int remise */) {
+        public Item(int codeTva, int montantTtc, int taux) {
             this.codeTva = codeTva;
             this.montantTtc = montantTtc;
             this.taux = taux;
-            // this.remise=remise;
+
         }
 
-        /*
-         * public int getRemise() { return remise; }
-         */
         public int getTaux() {
             return taux;
         }
@@ -217,7 +294,54 @@ public class FneServiceImpl implements FneService {
 
     }
 
-    private double calculHt(int ttc, int tva) {
-        return (ttc) * 1.0 / (1 + (tva / 100.f));
+    private class VenteDetail {
+
+        private final int codeTva;
+        private final int montantTtc;
+        private final int quantity;
+        private final String libelle;
+        private final String codeCip;
+        private final Double tauxRemise;
+        private final int tauxCouverture;
+
+        public VenteDetail(int codeTva, int montantTtc, int quantity, String libelle, String codeCip, Double tauxRemise,
+                int tauxCouverture) {
+            this.codeTva = codeTva;
+            this.montantTtc = montantTtc;
+            this.quantity = quantity;
+            this.libelle = libelle;
+            this.codeCip = codeCip;
+            this.tauxRemise = tauxRemise;
+            this.tauxCouverture = tauxCouverture;
+        }
+
+        public String getCodeCip() {
+            return codeCip;
+        }
+
+        public Double getTauxRemise() {
+            return tauxRemise;
+        }
+
+        public int getTauxCouverture() {
+            return tauxCouverture;
+        }
+
+        public int getCodeTva() {
+            return codeTva;
+        }
+
+        public int getMontantTtc() {
+            return montantTtc;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public String getLibelle() {
+            return libelle;
+        }
+
     }
 }

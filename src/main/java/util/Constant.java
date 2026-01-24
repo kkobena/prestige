@@ -46,7 +46,7 @@ public final class Constant {
     public static final String STATUT_IS_WAITING_VALIDATION = "is_Waiting_validation";
     public static final String STATUT_IS_ASSIGN = "is_assign";
     public static final String MODE_ESP = "1";
-    public static String ACTION_OTHER = "OTHER";
+    public static final String ACTION_OTHER = "OTHER";
     public static final String MVT_SORTIE_CAISSE = "4";
     public static final String MVT_FOND_CAISSE = "1";
     public static final String MVT_VENTE_VO = "8";
@@ -185,6 +185,7 @@ public final class Constant {
     public static final String KEY_MONTH_PERIME = "KEY_MONTH_PERIME";
     public static final String PARAM_TRUE = "1";
     public static final String PARAM_FALSE = "0";
+    public static final String TYPE_TIERS_PAYANT_CARNET_ID = "2";
 
     private Constant() {
     }

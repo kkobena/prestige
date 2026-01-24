@@ -1,5 +1,6 @@
 package rest.service.fne;
 
+import java.util.Arrays;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -8,7 +9,7 @@ import javax.validation.constraints.NotNull;
  */
 public class FneInvoiceItem {
 
-    private final int quantity = 1;
+    private int quantity = 1;
     private String[] taxes = { "TVAD" };
     private String reference;
     @NotNull
@@ -16,6 +17,7 @@ public class FneInvoiceItem {
     @NotNull
     private Double amount;// envoie double
     private String measurementUnit;
+    private Double discount;
 
     public String getReference() {
         return reference;
@@ -23,6 +25,10 @@ public class FneInvoiceItem {
 
     public String[] getTaxes() {
         return taxes;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
     public int getQuantity() {
@@ -39,6 +45,14 @@ public class FneInvoiceItem {
 
     public String getMeasurementUnit() {
         return measurementUnit;
+    }
+
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
     }
 
     public void setMeasurementUnit(String measurementUnit) {
@@ -63,8 +77,8 @@ public class FneInvoiceItem {
 
     @Override
     public String toString() {
-        return "FneInvoiceItem{" + "taxes=" + taxes + ", reference=" + reference + ", description=" + description
-                + ", amount=" + amount + ", quantity=" + quantity + '}';
+        return "FneInvoiceItem{" + "taxes=" + Arrays.toString(taxes) + ", reference=" + reference + ", description="
+                + description + ", amount=" + amount + ", quantity=" + quantity + '}';
     }
 
 }

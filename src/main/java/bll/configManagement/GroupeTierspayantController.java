@@ -35,10 +35,8 @@ import dal.TGrossiste_;
 import dal.TGroupeFactures;
 import dal.TGroupeFactures_;
 import dal.TGroupeTierspayant;
-import dal.TGroupeTierspayant_;
 import dal.TLot;
 import dal.TLot_;
-import dal.TModeReglement;
 
 import dal.TMvtCaisse;
 import dal.TMvtCaisse_;
