@@ -1,7 +1,5 @@
 package rest.service.fne;
 
-import java.util.List;
-
 /**
  *
  * @author koben
@@ -33,15 +31,15 @@ public class FneResponseInvoice {
     private String clientPointOfSale;
     private String status;
     private String createdAt;
-    private List<FneResponseInvoiceItem> items;
+    // private List<FneResponseInvoiceItem> items;
 
-    public List<FneResponseInvoiceItem> getItems() {
-        return items;
-    }
-
-    public void setItems(List<FneResponseInvoiceItem> items) {
-        this.items = items;
-    }
+    // public List<FneResponseInvoiceItem> getItems() {
+    // return items;
+    // }
+    //
+    // public void setItems(List<FneResponseInvoiceItem> items) {
+    // this.items = items;
+    // }
 
     public String getId() {
         return id;
@@ -243,17 +241,6 @@ public class FneResponseInvoice {
         this.createdAt = createdAt;
     }
 
-    @Override
-    public String toString() {
-        return "FneResponseInvoice{" + "id=" + id + ", token=" + token + ", reference=" + reference + ", type=" + type
-                + ", subtype=" + subtype + ", date=" + date + ", paymentMethod=" + paymentMethod + ", amount=" + amount
-                + ", fiscalStamp=" + fiscalStamp + ", vatAmount=" + vatAmount + ", discount=" + discount
-                + ", clientNcc=" + clientNcc + ", clientCompanyName=" + clientCompanyName + ", clientPhone="
-                + clientPhone + ", clientEmail=" + clientEmail + ", clientTerminal=" + clientTerminal + ", clientRccm="
-                + clientRccm + ", clientSellerName=" + clientSellerName + ", clientEstablishment=" + clientEstablishment
-                + ", clientPointOfSale=" + clientPointOfSale + ", status=" + status + ", createdAt=" + createdAt
-                + ", items=" + items + '}';
-    }
     /*
      * { "ncc": "1428351F", "reference": "1428351F26000000010", "token":
      * "http://54.247.95.108/fr/verification/019bcc6f-f63c-7226-b8b1-93f9789fc2c9", "warning": false, "balance_funds":
