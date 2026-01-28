@@ -165,9 +165,20 @@ public class FneServiceImpl implements FneService {
 
     }
 
+    /**
+     * IMPORTANT: Dans une vente complémentaire (assurance + carnet), il existe plusieurs lignes dans
+     * t_preenregistrement_compte_client_tiers_payent pour le même préenregistrement. Il faut donc filtrer cp par le
+     * tiers payant demandé, sinon le taux peut être pris sur l'autre prise en charge (ex: 70% au lieu de 30%).
+     */
     private List<Item> getFactureMonatantByTva(String factureId, String tiersPayantId) {
-        String sqlQuery = "SELECT d.valeurTva AS codeTva ,SUM(d.int_PRICE) AS montantTTCByCodeTva,cp.int_PERCENT AS taux FROM t_facture_detail fd JOIN t_preenregistrement_detail d ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY JOIN t_preenregistrement_compte_client_tiers_payent cp JOIN t_compte_client_tiers_payant cpt ON cpt.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID "
-                + " JOIN t_tiers_payant tp ON tp.lg_TIERS_PAYANT_ID=cpt.lg_TIERS_PAYANT_ID ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY  WHERE fd.lg_FACTURE_ID=?1 AND tp.lg_TIERS_PAYANT_ID=?2 GROUP  BY d.valeurTva,cp.int_PERCENT ORDER BY d.valeurTva";
+        String sqlQuery = "SELECT d.valeurTva AS codeTva ,SUM(d.int_PRICE) AS montantTTCByCodeTva,cp.int_PERCENT AS taux "
+                + "FROM t_facture_detail fd "
+                + "JOIN t_preenregistrement_detail d ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY "
+                + "JOIN t_preenregistrement_compte_client_tiers_payent cp ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY "
+                + "JOIN t_compte_client_tiers_payant cpt ON cpt.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID "
+                + "JOIN t_tiers_payant tp ON tp.lg_TIERS_PAYANT_ID=cpt.lg_TIERS_PAYANT_ID "
+                + "WHERE fd.lg_FACTURE_ID=?1 AND tp.lg_TIERS_PAYANT_ID=?2 " + "GROUP BY d.valeurTva,cp.int_PERCENT "
+                + "ORDER BY d.valeurTva";
         Query query = em.createNativeQuery(sqlQuery, Tuple.class).setParameter(1, factureId).setParameter(2,
                 tiersPayantId);
         List<Tuple> list = query.getResultList();
@@ -175,9 +186,25 @@ public class FneServiceImpl implements FneService {
 
     }
 
+    /**
+     * IMPORTANT: Correction pour vente complémentaire: filtrer le taux sur le tiers payant demandé via cp -> cpt -> tp,
+     * et ne pas s'appuyer sur fact.tiersPayant.
+     *
+     * Le GROUP BY précédent pouvait "choisir" un taux au hasard (MariaDB/MySQL) lorsqu'il y avait plusieurs lignes cp
+     * pour le même préenregistrement.
+     */
     private List<VenteDetail> fetchVenteDetail(String factureId, String tiersPayantId) {
-        String sqlQuery = "SELECT cp.int_PERCENT AS tauxCouverture,COALESCE(r.dbl_TAUX,0.0)  AS tauxRemise, d.int_PRICE_UNITAIR AS montantTtc,d.int_QUANTITY AS quantity,d.valeurTva AS codeTva,prod.int_CIP AS codeCip,prod.str_NAME AS libelle FROM t_preenregistrement_detail d JOIN t_famille prod ON d.lg_FAMILLE_ID=prod.lg_FAMILLE_ID "
-                + " JOIN t_facture_detail fd ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY  JOIN t_facture fact ON fact.lg_FACTURE_ID=fd.lg_FACTURE_ID LEFT JOIN t_grille_remise r ON r.lg_GRILLE_REMISE_ID=d.lg_GRILLE_REMISE_ID JOIN t_preenregistrement_compte_client_tiers_payent cp ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY WHERE fd.lg_FACTURE_ID=?1 AND fact.tiersPayant=?2 GROUP BY d.lg_PREENREGISTREMENT_DETAIL_ID";
+        String sqlQuery = "SELECT cp.int_PERCENT AS tauxCouverture,COALESCE(r.dbl_TAUX,0.0)  AS tauxRemise, "
+                + "d.int_PRICE_UNITAIR AS montantTtc,d.int_QUANTITY AS quantity,d.valeurTva AS codeTva,"
+                + "prod.int_CIP AS codeCip,prod.str_NAME AS libelle " + "FROM t_preenregistrement_detail d "
+                + "JOIN t_famille prod ON d.lg_FAMILLE_ID=prod.lg_FAMILLE_ID "
+                + "JOIN t_facture_detail fd ON d.lg_PREENREGISTREMENT_ID=fd.P_KEY "
+                + "LEFT JOIN t_grille_remise r ON r.lg_GRILLE_REMISE_ID=d.lg_GRILLE_REMISE_ID "
+                + "JOIN t_preenregistrement_compte_client_tiers_payent cp ON cp.lg_PREENREGISTREMENT_ID=fd.P_KEY "
+                + "JOIN t_compte_client_tiers_payant cpt ON cpt.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID "
+                + "JOIN t_tiers_payant tp ON tp.lg_TIERS_PAYANT_ID=cpt.lg_TIERS_PAYANT_ID "
+                + "WHERE fd.lg_FACTURE_ID=?1 AND tp.lg_TIERS_PAYANT_ID=?2";
+
         Query query = em.createNativeQuery(sqlQuery, Tuple.class).setParameter(1, factureId).setParameter(2,
                 tiersPayantId);
         List<Tuple> list = query.getResultList();
