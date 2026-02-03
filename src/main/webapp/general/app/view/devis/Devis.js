@@ -101,15 +101,7 @@ Ext.define('testextjs.view.devis.Devis', {
                             hidden: true,
                             scope: this,
                             iconCls: 'printable'
-                        },'-',
-                        {
-                            text: 'Inventaire liste',
-                            tooltip: 'Créer un inventaire à partir des devis affichés',
-                            itemId: 'btnInventaireListe',
-                            scope: this,
-                            iconCls: 'addicon' // ou une cls que tu préfères
-                        },
-                        '-'
+                        }
 
                     ]
                 }
@@ -348,7 +340,7 @@ Ext.define('testextjs.view.devis.Devis', {
                             sortable: false,
                             menuDisabled: true,
                             items: [{
-                                    icon: 'resources/images/icons/fam/folder_wrench.png', // mets ton icône
+                                    icon: 'resources/images/icons/fam/folder_wrench.png', 
                                     tooltip: 'Créer un inventaire à partir de cette proforma',
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('toInventaireFromOneDevis', view, rowIndex, colIndex, item, e, record, row);

@@ -652,28 +652,4 @@ public class SalesStatsRessource {
             return Response.serverError().entity("{\"count\":0}").build();
         }
     }
-
-    @POST
-    @Path("devis/inventaire")
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response createInventaireFromDevisList(@QueryParam("dtStart") String dtStart,
-            @QueryParam("dtEnd") String dtEnd, @QueryParam("query") String query) {
-
-        HttpSession hs = servletRequest.getSession();
-        TUser u = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (u == null) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"success\":false,\"msg\":\"" + Constant.DECONNECTED_MESSAGE + "\"}").build();
-        }
-
-        try {
-            JSONObject json = salesService.createInventaireFromDevisList(u, dtStart, dtEnd, query);
-            return Response.ok(json.toString(), MediaType.APPLICATION_JSON).build();
-        } catch (JSONException e) {
-            Logger.getLogger(SalesStatsRessource.class.getName()).log(Level.SEVERE, null, e);
-            return Response.serverError().entity("{\"count\":0}").build();
-        }
-    }
-
 }

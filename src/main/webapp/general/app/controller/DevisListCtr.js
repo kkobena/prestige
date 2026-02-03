@@ -38,10 +38,6 @@ Ext.define('testextjs.controller.DevisListCtr', {
         {
             ref: 'queryField',
             selector: 'devismanager #query'
-        },
-        {
-            ref: 'btnInventaireListe',
-            selector: 'devismanager #btnInventaireListe'
         }
     ],
     init: function (application) {
@@ -79,9 +75,6 @@ Ext.define('testextjs.controller.DevisListCtr', {
             },
             'devismanager #printPdf': {
                 click: this.printLit
-            },
-            'devismanager #btnInventaireListe': {
-                click: this.onCreateInventaireFromList
             }
         });
     },
@@ -306,58 +299,5 @@ Ext.define('testextjs.controller.DevisListCtr', {
                 });
             }
         );
-    },
-
-    /**
-     * Crée un inventaire à partir de la liste de devis affichée (période + filtre).
-     */
-    onCreateInventaireFromList: function () {
-        var me = this,
-            dtStart = me.getDtStart().getSubmitValue(),
-            dtEnd = me.getDtEnd().getSubmitValue(),
-            query = me.getQueryField().getValue();
-
-        Ext.Msg.confirm('Confirmation',
-            'Créer un inventaire à partir des proformas actuellement affichées (période + filtre) ?',
-            function (btn) {
-                if (btn !== 'yes') {
-                    return;
-                }
-
-                var progress = Ext.MessageBox.wait(
-                    'Veuillez patienter . . .',
-                    'Création de l\'inventaire'
-                );
-
-                Ext.Ajax.request({
-                    method: 'POST',
-                    url: '../api/v1/ventestats/devis/inventaire',
-                    params: {
-                        dtStart: dtStart,
-                        dtEnd: dtEnd,
-                        query: query
-                    },
-                    success: function (response) {
-                        progress.hide();
-                        var result = Ext.JSON.decode(response.responseText, true) || {};
-                        var count = result.count || 0;
-
-                        if (count > 0) {
-                            Ext.Msg.alert('Information',
-                                'Inventaire créé avec <b>' + count + '</b> ligne(s).');
-                        } else {
-                            Ext.Msg.alert('Information',
-                                'Aucune proforma trouvée pour cette période / ce filtre.');
-                        }
-                    },
-                    failure: function (response) {
-                        progress.hide();
-                        Ext.Msg.alert('Erreur',
-                            'Erreur serveur (code ' + response.status + ').');
-                    }
-                });
-            }
-        );
     }
-
 });

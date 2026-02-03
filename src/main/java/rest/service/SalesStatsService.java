@@ -148,5 +148,4 @@ public interface SalesStatsService {
 
     JSONObject createInventaireFromOneDevis(TUser u, String devisId) throws JSONException;
 
-    JSONObject createInventaireFromDevisList(TUser u, String dtStart, String dtEnd, String query) throws JSONException;
 }
