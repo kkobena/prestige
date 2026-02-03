@@ -43,6 +43,7 @@ import dal.TPreenregistrement_;
 import dal.TTiersPayant_;
 import dal.TTypeReglement_;
 import dal.TTypeVente_;
+import dal.TUser;
 import dal.TUser_;
 import dal.TZoneGeographique_;
 import dal.enumeration.TypeTransaction;
@@ -2657,6 +2658,117 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         int count = inventaireService.create(Set.copyOf(data), title);
         return new JSONObject().put("count", count);
 
+    }
+
+    private List<TPreenregistrementDetail> findDetailsByDevisId(String devisId) {
+        // on réutilise la requête déjà existante
+        return venteDetailByVenteId(devisId);
+    }
+
+    private List<TPreenregistrementDetail> findDetailsByDevisFilters(TUser u, String dtStart, String dtEnd,
+            String query) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<TPreenregistrementDetail> cq = cb.createQuery(TPreenregistrementDetail.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> st = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            // plage de dates sur DATE(dt_UPDATED)
+            LocalDate start = LocalDate.parse(dtStart);
+            LocalDate end = LocalDate.parse(dtEnd);
+            predicates.add(cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)),
+                    java.sql.Date.valueOf(start), java.sql.Date.valueOf(end)));
+
+            // ici on peut filtrer uniquement les proformas si tu as un code dédié
+            // Exemple si tu as une constante :
+            // predicates.add(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), Constant.VENTE_PROFORMA));
+            // exclure les annulées
+            predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
+
+            // filtre texte (même style que tes listes)
+            if (StringUtils.isNotEmpty(query)) {
+                String search = query + "%";
+                predicates.add(cb.or(
+                        cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), search),
+                        cb.like(st.get(TPreenregistrement_.strREF), search),
+                        cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), search),
+                        cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), search)));
+            }
+
+            // restreindre à l’emplacement de l’utilisateur
+            if (u != null && u.getLgEMPLACEMENTID() != null) {
+                predicates.add(cb.equal(
+                        st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
+                        u.getLgEMPLACEMENTID().getLgEMPLACEMENTID()));
+            }
+
+            cq.select(root).where(cb.and(predicates.toArray(Predicate[]::new)))
+                    .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
+
+            TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private JSONObject createInventaireFromFamilles(TUser u, String libelle, List<String> famillesIds) {
+        try {
+            if (CollectionUtils.isEmpty(famillesIds)) {
+                return new JSONObject().put("count", 0);
+            }
+            // on enlève les doublons au cas où
+            int count = inventaireService.create(Set.copyOf(famillesIds), libelle);
+            return new JSONObject().put("count", count);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new JSONObject().put("count", 0);
+        }
+    }
+
+    @Override
+    public JSONObject createInventaireFromOneDevis(TUser u, String devisId) throws JSONException {
+
+        TPreenregistrement devis = em.find(TPreenregistrement.class, devisId);
+        if (devis == null) {
+            // gérer le cas où l'id est invalide
+            return new JSONObject().put("count", 0);
+        }
+        // 1. Récupérer les lignes du devis
+        List<TPreenregistrementDetail> details = findDetailsByDevisId(devisId);
+
+        // 2. Extraire la liste des IDs de familles (distinct)
+        List<String> famillesIds = details.stream().map(d -> d.getLgFAMILLEID().getLgFAMILLEID()).distinct()
+                .collect(Collectors.toList());
+
+        // 3. Libellé d’inventaire
+        // String libelle = "INVENTAIRE PROFORMA " + devisId;
+        String libelle = "INVENTAIRE PROFORMA " + devis.getStrREF();
+
+        // 4. Créer l’inventaire à partir des familles (même logique que 20/80)
+        return createInventaireFromFamilles(u, libelle, famillesIds);
+    }
+
+    @Override
+    public JSONObject createInventaireFromDevisList(TUser u, String dtStart, String dtEnd, String query)
+            throws JSONException {
+
+        // 1. Récupérer les détails de tous les devis filtrés
+        List<TPreenregistrementDetail> details = findDetailsByDevisFilters(u, dtStart, dtEnd, query);
+
+        // 2. Extraire la liste des IDs de familles (distinct)
+        List<String> famillesIds = details.stream().map(d -> d.getLgFAMILLEID().getLgFAMILLEID()).distinct()
+                .collect(Collectors.toList());
+
+        // 3. Libellé d’inventaire
+        String libelle = "INVENTAIRE PROFORMAS DU " + dtStart + " AU " + dtEnd;
+
+        // 4. Créer l’inventaire à partir des familles
+        return createInventaireFromFamilles(u, libelle, famillesIds);
     }
 
 }
