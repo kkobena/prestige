@@ -76,11 +76,11 @@ Ext.define('testextjs.controller.StatVenteDepotCtr', {
             'ventehistoriquedepotmanager gridpanel': {
                 viewready: this.doInitStore
             },
-            "ventehistoriquedepotmanager gridpanel actioncolumn": {
-                printTicket: this.printTicket,
-                facture: this.onFacture
+            'ventehistoriquedepotmanager': {
+    printTicket: this.printTicket,
+    facture: this.onFacture
+},
 
-            },
             'ventemanager #query': {
                 specialkey: this.onSpecialKey
             },
