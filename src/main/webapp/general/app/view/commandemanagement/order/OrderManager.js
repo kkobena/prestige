@@ -190,6 +190,13 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                             handler: this.onbtnexport
                         }, '-',
                         {
+                            //icon: 'resources/images/icons/fam/exceller.png',
+                            tooltip: 'Exporter la commande en Excel (détails produits)',
+                            scope: this,
+                            handler: this.onbtnExportExcel,
+                            iconCls: 'export_excel_icon'
+                        },'-',
+                        {
                             icon: 'resources/images/icons/fam/page_white_edit.png',
                             tooltip: 'Modifier',
                             scope: this,
@@ -201,7 +208,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                             scope: this,
                             handler: this.onRemoveClick
                         }
-
+                         
 
                     ]
                 }
@@ -549,5 +556,20 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             mode: "create",
             titre: "Creation bon de livraison"
         });
-    }
+    },
+    
+    onbtnExportExcel: function (grid, rowIndex) {
+    Ext.MessageBox.confirm(
+        'Export Excel',
+        'Voulez-vous générer le fichier Excel (détail des produits) de la commande ?',
+        function (btn) {
+            if (btn === 'yes') {
+                const rec = grid.getStore().getAt(rowIndex);
+                window.location =
+                    '../api/v1/commande/export-excel-details?id=' + rec.get('lg_ORDER_ID');
+            }
+        }
+    );
+}
+
 });
