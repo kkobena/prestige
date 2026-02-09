@@ -16,6 +16,7 @@ import commonTasks.dto.VenteDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
+import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -144,4 +145,7 @@ public interface SalesStatsService {
     byte[] exportArticlesVendusRecapExcel(SalesStatsParams params) throws IOException;
 
     JSONObject createInventaire(SalesStatsParams params);
+
+    JSONObject createInventaireFromOneDevis(TUser u, String devisId) throws JSONException;
+
 }

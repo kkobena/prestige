@@ -23,12 +23,15 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -47,6 +50,7 @@ import org.json.JSONObject;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
 import rest.service.TvaService;
+import toolkits.parameters.commonparameter;
 import util.CommonUtils;
 import util.Constant;
 import util.FunctionUtils;
@@ -62,8 +66,10 @@ public class SalesStatsRessource {
 
     @Inject
     private HttpServletRequest servletRequest;
+
     @EJB
     SalesStatsService salesService;
+
     @EJB
     GenerateTicketService generateTicketService;
 
@@ -624,5 +630,26 @@ public class SalesStatsRessource {
                         nbre, start, limit, stock, prixachatFiltre, stockFiltre, rayonId, qteVendu, null, grossisteId));
 
         return Response.ok(count.toString()).build();
+    }
+
+    @POST
+    @Path("devis/inventaire/{id}")
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createInventaireFromOneDevis(@PathParam("id") String devisId) {
+        HttpSession hs = servletRequest.getSession();
+        TUser u = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (u == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"success\":false,\"msg\":\"" + Constant.DECONNECTED_MESSAGE + "\"}").build();
+        }
+
+        try {
+            JSONObject json = salesService.createInventaireFromOneDevis(u, devisId);
+            return Response.ok(json.toString(), MediaType.APPLICATION_JSON).build();
+        } catch (JSONException e) {
+            Logger.getLogger(SalesStatsRessource.class.getName()).log(Level.SEVERE, null, e);
+            return Response.serverError().entity("{\"count\":0}").build();
+        }
     }
 }

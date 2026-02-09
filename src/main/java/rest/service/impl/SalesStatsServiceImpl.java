@@ -43,6 +43,7 @@ import dal.TPreenregistrement_;
 import dal.TTiersPayant_;
 import dal.TTypeReglement_;
 import dal.TTypeVente_;
+import dal.TUser;
 import dal.TUser_;
 import dal.TZoneGeographique_;
 import dal.enumeration.TypeTransaction;
@@ -2657,6 +2658,48 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         int count = inventaireService.create(Set.copyOf(data), title);
         return new JSONObject().put("count", count);
 
+    }
+
+    private List<TPreenregistrementDetail> findDetailsByDevisId(String devisId) {
+        // on réutilise la requête déjà existante
+        return venteDetailByVenteId(devisId);
+    }
+
+    private JSONObject createInventaireFromFamilles(TUser u, String libelle, List<String> famillesIds) {
+        try {
+            if (CollectionUtils.isEmpty(famillesIds)) {
+                return new JSONObject().put("count", 0);
+            }
+            // on enlève les doublons au cas où
+            int count = inventaireService.create(Set.copyOf(famillesIds), libelle);
+            return new JSONObject().put("count", count);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new JSONObject().put("count", 0);
+        }
+    }
+
+    @Override
+    public JSONObject createInventaireFromOneDevis(TUser u, String devisId) throws JSONException {
+
+        TPreenregistrement devis = em.find(TPreenregistrement.class, devisId);
+        if (devis == null) {
+            // gérer le cas où l'id est invalide
+            return new JSONObject().put("count", 0);
+        }
+        // 1. Récupérer les lignes du devis
+        List<TPreenregistrementDetail> details = findDetailsByDevisId(devisId);
+
+        // 2. Extraire la liste des IDs de familles (distinct)
+        List<String> famillesIds = details.stream().map(d -> d.getLgFAMILLEID().getLgFAMILLEID()).distinct()
+                .collect(Collectors.toList());
+
+        // 3. Libellé d’inventaire
+        // String libelle = "INVENTAIRE PROFORMA " + devisId;
+        String libelle = "INVENTAIRE PROFORMA " + devis.getStrREF();
+
+        // 4. Créer l’inventaire à partir des familles
+        return createInventaireFromFamilles(u, libelle, famillesIds);
     }
 
 }
