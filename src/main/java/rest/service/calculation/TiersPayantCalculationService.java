@@ -177,10 +177,16 @@ public class TiersPayantCalculationService {
             }
 
             BigDecimal actualShare = calculationBase.multiply(BigDecimal.valueOf(rate));
+            /*
+             * if (rate == 1.0f && natureVente == NatureVente.ASSURANCE) { // formulle confort remainingAmountForTps =
+             * saleItem.getTotalSalesAmount().subtract(totalPartTiersPayant); actualShare =
+             * BigDecimal.ZERO.max(remainingAmountForTps); } else { actualShare =
+             * actualShare.min(remainingAmountForTps); }
+             */
 
-            if (rate == 1.0f && natureVente == NatureVente.ASSURANCE) { // formulle confort
+            if (rate == 1.0f && natureVente == NatureVente.ASSURANCE && !hasPrixReference) {
                 remainingAmountForTps = saleItem.getTotalSalesAmount().subtract(totalPartTiersPayant);
-                actualShare = BigDecimal.ZERO.max(remainingAmountForTps);
+                actualShare = remainingAmountForTps.max(BigDecimal.ZERO);
             } else {
                 actualShare = actualShare.min(remainingAmountForTps);
             }
