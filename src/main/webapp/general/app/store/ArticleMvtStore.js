@@ -1,0 +1,33 @@
+Ext.define('testextjs.store.ArticleMvtStore', {
+    extend: 'Ext.data.Store',
+
+    requires: [
+        'testextjs.model.ArticleMvt'
+    ],
+
+    model: 'testextjs.model.ArticleMvt',
+    pageSize: 15,
+    remoteSort: true,
+    autoLoad: false,
+
+    proxy: {
+        type: 'ajax',
+        // ✅ endpoint SRP côté backend
+        url: '../api/v1/articlemvt/list',
+        reader: {
+            type: 'json',
+            root: 'data',
+            totalProperty: 'total'
+        },
+
+        // ✅ paramètres attendus côté backend
+        extraParams: {
+            query: '',
+            dtStart: '',
+            dtEnd: ''
+        },
+
+        // Optionnel : timeout si requêtes lourdes
+        timeout: 120000
+    }
+});
