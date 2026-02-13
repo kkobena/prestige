@@ -36,8 +36,8 @@ Ext.define('testextjs.view.stat.ArticleMvtGrid', {
 
         Ext.apply(me, {
             tbar: [
-                { xtype: 'datefield', itemId: 'dtStart', fieldLabel: 'Du', labelWidth: 25, width: 160, format: 'Y-m-d', submitFormat: 'Y-m-d', maxValue: new Date() },
-                { xtype: 'datefield', itemId: 'dtEnd', fieldLabel: 'Au', labelWidth: 20, width: 155, format: 'Y-m-d', submitFormat: 'Y-m-d', maxValue: new Date() },
+                { xtype: 'datefield', itemId: 'dtStart', fieldLabel: 'Du', labelWidth: 25, width: 160, format: 'Y-m-d', submitFormat: 'Y-m-d', maxValue: new Date(),value: new Date() },
+                { xtype: 'datefield', itemId: 'dtEnd', fieldLabel: 'Au', labelWidth: 20, width: 155, format: 'Y-m-d', submitFormat: 'Y-m-d', maxValue: new Date(),value: new Date() },
                 { xtype: 'textfield', itemId: 'queryField', flex: 1, emptyText: 'Rechercher (CIP ou Nom)...', enableKeyEvents: true },
                 { xtype: 'button', itemId: 'btnSearch', text: 'Rechercher', iconCls: 'icon-find' },
                 { xtype: 'button', itemId: 'btnReset', text: 'Réinitialiser', iconCls: 'icon-refresh' },

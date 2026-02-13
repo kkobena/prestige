@@ -13,86 +13,43 @@ Ext.define('testextjs.controller.ArticleMvtController', {
         var me = this;
 
         me.control({
-            'articlemvtgrid button[itemId=btnSearch]': { click: me.onSearch },
-            'articlemvtgrid button[itemId=btnReset]':  { click: me.onReset },
-            'articlemvtgrid textfield[itemId=queryField]': { keyup: me.onQueryKeyUp },
-            'articlemvtgrid button[itemId=btnCreateInventaire]': { click: me.onCreateInventaireFromSelection },
-            'articlemvtgrid button[itemId=btnExportExcel]': { click: me.onExportExcel }
+            'articlemvtgrid': {
+                afterrender: me.onGridAfterRender     
+            },
+            'articlemvtgrid button[itemId=btnSearch]': {
+                click: me.onSearch
+            },
+            'articlemvtgrid button[itemId=btnReset]':  {
+                click: me.onReset
+            },
+            'articlemvtgrid textfield[itemId=queryField]': {
+                keyup: me.onQueryKeyUp
+            },
+            'articlemvtgrid button[itemId=btnCreateInventaire]': {
+                click: me.onCreateInventaireFromSelection
+            }
         });
     },
 
-    onExportExcel: function (btn) {
-        var grid = btn.up('articlemvtgrid');
-
-        var q = grid.down('textfield[itemId=queryField]');
+    onGridAfterRender: function (grid) {
         var d1 = grid.down('datefield[itemId=dtStart]');
         var d2 = grid.down('datefield[itemId=dtEnd]');
+        var store = grid.getStore();
+        var today = new Date();
 
-        var query = (q && q.getValue()) ? q.getValue().trim() : '';
+        if (d1) { d1.setValue(today); }
+        if (d2) { d2.setValue(today); }
+
         var dtStart = d1 && d1.getSubmitValue ? d1.getSubmitValue() : '';
-        var dtEnd = d2 && d2.getSubmitValue ? d2.getSubmitValue() : '';
+        var dtEnd   = d2 && d2.getSubmitValue ? d2.getSubmitValue() : '';
 
-        var params = Ext.Object.toQueryString({
-            dtStart: dtStart || '',
-            dtEnd: dtEnd || '',
-            query: query || ''
-        });
+        store.getProxy().extraParams = store.getProxy().extraParams || {};
+        store.getProxy().extraParams.dtStart = dtStart;
+        store.getProxy().extraParams.dtEnd   = dtEnd;
+        store.getProxy().extraParams.query   = '';
 
-        window.location = '../api/v1/articlemvt/export?' + params;
+        store.loadPage(1);
     },
-
-
-    onCreateInventaireFromSelection: function (btn) {
-    var grid = btn.up('articlemvtgrid');
-    var selections = grid.getSelectionModel().getSelection();
-
-    if (!selections || selections.length === 0) {
-        Ext.Msg.alert('Information', 'Veuillez sélectionner au moins un article.');
-        return;
-    }
-
-    var ids = Ext.Array.pluck(selections, 'data').map(function (d) {
-        return d.lgFamilleId;
-    });
-
-    var d1 = grid.down('datefield[itemId=dtStart]');
-    var d2 = grid.down('datefield[itemId=dtEnd]');
-
-    var dtStart = d1 && d1.getSubmitValue ? d1.getSubmitValue() : '';
-    var dtEnd   = d2 && d2.getSubmitValue ? d2.getSubmitValue() : '';
-
-    Ext.Msg.confirm(
-        'Confirmation',
-        'Créer un inventaire à partir des ' + ids.length + ' article(s) sélectionné(s) ?',
-        function (choice) {
-            if (choice !== 'yes') { return; }
-
-            Ext.Ajax.request({
-                url: '../api/v1/articlemvt/inventaire', // 
-                method: 'GET',
-                params: {
-                    ids: ids.join(','),
-                    dtStart: dtStart || '',
-                    dtEnd: dtEnd || ''
-                },
-                success: function (response) {
-                    var result = Ext.decode(response.responseText, true) || {};
-                    if (result.success) {
-                        Ext.Msg.alert('Succès', result.message || 'Inventaire créé avec succès.');
-                    } else {
-                        Ext.Msg.alert('Information', result.message || 'Opération non réalisée.');
-                    }
-                    grid.getStore().reload();
-                    grid.getSelectionModel().deselectAll();
-                },
-                failure: function () {
-                    Ext.Msg.alert('Erreur', 'Impossible de créer l’inventaire. Vérifiez les logs serveur.');
-                }
-            });
-        }
-    );
-}
-,
 
     onQueryKeyUp: function (field, e) {
         if (e.getKey && e.getKey() === e.ENTER) {
@@ -104,20 +61,25 @@ Ext.define('testextjs.controller.ArticleMvtController', {
         var grid = btn.up('articlemvtgrid');
         if (!grid) { return; }
 
-        var q = grid.down('textfield[itemId=queryField]');
+        var q  = grid.down('textfield[itemId=queryField]');
         var d1 = grid.down('datefield[itemId=dtStart]');
         var d2 = grid.down('datefield[itemId=dtEnd]');
 
+        var today = new Date();
+
         if (q)  { q.setValue(''); }
-        if (d1) { d1.setValue(null); }
-        if (d2) { d2.setValue(null); }
+        if (d1) { d1.setValue(today); }
+        if (d2) { d2.setValue(today); }
 
         var store = grid.getStore();
-        store.getProxy().extraParams.query = '';
-        store.getProxy().extraParams.dtStart = '';
-        store.getProxy().extraParams.dtEnd = '';
-        store.loadPage(1);
+        var dtStart = d1 && d1.getSubmitValue ? d1.getSubmitValue() : '';
+        var dtEnd   = d2 && d2.getSubmitValue ? d2.getSubmitValue() : '';
 
+        store.getProxy().extraParams.query   = '';
+        store.getProxy().extraParams.dtStart = dtStart;
+        store.getProxy().extraParams.dtEnd   = dtEnd;
+
+        store.loadPage(1);
         grid.getSelectionModel().deselectAll();
     },
 
@@ -128,7 +90,7 @@ Ext.define('testextjs.controller.ArticleMvtController', {
 
         if (!grid) { return; }
 
-        var q = grid.down('textfield[itemId=queryField]');
+        var q  = grid.down('textfield[itemId=queryField]');
         var d1 = grid.down('datefield[itemId=dtStart]');
         var d2 = grid.down('datefield[itemId=dtEnd]');
 
@@ -137,23 +99,91 @@ Ext.define('testextjs.controller.ArticleMvtController', {
             return;
         }
 
-        var query = (q.getValue() || '').trim();
+        var query   = (q.getValue() || '').trim();
+        var vStart  = d1.getValue();
+        var vEnd    = d2.getValue();
+
+        if (vStart && !vEnd) {
+            Ext.Msg.alert('Information', 'Veuillez renseigner la date de fin.', function () {
+                d2.focus();
+            });
+            return;
+        }
+
+        if (!vStart && vEnd) {
+            Ext.Msg.alert('Information', 'Veuillez renseigner la date de début.', function () {
+                d1.focus();
+            });
+            return;
+        }
+
+        if (vStart && vEnd && vStart > vEnd) {
+            Ext.Msg.alert('Information', 'La date de début ne peut pas être supérieure à la date de fin.', function () {
+                d1.focus();
+            });
+            return;
+        }
+
         var dtStart = d1.getSubmitValue ? d1.getSubmitValue() : '';
-        var dtEnd = d2.getSubmitValue ? d2.getSubmitValue() : '';
+        var dtEnd   = d2.getSubmitValue ? d2.getSubmitValue() : '';
 
         var store = grid.getStore();
-        store.getProxy().extraParams.query = query;
+        store.getProxy().extraParams.query   = query;
         store.getProxy().extraParams.dtStart = dtStart || '';
-        store.getProxy().extraParams.dtEnd = dtEnd || '';
+        store.getProxy().extraParams.dtEnd   = dtEnd || '';
         store.loadPage(1);
 
         grid.getSelectionModel().deselectAll();
     },
 
-    resetView: function () {
-    var grid = Ext.ComponentQuery.query('articlemvtgrid')[0];
-    if (grid && grid.resetScreen) {
-        grid.resetScreen();
-    }
+    onCreateInventaireFromSelection: function (btn) {
+        var grid = btn.up('articlemvtgrid');
+        var selections = grid.getSelectionModel().getSelection();
+
+        if (!selections || selections.length === 0) {
+            Ext.Msg.alert('Information', 'Veuillez sélectionner au moins un article.');
+            return;
+        }
+
+        var ids = Ext.Array.pluck(selections, 'data').map(function (d) {
+            return d.lgFamilleId;
+        });
+
+        var d1 = grid.down('datefield[itemId=dtStart]');
+        var d2 = grid.down('datefield[itemId=dtEnd]');
+
+        var dtStart = d1 && d1.getSubmitValue ? d1.getSubmitValue() : '';
+        var dtEnd   = d2 && d2.getSubmitValue ? d2.getSubmitValue() : '';
+
+        Ext.Msg.confirm(
+            'Confirmation',
+            'Créer un inventaire à partir des ' + ids.length + ' article(s) sélectionné(s) ?',
+            function (choice) {
+                if (choice !== 'yes') { return; }
+
+                Ext.Ajax.request({
+                    url: '../api/v1/articlemvt/inventaire',
+                    method: 'GET',
+                    params: {
+                        ids: ids.join(','),
+                        dtStart: dtStart || '',
+                        dtEnd: dtEnd || ''
+                    },
+                    success: function (response) {
+                        var result = Ext.decode(response.responseText, true) || {};
+                        if (result.success) {
+                            Ext.Msg.alert('Succès', result.message || 'Inventaire créé avec succès.');
+                        } else {
+                            Ext.Msg.alert('Information', result.message || 'Opération non réalisée.');
+                        }
+                        grid.getStore().reload();
+                        grid.getSelectionModel().deselectAll();
+                    },
+                    failure: function () {
+                        Ext.Msg.alert('Erreur', 'Impossible de créer l’inventaire. Vérifiez les logs serveur.');
+                    }
+                });
+            }
+        );
     }
 });
