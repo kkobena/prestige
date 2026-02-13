@@ -34,7 +34,7 @@ public class ArticleMvtServiceImpl implements ArticleMvtService {
 
     private static final Logger LOG = Logger.getLogger(ArticleMvtServiceImpl.class.getName());
 
-    // ✅ Requête principale (EXISTS + alias explicites)
+    
     private static final String MVT_QUERY = "SELECT " + " f.lg_FAMILLE_ID AS lgFamilleId, "
             + " CAST(f.int_CIP AS CHAR) AS codeCip, " + " f.str_NAME AS strName, " + " f.int_PRICE AS prixVente, "
             + " f.int_PAF AS prixAchat " + "FROM t_famille f " + "WHERE EXISTS ( " + "   SELECT 1 "
@@ -42,7 +42,7 @@ public class ArticleMvtServiceImpl implements ArticleMvtService {
             + "     AND h.mvtdate <  ?2 " + ") "
             + "AND ( ?3 IS NULL OR CAST(f.int_CIP AS CHAR) LIKE ?3 OR f.str_NAME LIKE ?3 ) " + "ORDER BY f.str_NAME";
 
-    // ✅ Count cohérent (mêmes filtres)
+    
     private static final String MVT_QUERY_COUNT = "SELECT COUNT(1) " + "FROM t_famille f " + "WHERE EXISTS ( "
             + "   SELECT 1 " + "   FROM hmvtproduit h " + "   WHERE h.lg_FAMILLE_ID = f.lg_FAMILLE_ID "
             + "     AND h.mvtdate >= ?1 " + "     AND h.mvtdate <  ?2 " + ") "
