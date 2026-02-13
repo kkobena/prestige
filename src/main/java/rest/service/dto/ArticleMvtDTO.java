@@ -9,7 +9,7 @@ import lombok.Setter;
 @Builder
 public class ArticleMvtDTO {
 
-    // Types demandés
+   
     private String lgFamilleId; // VARCHAR
     private String codeCip; // VARCHAR
     private String strName; // VARCHAR
