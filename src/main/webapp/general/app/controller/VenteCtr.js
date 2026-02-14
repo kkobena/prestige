@@ -1493,7 +1493,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.showAndHideInfosStandardClient(true);
             me.getMontantRecu().setReadOnly(false);
             me.getCbContainer().hide();
-        } else if (value === '7' || value === '8' || value === '9' || value === '10') {
+        } else if (value === '7' || value === '8' || value === '9' || value === '10' || value === '19' || value === '80' || value === '70') {
             me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
