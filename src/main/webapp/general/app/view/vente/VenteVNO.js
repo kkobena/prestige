@@ -47,6 +47,18 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                     root: 'data',
                     totalProperty: 'total'
                 }
+            },
+            // Ajoutez ceci pour filtrer les données au chargement
+            listeners: {
+                load: function (store, records, successful, operation, eOpts) {
+                    if (successful) {
+                        // Filtrer les produits dont le nom ne commence pas par "RV "
+                        store.filterBy(function (record) {
+                            var nom = record.get('strNAME');
+                            return !nom || !nom.toUpperCase().startsWith('RV ');
+                        });
+                    }
+                }
             }
         });
         let typeremise = new Ext.data.Store({

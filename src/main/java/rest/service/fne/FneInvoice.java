@@ -21,6 +21,8 @@ public class FneInvoice {
 
     private String clientEmail;
 
+    private String clientSellerName;
+
     @NotNull
     private String pointOfSale;
 
@@ -63,6 +65,14 @@ public class FneInvoice {
 
     public void setClientEmail(String clientEmail) {
         this.clientEmail = clientEmail;
+    }
+
+    public String getClientSellerName() {
+        return clientSellerName;
+    }
+
+    public void setClientSellerName(String clientSellerName) {
+        this.clientSellerName = clientSellerName;
     }
 
     public String getPointOfSale() {
