@@ -298,6 +298,7 @@ public class CaisseServiceImpl implements CaisseService {
                 case DateConverter.MODE_MOOV:
                 case DateConverter.TYPE_REGLEMENT_ORANGE:
                 case DateConverter.MODE_WAVE:
+                case DateConverter.MODE_DJAMO:
                     v.forEach(b -> {
                         montantMobileMoney.add(b.getMontant());
                         if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
@@ -1778,6 +1779,7 @@ public class CaisseServiceImpl implements CaisseService {
                 case DateConverter.TYPE_REGLEMENT_ORANGE:
                 case DateConverter.MODE_MTN:
                 case DateConverter.MODE_WAVE:
+                case DateConverter.MODE_DJAMO:
                     montantMobilePayment += montantPara;
                     break;
                 }

@@ -88,6 +88,7 @@ public final class Constant {
     public static final String TYPE_REGLEMENT_ORANGE = "7";
     public static final String MODE_MTN = "9";
     public static final String MODE_WAVE = "10";
+    public static final String MODE_DJAMO = "19";
     public static final String LESS = "LESS";
     public static final String MORE = "MORE";
     public static final String EQUAL = "EQUAL";
