@@ -247,6 +247,9 @@ public class Balance {
                 list = typeRe.get(DateConverter.MODE_WAVE);
                 P_SORTIECAISSE_MOBILE += (list == null) ? 0
                         : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                list = typeRe.get(DateConverter.MODE_DJAMO);
+                P_SORTIECAISSE_MOBILE += (list == null) ? 0
+                        : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                 break;
 
             case DateConverter.MVT_ENTREE_CAISSE:
@@ -276,6 +279,9 @@ public class Balance {
                 list = typeRe.get(DateConverter.MODE_WAVE);
                 P_ENTREECAISSE_MOBILE += (list == null) ? 0
                         : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                list = typeRe.get(DateConverter.MODE_DJAMO);
+                P_ENTREECAISSE_MOBILE += (list == null) ? 0
+                        : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                 break;
             case DateConverter.MVT_REGLE_TP:
                 P_REGLEMENT_LABEL = val.get(0).getTypeMouvement();
@@ -302,6 +308,9 @@ public class Balance {
                 P_REGLEMENT_MOBILE += (list == null) ? 0
                         : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                 list = typeRe.get(DateConverter.MODE_WAVE);
+                P_REGLEMENT_MOBILE += (list == null) ? 0
+                        : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                list = typeRe.get(DateConverter.MODE_DJAMO);
                 P_REGLEMENT_MOBILE += (list == null) ? 0
                         : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                 break;

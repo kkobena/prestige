@@ -274,6 +274,7 @@ public class ListCaisseServiceImpl implements ListCaisseService {
                 case Constant.TYPE_REGLEMENT_ORANGE:
                 case Constant.MODE_MTN:
                 case Constant.MODE_WAVE:
+                case Constant.MODE_DJAMO:
                     o.setMobile(o.getMobile() + montant);
                     break;
 
