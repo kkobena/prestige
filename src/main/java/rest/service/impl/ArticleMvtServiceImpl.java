@@ -25,7 +25,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.json.JSONObject;
 import rest.service.ArticleMvtService;
-import rest.service.InventaireService; 
+import rest.service.InventaireService;
 import rest.service.dto.ArticleMvtDTO;
 import util.FunctionUtils;
 
@@ -34,7 +34,6 @@ public class ArticleMvtServiceImpl implements ArticleMvtService {
 
     private static final Logger LOG = Logger.getLogger(ArticleMvtServiceImpl.class.getName());
 
-    
     private static final String MVT_QUERY = "SELECT " + " f.lg_FAMILLE_ID AS lgFamilleId, "
             + " CAST(f.int_CIP AS CHAR) AS codeCip, " + " f.str_NAME AS strName, " + " f.int_PRICE AS prixVente, "
             + " f.int_PAF AS prixAchat " + "FROM t_famille f " + "WHERE EXISTS ( " + "   SELECT 1 "
@@ -42,7 +41,6 @@ public class ArticleMvtServiceImpl implements ArticleMvtService {
             + "     AND h.mvtdate <  ?2 " + ") "
             + "AND ( ?3 IS NULL OR CAST(f.int_CIP AS CHAR) LIKE ?3 OR f.str_NAME LIKE ?3 ) " + "ORDER BY f.str_NAME";
 
-    
     private static final String MVT_QUERY_COUNT = "SELECT COUNT(1) " + "FROM t_famille f " + "WHERE EXISTS ( "
             + "   SELECT 1 " + "   FROM hmvtproduit h " + "   WHERE h.lg_FAMILLE_ID = f.lg_FAMILLE_ID "
             + "     AND h.mvtdate >= ?1 " + "     AND h.mvtdate <  ?2 " + ") "
@@ -52,7 +50,7 @@ public class ArticleMvtServiceImpl implements ArticleMvtService {
     private EntityManager em;
 
     @EJB
-    private InventaireService inventaireService; 
+    private InventaireService inventaireService;
 
     @Override
     public JSONObject getAllArticleMvt(String dtStart, String dtEnd, String query, int limit, int start) {

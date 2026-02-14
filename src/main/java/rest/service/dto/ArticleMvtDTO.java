@@ -9,7 +9,6 @@ import lombok.Setter;
 @Builder
 public class ArticleMvtDTO {
 
-   
     private String lgFamilleId; // VARCHAR
     private String codeCip; // VARCHAR
     private String strName; // VARCHAR
