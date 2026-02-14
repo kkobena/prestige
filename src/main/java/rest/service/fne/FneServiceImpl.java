@@ -89,9 +89,11 @@ public class FneServiceImpl implements FneService {
         FneInvoice fneInvoice = new FneInvoice();
         fneInvoice.setEstablishment(officine.getStrNOMCOMPLET());
         fneInvoice.setClientCompanyName(tTiersPayant.getStrFULLNAME());
-        fneInvoice.setClientEmail(tTiersPayant.getStrMAIL());
+        fneInvoice.setClientEmail(tTiersPayant.getStrADRESSE());
         fneInvoice.setClientPhone(tTiersPayant.getStrTELEPHONE());
         fneInvoice.setPointOfSale(sp.fnepointOfSale);
+        fneInvoice.setClientSellerName("Gestionnaire/Comptable");
+        // on pourra recuperer le nom de l'utilisateur connecter apres pour remplacer
         fneInvoice.setClientNcc(tTiersPayant.getStrCOMPTECONTRIBUABLE());
         return fneInvoice;
     }
