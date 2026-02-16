@@ -37,10 +37,10 @@ public class FneRessource {
     }
 
     @GET
-    @Path("invoices/sign-group/{id}/{typeInvoice}")
-    public Response getSignGroupInvoice(@PathParam("id") Integer id, @PathParam("typeInvoice") TypeInvoice typeInvoice)
-            throws FneExeception {
-        fneService.createGroupeInvoice(id, typeInvoice);
+    @Path("invoices/sign-group/{id}/{codeFacture}/{typeInvoice}")
+    public Response getSignGroupInvoice(@PathParam("id") Integer id, @PathParam("codeFacture") String codeFacture,
+            @PathParam("typeInvoice") TypeInvoice typeInvoice) throws FneExeception {
+        fneService.createGroupeInvoice(id, codeFacture, typeInvoice);
         return Response.ok().build();
     }
 

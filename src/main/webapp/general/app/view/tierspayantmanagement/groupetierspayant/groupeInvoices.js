@@ -367,89 +367,104 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
     },
 
     shwoChoiceModal: function (grid, rowIndex) {
-        var me = this;
-        var rec = grid.getStore().getAt(rowIndex);
+    var me = this;
+    var rec = grid.getStore().getAt(rowIndex);
 
-        var choice = new Ext.data.Store({
-            fields: ['code', 'libelle'],
-            data: [
-                {code: 'GROUPE_TAUX_TVA', libelle: 'Facture'},
-                {code: 'PRODUIT_DETAIL', libelle: 'Produit'}
-            ]
-        });
+    var choice = new Ext.data.Store({
+        fields: ['code', 'libelle'],
+        data: [
+            {code: 'GROUPE_TAUX_TVA', libelle: 'Facture'},
+            {code: 'PRODUIT_DETAIL', libelle: 'Produit'}
+        ]
+    });
 
-        var win = Ext.create('Ext.window.Window', {
-            autoShow: true,
-            height: 200,
-            width: '40%',
-            modal: true,
-            title: 'Choix du type fe facturation',
-            closeAction: 'hide',
-            closable: true,
+    var win = Ext.create('Ext.window.Window', {
+        autoShow: true,
+        height: 200,
+        width: '40%',
+        modal: true,
+        title: 'Choix du type fe facturation',
+        closeAction: 'hide',
+        closable: true,
+        layout: { type: 'vbox', align: 'stretch' },
+        items: [{
+            xtype: 'form',
+            bodyPadding: 5,
+            modelValidation: true,
             layout: { type: 'vbox', align: 'stretch' },
             items: [{
-                xtype: 'form',
-                bodyPadding: 5,
-                modelValidation: true,
-                layout: { type: 'vbox', align: 'stretch' },
+                xtype: 'fieldset',
+                layout: { type: 'hbox', align: 'stretch' },
+                title: 'Type de facturation',
                 items: [{
-                    xtype: 'fieldset',
-                    layout: { type: 'hbox', align: 'stretch' },
-                    title: 'Type de facturation',
-                    items: [{
-                        xtype: 'combo',
-                        fieldLabel: 'Type de facturation',
-                        allowBlank: false,
-                        name: 'typeInvoice',
-                        flex: 1,
-                        valueField: 'code',
-                        displayField: 'libelle',
-                        typeAhead: true,
-                        queryMode: 'local',
-                        pageSize: 2,
-                        emptyText: 'Choisir un type...',
-                        store: choice
-                    }]
-                }],
-                dockedItems: [{
-                    xtype: 'toolbar',
-                    dock: 'bottom',
-                    ui: 'footer',
-                    layout: { pack: 'end', type: 'hbox' },
-                    items: [{
-                        xtype: 'button',
-                        text: 'Valider',
-                        handler: function (btn) {
-                            var formulaire = btn.up('form');
-                            if (formulaire.isValid()) {
-                                var formValues = formulaire.getValues();
-                                me.certify(rec.get('lg_GROUPE_ID'), formValues.typeInvoice, win);
-                            }
+                    xtype: 'combo',
+                    fieldLabel: 'Type de facturation',
+                    allowBlank: false,
+                    name: 'typeInvoice',
+                    flex: 1,
+                    valueField: 'code',
+                    displayField: 'libelle',
+                    typeAhead: true,
+                    queryMode: 'local',
+                    pageSize: 2,
+                    emptyText: 'Choisir un type...',
+                    store: choice
+                }]
+            }],
+            dockedItems: [{
+                xtype: 'toolbar',
+                dock: 'bottom',
+                ui: 'footer',
+                layout: { pack: 'end', type: 'hbox' },
+                items: [{
+                    xtype: 'button',
+                    text: 'Valider',
+                    handler: function (btn) {
+                        var formulaire = btn.up('form');
+                        if (!formulaire.isValid()) {
+                            return;
                         }
-                    }, {
-                        xtype: 'button',
-                        text: 'Annuler',
-                        handler: function () { win.destroy(); }
-                    }]
+
+                        // ✅ évite les multi-clics (safe, pas de régression)
+                        btn.setDisabled(true);
+
+                        var formValues = formulaire.getValues();
+
+                        // ✅ code facture de la facture groupe (déjà présent dans tes records)
+                        var codeFacture = rec.get('CODEFACTURE');
+
+                        me.certify(rec.get('lg_GROUPE_ID'), codeFacture, formValues.typeInvoice, win, btn);
+                    }
+                }, {
+                    xtype: 'button',
+                    text: 'Annuler',
+                    handler: function () { win.destroy(); }
                 }]
             }]
-        });
-    },
+        }]
+    });
+},
 
-    certify: function (idFacture, typeInvoice, win) {
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-        Ext.Ajax.request({
-            url: '../api/v1/fne/invoices/sign-group/' + idFacture + '/' + typeInvoice,
-            method: 'GET',
-            success: function () {
-                progress.hide();
-                win.destroy();
-                Ext.MessageBox.alert('Info', 'Opération effectuée');
-            },
-            failure: function (response) {
-                progress.hide();
-                Ext.MessageBox.alert('Error Message', response.responseText);
-            }
-        });
-    }
+certify: function (idGroupe, codeFacture, typeInvoice, win, btn) {
+    var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+
+    var safeCode = encodeURIComponent(codeFacture || '');
+
+    Ext.Ajax.request({
+        url: '../api/v1/fne/invoices/sign-group/' + idGroupe + '/' + safeCode + '/' + typeInvoice,
+        method: 'GET',
+        timeout: 240000,
+        success: function () {
+            progress.hide();
+            win.destroy();
+            Ext.MessageBox.alert('Info', 'Opération effectuée');
+        },
+        failure: function (response) {
+            progress.hide();
+            if (btn) btn.setDisabled(false);
+            Ext.MessageBox.alert('Error Message', response.responseText);
+        }
+    });
+}
+
 });
