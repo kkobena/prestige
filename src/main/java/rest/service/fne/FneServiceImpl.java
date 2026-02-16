@@ -58,8 +58,8 @@ public class FneServiceImpl implements FneService {
     }
 
     @Override
-    public void createGroupeInvoice(Integer idFacture, TypeInvoice typeInvoice) {
-        fetchGroupeFactures(idFacture).forEach(facture -> {
+    public void createGroupeInvoice(Integer idFacture, String codeFacture, TypeInvoice typeInvoice) {
+        fetchGroupeFactures(idFacture, codeFacture).forEach(facture -> {
 
             createInvoice(facture, typeInvoice);
         });
@@ -214,14 +214,13 @@ public class FneServiceImpl implements FneService {
 
     }
 
-    private List<TFacture> fetchGroupeFactures(Integer idGroupeFacture) {
-
-        TypedQuery<TFacture> typedQuery = em.createQuery(
-                "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.lgGROUPEID.lgGROUPEID=?1  ) ",
-                TFacture.class);
+    private List<TFacture> fetchGroupeFactures(Integer idGroupeFacture, String codeFacture) {
+        TypedQuery<TFacture> typedQuery = em.createQuery("SELECT DISTINCT o " + "FROM TFacture o "
+                + "WHERE o.lgFACTUREID IN (" + "   SELECT g.lgFACTURESID " + "   FROM TGroupeFactures g "
+                + "   WHERE g.lgGROUPEID.lgGROUPEID = ?1 " + "   AND g.strCODEFACTURE = ?2" + ")", TFacture.class);
         typedQuery.setParameter(1, idGroupeFacture);
+        typedQuery.setParameter(2, codeFacture);
         return typedQuery.getResultList();
-
     }
 
     private Item buildFromTuple(Tuple tuple) {
