@@ -3,6 +3,12 @@
 
 Ext.define('testextjs.controller.VenteCtr', {
     extend: 'Ext.app.Controller',
+
+        // === Protection saisie Montant reçu (anti-scanner + confirmation) ===
+        antiBarcodeMaxDigits: 6,          // > 5 chiffres => blocage (probable scan code-barres)
+        confirmAtMaxDigits: true,         // == 5 chiffres => demande confirmation
+        suspectInputThreshold: 100000,       // confirmation au clic "Terminer" si montant élevé
+
     models: [
         'testextjs.model.caisse.Nature',
         'testextjs.model.caisse.Reglement',
@@ -1513,7 +1519,89 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     }
     ,
+
+
+    // Utilitaire: focus + sélection du texte sur Montant Reçu
+    focusSelectMontantRecu: function () {
+        const me = this;
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        if (!field) { return; }
+        // focus puis sélection du contenu
+        field.focus(false, 50);
+        Ext.defer(function () {
+            try {
+                if (field.selectText) {
+                    field.selectText();
+                } else if (field.inputEl && field.inputEl.dom) {
+                    field.inputEl.dom.select();
+                }
+            } catch (e) {}
+        }, 80);
+    },
+
+    // Wrapper: contrôle anti-scan + confirmation à 5 chiffres
     montantRecuChangeListener: function (field, value, options) {
+        const me = this;
+
+        // Normalise la saisie (ne garde que les chiffres)
+        const raw = String(field.getValue() || '').replace(/\D/g, '');
+        const digits = raw.length;
+
+        // Vide => laisse la logique existante gérer (désactivation etc.)
+        if (digits === 0) {
+            field.clearInvalid();
+            field._confirmedMaxDigitsValue = null;
+            return me.montantRecuChangeCore(field, value, options);
+        }
+
+        // Blocage net si > max digits (probable scan code-barres)
+        if (digits > me.antiBarcodeMaxDigits) {
+            field.markInvalid('Quantité trop grande ! (Code barre scanné ?)');
+            if (me.getVnobtnCloture) {
+                me.getVnobtnCloture().disable();
+            }
+            return;
+        }
+
+        // 5 digits atteint => demander confirmation (uniquement si la saisie dépasse le montant de la vente)
+        const data = me.getNetAmountToPay ? me.getNetAmountToPay() : null;
+        const netTopay = data && data.montantNet != null ? parseInt(data.montantNet, 10) : 0;
+        const numericValue = parseInt(raw, 10) || 0;
+        const exceedsSaleAmount = netTopay > 0 && numericValue > netTopay;
+
+        if (me.confirmAtMaxDigits
+                && digits === me.antiBarcodeMaxDigits
+                && exceedsSaleAmount
+                && field._confirmedMaxDigitsValue !== raw) {
+            Ext.Msg.show({
+                title: 'Confirmation',
+                msg: '⚠️ Montant à 5 chiffres détecté (' + raw + ') et supérieur au montant de la vente (' + netTopay + '). Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.WARNING,
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        field._confirmedMaxDigitsValue = raw;
+                        field.clearInvalid();
+                        // relance la logique existante après confirmation
+                        me.montantRecuChangeCore(field, value, options);
+                    } else {
+                        // Pas confirmé => on laisse la valeur pour correction, et on reposera la question si nécessaire
+                        field._confirmedMaxDigitsValue = null;
+                    }
+                    // Dans tous les cas, revenir sur le champ avec le texte sélectionné
+                    me.focusSelectMontantRecu();
+                }
+            });
+            return;
+        }
+
+        // OK => continue
+        field.clearInvalid();
+        return me.montantRecuChangeCore(field, value, options);
+    },
+
+montantRecuChangeCore: function(field, value, options) {
         const me = this, typeRegle = me.getVnotypeReglement().getValue();
         const montantRecu = parseInt(field.getValue());
         const data = me.getNetAmountToPay();
@@ -3729,7 +3817,85 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
 
     },
+    
+    // Wrapper: confirmation montant élevé + sécurité anti-scan avant clôture
     doCloture: function () {
+        const me = this;
+
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        const raw = field ? String(field.getValue() || '').replace(/\D/g, '') : '';
+        const digits = raw.length;
+
+        // Si invalide (anti-scan) => stop
+        if (field && digits > 0 && digits > me.antiBarcodeMaxDigits) {
+            field.markInvalid('Quantité trop grande ! (Code barre scanné ?)');
+            return;
+        }
+
+        // Si 5 digits et pas confirmé => redemander (au cas où l’utilisateur clique sans repasser par le change)
+        // (uniquement si la saisie dépasse le montant de la vente)
+        const data = me.getNetAmountToPay ? me.getNetAmountToPay() : null;
+        const netTopay = data && data.montantNet != null ? parseInt(data.montantNet, 10) : 0;
+        const numericValue = parseInt(raw, 10) || 0;
+        const exceedsSaleAmount = netTopay > 0 && numericValue > netTopay;
+
+        if (field && me.confirmAtMaxDigits && digits === me.antiBarcodeMaxDigits && exceedsSaleAmount && field._confirmedMaxDigitsValue !== raw) {
+            Ext.Msg.show({
+                title: 'Confirmation',
+                msg: '⚠️ Montant à 5 chiffres détecté (' + raw + ') et supérieur au montant de la vente (' + netTopay + '). Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.WARNING,
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        field._confirmedMaxDigitsValue = raw;
+                        me.doCloture(); // relance après confirmation
+                    } else {
+                        field._confirmedMaxDigitsValue = null;
+                    }
+                    // Dans tous les cas, revenir sur le champ avec le texte sélectionné
+                    me.focusSelectMontantRecu();
+                }
+            });
+            return;
+        }
+
+        // Montant suspect => confirmation avant de continuer
+        let totalSaisie = 0;
+        if (field && raw.length > 0) {
+            totalSaisie = parseInt(raw, 10) || 0;
+        }
+        if (me.getExtraModeReglementId && me.getExtraModeReglementId()) {
+            const montantExtraField = me.getMontantExtra ? me.getMontantExtra() : null;
+            const extraRaw = montantExtraField ? String(montantExtraField.getValue() || '').replace(/\D/g, '') : '';
+            const extra = extraRaw.length ? (parseInt(extraRaw, 10) || 0) : 0;
+            totalSaisie += extra;
+        }
+
+        if (totalSaisie >= me.suspectInputThreshold && me._suspectConfirmedForValue !== totalSaisie) {
+            Ext.Msg.show({
+                title: 'Alerte',
+                msg: '⚠️ Montant élevé : vous allez encaisser ' + totalSaisie + '. Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.ERROR,
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        me._suspectConfirmedForValue = totalSaisie;
+                        me.doClotureCore();
+                    } else {
+                        // Annuler => revenir sur le champ montant reçu avec texte sélectionné
+                        me.focusSelectMontantRecu();
+                    }
+                }
+            });
+            return;
+        }
+
+        me.doClotureCore();
+    },
+
+doClotureCore: function () {
         const me = this;
         let typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
