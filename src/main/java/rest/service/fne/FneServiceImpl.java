@@ -8,9 +8,11 @@ import dal.TTypeTiersPayant;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -58,11 +60,13 @@ public class FneServiceImpl implements FneService {
     }
 
     @Override
-    public void createGroupeInvoice(Integer idFacture, TypeInvoice typeInvoice) {
-        fetchGroupeFactures(idFacture).forEach(facture -> {
+    public void createGroupeInvoice(String idGroupeFactures, TypeInvoice typeInvoice) {
 
-            createInvoice(facture, typeInvoice);
-        });
+        fetchGroupeFactures(
+                Arrays.stream(idGroupeFactures.split("_")).map(Integer::valueOf).collect(Collectors.toSet()))
+                        .forEach(facture -> {
+                            createInvoice(facture, typeInvoice);
+                        });
     }
 
     private void createInvoice(TFacture facture, TypeInvoice typeInvoice) throws FneExeception {
@@ -214,12 +218,12 @@ public class FneServiceImpl implements FneService {
 
     }
 
-    private List<TFacture> fetchGroupeFactures(Integer idGroupeFacture) {
+    private List<TFacture> fetchGroupeFactures(Set<Integer> idGroupeFactures) {
 
         TypedQuery<TFacture> typedQuery = em.createQuery(
-                "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.lgGROUPEID.lgGROUPEID=?1  ) ",
+                "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.id IN ?1 ) ",
                 TFacture.class);
-        typedQuery.setParameter(1, idGroupeFacture);
+        typedQuery.setParameter(1, idGroupeFactures);
         return typedQuery.getResultList();
 
     }
