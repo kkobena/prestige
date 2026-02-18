@@ -217,7 +217,7 @@ public class FneServiceImpl implements FneService {
     private List<TFacture> fetchGroupeFactures(Integer idGroupeFacture) {
 
         TypedQuery<TFacture> typedQuery = em.createQuery(
-                "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.lgGROUPEID.lgGROUPEID=?1  ) ",
+                "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.id=?1 ) ",
                 TFacture.class);
         typedQuery.setParameter(1, idGroupeFacture);
         return typedQuery.getResultList();
