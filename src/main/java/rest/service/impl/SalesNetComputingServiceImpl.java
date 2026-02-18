@@ -17,6 +17,7 @@ import dal.TTypeVente;
 import dal.TWorkflowRemiseArticle;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -229,7 +230,12 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
-        List<TPreenregistrementDetail> items = new ArrayList<>(op.getTPreenregistrementDetailCollection());
+        Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection = op
+                .getTPreenregistrementDetailCollection();
+        if (CollectionUtils.isEmpty(tPreenregistrementDetailCollection)) {
+            return new MontantAPaye();
+        }
+        List<TPreenregistrementDetail> items = new ArrayList<>(tPreenregistrementDetailCollection);
         MontantAPaye montantAPaye = computeRemise(op, remise, items);
         List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents = new ArrayList<>(
                 op.getTPreenregistrementCompteClientTiersPayentCollection());
@@ -382,7 +388,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             ti.setPriorite(ctp.getIntPRIORITY());
             Optional.ofNullable(tiersPayant.getDblPLAFONDCREDIT())
                     .ifPresent(v -> ti.setPlafondCreditTiersPayant(BigDecimal.valueOf(v))); // plafond sur la fiche du
-                                                                                            // TP
+            // TP
             Optional.ofNullable(ctp.getDbPLAFONDENCOURS()).ifPresent(v -> ti.setPlafondConso(BigDecimal.valueOf(v)));
             Optional.ofNullable(ctp.getDbCONSOMMATIONMENSUELLE())
                     .ifPresent(v -> ti.setConsoMensuelle(BigDecimal.valueOf(v)));
