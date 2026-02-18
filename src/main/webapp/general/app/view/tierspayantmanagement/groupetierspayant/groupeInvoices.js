@@ -603,7 +603,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                                 if (formulaire.isValid()) {
 
                                                     const formValues = formulaire.getValues();
-                                                    me.certify(rec.get('lg_GROUPE_ID'), formValues.typeInvoice, win);
+                                                    me.certify(rec.get('ids'), formValues.typeInvoice, win);
                                                 }
                                             }
                                         },
@@ -627,13 +627,16 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
         );
 
     },
-    certify: function (idFacture, typeInvoice, win) {
-
-
+    certify: function (ids, typeInvoice, win) {
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
-            url: '../api/v1/fne/invoices/sign-group/' + idFacture + '/' + typeInvoice,
+            url: '../api/v1/fne/invoices/sign-group',
             method: 'GET',
+            params: {
+                ids,
+                typeInvoice
+
+            },
             success: function (response)
             {
                 progress.hide();
