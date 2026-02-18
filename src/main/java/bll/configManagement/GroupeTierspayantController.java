@@ -100,6 +100,7 @@ import javax.persistence.EntityManagerFactory;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Expression;
 
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
@@ -1870,11 +1871,17 @@ public class GroupeTierspayantController implements Serializable {
             } else {
                 criteria = cb.and(criteria, cb.equal(root.get(TGroupeFactures_.strCODEFACTURE), CODEGROUPE));
             }
+
+            Expression<String> groupConcatId = cb.function("GROUP_CONCAT", String.class, root.get("id"));
+
+            Expression<String> dateGroupBy = cb.function("DATE_FORMAT", String.class, root.get("dtCREATED"),
+                    cb.literal("%Y-%m-%d"));
             cq.multiselect(root.get("lgGROUPEID").get("lgGROUPEID"), root.get("lgGROUPEID").get("strLIBELLE"),
                     cb.count(root), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTRESTANT")),
                     root.get("strCODEFACTURE"), root.get("dtCREATED"), root.get("lgFACTURESID").get("strSTATUT"),
                     cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTCMDE")),
-                    cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTPAYE"))).groupBy(root.get("strCODEFACTURE"));
+                    cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTPAYE")), groupConcatId)
+                    .groupBy(root.get("strCODEFACTURE"), root.get("lgGROUPEID").get("lgGROUPEID"), dateGroupBy);
             cq.where(criteria);
 
             Query q = em.createQuery(cq);
@@ -1897,6 +1904,9 @@ public class GroupeTierspayantController implements Serializable {
                             .put("DATECREATION", date.formatterShort.format(objects[5])).put("STATUT", status)
                             .put("AMOUNT", objects[7]).put("AMOUNTPAYE", objects[8]);
                     json.put("ACTION_REGLER_FACTURE", ACTION_REGLER_FACTURE);
+                    var ids = ((String) objects[9]).replaceAll(",", "_");
+                    json.put("ids", ids);
+
                     list.put(json);
                 } catch (JSONException ex) {
                     ex.printStackTrace();

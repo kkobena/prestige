@@ -12,5 +12,5 @@ public interface FneService {
 
     void createInvoice(String idFacture, TypeInvoice typeInvoice) throws FneExeception;
 
-    void createGroupeInvoice(Integer idFacture, TypeInvoice typeInvoice);
+    void createGroupeInvoice(String idFactures, TypeInvoice typeInvoice);
 }

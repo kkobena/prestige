@@ -1755,7 +1755,12 @@ public class SalesServiceImpl implements SalesService {
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_ORDONNANCE);
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(tp);// TODO: utiliser directement la
-            // collection
+            if (CollectionUtils.isEmpty(lstTPreenregistrementDetail)) {
+                json.put("success", false);
+                json.put("msg", "Vous devez ajouter des lignes à la vente avant de la finaliser");
+                json.put("codeError", 0);
+                return json;
+            }
             int montant = tp.getIntPRICE();
             if (diffAmount(montant, lstTPreenregistrementDetail)) {
                 json.put("success", false);
@@ -1982,6 +1987,13 @@ public class SalesServiceImpl implements SalesService {
                 return json;
             }
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(tp);
+            if (CollectionUtils.isEmpty(lstTPreenregistrementDetail)) {
+                json.put("success", false);
+                json.put("msg", "Vous devez ajouter des lignes à la vente avant de la finaliser");
+                json.put("codeError", 0);
+                return json;
+            }
+
             boolean ordonnancier = gererOrdoncier();
             if (ordonnancier) {
                 boolean isOrdonnancier = checkOrdonnancier(lstTPreenregistrementDetail);
@@ -2406,15 +2418,22 @@ public class SalesServiceImpl implements SalesService {
             if (!params.isCheckUg()) {
                 MontantAPaye montantAPaye;
                 TPreenregistrement p = emg.find(TPreenregistrement.class, params.getVenteId());
+                List<TPreenregistrementDetail> items = getItems(p);
+                if (CollectionUtils.isEmpty(items)) {
+                    json.put("success", true).put("msg", "Opération effectuée avec success");
+                    json.put("data", new JSONObject(new MontantAPaye()));
+
+                    return json;
+                }
                 if (params.getRemiseId() == null || "".equals(params.getRemiseId())) {
-                    montantAPaye = sumVenteSansRemise(getItems(p));
+                    montantAPaye = sumVenteSansRemise(items);
                     p.setIntPRICE(montantAPaye.getMontant());
                     p.setIntACCOUNT(montantAPaye.getMontantAccount());
                     p.setIntPRICEOTHER(montantAPaye.getMontant());
 
                 } else {
                     TRemise remise = p.getRemise();
-                    montantAPaye = getRemiseVno(p, remise, getItems(p));
+                    montantAPaye = getRemiseVno(p, remise, items);
 
                 }
                 json.put("success", true).put("msg", "Opération effectuée avec success");
