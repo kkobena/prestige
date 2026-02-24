@@ -73,7 +73,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         confirmAtMaxDigits: true,         // == 5 chiffres => demande confirmation
         suspectInputThreshold: 200000,       // confirmation au clic "Terminer" si montant élevé
 
-        maxChangeAllowed: 9500,          // monnaie à rendre max avant alerte (anti scan)
+        maxChangeAllowed: 20000,          // monnaie à rendre max avant alerte (anti scan)
     models: [
         'testextjs.model.caisse.Nature',
         'testextjs.model.caisse.Reglement',
