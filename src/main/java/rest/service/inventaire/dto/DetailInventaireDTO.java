@@ -1,6 +1,8 @@
 
 package rest.service.inventaire.dto;
 
+import java.util.Date;
+
 /**
  *
  * @author koben
@@ -16,6 +18,21 @@ public class DetailInventaireDTO {
     private final int quantiteInitiale;
     private final int quantiteSaisie;
 
+    private final Date dtUpdated;
+
+    public DetailInventaireDTO(Long id, String produitName, String produitCip, int produitPrixAchat, int produitPrixUni,
+            int quantiteInitiale, int quantiteSaisie, Date dtUpdated) {
+        this.id = id;
+        this.produitName = produitName;
+        this.produitCip = produitCip;
+
+        this.produitPrixAchat = produitPrixAchat;
+        this.produitPrixUni = produitPrixUni;
+        this.quantiteInitiale = quantiteInitiale;
+        this.quantiteSaisie = quantiteSaisie;
+        this.dtUpdated = dtUpdated;
+    }
+
     public DetailInventaireDTO(Long id, String produitName, String produitCip, int produitPrixAchat, int produitPrixUni,
             int quantiteInitiale, int quantiteSaisie) {
         this.id = id;
@@ -26,6 +43,7 @@ public class DetailInventaireDTO {
         this.produitPrixUni = produitPrixUni;
         this.quantiteInitiale = quantiteInitiale;
         this.quantiteSaisie = quantiteSaisie;
+        this.dtUpdated = null;
     }
 
     public Long getId() {
@@ -56,4 +74,7 @@ public class DetailInventaireDTO {
         return quantiteSaisie;
     }
 
+    public Date getdtUpdated() {
+        return dtUpdated;
+    }
 }
