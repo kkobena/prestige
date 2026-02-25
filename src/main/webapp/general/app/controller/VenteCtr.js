@@ -3,6 +3,77 @@
 
 Ext.define('testextjs.controller.VenteCtr', {
     extend: 'Ext.app.Controller',
+
+    /**
+     * Remet totalement à zéro le champ de recherche produit (combo) :
+     * - clearValue() seul peut laisser le rawValue affiché
+     * - ici on force aussi setValue(null) + setRawValue('') + reset() + inputEl
+     */
+    resetProduitCombo: function (combo) {
+    if (!combo) {
+        return;
+    }
+    try {
+        // Fermer la liste (évite ENTER en arrière-plan)
+        if (combo.isExpanded) {
+            combo.collapse();
+        }
+    } catch (e) {
+    }
+    try {
+        // Deselect dans le picker
+        if (combo.getPicker && combo.getPicker()) {
+            const sm = combo.getPicker().getSelectionModel && combo.getPicker().getSelectionModel();
+            if (sm && sm.deselectAll) {
+                sm.deselectAll();
+            }
+        }
+    } catch (e) {
+    }
+    try {
+        // Vider value + texte affiché
+        combo.clearValue();
+    } catch (e) {
+    }
+    try {
+        combo.setValue(null);
+    } catch (e) {
+    }
+    try {
+        combo.setRawValue('');
+    } catch (e) {
+    }
+    try {
+        combo.reset();
+    } catch (e) {
+    }
+    try {
+        // Réinitialiser la dernière requête pour forcer une nouvelle recherche
+        combo.lastQuery = null;
+    } catch (e) {
+    }
+    try {
+        // Enlever tout filtre restant sur le store (sinon la liste conserve l'ancien résultat)
+        const st = combo.getStore && combo.getStore();
+        if (st && st.clearFilter) {
+            st.clearFilter(false);
+        }
+    } catch (e) {
+    }
+    try {
+        if (combo.inputEl && combo.inputEl.dom) {
+            combo.inputEl.dom.value = '';
+        }
+    } catch (e) {
+    }
+},
+
+        // === Protection saisie Montant reçu (anti-scanner + confirmation) ===
+        antiBarcodeMaxDigits: 7,          // > 5 chiffres => blocage (probable scan code-barres)
+        confirmAtMaxDigits: true,         // == 5 chiffres => demande confirmation
+        suspectInputThreshold: 200000,       // confirmation au clic "Terminer" si montant élevé
+
+        maxChangeAllowed: 20000,          // monnaie à rendre max avant alerte (anti scan)
     models: [
         'testextjs.model.caisse.Nature',
         'testextjs.model.caisse.Reglement',
@@ -846,8 +917,14 @@ Ext.define('testextjs.controller.VenteCtr', {
         const me = this;
         me.onComputeNet();
     },
-    checkDouchette(field) {
+    /**
+     * Recherche un produit via douchette (API findone/{code}).
+     * - mode classique: renseigne stock/emplacement puis focus quantité
+     * - mode autoAdd: si résultat unique => ajoute directement qté=1 (sans passer par la saisie quantité)
+     */
+    checkDouchette(field, autoAdd) {
         let me = this;
+        autoAdd = (autoAdd === true);
         Ext.Ajax.request({
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
@@ -859,7 +936,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                     let vnoemplacementId = me.getVnoemplacementField();
                     me.updateStockField(produit.intNUMBERAVAILABLE);
                     vnoemplacementId.setValue(produit.strLIBELLEE);
-                    me.getVnoqtyField().focus(true, 100);
+
+                    // ✅ Ajout direct si scan => résultat unique
+                    if (autoAdd) {
+                        try {
+                            // On crée un record compatible buildSaleParams (record.get(...))
+                            const record = Ext.create('testextjs.model.caisse.Produit', produit);
+                            me.addProduitFromScan(record, 1);
+                        } catch (e) {
+                            // fallback: comportement historique
+                            me.getVnoqtyField().focus(true, 100);
+                        }
+                    } else {
+                        me.getVnoqtyField().focus(true, 100);
+                    }
                 } else {
                     field.focus(true, 100);
                 }
@@ -868,6 +958,150 @@ Ext.define('testextjs.controller.VenteCtr', {
 
         });
 
+    },
+
+    /**
+     * Ajout direct d'un produit après scan (résultat unique).
+     * Reprend les contrôles de stock/déconditionnement de onQtySpecialKey.
+     */
+    addProduitFromScan: function (record, qte) {
+        const me = this;
+        const typeVente = me.getTypeVenteCombo().getValue();
+        const vente = me.getCurrent();
+        const isVno = (typeVente === '1');
+
+        // champs UI
+        const qtyField = me.getVnoqtyField();
+        const produitCmp = me.getVnoproduitCombo();
+
+        // URL d'ajout
+        const url = vente ? '../api/v1/vente/add/item' : isVno ? '../api/v1/vente/add/vno' : '../api/v1/vente/add/assurance';
+
+        if (!record) {
+            produitCmp.focus(true, 100);
+            return;
+        }
+
+        const stock = parseInt(record.get('intNUMBERAVAILABLE'));
+        const boolDECONDITIONNE = parseInt(record.get('boolDECONDITIONNE'));
+        const lgFAMILLEID = record.get('lgFAMILLEPARENTID');
+        qte = parseInt(qte);
+
+        if (qte > 999) {
+            Ext.MessageBox.show({
+                title: 'Message d\'erreur',
+                width: 550,
+                msg: "Impossible de saisir une quantit&eacute; sup&eacute;rieure &agrave; 1000",
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING,
+                fn: function (buttonId) {
+                    if (buttonId === "ok") {
+                        produitCmp.focus(true, 100);
+                    }
+                }
+            });
+            return;
+        }
+
+        if (qte <= stock) {
+            if (isVno) {
+                me.addVenteVno(me.buildSaleParams(record, qte, typeVente), url, qtyField, produitCmp);
+            } else {
+                me.addVenteAssuarnce(me.buildSaleParams(record, qte, typeVente), url, qtyField, produitCmp);
+            }
+            return;
+        }
+
+        // qte > stock
+        if (boolDECONDITIONNE === 1) {
+            me.showYesNoPriority({
+                title: 'Message d\'erreur',
+                width: 550,
+                msg: "Stock insuffisant. Voulez-vous faire un déconditionnement ?",
+                buttons: Ext.MessageBox.YESNO,
+                icon: Ext.MessageBox.WARNING,
+                fn: function (buttonId) {
+                    if (buttonId === "yes") {
+                        Ext.Ajax.request({
+                            method: 'GET',
+                            headers: {'Content-Type': 'application/json'},
+                            url: '../api/v1/vente/search/' + lgFAMILLEID,
+                            success: function (response, options) {
+                                const result = Ext.JSON.decode(response.responseText, true);
+                                if (result.success) {
+                                    let produit = result.data;
+                                    let qtyDetail = produit.intNUMBERDETAIL,
+                                            nbreBoite = produit.intNUMBERAVAILABLE;
+                                    let stockParent = (nbreBoite * qtyDetail) + stock;
+
+                                    if (qte < stockParent) {
+                                        if (isVno) {
+                                            me.addVenteVno(me.buildSaleParams(record, qte, typeVente), url, qtyField, produitCmp);
+                                        } else {
+                                            me.addVenteAssuarnce(me.buildSaleParams(record, qte, typeVente), url, qtyField, produitCmp);
+                                        }
+                                    } else {
+                                        Ext.MessageBox.show({
+                                            title: 'Message d\'erreur',
+                                            width: 550,
+                                            msg: "Le stock est insuffisant",
+                                            buttons: Ext.MessageBox.OK,
+                                            icon: Ext.MessageBox.ERROR,
+                                            fn: function (buttonId) {
+                                                if (buttonId === "ok") {
+                                                    produitCmp.focus(true, 100);
+                                                }
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 550,
+                                        msg: "Impossible de poursuivre",
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.ERROR,
+                                        fn: function (buttonId) {
+                                            if (buttonId === "ok") {
+                                                produitCmp.focus(true, 100);
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            failure: function (response, options) {
+                                Ext.Msg.alert("Message", 'Un problème avec le serveur');
+                            }
+                        });
+                    } else {
+                        // annulation: retour champ produit, remise à zéro infos
+                        qtyField.setValue(1);
+                        me.resetProduitCombo(produitCmp);
+                        produitCmp.focus(true, 100);
+                        me.updateStockField(0);
+                        me.getVnoemplacementField().setValue('');
+                    }
+                }
+            }, [produitCmp, qtyField]);
+        } else {
+            me.showYesNoPriority({
+                title: 'Ajout de produit',
+                msg: 'Stock insuffisant, voulez-vous forcer le stock ?',
+                buttons: Ext.MessageBox.YESNO,
+                fn: function (button) {
+                    if ('yes' === button) {
+                        if (isVno) {
+                            me.addVenteVno(me.buildSaleParams(record, qte, typeVente), url, qtyField, produitCmp);
+                        } else {
+                            me.addVenteAssuarnce(me.buildSaleParams(record, qte, typeVente), url, qtyField, produitCmp);
+                        }
+                    } else if ('no' === button) {
+                        produitCmp.focus(true, 100);
+                    }
+                },
+                icon: Ext.MessageBox.QUESTION
+            }, [produitCmp, qtyField]);
+        }
     },
     onProduitSpecialKey: function (field, e) {
         const me = this;
@@ -895,6 +1129,18 @@ Ext.define('testextjs.controller.VenteCtr', {
         field.suspendEvents();
         let task = new Ext.util.DelayedTask(function (combo, e) {
             if (e.getKey() === e.ENTER) {
+
+// Si la liste est ouverte, on la ferme et on ne déclenche aucune action
+// (évite ENTER qui valide en arrière-plan et passe en quantité)
+try {
+    if (combo.isExpanded) {
+        e.stopEvent();
+        combo.collapse();
+        return;
+    }
+} catch (ex) {
+}
+
                 if (combo.getValue() === null || combo.getValue().trim() === "") {
                     let selection = combo.getPicker().getSelectionModel().getSelection();
                     if (selection.length <= 0) {
@@ -908,7 +1154,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                         vnoemplacementId.setValue(record.get('strLIBELLEE'));
                         me.getVnoqtyField().focus(true, 100);
                     } else {
-                        me.checkDouchette(combo);
+                        // ✅ scan (ENTER) : si résultat unique => ajout direct qté=1
+                        me.checkDouchette(combo, true);
                     }
                 }
             }
@@ -990,7 +1237,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                     } else if (qte > stock) {
                         if (boolDECONDITIONNE === 1) {
-                            Ext.MessageBox.show({
+                            me.showYesNoPriority({
                                 title: 'Message d\'erreur',
                                 width: 550,
                                 msg: "Stock insuffisant. Voulez-vous faire un déconditionnement ?",
@@ -1030,7 +1277,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                                 }
                                                             }
                                                         });
-                                                    }
+}
                                                 } else {
 
                                                     Ext.MessageBox.show({
@@ -1066,9 +1313,9 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                                     }
                                 }
-                            });
+                            }, [produitCmp, field]);
                         } else {
-                            Ext.MessageBox.show({
+                            me.showYesNoPriority({
                                 title: 'Ajout de produit',
                                 msg: 'Stock insuffisant, voulez-vous forcer le stock ?',
                                 buttons: Ext.MessageBox.YESNO,
@@ -1083,10 +1330,10 @@ Ext.define('testextjs.controller.VenteCtr', {
                                     } else if ('no' == button) {
                                         field.focus(true, 100, function () {
                                         });
-                                    }
+}
                                 },
                                 icon: Ext.MessageBox.QUESTION
-                            });
+                            }, [produitCmp, field]);
                         }
                     }
 
@@ -1137,7 +1384,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     me.current = result.data;
                     me.getTotalField().setValue(me.getCurrent().intPRICE);
                     field.setValue(1);
-                    comboxProduit.clearValue();
+                    me.resetProduitCombo(comboxProduit);
                     comboxProduit.focus(true, 100, function () {
                     });
                     me.refresh();
@@ -1513,7 +1760,163 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     }
     ,
+    // Utilitaire: focus + sélection du texte sur Montant Reçu
+    focusSelectMontantRecu: function () {
+        const me = this;
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        if (!field) { return; }
+        field.focus(false, 50);
+        Ext.defer(function () {
+            try {
+                if (field.selectText) {
+                    field.selectText();
+                } else if (field.inputEl && field.inputEl.dom) {
+                    field.inputEl.dom.select();
+                }
+            } catch (e) {}
+        }, 80);
+    },
+
+    // Utilitaire: après un "Annuler" sur une alerte de sécurité, on empêche toute boucle
+    // tant que l'utilisateur n'a pas modifié la valeur du champ.
+    // - bloque la validation
+    // - garde le focus + sélection
+    blockMontantRecuUntilChange: function (rawValue, message) {
+        const me = this;
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        if (!field) { return; }
+        field._blockedSecurityValue = String(rawValue || '');
+        if (message) {
+            try { field.markInvalid(message); } catch (e) {}
+        }
+        if (me.getVnobtnCloture) {
+            try { me.getVnobtnCloture().disable(); } catch (e) {}
+        }
+        me.focusSelectMontantRecu();
+    },
+
+    // Utilitaire: mettre le focus par défaut sur le bouton "Annuler" (NO) d'une MessageBox
+    // Objectif: si l'utilisateur appuie sur Entrée par erreur => on annule toujours.
+    focusMsgBoxCancelButton: function () {
+        Ext.defer(function () {
+            try {
+                const dlg = Ext.Msg.getDialog ? Ext.Msg.getDialog() : null;
+                // Ext.MessageBox expose souvent getButton('no') (plus fiable que query itemId)
+                const btn = dlg && dlg.getButton ? (dlg.getButton('no') || dlg.getButton('cancel')) : null;
+                const btnFallback = !btn && dlg ? (dlg.down('button[itemId=no]') || dlg.down('button[itemId=cancel]')) : null;
+                const target = btn || btnFallback;
+                if (target) {
+                    target.focus();
+                    if (target.el && target.el.dom) {
+                        target.el.dom.focus();
+                    }
+                }
+            } catch (e) {}
+        }, 120);
+    },
+
+    // Wrapper: contrôle anti-scan + confirmation à 5 chiffres
+
     montantRecuChangeListener: function (field, value, options) {
+        const me = this;
+
+        // Normalise la saisie (ne garde que les chiffres)
+        const raw = String(field.getValue() || '').replace(/\D/g, '');
+        const digits = raw.length;
+
+        // Vide => laisse la logique existante gérer (désactivation etc.)
+        if (digits === 0) {
+            field.clearInvalid();
+            field._confirmedMaxDigitsValue = null;
+            field._blockedSecurityValue = null;
+            return me.montantRecuChangeCore(field, value, options);
+        }
+
+        // Si l'utilisateur a cliqué "Annuler" sur une alerte de sécurité,
+        // on ne relance aucune popup tant que la valeur n'a pas changé.
+        if (field._blockedSecurityValue && String(field._blockedSecurityValue) === raw) {
+            return;
+        } else if (field._blockedSecurityValue && String(field._blockedSecurityValue) !== raw) {
+            field._blockedSecurityValue = null;
+        }
+
+        // Blocage net si > max digits (probable scan code-barres)
+        if (digits > me.antiBarcodeMaxDigits) {
+            field.markInvalid('Quantité trop grande ! (Code barre scanné ?)');
+            if (me.getVnobtnCloture) {
+                me.getVnobtnCloture().disable();
+            }
+            return;
+        }
+
+        // 5 digits atteint => demander confirmation (uniquement si la saisie dépasse le montant de la vente)
+        const data = me.getNetAmountToPay ? me.getNetAmountToPay() : null;
+        const netTopay = data && data.montantNet != null ? parseInt(data.montantNet, 10) : 0;
+        const numericValue = parseInt(raw, 10) || 0;
+        const exceedsSaleAmount = netTopay > 0 && numericValue > netTopay;
+
+        // ✅ Protection "monnaie à rendre" : si la monnaie dépasse le seuil -> quasi certain scan/erreur
+        const monnaieARendre = (netTopay > 0 && numericValue > netTopay) ? (numericValue - netTopay) : 0;
+        if (field && monnaieARendre > me.maxChangeAllowed && me._changeConfirmedForValue !== raw) {
+            Ext.Msg.show({
+                title: 'Alerte',
+                msg: '⚠️ Monnaie à rendre anormalement élevée : ' + monnaieARendre + ' (seuil ' + me.maxChangeAllowed + ').\n' +
+                        'Montant reçu : ' + raw + ' / Montant vente : ' + netTopay + '.\n' +
+                        'Probable scan ou erreur de saisie. Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.ERROR,
+                defaultFocus: 'no',
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        me._changeConfirmedForValue = raw;
+                        // Ne pas relancer automatiquement ici (évite boucle de confirmations)
+                        me.focusSelectMontantRecu();
+                    } else {
+                        me._changeConfirmedForValue = null;
+                        me.blockMontantRecuUntilChange(raw, 'Saisie annulée. Corrigez le montant reçu.');
+                    }
+                }
+            });
+            me.focusMsgBoxCancelButton(); // focus par défaut sur Annuler
+            return;
+        }
+
+        if (me.confirmAtMaxDigits
+                && digits === me.antiBarcodeMaxDigits
+                && exceedsSaleAmount
+                && field._confirmedMaxDigitsValue !== raw) {
+            Ext.Msg.show({
+                title: 'Confirmation',
+                msg: '⚠️ Montant à 5 chiffres détecté (' + raw + ') et supérieur au montant de la vente (' + netTopay + '). Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.WARNING,
+                defaultFocus: 'no',
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        field._confirmedMaxDigitsValue = raw;
+                        field.clearInvalid();
+                        // relance la logique existante après confirmation
+                        me.montantRecuChangeCore(field, value, options);
+                        me.focusSelectMontantRecu();
+                    } else {
+                        // Pas confirmé => on laisse la valeur pour correction, et on reposera la question si nécessaire
+                        field._confirmedMaxDigitsValue = null;
+                        me.blockMontantRecuUntilChange(raw, 'Saisie annulée. Corrigez le montant reçu.');
+                    }
+                }
+            });
+            me.focusMsgBoxCancelButton(); // focus par défaut sur Annuler
+            return;
+        }
+
+        // OK => continue
+        field.clearInvalid();
+        return me.montantRecuChangeCore(field, value, options);
+    },
+
+montantRecuChangeCore: function(field, value, options) {
         const me = this, typeRegle = me.getVnotypeReglement().getValue();
         const montantRecu = parseInt(field.getValue());
         const data = me.getNetAmountToPay();
@@ -3729,8 +4132,143 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
 
     },
+    
+    // Wrapper: confirmation montant élevé + sécurité anti-scan avant clôture
     doCloture: function () {
         const me = this;
+
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        const raw = field ? String(field.getValue() || '').replace(/\D/g, '') : '';
+        const digits = raw.length;
+
+        // Si un "Annuler" de sécurité est actif pour cette valeur => stop (évite boucle)
+        if (field && field._blockedSecurityValue && String(field._blockedSecurityValue) === raw) {
+            me.focusSelectMontantRecu();
+            return;
+        }
+
+        // Si invalide (anti-scan) => stop
+        if (field && digits > 0 && digits > me.antiBarcodeMaxDigits) {
+            field.markInvalid('Quantité trop grande ! (Code barre scanné ?)');
+            return;
+        }
+
+        // Si 5 digits et pas confirmé => redemander (au cas où l’utilisateur clique sans repasser par le change)
+        // (uniquement si la saisie dépasse le montant de la vente)
+        const data = me.getNetAmountToPay ? me.getNetAmountToPay() : null;
+        const netTopay = data && data.montantNet != null ? parseInt(data.montantNet, 10) : 0;
+        const numericValue = parseInt(raw, 10) || 0;
+        const exceedsSaleAmount = netTopay > 0 && numericValue > netTopay;
+
+        if (field && me.confirmAtMaxDigits && digits === me.antiBarcodeMaxDigits && exceedsSaleAmount && field._confirmedMaxDigitsValue !== raw) {
+            Ext.Msg.show({
+                title: 'Confirmation',
+                msg: '⚠️ Montant à 5 chiffres détecté (' + raw + ') et supérieur au montant de la vente (' + netTopay + '). Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.WARNING,
+                defaultFocus: 'no',
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        field._confirmedMaxDigitsValue = raw;
+                        me.doCloture(); // relance après confirmation
+                    } else {
+                        field._confirmedMaxDigitsValue = null;
+                        me.blockMontantRecuUntilChange(raw, 'Saisie annulée. Corrigez le montant reçu.');
+                    }
+                    // Dans tous les cas, revenir sur le champ avec le texte sélectionné
+                    me.focusSelectMontantRecu();
+                }
+            });
+            me.focusMsgBoxCancelButton();
+            return;
+        }
+
+        // Montant suspect => confirmation avant de continuer
+        let totalSaisie = 0;
+        if (field && raw.length > 0) {
+            totalSaisie = parseInt(raw, 10) || 0;
+        }
+        if (me.getExtraModeReglementId && me.getExtraModeReglementId()) {
+            const montantExtraField = me.getMontantExtra ? me.getMontantExtra() : null;
+            const extraRaw = montantExtraField ? String(montantExtraField.getValue() || '').replace(/\D/g, '') : '';
+            const extra = extraRaw.length ? (parseInt(extraRaw, 10) || 0) : 0;
+            totalSaisie += extra;
+        }
+
+        if (totalSaisie >= me.suspectInputThreshold && me._suspectConfirmedForValue !== totalSaisie) {
+            Ext.Msg.show({
+                title: 'Alerte',
+                msg: '⚠️ Montant élevé : vous allez encaisser ' + totalSaisie + '. Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.ERROR,
+                defaultFocus: 'no',
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        me._suspectConfirmedForValue = totalSaisie;
+                        me.doClotureCore();
+                    } else {
+                        // Annuler => bloquer jusqu'à changement (évite enchainement)
+                        me.blockMontantRecuUntilChange(raw, 'Saisie annulée. Corrigez le montant reçu.');
+                    }
+                }
+            });
+            me.focusMsgBoxCancelButton();
+            return;
+        }
+
+        me.doClotureCore();
+    },
+
+doClotureCore: function () {
+        const me = this;
+
+        // ✅ Sécurité finale (au cas où doClotureCore est appelé directement)
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        const rawTxt = field ? String((field.getRawValue && field.getRawValue()) || field.getValue() || '').replace(/\D/g, '') : '';
+        const digits = rawTxt.length;
+        const dataNet = me.getNetAmountToPay ? me.getNetAmountToPay() : null;
+        const netTopay = dataNet && dataNet.montantNet != null ? parseInt(dataNet.montantNet, 10) : 0;
+        const numericValue = parseInt(rawTxt, 10) || 0;
+        const monnaieARendre = (netTopay > 0 && numericValue > netTopay) ? (numericValue - netTopay) : 0;
+
+        // Si un "Annuler" de sécurité est actif pour cette valeur => stop (évite boucle)
+        if (field && field._blockedSecurityValue && String(field._blockedSecurityValue) === rawTxt) {
+            me.focusSelectMontantRecu();
+            return;
+        }
+
+        if (field && digits > 0 && digits > me.antiBarcodeMaxDigits) {
+            field.markInvalid('Quantité trop grande ! (Code barre scanné ?)');
+            me.focusSelectMontantRecu();
+            return;
+        }
+        if (field && monnaieARendre > me.maxChangeAllowed && me._changeConfirmedForValue !== rawTxt) {
+            Ext.Msg.show({
+                title: 'Alerte',
+                msg: '⚠️ Monnaie à rendre anormalement élevée : ' + monnaieARendre + ' (seuil ' + me.maxChangeAllowed + ').\\n' +
+                        'Montant reçu : ' + rawTxt + ' / Montant vente : ' + netTopay + '.\\n' +
+                        'Probable scan ou erreur de saisie. Confirmez-vous ?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.ERROR,
+                defaultFocus: 'no',
+                buttonText: { yes: 'Confirmer quand même', no: 'Annuler' },
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        me._changeConfirmedForValue = rawTxt;
+                        me.doClotureCore(); // relance
+                    } else {
+                        me._changeConfirmedForValue = null;
+                        me.blockMontantRecuUntilChange(rawTxt, 'Saisie annulée. Corrigez le montant reçu.');
+                    }
+                    me.focusSelectMontantRecu();
+                }
+            });
+            me.focusMsgBoxCancelButton();
+            return;
+        }
+
         let typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
 
@@ -4187,7 +4725,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     me.current = result.data;
                     me.getTotalField().setValue(me.getCurrent().intPRICE);
                     field.setValue(1);
-                    comboxProduit.clearValue();
+                    me.resetProduitCombo(comboxProduit);
                     comboxProduit.focus(true, 100);
                     me.refresh();
                 } else {
@@ -4268,6 +4806,31 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     montantRecuFocus: function () {
         const me = this;
+
+        // ✅ Anti-scan robuste : capte scan/paste/saisie rapide même si "change" ne déclenche pas correctement
+        const field = me.getMontantRecu ? me.getMontantRecu() : null;
+        if (field && !field._antiScanBound) {
+            field._antiScanBound = true;
+
+            const fireCheck = function () {
+                try {
+                    // on réutilise la logique de change existante (anti-codebarres + confirmations)
+                    me.montantRecuChangeListener(field, field.getValue());
+                } catch (e) {}
+            };
+
+            // listeners Ext + DOM
+            Ext.defer(function () {
+                try {
+                    if (field.inputEl) {
+                        field.inputEl.on('input', fireCheck);
+                        field.inputEl.on('keyup', fireCheck);
+                        field.inputEl.on('paste', fireCheck);
+                    }
+                } catch (e) {}
+            }, 50);
+        }
+
         const typeVente = me.getTypeVenteCombo().getValue();
         if (me.getToRecalculate()) {
             if (typeVente === '1') {
@@ -4277,6 +4840,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
         }
     },
+
 
     buildMedecinGrid: function () {
         const me = this;
@@ -6207,6 +6771,108 @@ recallSelectedPrevente: function() {
 getPreventeSearchWindow: function() {
     return Ext.ComponentQuery.query('window[title="RÉSULTATS DE RECHERCHE DES PRÉVENTES"]')[0];
 }
+
+,
+    /**
+     * MessageBox YES/NO prioritaire :
+     * - Empêche la saisie en arrière-plan (ENTER ne déclenche plus le champ produit/qté)
+     * - Focus par défaut sur "Oui" (ENTER => Oui)
+     * - Désactive temporairement des composants (combo produit, champ qté, etc.)
+     */
+    showYesNoPriority: function (cfg, toDisable) {
+        var me = this;
+
+        // couper le focus clavier derrière
+        try {
+            if (document && document.activeElement) {
+                document.activeElement.blur();
+            }
+        } catch (e) {}
+
+        // désactiver temporairement composants
+        var comps = Ext.isArray(toDisable) ? toDisable : (toDisable ? [toDisable] : []);
+        Ext.Array.each(comps, function (c) {
+            if (c && c.setDisabled) {
+                c.setDisabled(true);
+            }
+        });
+
+        // sécuriser : modal + focus sur YES
+        cfg = cfg || {};
+        cfg.modal = true;
+        cfg.defaultFocus = cfg.defaultFocus || 'yes';
+        cfg.buttons = cfg.buttons || Ext.MessageBox.YESNO;
+
+        // wrapper fn pour réactiver
+        var userFn = cfg.fn;
+        cfg.fn = function (btn) {
+            Ext.Array.each(comps, function (c) {
+                if (c && c.setDisabled) {
+                    c.setDisabled(false);
+                }
+            });
+            if (Ext.isFunction(userFn)) {
+                userFn(btn);
+            }
+        };
+
+        // listeners show/hide : focus + keymap ENTER bloquant arrière-plan
+        cfg.listeners = cfg.listeners || {};
+        var prevShow = cfg.listeners.show;
+        cfg.listeners.show = function (mb) {
+            if (Ext.isFunction(prevShow)) {
+                prevShow(mb);
+            }
+            try {
+                mb.toFront();
+                mb.focus(false, 10);
+                if (mb.getEl) {
+                    mb.getEl().focus();
+                }
+            } catch (e) {}
+
+            // bloque ENTER sur le body pendant la popup (évite que le champ produit capte ENTER)
+            try {
+                mb.__prioKeyMap = new Ext.util.KeyMap(Ext.getBody(), [{
+                    key: Ext.EventObject.ENTER,
+                    fn: function () { return false; },
+                    stopEvent: true
+                }]);
+            } catch (e) {}
+
+            // focus forcé sur le bouton "Oui"
+            Ext.defer(function () {
+                try {
+                    var yesBtn = mb.down && mb.down('button[itemId=yes]');
+                    if (yesBtn && yesBtn.focus) {
+                        yesBtn.focus(false, 10);
+                    }
+                } catch (e) {}
+            }, 80);
+        };
+
+        var prevHide = cfg.listeners.hide;
+        cfg.listeners.hide = function (mb) {
+            if (Ext.isFunction(prevHide)) {
+                prevHide(mb);
+            }
+            // cleanup keymap
+            try {
+                if (mb && mb.__prioKeyMap) {
+                    mb.__prioKeyMap.destroy();
+                    mb.__prioKeyMap = null;
+                }
+            } catch (e) {}
+            // sécurité réactivation
+            Ext.Array.each(comps, function (c) {
+                if (c && c.setDisabled) {
+                    c.setDisabled(false);
+                }
+            });
+        };
+
+        Ext.MessageBox.show(cfg);
+    }
 
 }
 );
