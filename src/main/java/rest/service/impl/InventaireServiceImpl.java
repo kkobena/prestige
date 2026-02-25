@@ -112,7 +112,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
                             + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon");
@@ -156,7 +156,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
                             + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED IS NULL ");
@@ -200,7 +200,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
                             + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED IS NOT NULL ");
@@ -244,7 +244,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire");
 
@@ -286,7 +286,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.dtUPDATED IS NULL" // ✅
                                                                                                                    // filtre
@@ -332,7 +332,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.dtUPDATED IS NOT NULL" // ✅
             // filtre
@@ -378,7 +378,7 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER" + ") "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
                             + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
                             + "AND COALESCE(o.intNUMBERINIT, 0) <> COALESCE(o.intNUMBER, 0)");
