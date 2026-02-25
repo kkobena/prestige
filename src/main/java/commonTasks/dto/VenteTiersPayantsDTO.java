@@ -276,4 +276,11 @@ public class VenteTiersPayantsDTO implements Serializable {
         this.createdAt = venteExclus.getModifiedAt();
 
     }
+    
+    public VenteTiersPayantsDTO(TTiersPayant payant, Long nbreDossier, Long montant, Long montantRemise) {
+    this(payant,
+            nbreDossier == null ? 0L : nbreDossier,
+            montant == null ? 0L : montant,
+            montantRemise == null ? 0L : montantRemise);
+}
 }
