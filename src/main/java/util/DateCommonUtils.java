@@ -89,4 +89,19 @@ public final class DateCommonUtils {
 
     }
 
+    /**
+     *
+     * @param date
+     *            yyyy-MM-dd
+     *
+     * @return
+     */
+    public static Date from(String date) {
+
+        if (date != null) {
+            return convertLocalDateToDate(LocalDate.parse(date));
+        } else {
+            return new Date();
+        }
+    }
 }

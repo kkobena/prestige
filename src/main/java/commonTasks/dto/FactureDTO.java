@@ -16,12 +16,31 @@ import java.text.SimpleDateFormat;
  */
 public class FactureDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    private String lgFACTUREID, strLIBELLETYPETIERSPAYANT, strCODECOMPTABLE, dtDATEFACTURE, dtDEBUTFACTURE,
-            dtFINFACTURE, strCUSTOMER, strFULLNAME, periode;
-    private Integer nbDossier, dblMONTANTBrut, dblMONTANTFOFETAIRE, dblMONTANTREMISE, dblMONTANTCMDE;
-    private String strCODEFACTURE;
     private final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+    private static final long serialVersionUID = 1L;
+    private String lgFACTUREID;
+    private String strLIBELLETYPETIERSPAYANT;
+    private String strCODECOMPTABLE;
+    private String dtDATEFACTURE;
+    private String dtDEBUTFACTURE;
+    private String dtFINFACTURE;
+    private String strCUSTOMER;
+    private String strFULLNAME;
+    private String periode;
+    private Integer nbDossier;
+    private Integer dblMONTANTBrut;
+    private Integer dblMONTANTFOFETAIRE;
+    private Integer dblMONTANTREMISE;
+    private Integer dblMONTANTCMDE;
+    private String strCODEFACTURE;
+    private String tiersPayantId;
+
+    private String strTELEPHONE;
+    private String strADRESSE;
+    private String strMOBILE;
+    private String strCODEOFFICINE;
+    private String strREGISTRECOMMERCE;
+    private String strCOMPTECONTRIBUABLE;
 
     public String getLgFACTUREID() {
         return lgFACTUREID;
@@ -41,6 +60,14 @@ public class FactureDTO implements Serializable {
 
     public String getPeriode() {
         return periode;
+    }
+
+    public String getTiersPayantId() {
+        return tiersPayantId;
+    }
+
+    public void setTiersPayantId(String tiersPayantId) {
+        this.tiersPayantId = tiersPayantId;
     }
 
     public void setPeriode(String periode) {
@@ -188,7 +215,7 @@ public class FactureDTO implements Serializable {
         this.dtDATEFACTURE = df.format(facture.getDtDATEFACTURE());
         this.dtDEBUTFACTURE = df.format(facture.getDtDEBUTFACTURE());
         this.dtFINFACTURE = df.format(facture.getDtFINFACTURE());
-        this.strCUSTOMER = facture.getStrCUSTOMER();
+        this.strCUSTOMER = payant.getLgTIERSPAYANTID();
         this.strFULLNAME = payant.getStrFULLNAME();
         this.strCODEORGANISME = payant.getStrCODEORGANISME();
         this.nbDossier = facture.getIntNBDOSSIER();
@@ -207,11 +234,8 @@ public class FactureDTO implements Serializable {
         this.strCODEOFFICINE = payant.getStrCODEOFFICINE();
         this.strREGISTRECOMMERCE = payant.getStrREGISTRECOMMERCE();
         this.strCOMPTECONTRIBUABLE = payant.getStrCOMPTECONTRIBUABLE();
+        this.tiersPayantId = payant.getLgTIERSPAYANTID();
     }
-
-    private String strTELEPHONE;
-    private String strADRESSE;
-    private String strMOBILE, strCODEOFFICINE, strREGISTRECOMMERCE, strCOMPTECONTRIBUABLE;
 
     public String getStrTELEPHONE() {
         return strTELEPHONE;

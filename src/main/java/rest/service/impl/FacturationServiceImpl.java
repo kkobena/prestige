@@ -11,13 +11,17 @@ import commonTasks.dto.FactureDetailDTO;
 import commonTasks.dto.ItemFactGenererDTO;
 import commonTasks.dto.Mode;
 import commonTasks.dto.ModelFactureDTO;
+import commonTasks.dto.ReportFactureDTO;
+import commonTasks.dto.ReportTypeTiersPayantFactureDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.*;
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -27,11 +31,14 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
+import org.apache.commons.lang3.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.FacturationService;
+import util.CommonUtils;
+import util.DateCommonUtils;
 import util.DateConverter;
 
 /**
@@ -183,7 +190,7 @@ public class FacturationServiceImpl implements FacturationService {
                     root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)))
                     .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.dtUPDATED)));
             List<Predicate> predicates = provisoiresBonPredicate(cb, root, st, tpid, dtStart, dtEnd, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             q.setFirstResult(start);
             q.setMaxResults(limit);
@@ -249,7 +256,7 @@ public class FacturationServiceImpl implements FacturationService {
                             .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)));
             List<Predicate> predicates = provisoirespartp(cb, root, st, mode, groupTp, typetp, tpid, codegroup, dtStart,
                     dtEnd);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             q.setFirstResult(start);
             q.setMaxResults(limit);
@@ -336,7 +343,7 @@ public class FacturationServiceImpl implements FacturationService {
             List<Predicate> predicates = provisoires10Predicates(cb, root, st, groupTp, typetp, tpid, codegroup,
                     isTemplate);
 
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
         } catch (Exception e) {
@@ -358,7 +365,7 @@ public class FacturationServiceImpl implements FacturationService {
             List<Predicate> predicates = provisoires10Predicates(cb, root, st, groupTp, typetp, tpid, codegroup,
                     isTemplate);
 
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TFacture> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -479,6 +486,113 @@ public class FacturationServiceImpl implements FacturationService {
             cq.where(cb.in(st.get(TPreenregistrement_.lgPREENREGISTREMENTID)).value(sub));
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
             return q.getResultList().stream().map(VenteDetailsDTO::new).collect(Collectors.toList());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<ReportTypeTiersPayantFactureDTO> exportReleveFacture(String invoiceFilter, String tiersPayantId,
+            String codeFacture, String searchTerm, String dtStart, String dtEnd) {
+        List<ReportTypeTiersPayantFactureDTO> exportDatas = new ArrayList<>();
+
+        Map<TTypeTiersPayant, Map<TTiersPayant, List<TFacture>>> typeTiersPayantMap = fetchFactures(invoiceFilter,
+                tiersPayantId, codeFacture, searchTerm, dtStart, dtEnd).stream()
+                        .collect(Collectors.groupingBy(facture -> facture.getTiersPayant().getLgTYPETIERSPAYANTID(),
+                                Collectors.groupingBy(TFacture::getTiersPayant)));
+
+        typeTiersPayantMap.forEach((type, factureByTp) -> {
+            BigDecimal montantFacture = BigDecimal.ZERO;
+            BigDecimal montantRegle = BigDecimal.ZERO;
+            BigDecimal montantRestant = BigDecimal.ZERO;
+
+            List<ReportFactureDTO> tierspayants = new ArrayList<>();
+            ReportTypeTiersPayantFactureDTO reportTypeTiersPayantFacture = new ReportTypeTiersPayantFactureDTO(
+                    type.getLgTYPETIERSPAYANTID(), type.getStrLIBELLETYPETIERSPAYANT());
+            for (Map.Entry<TTiersPayant, List<TFacture>> entry : factureByTp.entrySet()) {
+                TTiersPayant tiersPayant = entry.getKey();
+                List<TFacture> factures = entry.getValue();
+                List<FactureDTO> invoies = new ArrayList<>();
+                ReportFactureDTO reportFacture = new ReportFactureDTO(tiersPayant.getLgTIERSPAYANTID(),
+                        tiersPayant.getStrFULLNAME());
+                BigDecimal montantFactureTp = BigDecimal.ZERO;
+                BigDecimal montantRegleTp = BigDecimal.ZERO;
+                BigDecimal montantRestantTp = BigDecimal.ZERO;
+                for (TFacture facture : factures) {
+                    FactureDTO factureDTO = new FactureDTO(facture);
+                    montantFactureTp = montantFactureTp.add(BigDecimal.valueOf(facture.getDblMONTANTCMDE()));
+                    montantRegleTp = montantRegleTp.add(BigDecimal.valueOf(facture.getDblMONTANTPAYE()));
+                    montantRestantTp = montantRestantTp.add(BigDecimal.valueOf(facture.getDblMONTANTRESTANT()));
+                    invoies.add(factureDTO);
+                }
+
+                reportFacture.setMontantFacture(montantFactureTp);
+                reportFacture.setFactures(invoies);
+                reportFacture.setMontantRegle(montantRegleTp);
+                reportFacture.setMontantRestant(montantRestantTp);
+                tierspayants.add(reportFacture);
+                montantFacture = montantFacture.add(montantFactureTp);
+                montantRegle = montantRegle.add(montantRegleTp);
+                montantRestant = montantRestant.add(montantRestantTp);
+            }
+
+            reportTypeTiersPayantFacture.setMontantFacture(montantFacture);
+            reportTypeTiersPayantFacture.setTierspayants(tierspayants);
+            reportTypeTiersPayantFacture.setMontantRegle(montantRegle);
+            reportTypeTiersPayantFacture.setMontantRestant(montantRestant);
+            exportDatas.add(reportTypeTiersPayantFacture);
+        });
+
+        return exportDatas;
+    }
+
+    private List<Predicate> fetchFacturesPredicates(CriteriaBuilder cb, Root<TFacture> root,
+            Join<TFacture, TTiersPayant> st, String searchTerm, String tiersPayantId, String codeFacture,
+            String invoiceFilter, Date dtStart, Date dtEnd) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (StringUtils.isNotBlank(codeFacture)) {
+            predicates.add(cb.like(root.get(TFacture_.strCODEFACTURE), codeFacture + "%"));
+        } else {
+            predicates.add(cb.isFalse(root.get(TFacture_.template)));
+
+            if (StringUtils.isNotBlank(tiersPayantId)) {
+                predicates.add(cb.equal(st.get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
+            }
+            if (StringUtils.isNotBlank(searchTerm)) {
+                predicates.add(cb.or(cb.like(root.get(TFacture_.strCODEFACTURE), searchTerm + "%"),
+                        cb.like(st.get(TTiersPayant_.strNAME), searchTerm + "%")));
+            }
+            predicates.add(cb.between(root.get(TFacture_.dtCREATED), dtStart, dtEnd));
+            if (StringUtils.isNotBlank(invoiceFilter)) {
+                if ("impayes".equals(invoiceFilter)) {
+                    predicates.add(cb.greaterThan(root.get(TFacture_.dblMONTANTRESTANT), 0.0));
+                } else {
+                    predicates.add(cb.lessThanOrEqualTo(root.get(TFacture_.dblMONTANTRESTANT), 0.0));
+                }
+            }
+        }
+        return predicates;
+    }
+
+    private List<TFacture> fetchFactures(String invoiceFilter, String tiersPayantId, String codeFacture,
+            String searchTerm, String dtStart, String dtEnd) {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
+            Root<TFacture> root = cq.from(TFacture.class);
+            Join<TFacture, TTiersPayant> st = root.join(TFacture_.tiersPayant, JoinType.INNER);
+            cq.select(root).orderBy(cb.desc(root.get(TFacture_.dtCREATED)),
+                    cb.desc(root.get(TFacture_.strCODEFACTURE)));
+            List<Predicate> predicates = fetchFacturesPredicates(cb, root, st, searchTerm, tiersPayantId, codeFacture,
+                    invoiceFilter, DateCommonUtils.from(dtStart), DateCommonUtils.from(dtEnd));
+
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<TFacture> q = getEntityManager().createQuery(cq);
+
+            return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
