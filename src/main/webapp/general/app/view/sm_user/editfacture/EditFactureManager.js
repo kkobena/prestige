@@ -706,8 +706,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     },
 
     certify: function (idFacture, typeInvoice, win, grid) {
-
-
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             url: '../api/v1/fne/invoices/sign/' + idFacture + '/' + typeInvoice,
@@ -884,7 +882,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
     },
     onPrint: function () {
-        var lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
+        let lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
                 dt_fin = Ext.getCmp('datefin').getSubmitValue(), dt_debut = Ext.getCmp('datedebut').getSubmitValue();
         if (Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() === null) {
             lg_customer_id = "";
@@ -893,9 +891,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         if (filtreImpayes == null || filtreImpayes == undefined) {
             filtreImpayes = '';
         }
-        var search_value = Ext.getCmp('rechecherFacture').getValue();
+        const search_value = Ext.getCmp('rechecherFacture').getValue();
 
-        window.open("../webservices/sm_user/facturation/ws_data_relever_facture.jsp" + "?lg_customer_id=" + lg_customer_id + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin + "&search_value=" + search_value + "&impayes=" + filtreImpayes);
+        window.open("../releveFactureServlet" + "?lg_customer_id=" + lg_customer_id + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin + "&search_value=" + search_value + "&impayes=" + filtreImpayes + '&codeFacture=' + Ext.getCmp('rechecherCode').getValue());
     },
     exportToExcel: function () {
         var lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
