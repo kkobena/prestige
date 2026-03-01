@@ -98,7 +98,7 @@ public final class DateCommonUtils {
      */
     public static Date from(String date) {
 
-        if (date != null) {
+        if (org.apache.commons.lang3.StringUtils.isNotEmpty(date)) {
             return convertLocalDateToDate(LocalDate.parse(date));
         } else {
             return new Date();

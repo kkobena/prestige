@@ -54,6 +54,6 @@ public interface FacturationService {
 
     TModelFacture modelFactureById(String lgMODELFACTUREID);
 
-    List<ReportTypeTiersPayantFactureDTO> exportReleveFacture(String invoiceFilter, String tiersPayantId,
-            String codeFacture, String searchTerm, String dtStart, String dtEnd);
+    ReportTypeTiersPayantFactureDTO exportReleveFacture(String invoiceFilter, String tiersPayantId, String codeFacture,
+            String searchTerm, String dtStart, String dtEnd);
 }

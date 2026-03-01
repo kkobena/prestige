@@ -11,8 +11,7 @@ import java.util.List;
 public class ReportTypeTiersPayantFactureDTO {
 
     private List<ReportFactureDTO> tierspayants = new ArrayList<>();
-    private String typeTiersPayantId;
-    private String typeTiersPayantLibelle;
+
     private BigDecimal montantFacture;
     private BigDecimal montantRegle;
     private BigDecimal montantRestant;
@@ -21,32 +20,8 @@ public class ReportTypeTiersPayantFactureDTO {
         return tierspayants;
     }
 
-    public ReportTypeTiersPayantFactureDTO() {
-    }
-
-    public ReportTypeTiersPayantFactureDTO(String typeTiersPayantId, String typeTiersPayantLibelle) {
-        this.typeTiersPayantId = typeTiersPayantId;
-        this.typeTiersPayantLibelle = typeTiersPayantLibelle;
-    }
-
     public void setTierspayants(List<ReportFactureDTO> tierspayants) {
         this.tierspayants = tierspayants;
-    }
-
-    public String getTypeTiersPayantId() {
-        return typeTiersPayantId;
-    }
-
-    public void setTypeTiersPayantId(String typeTiersPayantId) {
-        this.typeTiersPayantId = typeTiersPayantId;
-    }
-
-    public String getTypeTiersPayantLibelle() {
-        return typeTiersPayantLibelle;
-    }
-
-    public void setTypeTiersPayantLibelle(String typeTiersPayantLibelle) {
-        this.typeTiersPayantLibelle = typeTiersPayantLibelle;
     }
 
     public BigDecimal getMontantFacture() {

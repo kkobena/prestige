@@ -5,7 +5,6 @@ import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
@@ -84,8 +83,6 @@ public class ReleveFactureServlet extends HttpServlet {
      * @return a String containing servlet description
      */
     private String buildReport(HttpServletRequest request) {
-        // String invoiceFilter, String tiersPayantId, String codeFacture, String searchTerm, String dtStart, String
-        // dtEnd
 
         String searchTerm = request.getParameter("search_value");
         String tiersPayantId = request.getParameter("lg_customer_id");
@@ -93,20 +90,19 @@ public class ReleveFactureServlet extends HttpServlet {
         String codeFacture = request.getParameter("codeFacture");
         String dtStart = request.getParameter("dt_debut");
         String dtEnd = request.getParameter("dt_fin");
-        String reportName = "rp_relever_facture";
+        String reportName = "rp_releve_factures";
         String info = StringUtils.isEmpty(tiersPayantId) ? ""
-                : "SAUF ERREUR DE NOTRE PART LE REGLEMENT DE VOS FACTURES CI-DESSUS RELEVES NE NOUS EST PAS ENCORE PARVENU.\\n NOUS VOUS PRIONS DE BIEN VOULOIR NOUS LES REGLER A VOTRE CONVENANCE DANS LES DELAIS";
+                : "SAUF ERREUR DE NOTRE PART LE REGLEMENT DE VOS FACTURES CI-DESSUS RELEVES NE NOUS EST PAS ENCORE PARVENU. NOUS VOUS PRIONS DE BIEN VOULOIR NOUS LES REGLER A VOTRE CONVENANCE DANS LES DELAIS";
 
-        List<ReportTypeTiersPayantFactureDTO> datas = facturationService.exportReleveFacture(invoiceFilter,
-                tiersPayantId, codeFacture, searchTerm, dtStart, dtEnd);
-        return reportUtil.buildReport(
-                getParameters(request, "RELEVE DES FACTURES CLIENTS EN COMPTE \n PERIODE DU ", dtStart, dtEnd, info),
-                reportName, datas);
+        ReportTypeTiersPayantFactureDTO datas = facturationService.exportReleveFacture(invoiceFilter, tiersPayantId,
+                codeFacture, searchTerm, dtStart, dtEnd);
+        return reportUtil.buildReport(getParameters(request, "RELEVE DES FACTURES CLIENTS EN COMPTE PERIODE DU ",
+                dtStart, dtEnd, info, datas), reportName, datas.getTierspayants());
 
     }
 
     private Map<String, Object> getParameters(HttpServletRequest request, String title, String dtStart, String dtEnd,
-            String info) {
+            String info, ReportTypeTiersPayantFactureDTO datas) {
         HttpSession session = request.getSession();
         TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
 
@@ -124,7 +120,10 @@ public class ReleveFactureServlet extends HttpServlet {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", title + periode);
-        parameters.put("P_TOTAL_GENERAL", info);
+        parameters.put("P_NOTE_MONTANT", info);
+        parameters.put("P_MONTANT_FACTURE", datas.getMontantFacture());
+        parameters.put("P_MONTANT_REGLE", datas.getMontantRegle());
+        parameters.put("P_MONTANT_RESTANT", datas.getMontantRestant());
         return parameters;
     }
 }

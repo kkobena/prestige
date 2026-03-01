@@ -16,9 +16,19 @@ public class ReportFactureDTO {
     private BigDecimal montantFacture;
     private BigDecimal montantRegle;
     private BigDecimal montantRestant;
+    private String typeTiersPayantId;
+    private String typeTiersPayantLibelle;
 
     public List<FactureDTO> getFactures() {
         return factures;
+    }
+
+    public ReportFactureDTO(String tiersPayantId, String tiersPayantLibelle, String typeTiersPayantId,
+            String typeTiersPayantLibelle) {
+        this.tiersPayantId = tiersPayantId;
+        this.tiersPayantLibelle = tiersPayantLibelle;
+        this.typeTiersPayantId = typeTiersPayantId;
+        this.typeTiersPayantLibelle = typeTiersPayantLibelle;
     }
 
     public ReportFactureDTO(String tiersPayantId, String tiersPayantLibelle) {
@@ -71,6 +81,22 @@ public class ReportFactureDTO {
 
     public void setMontantRestant(BigDecimal montantRestant) {
         this.montantRestant = montantRestant;
+    }
+
+    public String getTypeTiersPayantId() {
+        return typeTiersPayantId;
+    }
+
+    public void setTypeTiersPayantId(String typeTiersPayantId) {
+        this.typeTiersPayantId = typeTiersPayantId;
+    }
+
+    public String getTypeTiersPayantLibelle() {
+        return typeTiersPayantLibelle;
+    }
+
+    public void setTypeTiersPayantLibelle(String typeTiersPayantLibelle) {
+        this.typeTiersPayantLibelle = typeTiersPayantLibelle;
     }
 
 }
