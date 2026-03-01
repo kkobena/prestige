@@ -1353,33 +1353,49 @@ public class ClientServiceImpl implements ClientService {
 
     }
 
+    // MODIFICATION ICI POUR CONTOURNER LE BUG D'HIBERNATE
     @Override
     public List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd,
             String tiersPayantId, String groupeId, String typeTp, int start, int limit, boolean all) {
         List<VenteTiersPayantsDTO> data = new ArrayList<>();
         try {
             CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
-            CriteriaQuery<VenteTiersPayantsDTO> cq = cb.createQuery(VenteTiersPayantsDTO.class);
+            CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TPreenregistrementCompteClientTiersPayent> root = cq
                     .from(TPreenregistrementCompteClientTiersPayent.class);
-            cq.select(cb.construct(VenteTiersPayantsDTO.class,
+
+            cq.multiselect(
                     root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
                             .get(TCompteClientTiersPayant_.lgTIERSPAYANTID),
                     cb.count(root), cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
-                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICERESTE))))
+                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICERESTE)))
                     .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
                             .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)))
                     .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
                             .get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
+
             List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId,
                     groupeId, typeTp);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            TypedQuery<VenteTiersPayantsDTO> q = this.getEmg().createQuery(cq);
+
+            TypedQuery<Object[]> q = this.getEmg().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            return q.getResultList();
+
+            // Mapping manuel robuste
+            List<Object[]> results = q.getResultList();
+            for (Object[] row : results) {
+                TTiersPayant payant = (TTiersPayant) row[0];
+                Number count = (Number) row[1];
+                Number sumPrice = (Number) row[2];
+                Number sumReste = (Number) row[3];
+
+                data.add(new VenteTiersPayantsDTO(payant, count, sumPrice, sumReste));
+            }
+
+            return data;
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
