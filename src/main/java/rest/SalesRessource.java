@@ -463,7 +463,6 @@ public class SalesRessource {
     @PUT
     @Path("add/medecin/{id}")
     public Response addMedecin(@PathParam("id") String id, MedecinDTO params) {
-
         JSONObject json = salesService.updateMedecin(id, params);
         return Response.ok().entity(json.toString()).build();
     }
