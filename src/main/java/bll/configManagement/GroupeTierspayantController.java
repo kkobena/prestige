@@ -376,8 +376,7 @@ public class GroupeTierspayantController implements Serializable {
             }
             criteria = cb.and(criteria, cb.equal(root.get("strSTATUT"), "enable"));
             cq.where(criteria);
-            // cq.where(cb.equal(root.get("lgGROUPEID"), groupeTierspayant), cb.like(root.get("strFULLNAME"), search +
-            // "%"), cb.equal(root.get("strSTATUT"), "enable"));
+
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 
@@ -2191,61 +2190,6 @@ public class GroupeTierspayantController implements Serializable {
 
         }
         return isOk;
-    }
-
-    public JSONObject getReleveFacture(String dt_start, String dt_end, String search, String lgTP, boolean paid,
-            boolean all) {
-        JSONObject json = new JSONObject();
-        EntityManager em = null;
-        try {
-
-            String impayerClause = " ";
-            if (!all) {
-                if (paid) {
-                    impayerClause = " AND o.dblMONTANTRESTANT = 0 ";
-                } else {
-                    impayerClause = " AND o.dblMONTANTRESTANT >0 ";
-                }
-            }
-
-            em = getEntityManager();
-
-            String query = "SELECT SUM(o.dblMONTANTRESTANT),SUM(o.dblMONTANTCMDE),SUM(o.dblMONTANTPAYE) FROM TFacture o JOIN  o.tiersPayant p  JOIN   o.tFactureDetailCollection fd WHERE  FUNCTION('DATE',o.dtCREATED) BETWEEN ?3 AND ?4  ";
-
-            if (!"".equals(lgTP)) {
-                query += "AND o.strCUSTOMER LIKE ?1 ";
-            }
-            if (!"".equals(search)) {
-                query += "AND (p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR p.strNUMEROCAISSEOFFICIEL LIKE ?2)";
-            }
-            query += impayerClause;
-            Query q = em.createQuery(query);
-            q.setParameter(3, dt_start);
-            q.setParameter(4, dt_end);
-            if (!"".equals(lgTP)) {
-                q.setParameter(1, lgTP);
-            }
-            if (!"".equals(search)) {
-                q.setParameter(2, search + "%");
-            }
-
-            List<Object[]> oblist = q.getResultList();
-
-            oblist.forEach((objects) -> {
-                try {
-
-                    json.put("dblMONTANTRESTANT", objects[0]).put("dblMONTANTCMDE", objects[1]).put("dblMONTANTPAYE",
-                            objects[2]);
-
-                } catch (JSONException ex) {
-
-                }
-            });
-
-        } finally {
-
-        }
-        return json;
     }
 
     public Map<String, LinkedHashSet<TFacture>> generateInvoices(List<TTiersPayant> payants, String dt_start,

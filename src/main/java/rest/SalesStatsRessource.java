@@ -50,7 +50,6 @@ import org.json.JSONObject;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
 import rest.service.TvaService;
-import toolkits.parameters.commonparameter;
 import util.CommonUtils;
 import util.Constant;
 import util.FunctionUtils;

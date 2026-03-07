@@ -117,7 +117,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private static final String NATURE_CLOSE = " AND p.str_TYPE_VENTE='%s' ";
     private static final String VENTE_SQL = "SELECT {distinct} p.lg_PREENREGISTREMENT_ID as lgPREENREGISTREMENTID,p.str_REF as strREF,p.str_REF_TICKET as strREFTICKET,p.int_PRICE as intPRICE,p.int_CUST_PART as intCUSTPART,p.int_PRICE_REMISE as intPRICEREMISE,p.str_STATUT as strSTATUT,p.dt_CREATED as dtCREATED, p.dt_UPDATED as dtUPDATED,p.str_TYPE_VENTE as strTYPEVENTE,p.b_IS_AVOIR as avoir,p.b_IS_CANCEL as cancel,p.b_WITHOUT_BON as sansbon, p.lg_TYPE_VENTE_ID as lgTYPEVENTEID,p.copy as copy,"
             + "p.dt_ANNULER as dtANNULER,p.lg_USER_CAISSIER_ID as lgUSERCAISSIERID,CONCAT(caissier.str_FIRST_NAME,' ',caissier.str_LAST_NAME) AS userCaissierName,CONCAT(c.str_FIRST_NAME,' ',c.str_LAST_NAME) AS clientFullName, CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeurName,em.lg_EMPLACEMENT_ID AS  pkBrand from {select_placeholder} INNER JOIN t_user caissier ON caissier.lg_USER_ID=p.lg_USER_CAISSIER_ID LEFT JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID LEFT  JOIN  t_client c ON p.lg_CLIENT_ID=c.lg_CLIENT_ID "
-            + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where (timestamp(p.dt_UPDATED) between :dtStart and :dtEnd) and p.str_STATUT=:status";
+            + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where p.dt_UPDATED >=:dtStart and p.dt_UPDATED <=:dtEnd and p.str_STATUT=:status";
     private static final String NATURE_CLOSE2 = " and p.lg_NATURE_VENTE_ID=:natureVente";
     private static final String TYPE_CLOSE = " and p.str_TYPE_VENTE=:typeVente";
     private static final String SEARCH_CLOSE2 = " and (f.int_CIP like :searchTerm or p.str_REF_TICKET like :searchTerm or p.str_REF like :searchTerm or f.str_NAME like :searchTerm or f.int_EAN13 like :searchTerm) ";
@@ -128,7 +128,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private static final String SELECT_DETAIL = " t_preenregistrement_detail tpreenregi0_ inner join t_preenregistrement p  on tpreenregi0_.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID ";
 
     private static final String VENTE_SQL_COUNT = "SELECT COUNT({distinct} p.lg_PREENREGISTREMENT_ID)  from {select_placeholder} INNER JOIN t_user caissier ON caissier.lg_USER_ID=p.lg_USER_CAISSIER_ID LEFT  JOIN  t_client c ON p.lg_CLIENT_ID=c.lg_CLIENT_ID "
-            + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where (timestamp(p.dt_UPDATED) between :dtStart and :dtEnd) and p.str_STATUT=:status";
+            + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where p.dt_UPDATED >=:dtStart and p.dt_UPDATED <=:dtEnd and p.str_STATUT=:status";
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
