@@ -562,12 +562,15 @@ public class FacturationServiceImpl implements FacturationService {
             if (StringUtils.isNotBlank(tiersPayantId)) {
                 predicates.add(cb.equal(st.get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
             }
+
             if (StringUtils.isNotBlank(searchTerm)) {
-                predicates.add(cb.or(cb.like(root.get(TFacture_.strCODEFACTURE), searchTerm + "%"),
-                        cb.like(st.get(TTiersPayant_.strNAME), searchTerm + "%")));
+                String search = searchTerm.trim().toUpperCase() + "%";
+                predicates.add(cb.or(cb.like(root.get(TFacture_.strCODEFACTURE), search),
+                        cb.like(cb.upper(st.get(TTiersPayant_.strNAME)), search)));
             }
             predicates.add(cb.between(root.get(TFacture_.dtCREATED), dtStart, dtEnd));
             if (StringUtils.isNotBlank(invoiceFilter)) {
+
                 if ("impayes".equals(invoiceFilter)) {
                     predicates.add(cb.greaterThan(root.get(TFacture_.dblMONTANTRESTANT), 0.0));
                 } else {
@@ -589,7 +592,7 @@ public class FacturationServiceImpl implements FacturationService {
             cq.select(root).orderBy(cb.desc(st.get(TTiersPayant_.dtCREATED)),
                     cb.asc(st.get(TTiersPayant_.strFULLNAME)));
             List<Predicate> predicates = fetchFacturesPredicates(cb, root, st, searchTerm, tiersPayantId, codeFacture,
-                    invoiceFilter, DateCommonUtils.from(dtStart), DateCommonUtils.from(dtEnd));
+                    invoiceFilter, DateCommonUtils.from(dtStart), DateCommonUtils.toDateAtEndOfDay(dtEnd));
 
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TFacture> q = getEntityManager().createQuery(cq);
