@@ -454,6 +454,10 @@ public class SuggestionImpl implements SuggestionService {
     private TSuggestionOrderDetails initTSuggestionOrderDetail(TSuggestionOrder suggestionOrder, TFamille famille,
             TGrossiste grossiste, int intNumber) {
         TFamilleGrossiste familleGrossiste = findOrCreateFamilleGrossiste(famille, grossiste);
+        if (!canSugger(familleGrossiste)) {
+            return null;
+        }
+
         TSuggestionOrderDetails orderDetails = new TSuggestionOrderDetails();
         orderDetails.setLgSUGGESTIONORDERDETAILSID(UUID.randomUUID().toString());
         orderDetails.setLgSUGGESTIONORDERID(suggestionOrder);
@@ -473,6 +477,15 @@ public class SuggestionImpl implements SuggestionService {
         orderDetails.setDtUPDATED(orderDetails.getDtCREATED());
         getEmg().persist(orderDetails);
         return orderDetails;
+
+    }
+
+    private boolean canSugger(TFamilleGrossiste familleGrossiste) {
+        if (Objects.isNull(familleGrossiste)) {
+            return true;
+        }
+
+        return Constant.STATUT_ENABLE.equals(familleGrossiste.getStrSTATUT());
 
     }
 
@@ -654,8 +667,12 @@ public class SuggestionImpl implements SuggestionService {
                 TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
                 v.forEach(o -> {
                     TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, o.getIntQUANTITY());
-                    count.increment();
+                    TSuggestionOrderDetails suggestionOrderDetails = initTSuggestionOrderDetail(suggestionOrder,
+                            oFamille, oGrossiste, o.getIntQUANTITY());
+                    if (Objects.nonNull(suggestionOrderDetails)) {
+                        count.increment();
+                    }
+
                 });
 
             });
@@ -678,8 +695,12 @@ public class SuggestionImpl implements SuggestionService {
                 TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
                 v.forEach(o -> {
                     TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, o.getIntQUANTITY());
-                    count.increment();
+                    TSuggestionOrderDetails suggestionOrderDetails = initTSuggestionOrderDetail(suggestionOrder,
+                            oFamille, oGrossiste, o.getIntQUANTITY());
+                    if (Objects.nonNull(suggestionOrderDetails)) {
+                        count.increment();
+                    }
+
                 });
 
             });
@@ -704,10 +725,13 @@ public class SuggestionImpl implements SuggestionService {
                     TFamille otfamille = getEmg().find(TFamille.class, o.getId());
                     TFamilleStock familleStock = findStock(otfamille.getLgFAMILLEID(), u.getLgEMPLACEMENTID());
                     if (otfamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
-                        initTSuggestionOrderDetail(suggestionOrder, otfamille, grossiste,
-                                (otfamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? otfamille.getIntQTEREAPPROVISIONNEMENT()
-                                        : 0));
-                        count.increment();
+                        TSuggestionOrderDetails suggestionOrderDetails = initTSuggestionOrderDetail(suggestionOrder,
+                                otfamille, grossiste, (otfamille.getIntQTEREAPPROVISIONNEMENT() > 0
+                                        ? otfamille.getIntQTEREAPPROVISIONNEMENT() : 0));
+                        if (Objects.nonNull(suggestionOrderDetails)) {
+                            count.increment();
+                        }
+
                     }
 
                 });
@@ -862,6 +886,9 @@ public class SuggestionImpl implements SuggestionService {
         TGrossiste grossiste = this.getEmg().find(TGrossiste.class, suggestion.getGrossisteId());
         TSuggestionOrder suggestionOrder = createSuggestionOrder(grossiste, STATUT_IS_PROGRESS);
         TSuggestionOrderDetails details = addItem(suggestion.getItem(), suggestionOrder);
+        if (Objects.isNull(details)) {
+            return SuggestionDTO.builder().montantAchat(0).montantVente(0).build();
+        }
         return SuggestionDTO.builder().montantAchat(details.getIntPRICE())
                 .montantVente((long) details.getIntPRICEDETAIL() * details.getIntNUMBER()).build();
     }
@@ -1292,10 +1319,13 @@ public class SuggestionImpl implements SuggestionService {
                 TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
                 v.forEach(o -> {
                     TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste,
-                            oFamille.getIntQTEREAPPROVISIONNEMENT().compareTo(0) == 1
+                    TSuggestionOrderDetails suggestionOrderDetails = initTSuggestionOrderDetail(suggestionOrder,
+                            oFamille, oGrossiste, oFamille.getIntQTEREAPPROVISIONNEMENT().compareTo(0) == 1
                                     ? oFamille.getIntQTEREAPPROVISIONNEMENT() : 1);
-                    count.increment();
+                    if (Objects.nonNull(suggestionOrderDetails)) {
+                        count.increment();
+                    }
+
                 });
 
             });
