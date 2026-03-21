@@ -73,7 +73,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         confirmAtMaxDigits: true,         // == 5 chiffres => demande confirmation
         suspectInputThreshold: 200000,       // confirmation au clic "Terminer" si montant élevé
 
-        maxChangeAllowed: 20000,          // monnaie à rendre max avant alerte (anti scan)
+        maxChangeAllowed: 9500,          // monnaie à rendre max avant alerte (anti scan)
     models: [
         'testextjs.model.caisse.Nature',
         'testextjs.model.caisse.Reglement',
@@ -867,7 +867,10 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
 
         }
-        const item = cmp.findRecord("lgFAMILLEID" || "intCIP", cmp.getValue());
+        // ✅ recherche sûre du record (store peut être null selon l'état du composant)
+        let dsCmp = (cmp.getStore) ? cmp.getStore() : cmp.store;
+        const item = dsCmp ? (dsCmp.findRecord("lgFAMILLEID", cmp.getValue(), 0, false, false, true)
+                || dsCmp.findRecord("intCIP", cmp.getValue(), 0, false, false, true)) : null;
         if (item) {
             const vnoemplacementId = me.getVnoemplacementField();
             me.updateStockField(item.get('intNUMBERAVAILABLE'));
@@ -1147,7 +1150,9 @@ try {
                         me.onComputeNet();
                     }
                 } else {
-                    const record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
+                    let dsCombo = (combo.getStore) ? combo.getStore() : combo.store;
+                    const record = dsCombo ? (dsCombo.findRecord("lgFAMILLEID", combo.getValue(), 0, false, false, true)
+                            || dsCombo.findRecord("intCIP", combo.getValue(), 0, false, false, true)) : null;
                     if (record) {
                         const vnoemplacementId = me.getVnoemplacementField();
                         me.updateStockField(record.get('intNUMBERAVAILABLE'));
@@ -1201,9 +1206,24 @@ try {
                 let me = this;
                 me.toRecalculate = true;
                 let produitCmp = me.getVnoproduitCombo();
-                let record = produitCmp.findRecord("lgFAMILLEID", produitCmp.getValue()),
+                if (!produitCmp) {
+                    return;
+                }
+                // ✅ Sécuriser le store du combo (évite "ds is null" dans findRecord)
+                let ds = (produitCmp.getStore) ? produitCmp.getStore() : produitCmp.store;
+                if (!ds && produitCmp.getPicker && produitCmp.getPicker()) {
+                    let picker = produitCmp.getPicker();
+                    ds = (picker && picker.getStore) ? picker.getStore() : null;
+                }
+                if (!ds) {
+                    // Fallback : on remet le focus sur la recherche produit et on stoppe
+                    produitCmp.focus(true, 100);
+                    return;
+                }
+
+                let record = ds.findRecord("lgFAMILLEID", produitCmp.getValue(), 0, false, false, true),
                         typeVente = me.getTypeVenteCombo().getValue();
-                record = record ? record : produitCmp.findRecord("intCIP", produitCmp.getValue());
+                record = record ? record : ds.findRecord("intCIP", produitCmp.getValue(), 0, false, false, true);
                 const vente = me.getCurrent();
                 const isVno = (typeVente === '1') ? true : false;
                 let url = vente ? '../api/v1/vente/add/item' : isVno ? '../api/v1/vente/add/vno' : '../api/v1/vente/add/assurance';
