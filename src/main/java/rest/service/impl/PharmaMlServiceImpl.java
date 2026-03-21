@@ -173,8 +173,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
     @Override
     public JSONObject renvoiPharmaCommande(String ruptureId, String grossisteId, LocalDate dateLivraisonSouhaitee) {
         try {
-            Rupture rupture = em.find(Rupture.class, grossisteId);
-            TGrossiste grossiste = em.find(TGrossiste.class, ruptureId);
+            Rupture rupture = em.find(Rupture.class, ruptureId);
+            TGrossiste grossiste = em.find(TGrossiste.class, grossisteId);
             if (StringUtils.isEmpty(grossiste.getStrURLPHARMAML())) {
                 return new JSONObject().put("success", false).put("msg", "Le grossise n'a url pharmaML");
             }
