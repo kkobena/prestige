@@ -112,28 +112,6 @@ public class PharmaMlServiceImpl implements PharmaMlService {
         return em;
     }
 
-    private List<TOrderDetail> findByOrder(TOrder order) {
-        TypedQuery<TOrderDetail> q = getEntityManager().createNamedQuery("TOrderDetail.findByLgORDERID",
-                TOrderDetail.class);
-        q.setParameter("lgORDERID", order);
-        return q.getResultList();
-    }
-
-    private TFamilleGrossiste findByGrossisteAndFamille(String idProduit, String grossisteId) {
-        try {
-            TypedQuery<TFamilleGrossiste> q = getEntityManager().createQuery(
-                    "SELECT o FROM TFamilleGrossiste o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgGROSSISTEID.lgGROSSISTEID=?2 AND o.strSTATUT='enable' ",
-                    TFamilleGrossiste.class);
-            q.setParameter(1, idProduit);
-            q.setParameter(2, grossisteId);
-            q.setMaxResults(1);
-            return q.getSingleResult();
-        } catch (Exception e) {
-            // LOG.log(Level.SEVERE, null, e);
-            return null;
-        }
-    }
-
     @Override
     public JSONObject envoiPharmaInfosProduit(String commandeId) {
         JSONObject json = new JSONObject();
@@ -156,7 +134,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
             TOfficine officine = getOfficine();
             CsrpEnveloppe payLoad = buildPayload(grossiste, officine, buildNormale(order, grossiste.getLgGROSSISTEID()),
-                    StringUtils.isEmpty(commentaire) ? order.getStrREFORDER() : commentaire, order.getStrREFORDER());
+                    StringUtils.isEmpty(commentaire) ? order.getStrREFORDER() : commentaire, order.getStrREFORDER()
+                            + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyMMddHHmmss")));
             System.err.println("envoiCommande payLoad " + payLoad);
             CsrpEnveloppeResponse enveloppeResponse = processommandeXml(payLoad, order.getStrREFORDER(), grossiste);
             System.err.println(" envoiCommande enveloppeResponse " + enveloppeResponse);
@@ -181,7 +160,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
             List<RuptureDetail> ruptureDetails = orderService.ruptureDetaisDtoByRupture(rupture.getId());
             TOfficine officine = getOfficine();
             CsrpEnveloppe payLoad = buildPayload(grossiste, officine, buildFromRupture(ruptureDetails, grossisteId),
-                    rupture.getReference(), rupture.getReference());
+                    rupture.getReference(), rupture.getReference() + "_"
+                            + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyMMddHHmmss")));
             System.err.println(" renvoiPharmaCommande payLoad " + payLoad);
             CsrpEnveloppeResponse enveloppeResponse = processommandeXml(payLoad, rupture.getReference(), grossiste);
             System.err.println(" renvoiPharmaCommande enveloppeResponse " + enveloppeResponse);
