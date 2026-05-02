@@ -6,6 +6,7 @@ package job;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.Schedule;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -23,26 +24,20 @@ import rest.service.impl.DailyStockService;
 @Singleton
 @Startup
 public class StockDailyScheduler {
+
     @Inject
     private DailyStockService dailyStockService;
 
-    @Resource
-    private TimerService timerService;
-
     @PostConstruct
     public void init() {
-        // Scheduler tous les jours à 00:05 cas ou le serveur n'est pas eteint
-        timerService.createCalendarTimer(new ScheduleExpression().hour("0").minute("5").second("0"),
-                new TimerConfig("daily-stock", false));
 
         // Au demarrage
         dailyStockService.updateStockDailyValueAsync();
     }
 
-    @Timeout
-    public void onTimeout(Timer timer) {
-        if ("daily-stock".equals(timer.getInfo())) {
-            dailyStockService.updateStockDailyValueAsync();
-        }
+    @Schedule(hour = "0", minute = "5", second = "0", persistent = false)
+    public void run() {
+        dailyStockService.updateStockDailyValueAsync();
     }
+
 }

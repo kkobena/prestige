@@ -2,6 +2,7 @@ package job;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.Schedule;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -22,26 +23,19 @@ public class NotificationScheduler {
     @Inject
     private NotificationScheduledService notificationScheduledService;
 
-    @Resource
-    private TimerService timerService;
-
     @PostConstruct
     public void init() {
-        timerService.createCalendarTimer(new ScheduleExpression().minute("*/2").hour("*").dayOfMonth("*").year("*"),
-                new TimerConfig("sms", false));
-
-        timerService.createCalendarTimer(new ScheduleExpression().hour("12,20").dayOfMonth("*").year("*"),
-                new TimerConfig("email", false));
+        notificationScheduledService.sendPendingSmsAsync();
+        notificationScheduledService.sendPendingEmailsAsync();
     }
 
-    @Timeout
-    public void onTimeout(Timer timer) {
-        var timerInfo = (String) timer.getInfo();
-        if ("sms".equals(timerInfo)) {
-            notificationScheduledService.sendPendingSmsAsync();
-        } else if ("email".equals(timerInfo)) {
-            notificationScheduledService.sendPendingEmailsAsync();
-        }
+    @Schedule(hour = "9,13,17,21", minute = "20", second = "0", persistent = false)
+    public void smsJob() {
+        notificationScheduledService.sendPendingSmsAsync();
+    }
 
+    @Schedule(hour = "9,12,17", minute = "0", second = "0", persistent = false)
+    public void emailJob() {
+        notificationScheduledService.sendPendingEmailsAsync();
     }
 }
