@@ -134,8 +134,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
             TOfficine officine = getOfficine();
             CsrpEnveloppe payLoad = buildPayload(grossiste, officine, buildNormale(order, grossiste.getLgGROSSISTEID()),
-                    StringUtils.isEmpty(commentaire) ? order.getStrREFORDER() : commentaire, order.getStrREFORDER()
-                            + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyMMddHHmmss")));
+                    StringUtils.isEmpty(commentaire) ? order.getStrREFORDER() : commentaire,
+                    order.getStrREFORDER() + LocalDateTime.now().format(DateTimeFormatter.ofPattern("mmss")));
             System.err.println("envoiCommande payLoad " + payLoad);
             CsrpEnveloppeResponse enveloppeResponse = processommandeXml(payLoad, order.getStrREFORDER(), grossiste);
             System.err.println(" envoiCommande enveloppeResponse " + enveloppeResponse);

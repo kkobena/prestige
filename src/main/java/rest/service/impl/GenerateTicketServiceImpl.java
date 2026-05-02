@@ -1972,7 +1972,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 break;
 
             case DateConverter.MODE_DJAMO:
-                ticket.setMontantSortieWave(b.getMontant() + ticket.getMontantSortieWave());
+                ticket.setMontantSortieDjamo(b.getMontant() + ticket.getMontantSortieDjamo());
                 break;
             default:
                 break;
@@ -2459,6 +2459,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             totalCB += (v.getTotalCB() + v.getTotalEntreeCB() + v.getTotalReglementCB() + v.getTotalSortieCB());
             differe += v.getDiffere();
             montantWave += (v.getMontantWave() + v.getMontantSortieWave() + v.getMontantEntreeWave());
+            montantDjamo += (v.getMontantDjamo() + v.getMontantSortieDjamo() + v.getMontantEntreeDjamo());
             montantMtn += (v.getMontantMtn() + v.getMontantSortieMtn() + v.getMontantEntreeMtn());
             montantMoov += (v.getMontantMoov() + v.getMontantSortieMoov() + v.getMontantEntreeMoov());
             montantOrange += (v.getMontantOrange() + v.getMontantSortieOrange() + v.getMontantEntreeOrange());

@@ -52,7 +52,7 @@ public class InventaireServiceImpl implements InventaireService {
     private SessionHelperService sessionHelperService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    private static final String INVENTAIRE_QUERY = "INSERT INTO t_inventaire_famille(`lg_INVENTAIRE_ID`,`str_STATUT`,`dt_CREATED`,`bool_INVENTAIRE`,`lg_FAMILLE_ID`,`int_NUMBER`,`int_NUMBER_INIT`,`lg_FAMILLE_STOCK_ID`) "
+    private static final String INVENTAIRE_QUERY = "INSERT INTO t_inventaire_famille(`lg_INVENTAIRE_ID`,`str_STATUT`,`dt_CREATED`,`boolINVENTAIRE`,`lg_FAMILLE_ID`,`int_NUMBER`,`int_NUMBER_INIT`,`lg_FAMILLE_STOCK_ID`) "
             + " SELECT '{inventaireId}','enable',NOW(),TRUE,  f.`lg_FAMILLE_ID` AS lg_FAMILLE_ID,s.`int_NUMBER_AVAILABLE` ,s.`int_NUMBER_AVAILABLE`,s.`lg_FAMILLE_STOCK_ID` AS lg_FAMILLE_STOCK_ID  FROM t_preenregistrement_detail d JOIN t_preenregistrement p ON d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` JOIN t_famille f ON f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` JOIN t_famille_stock s ON f.`lg_FAMILLE_ID`=s.`lg_FAMILLE_ID` "
             + " WHERE p.`str_STATUT`='is_Closed' AND p.`b_IS_CANCEL`=1 AND DATE(p.`dt_CREATED`) BETWEEN ?1 AND ?2 AND f.`str_STATUT`='enable' AND s.`lg_EMPLACEMENT_ID`='1' {userClose} GROUP BY  f.`lg_FAMILLE_ID`";
 
@@ -112,9 +112,10 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
-                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + " AND o.boolINVENTAIRE=true "
                             + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon");
 
             if (StringUtils.isNotBlank(query)) {
@@ -156,9 +157,10 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
-                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + " AND o.boolINVENTAIRE=true "
                             + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED IS NULL ");
 
             if (StringUtils.isNotBlank(query)) {
@@ -200,9 +202,10 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
-                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + " AND o.boolINVENTAIRE=true "
                             + "AND o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :idRayon " + "AND o.dtUPDATED IS NOT NULL ");
 
             if (StringUtils.isNotBlank(query)) {
@@ -244,9 +247,10 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
-                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire");
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire" + " AND o.boolINVENTAIRE=true ");
 
             if (StringUtils.isNotBlank(query)) {
                 jpql.append(" AND (" + " o.lgFAMILLEID.intCIP LIKE :search "
@@ -286,12 +290,13 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.dtUPDATED IS NULL" // ✅
-                                                                                                                   // filtre
-                                                                                                                   // “non
-                                                                                                                   // touché”
+                            + " AND o.boolINVENTAIRE=true " // filtre
+            // “non
+            // touché”
             );
 
             if (StringUtils.isNotBlank(query)) {
@@ -332,9 +337,11 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
                             + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.dtUPDATED IS NOT NULL" // ✅
+                            + " AND o.boolINVENTAIRE=true "
             // filtre
             // “non
             // touché”
@@ -378,9 +385,10 @@ public class InventaireServiceImpl implements InventaireService {
             StringBuilder jpql = new StringBuilder(
                     "SELECT DISTINCT new rest.service.inventaire.dto.DetailInventaireDTO(" + " o.lgINVENTAIREFAMILLEID,"
                             + " o.lgFAMILLEID.strNAME," + " o.lgFAMILLEID.intCIP," + " o.lgFAMILLEID.intPAF,"
-                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + " o.dtUPDATED" + ") "
-                            + "FROM TInventaireFamille o " + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
-                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire "
+                            + " o.lgFAMILLEID.intPRICE," + " o.intNUMBERINIT," + " o.intNUMBER," + "o.boolINVENTAIRE,"
+                            + " o.dtUPDATED" + ") " + "FROM TInventaireFamille o "
+                            + "LEFT JOIN o.lgFAMILLEID.tFamilleGrossisteCollection st "
+                            + "WHERE o.lgINVENTAIREID.lgINVENTAIREID = :idInventaire " + "AND o.boolINVENTAIRE=true "
                             + "AND COALESCE(o.intNUMBERINIT, 0) <> COALESCE(o.intNUMBER, 0)");
 
             if (StringUtils.isNotBlank(query)) {
