@@ -151,6 +151,7 @@ public class SockServlet extends HttpServlet {
             articleParams.setSearch(search);
             articleParams.setFabricantId(fabricantId);
             articleParams.setCategorieId(categorieId);
+            articleParams.setRayonId(rayonId);
             articleParams.setMagasinId(tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             file = stockService.suivitMvtArcticle(articleParams, tUser);
             break;
