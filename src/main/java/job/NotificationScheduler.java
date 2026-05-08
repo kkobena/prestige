@@ -1,15 +1,9 @@
 package job;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.ejb.Schedule;
-import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.ejb.Timeout;
-import javax.ejb.Timer;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
 import javax.inject.Inject;
 
 /**
