@@ -240,34 +240,6 @@ public class DatabaseToolkit {
         return sb.toString();
     }
 
-    void updateStockDailyValue() {
-        try {
-            LocalDate now = LocalDate.now();
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
-            List<Integer> ids = List.of(Integer.valueOf(now.format(dtf)), Integer.valueOf(now.minusDays(1).format(dtf)),
-                    Integer.valueOf(now.minusDays(2).format(dtf)), Integer.valueOf(now.minusDays(3).format(dtf)));
-            userTransaction.begin();
-            for (Integer id : ids) {
-                if (!checkIsAlreadyUpdated(id)) {
-                    List<Tuple> list = em.createNativeQuery(
-                            "SELECT SUM(s.int_NUMBER_AVAILABLE * f.int_PRICE) AS VALEUR_VENTE,SUM(s.int_NUMBER_AVAILABLE * f.int_PAF) AS VALEUR_ACHAT from t_famille f,t_famille_stock s WHERE s.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND s.lg_EMPLACEMENT_ID='1' AND s.int_NUMBER_AVAILABLE >0 AND f.str_STATUT='enable' ",
-                            Tuple.class).getResultList();
-                    Tuple t = list.get(0);
-                    StockDailyValue sdv = new StockDailyValue();
-                    sdv.setId(id);
-                    sdv.setValeurAchat(t.get(1, BigDecimal.class).longValue());
-                    sdv.setValeurVente(t.get(0, BigDecimal.class).longValue());
-                    em.persist(sdv);
-                }
-            }
-            userTransaction.commit();
-
-        } catch (IllegalStateException | NumberFormatException | SecurityException | HeuristicMixedException
-                | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
-    }
-
     boolean checkIsAlreadyUpdated(int day) {
         try {
             StockDailyValue sdv = em.find(StockDailyValue.class, day);
