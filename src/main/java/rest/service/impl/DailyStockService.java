@@ -76,40 +76,44 @@ public class DailyStockService {
 
         int dateAsInt = Integer.parseInt(dateStock.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
-        List<TFamilleStock> list = em
-                .createNamedQuery("TFamilleStock.findFamilleStockByEmplacement", TFamilleStock.class)
-                .setParameter("lgEMPLACEMENTID", Constant.OFFICINE).getResultList();
+        int offset = 0;
+        int processed;
 
-        int i = 0;
+        do {
+            List<TFamilleStock> batch = em
+                    .createNamedQuery("TFamilleStock.findFamilleStockByEmplacement", TFamilleStock.class)
+                    .setParameter("lgEMPLACEMENTID", Constant.OFFICINE).setFirstResult(offset).setMaxResults(BATCH_SIZE)
+                    .getResultList();
 
-        for (TFamilleStock next : list) {
+            processed = batch.size();
 
-            TFamille famille = next.getLgFAMILLEID();
+            for (TFamilleStock next : batch) {
 
-            StockSnapshot snapshot = em.find(StockSnapshot.class, famille.getLgFAMILLEID());
-            if (snapshot == null) {
-                snapshot = new StockSnapshot().id(famille.getLgFAMILLEID());
+                TFamille famille = next.getLgFAMILLEID();
+
+                StockSnapshot snapshot = em.find(StockSnapshot.class, famille.getLgFAMILLEID());
+                if (snapshot == null) {
+                    snapshot = new StockSnapshot().id(famille.getLgFAMILLEID());
+                }
+
+                snapshot.setProduit(famille);
+                snapshot.getStocks().add(new StockSnapshotValue()
+                        .prixMoyentpondere(prixMpd(Objects.requireNonNullElse(next.getIntNUMBERAVAILABLE(), 0),
+                                Objects.requireNonNullElse(famille.getIntPAF(), 0)))
+                        .prixPaf(famille.getIntPAF()).prixUni(famille.getIntPRICE()).qty(next.getIntNUMBERAVAILABLE())
+                        .stockOfDay(dateAsInt));
+
+                em.merge(snapshot);
             }
 
-            snapshot.setProduit(famille);
-            snapshot.getStocks()
-                    .add(new StockSnapshotValue()
-                            .prixMoyentpondere(prixMpd(Objects.requireNonNullElse(next.getIntNUMBERAVAILABLE(), 0),
-                                    Objects.requireNonNullElse(famille.getIntPAF(), 0)))
-                            .prixPaf(famille.getIntPAF()).prixUni(famille.getIntPRICE())
-                            .qty(next.getIntNUMBERAVAILABLE()).stockOfDay(dateAsInt));
+            em.flush();
+            em.clear();
+            offset += processed;
+            LOG.log(Level.INFO, "Batch flush at offset {0}", offset);
 
-            em.merge(snapshot);
+        } while (processed == BATCH_SIZE);
 
-            if (++i % BATCH_SIZE == 0) {
-                em.flush();
-                em.clear();
-                LOG.log(Level.INFO, "Batch flush at {0}", i);
-            }
-        }
-
-        em.flush();
-        em.clear();
+        LOG.log(Level.INFO, "Fin execution du batch {0}", LocalDateTime.now());
     }
 
     private int prixMpd(int stoc, int prixAchat) {
@@ -159,6 +163,7 @@ public class DailyStockService {
         }
     }
 
+   
     @Asynchronous
     public void updateStockDailyValueAsync() {
         LOG.info("Stock daily value update started");
