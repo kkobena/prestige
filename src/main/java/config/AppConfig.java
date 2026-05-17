@@ -48,7 +48,7 @@ public class AppConfig {
             boolean modified = false;
 
             if (properties.getProperty("application.mode") == null) {
-                properties.setProperty("application.mode", "client"); // server/client
+                properties.setProperty("application.mode", "server"); // server/client
                 modified = true;
             }
             if (properties.getProperty("reappro.mode") == null) {
@@ -70,7 +70,7 @@ public class AppConfig {
 
     private void createDefaultConfig(File file) {
         Properties defaults = new Properties();
-        defaults.setProperty("application.mode", "client"); // server/client
+        defaults.setProperty("application.mode", "server"); // server/client
         defaults.setProperty("reappro.mode", "default"); // semois/default
         try (FileOutputStream out = new FileOutputStream(file)) {
             defaults.store(out, CONFIG_COMMENT);
@@ -94,6 +94,10 @@ public class AppConfig {
 
     public boolean isDefaultReapproMode() {
         return "default".equals(modReappro);
+    }
+
+    public boolean isSemoisReapproMode() {
+        return "semois".equals(modReappro);
     }
 
     public String getModReappro() {

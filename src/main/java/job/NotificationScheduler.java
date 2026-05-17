@@ -2,6 +2,8 @@ package job;
 
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import config.AppConfig;
 
@@ -18,10 +20,12 @@ public class NotificationScheduler {
     @Inject
     private AppConfig appConfig;
 
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void runSmsOnStartup() {
         notificationScheduledService.sendPendingSmsAsync();
     }
 
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void runEmailOnStartup() {
         notificationScheduledService.sendPendingEmailsAsync();
     }

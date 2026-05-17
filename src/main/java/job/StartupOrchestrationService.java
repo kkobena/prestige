@@ -67,12 +67,16 @@ public class StartupOrchestrationService {
     @Inject
     private JobLot jobLot;
 
+    @Inject
+    private SemoisService semoisService;
+
     // ── Types ────────────────────────────────────────────────────────────────────
 
     public enum JobStep {
-        CALENDRIER("Calendrier & nettoyage"), STOCK_REAPPRO("Réapprovisionnement stock"),
-        LOT_PEREMPTION("Lots en cours de péremption"), STOCK_JOURNALIER("Stock journalier (snapshot + valorisation)"),
-        NOTIFICATIONS_SMS("Envoi SMS en attente"), NOTIFICATIONS_EMAIL("Envoi emails en attente");
+        CALENDRIER("Calendrier & nettoyage"), STOCK_REAPPRO("Réapprovisionnement stock (mode default)"),
+        STOCK_REAPPRO_SEMOIS("Réapprovisionnement stock (mode semois)"), LOT_PEREMPTION("Lots en cours de péremption"),
+        STOCK_JOURNALIER("Stock journalier (snapshot + valorisation)"), NOTIFICATIONS_SMS("Envoi SMS en attente"),
+        NOTIFICATIONS_EMAIL("Envoi emails en attente");
 
         private final String label;
 
@@ -118,8 +122,16 @@ public class StartupOrchestrationService {
 
     // ── Pipeline ─────────────────────────────────────────────────────────────────
 
-    private static final List<JobStep> ALL_STEPS = List.of(JobStep.CALENDRIER, JobStep.STOCK_REAPPRO,
-            JobStep.LOT_PEREMPTION, JobStep.STOCK_JOURNALIER, JobStep.NOTIFICATIONS_SMS, JobStep.NOTIFICATIONS_EMAIL);
+    private List<JobStep> buildSteps() {
+        List<JobStep> steps = new ArrayList<>();
+        steps.add(JobStep.CALENDRIER);
+        steps.add(appConfig.isSemoisReapproMode() ? JobStep.STOCK_REAPPRO_SEMOIS : JobStep.STOCK_REAPPRO);
+        steps.add(JobStep.LOT_PEREMPTION);
+        steps.add(JobStep.STOCK_JOURNALIER);
+        steps.add(JobStep.NOTIFICATIONS_SMS);
+        steps.add(JobStep.NOTIFICATIONS_EMAIL);
+        return steps;
+    }
 
     /**
      * Déclenché au démarrage de l'application, après Flyway. L'injection de {@link JobCalendar},
@@ -149,17 +161,18 @@ public class StartupOrchestrationService {
             return;
         }
 
-        LOG.info("[PIPELINE-" + trigger + "] Démarrage — " + ALL_STEPS.size() + " étape(s)");
+        List<JobStep> steps = buildSteps();
+        LOG.info("[PIPELINE-" + trigger + "] Démarrage — " + steps.size() + " étape(s)");
         Instant pipelineStart = Instant.now();
         List<StepResult> results = new ArrayList<>();
 
         try {
-            for (JobStep step : ALL_STEPS) {
+            for (JobStep step : steps) {
                 StepResult result = executeStep(step);
                 results.add(result);
                 if (!result.isSuccess()) {
-                    LOG.severe("[PIPELINE-" + trigger + "] Étape «" + step.getLabel() + "» échouée — pipeline arrêté");
-                    break;
+                    LOG.warning(
+                            "[PIPELINE-" + trigger + "] Étape «" + step.getLabel() + "» échouée — pipeline continue");
                 }
             }
         } finally {
@@ -186,6 +199,9 @@ public class StartupOrchestrationService {
                 break;
             case STOCK_REAPPRO:
                 stockReapproJob.runOnStartup();
+                break;
+            case STOCK_REAPPRO_SEMOIS:
+                semoisService.execute();
                 break;
             case LOT_PEREMPTION:
                 jobLot.execute();
