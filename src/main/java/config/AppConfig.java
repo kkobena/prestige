@@ -2,6 +2,7 @@ package config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -9,7 +10,6 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-
 
 /**
  *
@@ -25,24 +25,9 @@ public class AppConfig {
 
     private String applicationMode;
     private String modReappro;
-   /* private String clientId;
-    private String clientSecret;
-    private String header;
-    private String email;
-    private String password;
-    private String pathsmsapitokenendpoint;
-    private String pathsmsapisendmessageurl;
-    private String senderAddress;
-    private String accesstoken;
-    private String expiresin;
-    private String mobile;
-    private String smtpHost;
-    private String protocol;
-    private String mailOfficine;
-    private String fneUrl;
-    private String fnePkey;
-    private String fnepointOfSale;
-    private String pharmaMlDir;*/
+
+    private static final String CONFIG_COMMENT = "Configuration de l'application\n"
+            + "application.mode: server | client\n" + "reappro.mode: semois | default";
 
     @PostConstruct
     public void init() {
@@ -50,115 +35,66 @@ public class AppConfig {
         String path = System.getProperty("user.home") + File.separator + "Documents" + File.separator
                 + "dicisms.properties";
 
-        try (InputStream in = new FileInputStream(path)) {
+        File configFile = new File(path);
+
+        if (!configFile.exists()) {
+            createDefaultConfig(configFile);
+        }
+
+        try (InputStream in = new FileInputStream(configFile)) {
 
             properties.load(in);
 
-            applicationMode = properties.getProperty("mode");//server/client
-            modReappro = properties.getProperty("mode.reappro");//server/client
-          /*  clientId = properties.getProperty("clientId");
-            clientSecret = properties.getProperty("clientSecret");
-            header = properties.getProperty("header");
-            email = properties.getProperty("email");
-            password = properties.getProperty("password");
-            pathsmsapitokenendpoint = properties.getProperty("pathsmsapitokenendpoint");
-            pathsmsapisendmessageurl = properties.getProperty("pathsmsapisendmessageurl");
-            senderAddress = properties.getProperty("senderAddress");
-            accesstoken = properties.getProperty("accesstoken");
-            expiresin = properties.getProperty("expiresin");
-            mobile = properties.getProperty("mobile");
-            smtpHost = properties.getProperty("smtphost", "smtp.gmail.com");
-            protocol = properties.getProperty("protocol", "smtps");
-            mailOfficine = properties.getProperty("usermail");
-            fneUrl = properties.getProperty("fneUrl");
-            fnePkey = properties.getProperty("fnePkey");
-            fnepointOfSale = properties.getProperty("fnepointOfSale");
-            pharmaMlDir = properties.getProperty("pharmaMlDir");*/
+            boolean modified = false;
 
-            LOG.info("Notification configuration loaded from " + path);
+            if (properties.getProperty("application.mode") == null) {
+                properties.setProperty("application.mode", "client"); // server/client
+                modified = true;
+            }
+            if (properties.getProperty("reappro.mode") == null) {
+                properties.setProperty("reappro.mode", "default"); // semois/default
+                modified = true;
+            }
+
+            if (modified) {
+                saveConfig(configFile);
+            }
+
+            applicationMode = properties.getProperty("application.mode");
+            modReappro = properties.getProperty("reappro.mode");
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Unable to load configuration file", e);
         }
     }
-    
-   
-/*
-    public String getApplicationId() {
-        return applicationId;
+
+    private void createDefaultConfig(File file) {
+        Properties defaults = new Properties();
+        defaults.setProperty("application.mode", "client"); // server/client
+        defaults.setProperty("reappro.mode", "default"); // semois/default
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            defaults.store(out, CONFIG_COMMENT);
+            LOG.log(Level.INFO, "Default configuration file created at: {0}", file.getAbsolutePath());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Unable to create default configuration file", e);
+        }
     }
 
-    public String getClientId() {
-        return clientId;
+    private void saveConfig(File file) {
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            properties.store(out, CONFIG_COMMENT);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Unable to save configuration file", e);
+        }
     }
 
-    public String getClientSecret() {
-        return clientSecret;
+    public boolean isServerMode() {
+        return "server".equals(applicationMode);
     }
 
-    public String getHeader() {
-        return header;
+    public boolean isDefaultReapproMode() {
+        return "default".equals(modReappro);
     }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getPathsmsapitokenendpoint() {
-        return pathsmsapitokenendpoint;
-    }
-
-    public String getPathsmsapisendmessageurl() {
-        return pathsmsapisendmessageurl;
-    }
-
-    public String getSenderAddress() {
-        return senderAddress;
-    }
-
-    public String getAccesstoken() {
-        return accesstoken;
-    }
-
-    public String getExpiresin() {
-        return expiresin;
-    }
-
-    public String getMobile() {
-        return mobile;
-    }
-
-    public String getSmtpHost() {
-        return smtpHost;
-    }
-
-    public String getProtocol() {
-        return protocol;
-    }
-
-    public String getMailOfficine() {
-        return mailOfficine;
-    }
-
-    public String getFneUrl() {
-        return fneUrl;
-    }
-
-    public String getFnePkey() {
-        return fnePkey;
-    }
-
-    public String getFnepointOfSale() {
-        return fnepointOfSale;
-    }
-
-    public String getPharmaMlDir() {
-        return pharmaMlDir;
-    }*/
 
     public String getModReappro() {
         return modReappro;
@@ -168,5 +104,4 @@ public class AppConfig {
         return applicationMode;
     }
 
-   
 }

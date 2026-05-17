@@ -4,10 +4,8 @@
  */
 package config;
 
-import javax.ejb.DependsOn;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.inject.Inject;
 
 /**
  *
@@ -15,9 +13,9 @@ import javax.inject.Inject;
  */
 @Singleton
 @Startup
-@DependsOn("AppConfig")
+// @DependsOn("AppConfig")
 public class Test {
 
-    @Inject
-    private AppConfig config;
+    // @Inject
+    // private AppConfig config;
 }

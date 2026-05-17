@@ -1,11 +1,10 @@
-package job.ejb;
+package job;
 
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
-import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import rest.service.StockReapproService;
 
@@ -14,7 +13,6 @@ import rest.service.StockReapproService;
  * @author koben
  */
 @Singleton
-@Startup
 public class StockReapproJob {
 
     @Resource(name = "concurrent/__defaultManagedScheduledExecutorService")
@@ -23,16 +21,25 @@ public class StockReapproJob {
     @EJB
     private StockReapproService stockReapproService;
 
+    @EJB
+    private config.AppConfig appConfig;
+
     @PostConstruct
     public void init() {
+        // initialDelay = 1 day : l'exécution au démarrage est déléguée à StartupOrchestrationService
+        scheduledExecutorService.scheduleAtFixedRate(this::execute, 1, 1, TimeUnit.DAYS);
+    }
 
-        scheduledExecutorService.scheduleAtFixedRate(this::execute, 0, 1, TimeUnit.DAYS);
-
+    public void runOnStartup() {
+        if (appConfig.isServerMode() && appConfig.isDefaultReapproMode()) {
+            stockReapproService.execute();
+        }
     }
 
     private void execute() {
-        this.stockReapproService.execute();
-
+        if (appConfig.isServerMode() && appConfig.isDefaultReapproMode()) {
+            stockReapproService.execute();
+        }
     }
 
 }
