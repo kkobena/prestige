@@ -135,4 +135,8 @@ public interface OrderService {
     void addCheckedQuantity(AddCheckedQuantity addCheckedQuantity);
 
     void addBonItemCheckedQuantity(AddCheckedQuantity addCheckedQuantity);
+
+    JSONObject cloneCommande(String orderId, TUser user) throws JSONException;
+
+    JSONObject cloneSuggestion(String suggestionId, TUser user) throws JSONException;
 }

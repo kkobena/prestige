@@ -1438,6 +1438,217 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    private TOrder createClonedOrder(TGrossiste grossiste, TUser user, KeyUtilGen keyUtilGen) {
+        TOrder order = new TOrder(keyUtilGen.getComplexId());
+        order.setDtCREATED(new Date());
+        order.setDtUPDATED(order.getDtCREATED());
+        order.setLgGROSSISTEID(grossiste);
+        order.setStrREFORDER(genererReferenceCommande());
+        order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        order.setIntPRICE(0);
+        order.setLgUSERID(user);
+
+        this.em.persist(order);
+
+        return order;
+    }
+
+    private TOrderDetail cloneOrderDetail(TOrder newOrder, TOrderDetail sourceDetail, TGrossiste grossiste,
+            KeyUtilGen keyUtilGen) {
+
+        TOrderDetail detail = new TOrderDetail();
+
+        detail.setLgORDERDETAILID(keyUtilGen.getComplexId());
+        detail.setLgORDERID(newOrder);
+        detail.setLgFAMILLEID(sourceDetail.getLgFAMILLEID());
+        detail.setLgGROSSISTEID(grossiste);
+
+        detail.setIntNUMBER(sourceDetail.getIntNUMBER());
+        detail.setIntQTEREPGROSSISTE(sourceDetail.getIntQTEREPGROSSISTE());
+        detail.setIntQTEMANQUANT(sourceDetail.getIntQTEMANQUANT());
+
+        detail.setIntPAFDETAIL(sourceDetail.getIntPAFDETAIL());
+        detail.setIntPRICEDETAIL(sourceDetail.getIntPRICEDETAIL());
+        detail.setIntPRICE(sourceDetail.getIntPRICE());
+
+        detail.setPrixAchat(sourceDetail.getPrixAchat());
+        detail.setPrixUnitaire(sourceDetail.getPrixUnitaire());
+        // detail.setPrixTarif(sourceDetail.getPrixTarif());
+
+        detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        detail.setDtCREATED(newOrder.getDtCREATED());
+        detail.setDtUPDATED(newOrder.getDtCREATED());
+
+        detail.setIntORERSTATUS((short) 2);
+
+        detail.setChecked(false);
+        detail.setCheckedQuantity(0);
+
+        this.em.persist(detail);
+
+        return detail;
+    }
+
+    @Override
+    public JSONObject cloneCommande(String orderId, TUser user) throws JSONException {
+        JSONObject json = new JSONObject();
+
+        try {
+            TOrder sourceOrder = this.em.find(TOrder.class, orderId);
+
+            if (sourceOrder == null) {
+                return json.put("success", false).put("msg", "La commande à cloner est introuvable");
+            }
+
+            TGrossiste grossiste = sourceOrder.getLgGROSSISTEID();
+
+            if (grossiste == null) {
+                return json.put("success", false).put("msg",
+                        "Impossible de cloner cette commande : grossiste introuvable");
+            }
+
+            Collection<TOrderDetail> sourceDetails = sourceOrder.getTOrderDetailCollection();
+
+            if (sourceDetails == null || sourceDetails.isEmpty()) {
+                return json.put("success", false).put("msg", "Impossible de cloner une commande sans produit");
+            }
+
+            KeyUtilGen keyUtilGen = new KeyUtilGen();
+
+            TOrder newOrder = createClonedOrder(grossiste, user, keyUtilGen);
+
+            int montantAchat = 0;
+            int nombreLignes = 0;
+            int quantiteTotale = 0;
+
+            for (TOrderDetail sourceDetail : sourceDetails) {
+                TOrderDetail detail = cloneOrderDetail(newOrder, sourceDetail, grossiste, keyUtilGen);
+
+                montantAchat += detail.getIntPRICE();
+                quantiteTotale += detail.getIntNUMBER();
+                nombreLignes++;
+            }
+
+            newOrder.setIntPRICE(montantAchat);
+            newOrder.setDtUPDATED(new Date());
+            this.em.merge(newOrder);
+
+            JSONObject data = new JSONObject();
+            data.put("lg_ORDER_ID", newOrder.getLgORDERID());
+            data.put("str_REF_ORDER", newOrder.getStrREFORDER());
+            data.put("lg_GROSSISTE_ID", grossiste.getLgGROSSISTEID());
+            data.put("str_GROSSISTE_LIBELLE", grossiste.getStrLIBELLE());
+            data.put("int_PRICE", montantAchat);
+            data.put("nbreLigne", nombreLignes);
+            data.put("totalQty", quantiteTotale);
+
+            return json.put("success", true).put("msg", "Commande clonée avec succès").put("data", data);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "cloneCommande ===>> ", e);
+            return json.put("success", false).put("msg", "Erreur lors du clonage de la commande");
+        }
+    }
+
+    @Override
+    public JSONObject cloneSuggestion(String suggestionId, TUser user) throws JSONException {
+        JSONObject json = new JSONObject();
+
+        try {
+            TSuggestionOrder suggestionOrder = this.em.find(TSuggestionOrder.class, suggestionId);
+
+            if (suggestionOrder == null) {
+                return json.put("success", false).put("msg", "La suggestion à cloner est introuvable");
+            }
+
+            TGrossiste grossiste = suggestionOrder.getLgGROSSISTEID();
+
+            if (grossiste == null) {
+                return json.put("success", false).put("msg",
+                        "Impossible de cloner cette suggestion : grossiste introuvable");
+            }
+
+            Collection<TSuggestionOrderDetails> sourceDetails = suggestionOrder.getTSuggestionOrderDetailsCollection();
+
+            if (sourceDetails == null || sourceDetails.isEmpty()) {
+                return json.put("success", false).put("msg", "Impossible de cloner une suggestion sans produit");
+            }
+
+            KeyUtilGen keyUtilGen = new KeyUtilGen();
+
+            TOrder newOrder = createClonedOrder(grossiste, user, keyUtilGen);
+
+            int montantAchat = 0;
+            int nombreLignes = 0;
+            int quantiteTotale = 0;
+
+            for (TSuggestionOrderDetails sourceDetail : sourceDetails) {
+                TOrderDetail detail = cloneSuggestionDetail(newOrder, sourceDetail, grossiste, keyUtilGen);
+
+                montantAchat += detail.getIntPRICE();
+                quantiteTotale += detail.getIntNUMBER();
+                nombreLignes++;
+            }
+
+            newOrder.setIntPRICE(montantAchat);
+            newOrder.setDtUPDATED(new Date());
+            this.em.merge(newOrder);
+
+            JSONObject data = new JSONObject();
+            data.put("lg_ORDER_ID", newOrder.getLgORDERID());
+            data.put("str_REF_ORDER", newOrder.getStrREFORDER());
+            data.put("lg_GROSSISTE_ID", grossiste.getLgGROSSISTEID());
+            data.put("str_GROSSISTE_LIBELLE", grossiste.getStrLIBELLE());
+            data.put("int_PRICE", montantAchat);
+            data.put("nbreLigne", nombreLignes);
+            data.put("totalQty", quantiteTotale);
+
+            return json.put("success", true).put("msg", "Suggestion clonée en commande avec succès").put("data", data);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "cloneSuggestion ===>> ", e);
+            return json.put("success", false).put("msg", "Erreur lors du clonage de la suggestion");
+        }
+    }
+
+    private TOrderDetail cloneSuggestionDetail(TOrder newOrder, TSuggestionOrderDetails sourceDetail,
+            TGrossiste grossiste, KeyUtilGen keyUtilGen) {
+
+        TFamille famille = sourceDetail.getLgFAMILLEID();
+
+        TOrderDetail detail = new TOrderDetail();
+
+        detail.setLgORDERDETAILID(keyUtilGen.getComplexId());
+        detail.setLgORDERID(newOrder);
+        detail.setLgFAMILLEID(famille);
+        detail.setLgGROSSISTEID(grossiste);
+
+        detail.setIntNUMBER(sourceDetail.getIntNUMBER());
+        detail.setIntQTEREPGROSSISTE(sourceDetail.getIntNUMBER());
+        detail.setIntQTEMANQUANT(sourceDetail.getIntNUMBER());
+
+        detail.setIntPAFDETAIL(sourceDetail.getIntPAFDETAIL());
+        detail.setIntPRICEDETAIL(sourceDetail.getIntPRICEDETAIL());
+        detail.setIntPRICE(sourceDetail.getIntNUMBER() * sourceDetail.getIntPAFDETAIL());
+
+        detail.setPrixAchat(sourceDetail.getIntPAFDETAIL());
+        detail.setPrixUnitaire(sourceDetail.getIntPRICEDETAIL());
+        // detail.setPrixTarif(sourceDetail.getIntPAFDETAIL());
+
+        detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        detail.setDtCREATED(newOrder.getDtCREATED());
+        detail.setDtUPDATED(newOrder.getDtCREATED());
+
+        detail.setIntORERSTATUS((short) 2);
+
+        detail.setChecked(false);
+        detail.setCheckedQuantity(0);
+
+        this.em.persist(detail);
+
+        return detail;
+    }
+
     @Override
     public void changeGrossiste(String idCommande, String grossisteId) {
         try {
