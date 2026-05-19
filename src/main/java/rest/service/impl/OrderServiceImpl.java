@@ -2601,4 +2601,94 @@ public class OrderServiceImpl implements OrderService {
         }
         return StatutTraitement.EN_COURS;
     }
+
+    @Override
+    public JSONObject cloneSuggestionOrder(String suggestionId, TUser user) throws JSONException {
+        JSONObject json = new JSONObject();
+
+        try {
+            TSuggestionOrder sourceSuggestion = this.em.find(TSuggestionOrder.class, suggestionId);
+
+            if (sourceSuggestion == null) {
+                return json.put("success", false).put("msg", "La suggestion à cloner est introuvable");
+            }
+
+            TGrossiste grossiste = sourceSuggestion.getLgGROSSISTEID();
+
+            if (grossiste == null) {
+                return json.put("success", false).put("msg",
+                        "Impossible de cloner cette suggestion : grossiste introuvable");
+            }
+
+            Collection<TSuggestionOrderDetails> sourceDetails = sourceSuggestion.getTSuggestionOrderDetailsCollection();
+
+            if (sourceDetails == null || sourceDetails.isEmpty()) {
+                return json.put("success", false).put("msg", "Impossible de cloner une suggestion sans produit");
+            }
+
+            KeyUtilGen keyUtilGen = new KeyUtilGen();
+
+            TSuggestionOrder newSuggestion = new TSuggestionOrder(keyUtilGen.getComplexId());
+            newSuggestion.setLgGROSSISTEID(grossiste);
+
+            // Important : garder le même statut que la suggestion clonée
+            newSuggestion.setStrSTATUT(sourceSuggestion.getStrSTATUT());
+
+            // Important : renseigner la référence pour que la vue puisse l'afficher
+            newSuggestion.setStrREF(sourceSuggestion.getStrREF());
+
+            newSuggestion.setDtCREATED(new Date());
+            newSuggestion.setDtUPDATED(newSuggestion.getDtCREATED());
+
+            this.em.persist(newSuggestion);
+
+            int montantAchat = 0;
+            int nombreLignes = 0;
+            int quantiteTotale = 0;
+
+            for (TSuggestionOrderDetails sourceDetail : sourceDetails) {
+                TSuggestionOrderDetails newDetail = new TSuggestionOrderDetails(keyUtilGen.getComplexId());
+
+                int qte = Objects.requireNonNullElse(sourceDetail.getIntNUMBER(), 0);
+                int paf = Objects.requireNonNullElse(sourceDetail.getIntPAFDETAIL(), 0);
+                int prixVente = Objects.requireNonNullElse(sourceDetail.getIntPRICEDETAIL(), 0);
+
+                newDetail.setLgSUGGESTIONORDERID(newSuggestion);
+                newDetail.setLgFAMILLEID(sourceDetail.getLgFAMILLEID());
+                newDetail.setLgGROSSISTEID(grossiste);
+
+                newDetail.setIntNUMBER(qte);
+                newDetail.setIntPAFDETAIL(paf);
+                newDetail.setIntPRICEDETAIL(prixVente);
+
+                // Important : garder le statut du détail source
+                newDetail.setStrSTATUT(sourceDetail.getStrSTATUT());
+
+                newDetail.setDtCREATED(newSuggestion.getDtCREATED());
+                newDetail.setDtUPDATED(newSuggestion.getDtCREATED());
+
+                this.em.persist(newDetail);
+
+                montantAchat += qte * paf;
+                quantiteTotale += qte;
+                nombreLignes++;
+            }
+
+            JSONObject data = new JSONObject();
+            data.put("lg_SUGGESTION_ORDER_ID", newSuggestion.getLgSUGGESTIONORDERID());
+            data.put("str_REF", newSuggestion.getStrREF());
+            data.put("str_STATUT", newSuggestion.getStrSTATUT());
+            data.put("lg_GROSSISTE_ID", grossiste.getLgGROSSISTEID());
+            data.put("str_GROSSISTE_LIBELLE", grossiste.getStrLIBELLE());
+            data.put("int_PRICE", montantAchat);
+            data.put("nbreLigne", nombreLignes);
+            data.put("totalQty", quantiteTotale);
+
+            return json.put("success", true).put("msg", "Suggestion clonée avec succès").put("data", data);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "cloneSuggestionOrder ===>> ", e);
+            return json.put("success", false).put("msg", "Erreur lors du clonage de la suggestion");
+        }
+    }
 }

@@ -139,4 +139,6 @@ public interface OrderService {
     JSONObject cloneCommande(String orderId, TUser user) throws JSONException;
 
     JSONObject cloneSuggestion(String suggestionId, TUser user) throws JSONException;
+
+    JSONObject cloneSuggestionOrder(String suggestionId, TUser user) throws JSONException;
 }

@@ -467,7 +467,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                 }
 
                 Ext.Ajax.request({
-                    url: '../api/v1/commande/clone-suggestion/' + suggestionId,
+                    url: '../api/v1/commande/clone-suggestion-order/' + suggestionId,
                     method: 'PUT',
                     success: function (response) {
                         let result = {};
