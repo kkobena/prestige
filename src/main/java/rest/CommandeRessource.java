@@ -187,15 +187,6 @@ public class CommandeRessource {
     }
 
     @PUT
-    @Path("clone-suggestion/{id}")
-    public Response cloneSuggestion(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-
-        return Response.ok().entity(this.orderService.cloneSuggestion(id, tu).toString()).build();
-    }
-
-    @PUT
     @Path("clone-suggestion-order/{id}")
     public Response cloneSuggestionOrder(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
