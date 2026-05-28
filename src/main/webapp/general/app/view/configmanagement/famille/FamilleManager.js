@@ -760,19 +760,16 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 listeners: {
                     beforechange: function (page, currentPage) {
                         const myProxy = this.store.getProxy();
-                        myProxy.params = {
-                            search_value: '',
-                            str_TYPE_TRANSACTION: '',
-                            lg_DCI_ID: ''
-                        };
 
                         const lg_DCI_PRINCIPAL_ID = Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue();
                         const str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
                         const search_value = Ext.getCmp('rechecher').getValue();
+                        const lg_ZONE_GEO_ID = Ext.getCmp('lg_ZONE_GEO_ID').getValue();
 
-                        myProxy.setExtraParam('str_TYPE_TRANSACTION', str_TYPE_TRANSACTION);
-                        myProxy.setExtraParam('lg_DCI_ID', lg_DCI_PRINCIPAL_ID);
-                        myProxy.setExtraParam('search_value', search_value);
+                        myProxy.setExtraParam('str_TYPE_TRANSACTION', str_TYPE_TRANSACTION || '');
+                        myProxy.setExtraParam('lg_DCI_ID', lg_DCI_PRINCIPAL_ID || '');
+                        myProxy.setExtraParam('search_value', search_value || '');
+                        myProxy.setExtraParam('lg_ZONE_GEO_ID', lg_ZONE_GEO_ID || '');
                     }
 
                 }
@@ -1134,12 +1131,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
     onRechClick: function () {
         const val = Ext.getCmp('rechecher');
 
-        Ext.getCmp('GridArticleID').getStore().load({
+        Ext.getCmp('GridArticleID').getStore().loadPage(1, {
             params: {
-                search_value: val.getValue(),
-                str_TYPE_TRANSACTION: Ext.getCmp('str_TYPE_TRANSACTION').getValue(),
-                lg_DCI_ID: Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue(),
-                lg_ZONE_GEO_ID: Ext.getCmp('lg_ZONE_GEO_ID').getValue()
+                search_value: val.getValue() || '',
+                str_TYPE_TRANSACTION: Ext.getCmp('str_TYPE_TRANSACTION').getValue() || '',
+                lg_DCI_ID: Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue() || '',
+                lg_ZONE_GEO_ID: Ext.getCmp('lg_ZONE_GEO_ID').getValue() || ''
             }
         });
 

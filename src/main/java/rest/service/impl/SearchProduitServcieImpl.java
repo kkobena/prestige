@@ -69,52 +69,39 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
     private ProductStateService productStateService;
 
     @Override
-public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, String produitId, String search,
-        String diciId, String type, String zoneGeoId, int limit, int start) {
+    public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, String produitId, String search,
+            String diciId, String type, String zoneGeoId, int limit, int start) {
 
-    boolean checkExpirationdate = checkDatePeremption();
-    JSONObject data = new JSONObject();
-    Object[] objs = getPrivilegeProductByUser(user.getLgUSERID());
-    boolean canceledBtn = Constant.hasAuthorityByName(usersPrivileges, Constant.ACTION_DESACTIVE_PRODUIT);
-    JSONArray arrayObj = new JSONArray();
+        boolean checkExpirationdate = checkDatePeremption();
+        JSONObject data = new JSONObject();
+        Object[] objs = getPrivilegeProductByUser(user.getLgUSERID());
+        boolean canceledBtn = Constant.hasAuthorityByName(usersPrivileges, Constant.ACTION_DESACTIVE_PRODUIT);
+        JSONArray arrayObj = new JSONArray();
 
-    String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
 
-    if (StringUtils.isNotEmpty(produitId)) {
-        TFamille famille = this.em.find(TFamille.class, produitId);
-        int stock = getStock(famille.getLgFAMILLEID(), empl);
+        if (StringUtils.isNotEmpty(produitId)) {
+            TFamille famille = this.em.find(TFamille.class, produitId);
+            int stock = getStock(famille.getLgFAMILLEID(), empl);
 
-        Object[] tuple = new Object[]{
-            famille,
-            stock,
-            famille.getGamme(),
-            famille.getLaboratoire(),
-            famille.getLgFAMILLEARTICLEID(),
-            famille.getLgGROSSISTEID(),
-            famille.getLgZONEGEOID(),
-            famille.getLgTYPEETIQUETTEID(),
-            famille.getLgCODEACTEID(),
-            famille.getLgCODEGESTIONID(),
-            famille.getLgFABRIQUANTID(),
-            famille.getLgINDICATEURREAPPROVISIONNEMENTID(),
-            famille.getLgREMISEID(),
-            famille.getLgCODETVAID()
-        };
+            Object[] tuple = new Object[] { famille, stock, famille.getGamme(), famille.getLaboratoire(),
+                    famille.getLgFAMILLEARTICLEID(), famille.getLgGROSSISTEID(), famille.getLgZONEGEOID(),
+                    famille.getLgTYPEETIQUETTEID(), famille.getLgCODEACTEID(), famille.getLgCODEGESTIONID(),
+                    famille.getLgFABRIQUANTID(), famille.getLgINDICATEURREAPPROVISIONNEMENTID(),
+                    famille.getLgREMISEID(), famille.getLgCODETVAID() };
 
-        arrayObj.put(buildProduitData(canceledBtn, tuple, objs, user, empl, checkExpirationdate));
-        data.put("total", 1);
-    } else {
-        getAllLite(false, search, diciId, empl, type, zoneGeoId, true, start, limit)
-                .forEach(tuple -> arrayObj.put(
-                buildProduitDataLite(canceledBtn, tuple, objs, empl, checkExpirationdate)
-        ));
+            arrayObj.put(buildProduitData(canceledBtn, tuple, objs, user, empl, checkExpirationdate));
+            data.put("total", 1);
+        } else {
+            getAllLite(false, search, diciId, empl, type, zoneGeoId, true, start, limit).forEach(
+                    tuple -> arrayObj.put(buildProduitDataLite(canceledBtn, tuple, objs, empl, checkExpirationdate)));
 
-        data.put("total", getAllCount(search, diciId, empl, type, zoneGeoId, true));
+            data.put("total", getAllCount(search, diciId, empl, type, zoneGeoId, true));
+        }
+
+        data.put("results", arrayObj);
+        return data;
     }
-
-    data.put("results", arrayObj);
-    return data;
-}
 
     @Override
     public JSONObject fetchOrderProduits(TUser user, String produitId, String search, int limit, int start) {
@@ -202,7 +189,7 @@ public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, St
             sql.append("WHERE t.str_STATUT = 'enable' AND fs.lg_EMPLACEMENT_ID = :emplacementId ");
 
             // Apply centralized filters
-           applyFilters(sql, search, diciId, type, null, checkDeconditionne);
+            applyFilters(sql, search, diciId, type, null, checkDeconditionne);
 
             sql.append(" ORDER BY t.str_DESCRIPTION ASC");
 
@@ -258,8 +245,7 @@ public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, St
             sql.append(" ORDER BY t.str_DESCRIPTION ASC");
 
             org.hibernate.query.NativeQuery q = (org.hibernate.query.NativeQuery) em.createNativeQuery(sql.toString())
-                    .unwrap(org.hibernate.query.NativeQuery.class)
-                    .addEntity("t", TFamille.class)
+                    .unwrap(org.hibernate.query.NativeQuery.class).addEntity("t", TFamille.class)
                     .addScalar("stock", org.hibernate.type.IntegerType.INSTANCE)
                     .addEntity("zone", dal.TZoneGeographique.class);
 
@@ -334,23 +320,24 @@ public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, St
 
         if (StringUtils.isNotEmpty(type)) {
             switch (type) {
-                case "DECONDITIONNE":
-                    sql.append("AND t.bool_DECONDITIONNE = 1 AND t.bool_DECONDITIONNE_EXIST = 1 ");
-                    break;
+            case "DECONDITIONNE":
+                sql.append("AND t.bool_DECONDITIONNE = 1 AND t.bool_DECONDITIONNE_EXIST = 1 ");
+                break;
 
-                case "DECONDITION":
-                    sql.append("AND t.bool_DECONDITIONNE = 0 AND t.bool_DECONDITIONNE_EXIST = 1 ");
-                    break;
+            case "DECONDITION":
+                sql.append("AND t.bool_DECONDITIONNE = 0 AND t.bool_DECONDITIONNE_EXIST = 1 ");
+                break;
 
-                case "SANSEMPLACEMENT":
-                    sql.append("AND t.lg_ZONE_GEO_ID = '1' ");
-                    break;
+            case "SANSEMPLACEMENT":
+                sql.append("AND t.lg_ZONE_GEO_ID = '1' ");
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
         }
     }
+
     /**
      * Centralized method to set filter parameters on queries
      */
