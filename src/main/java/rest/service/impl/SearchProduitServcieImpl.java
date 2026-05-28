@@ -72,10 +72,26 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
     public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, String produitId, String search,
             String diciId, String type, String zoneGeoId, int limit, int start) {
 
+        long t0 = System.currentTimeMillis();
         boolean checkExpirationdate = checkDatePeremption();
+        LOG.info("FICHE checkDatePeremption time=" + (System.currentTimeMillis() - t0) + " ms");
+
         JSONObject data = new JSONObject();
+
+        t0 = System.currentTimeMillis();
         Object[] objs = getPrivilegeProductByUser(user.getLgUSERID());
+        LOG.info("FICHE getPrivilegeProductByUser time=" + (System.currentTimeMillis() - t0) + " ms");
+
+        t0 = System.currentTimeMillis();
         boolean canceledBtn = Constant.hasAuthorityByName(usersPrivileges, Constant.ACTION_DESACTIVE_PRODUIT);
+        LOG.info("FICHE hasAuthorityByName time=" + (System.currentTimeMillis() - t0) + " ms");
+        long globalStart = System.currentTimeMillis();
+
+        /*
+         * boolean checkExpirationdate = checkDatePeremption(); JSONObject data = new JSONObject(); Object[] objs =
+         * getPrivilegeProductByUser(user.getLgUSERID()); boolean canceledBtn =
+         * Constant.hasAuthorityByName(usersPrivileges, Constant.ACTION_DESACTIVE_PRODUIT);
+         */
         JSONArray arrayObj = new JSONArray();
 
         String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
@@ -93,13 +109,33 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             arrayObj.put(buildProduitData(canceledBtn, tuple, objs, user, empl, checkExpirationdate));
             data.put("total", 1);
         } else {
-            getAllLite(false, search, diciId, empl, type, zoneGeoId, true, start, limit).forEach(
-                    tuple -> arrayObj.put(buildProduitDataLite(canceledBtn, tuple, objs, empl, checkExpirationdate)));
+            // long t0 = System.currentTimeMillis();
 
-            data.put("total", getAllCount(search, diciId, empl, type, zoneGeoId, true));
+            List<Object[]> rows = getAllLite(false, search, diciId, empl, type, zoneGeoId, true, start, limit);
+
+            LOG.info("FICHE getAllLite time=" + (System.currentTimeMillis() - t0) + " ms, size=" + rows.size());
+
+            t0 = System.currentTimeMillis();
+
+            for (Object[] tuple : rows) {
+                long tb = System.currentTimeMillis();
+                arrayObj.put(buildProduitDataLite(canceledBtn, tuple, objs, empl, checkExpirationdate));
+                LOG.info("FICHE buildProduitDataLite ligne time=" + (System.currentTimeMillis() - tb) + " ms");
+            }
+
+            LOG.info("FICHE build all rows time=" + (System.currentTimeMillis() - t0) + " ms");
+
+            t0 = System.currentTimeMillis();
+
+            long total = getAllCount(search, diciId, empl, type, zoneGeoId, true);
+
+            LOG.info("FICHE getAllCount time=" + (System.currentTimeMillis() - t0) + " ms, total=" + total);
+
+            data.put("total", total);
         }
 
         data.put("results", arrayObj);
+        LOG.info("FICHE TOTAL fetchProduits time=" + (System.currentTimeMillis() - globalStart) + " ms");
         return data;
     }
 
@@ -490,8 +526,6 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
         TFamille t = (TFamille) tuple[0];
 
-        // json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
-
         long t0 = System.currentTimeMillis();
         json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
         LOG.info("PRODUCT STATE famille=" + t.getLgFAMILLEID() + " time=" + (System.currentTimeMillis() - t0) + " ms");
@@ -699,7 +733,6 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(deliveryDate));
         }
 
-        // json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
 
         long t0 = System.currentTimeMillis();
         json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));

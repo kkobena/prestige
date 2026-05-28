@@ -17,13 +17,13 @@ Ext.Loader.setConfig({
     enabled: true,
     disableCaching: true,
     paths: {
-        'testextjs': '/prestige/general/app',
-        'Ext.ux': '/prestige/general/ux'
+        'testextjs': '/prestige/general/app'
+        //,'Ext.ux': '/prestige/general/ux'
     }
 });
 
 Ext.Loader.setPath('testextjs', '/prestige/general/app');
-Ext.Loader.setPath('Ext.ux', '/prestige/general/ux');
+//Ext.Loader.setPath('Ext.ux', '/prestige/general/ux');
 
 Ext.application({
     name: 'testextjs',
