@@ -48,6 +48,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         Me_Workflow = this;
         lg_EMPLACEMENT_ID = loadEmplacement();
         let itemsPerPage = 20;
+        
         const store = new Ext.data.Store({
             model: 'testextjs.model.Famille',
             pageSize: itemsPerPage,
@@ -55,14 +56,28 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             proxy: {
                 type: 'ajax',
                 url: '../api/v1/produit-search/fiche',
+                timeout: 60000,
                 reader: {
                     type: 'json',
                     root: 'results',
                     totalProperty: 'total'
                 }
+            },
+            listeners: {
+                beforeload: function (store, operation) {
+                    const proxy = store.getProxy();
 
+                    const searchCmp = Ext.getCmp('rechecher');
+                    const typeCmp = Ext.getCmp('str_TYPE_TRANSACTION');
+                    const dciCmp = Ext.getCmp('lg_DCI_PRINCIPAL_ID');
+                    const zoneCmp = Ext.getCmp('lg_ZONE_GEO_ID');
+
+                    proxy.setExtraParam('search_value', searchCmp ? (searchCmp.getValue() || '') : '');
+                    proxy.setExtraParam('str_TYPE_TRANSACTION', typeCmp ? (typeCmp.getValue() || '') : '');
+                    proxy.setExtraParam('lg_DCI_ID', dciCmp ? (dciCmp.getValue() || '') : '');
+                    proxy.setExtraParam('lg_ZONE_GEO_ID', zoneCmp ? (zoneCmp.getValue() || '') : '');
+                }
             }
-
         });
 
         const store_dci = new Ext.data.Store({
@@ -800,18 +815,41 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 }
             }
         });
-
+        /*
         this.callParent();
-
+           
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
             single: true
-        });
+        });*/
+        
+        this.callParent(arguments);
+
+        this.on('afterrender', function (grid) {
+            Ext.defer(function () {
+                grid.loadStore();
+            }, 300);
+        }, this);
 
     },
     loadStore: function () {
-        this.getStore().load({
-            callback: this.onStoreLoad
+        const grid = this;
+        const store = grid.getStore();
+        const proxy = store.getProxy();
+
+        proxy.setExtraParam('search_value', '');
+        proxy.setExtraParam('str_TYPE_TRANSACTION', '');
+        proxy.setExtraParam('lg_DCI_ID', '');
+        proxy.setExtraParam('lg_ZONE_GEO_ID', '');
+
+        store.loadPage(1, {
+            params: {
+                search_value: '',
+                str_TYPE_TRANSACTION: '',
+                lg_DCI_ID: '',
+                lg_ZONE_GEO_ID: ''
+            },
+            callback: grid.onStoreLoad
         });
     },
     onStoreLoad: function () {

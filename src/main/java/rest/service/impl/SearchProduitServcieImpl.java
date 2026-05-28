@@ -168,7 +168,6 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             sql.append("{indicateur.*}, {remise.*}, {tva.*} ");
             sql.append("FROM t_famille t ");
             sql.append("INNER JOIN t_famille_stock fs ON t.lg_FAMILLE_ID = fs.lg_FAMILLE_ID ");
-            sql.append("INNER JOIN t_famille_grossiste fg ON t.lg_FAMILLE_ID = fg.lg_FAMILLE_ID ");
             sql.append("LEFT JOIN gamme_produit gamme ON t.gamme_id = gamme.id ");
             sql.append("LEFT JOIN laboratoire labo ON t.laboratoire_id = labo.id ");
             sql.append(
@@ -187,7 +186,8 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
                 sql.append("INNER JOIN t_famille_dci fd ON t.lg_FAMILLE_ID = fd.lg_FAMILLE_ID ");
             }
             sql.append("WHERE t.str_STATUT = 'enable' AND fs.lg_EMPLACEMENT_ID = :emplacementId ");
-
+            sql.append("WHERE t.str_STATUT = 'enable' AND fs.lg_EMPLACEMENT_ID = :emplacementId ");
+            sql.append("AND EXISTS (SELECT 1 FROM t_famille_grossiste fg0 WHERE fg0.lg_FAMILLE_ID = t.lg_FAMILLE_ID) ");
             // Apply centralized filters
             applyFilters(sql, search, diciId, type, null, checkDeconditionne);
 
@@ -231,7 +231,7 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             sql.append("SELECT DISTINCT {t.*}, fs.int_NUMBER_AVAILABLE as stock, {zone.*} ");
             sql.append("FROM t_famille t ");
             sql.append("INNER JOIN t_famille_stock fs ON t.lg_FAMILLE_ID = fs.lg_FAMILLE_ID ");
-            sql.append("INNER JOIN t_famille_grossiste fg ON t.lg_FAMILLE_ID = fg.lg_FAMILLE_ID ");
+
             sql.append("LEFT JOIN t_zone_geographique zone ON t.lg_ZONE_GEO_ID = zone.lg_ZONE_GEO_ID ");
 
             if (StringUtils.isNotEmpty(diciId)) {
@@ -239,7 +239,7 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             }
 
             sql.append("WHERE t.str_STATUT = 'enable' AND fs.lg_EMPLACEMENT_ID = :emplacementId ");
-
+            sql.append("AND EXISTS (SELECT 1 FROM t_famille_grossiste fg0 WHERE fg0.lg_FAMILLE_ID = t.lg_FAMILLE_ID) ");
             applyFilters(sql, search, diciId, type, zoneGeoId, checkDeconditionne);
 
             sql.append(" ORDER BY t.str_DESCRIPTION ASC");
@@ -270,14 +270,13 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             StringBuilder sql = new StringBuilder();
             sql.append("SELECT COUNT(DISTINCT t.lg_FAMILLE_ID) FROM t_famille t ");
             sql.append("INNER JOIN t_famille_stock fs ON t.lg_FAMILLE_ID = fs.lg_FAMILLE_ID ");
-            sql.append("INNER JOIN t_famille_grossiste fg ON t.lg_FAMILLE_ID = fg.lg_FAMILLE_ID ");
 
             if (StringUtils.isNotEmpty(diciId)) {
                 sql.append("INNER JOIN t_famille_dci fd ON t.lg_FAMILLE_ID = fd.lg_FAMILLE_ID ");
             }
 
             sql.append("WHERE t.str_STATUT = 'enable' AND fs.lg_EMPLACEMENT_ID = :emplacementId ");
-
+            sql.append("AND EXISTS (SELECT 1 FROM t_famille_grossiste fg0 WHERE fg0.lg_FAMILLE_ID = t.lg_FAMILLE_ID) ");
             applyFilters(sql, search, diciId, type, zoneGeoId, checkDeconditionne);
 
             Query q = em.createNativeQuery(sql.toString());
@@ -300,7 +299,8 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
         if (StringUtils.isNotEmpty(search)) {
             sql.append("AND (t.int_CIP LIKE :search ");
-            sql.append("OR fg.str_CODE_ARTICLE LIKE :search ");
+            sql.append(
+                    "OR EXISTS (SELECT 1 FROM t_famille_grossiste fg WHERE fg.lg_FAMILLE_ID = t.lg_FAMILLE_ID AND fg.str_CODE_ARTICLE LIKE :search) ");
             sql.append("OR t.int_EAN13 LIKE :search ");
             sql.append("OR t.str_NAME LIKE :search ");
             sql.append("OR t.code_ean_fabriquant LIKE :search) ");
@@ -490,7 +490,11 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
         TFamille t = (TFamille) tuple[0];
 
+        // json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
+
+        long t0 = System.currentTimeMillis();
         json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
+        LOG.info("PRODUCT STATE famille=" + t.getLgFAMILLEID() + " time=" + (System.currentTimeMillis() - t0) + " ms");
 
         return json;
     }
@@ -695,7 +699,11 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(deliveryDate));
         }
 
+        // json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
+
+        long t0 = System.currentTimeMillis();
         json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
+        LOG.info("PRODUCT STATE famille=" + t.getLgFAMILLEID() + " time=" + (System.currentTimeMillis() - t0) + " ms");
 
         return json;
     }
