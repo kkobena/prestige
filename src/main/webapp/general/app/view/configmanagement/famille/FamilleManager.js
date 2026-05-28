@@ -567,188 +567,203 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             selModel: {
                 selType: 'cellmodel'
             },
-            tbar: [{
-                    text: ''
-                },
+            dockedItems: [
                 {
-                    text: 'Créer un Article',
-                    tooltip: 'rechercher',
-                    cls: 'btn-primary',
-                    scope: this,
-                    id: 'btn_add',
-                    iconCls: 'addicon',
-                    handler: this.onAddClick
-                }, {
-                    xtype: 'combobox',
-                    name: 'str_TYPE_TRANSACTION',
-                    margins: '0 0 0 10',
-                    id: 'str_TYPE_TRANSACTION',
-                    store: store_type,
-                    valueField: 'str_TYPE_TRANSACTION',
-                    displayField: 'str_desc',
-                    typeAhead: true,
-                    queryMode: 'local',
-//                    flex: 1,
-                    emptyText: 'Filtre article...',
-                    listeners: {
-                        select: function (cmp) {
-                            Me_Workflow.onRechClick();
-                        }
-                    }
-                }, '-', {
-                    xtype: 'combobox',
-                    name: 'lg_DCI_PRINCIPAL_ID',
-                    margins: '0 0 0 10',
-                    id: 'lg_DCI_PRINCIPAL_ID',
-                    store: store_dci,
-                    valueField: 'lg_DCI_ID',
-                    pageSize: 20, //ajout la barre de pagination
-                    displayField: 'str_NAME',
-                    typeAhead: true,
-//                    editable: false,
-                    width: 350,
-                    minChars: 2,
-                    queryMode: 'remote',
-//                    flex: 2,
-                    emptyText: 'Selectionner un DCI...',
-                    listeners: {
-                        select: function (cmp) {
-                            Me_Workflow.onRechClick();
-                        }
+                    xtype: 'toolbar',
+                    dock: 'top',
+                    items: [
+                        {
+                            text: 'Créer un Article',
+                            tooltip: 'Créer un Article',
+                            cls: 'btn-primary',
+                            scope: this,
+                            id: 'btn_add',
+                            iconCls: 'addicon',
+                            handler: this.onAddClick
+                        },
+                        '-',
+                        {
+                            text: 'Importer',
+                            tooltip: 'Importer',
+                            id: 'btn_import',
+                            iconCls: 'importicon',
+                            scope: this,
+                            handler: this.onbtnimport
+                        },
+                        '-',
+                        {
+                            text: 'Verifier l\'importation',
+                            tooltip: 'Verifier l\'importation',
+                            id: 'btn_checkimport',
+                            iconCls: 'check_icon',
+                            scope: this,
+                            handler: this.onbtncheckimport
+                        },
+                        '-',
+                        {
+                            text: 'Importer des articles',
+                            tooltip: 'Importer stock',
+                            iconCls: 'importicon',
+                            scope: this,
+                            hidden: (lg_EMPLACEMENT_ID === '1'),
+                            handler: function () {
 
-                    }
-                }, '-', {
-                    xtype: 'textfield',
-                    id: 'rechecher',
-                    name: 'user',
-                    fieldStyle: 'background-color: orange; background-image: none;color:blue;font-weight:bold;font-size:1.3em',
-                    emptyText: 'Recherche',
-                    listeners: {
-                        'render': function (cmp) {
-                            cmp.getEl().on('keypress', function (e) {
-                                if (e.getKey() === e.ENTER) {
-                                    Me_Workflow.onRechClick();
-
-                                }
-                            });
-                        }
-                    }
-                }, '-', {
-                    text: 'rechercher',
-                    tooltip: 'rechercher',
-                    scope: this,
-                    iconCls: 'searchicon',
-                    handler: this.onRechClick
-                }, '-', {
-                    xtype: 'combobox',
-                    name: 'lg_ZONE_GEO_ID',
-                    id: 'lg_ZONE_GEO_ID',
-                    store: rayons,
-                    valueField: 'id',
-                    displayField: 'libelle',
-                    typeAhead: false,
-                    queryMode: 'remote',
-                    minChars: 0,
-                    pageSize: 9999,
-                    width: 230,
-                    emptyText: 'Sélectionner un rayon...',
-                    forceSelection: true,
-                    listeners: {
-                        select: function () {
-                            Me_Workflow.onRechClick();
-                        }
-                    }
-                }, '-', {
-                    text: 'Effacer rayon',
-                    tooltip: 'Effacer le filtre rayon',
-                    iconCls: 'cancelicon',
-                    scope: this,
-                    handler: function () {
-                        Ext.getCmp('lg_ZONE_GEO_ID').clearValue();
-                        Me_Workflow.onRechClick();
-                    }
-                }, '-', {
-    text: 'Imprimer',
-    tooltip: 'imprimer',
-    iconCls: 'printable',
-    scope: this,
-    handler: this.onPdfClick
-}, '-', {
-                    text: 'Importer',
-                    tooltip: 'Importer',
-                    id: 'btn_import',
-                    iconCls: 'importicon',
-//                    hidden: true, //a decommenter en cas de probleme 10/06/2016
-                    scope: this,
-                    handler: this.onbtnimport
-                }, '-',
-
-                {
-                    text: 'Verifier l\'importation',
-                    tooltip: 'Verifier l\'importation',
-                    id: 'btn_checkimport',
-                    iconCls: 'check_icon',
-                    scope: this,
-                    handler: this.onbtncheckimport
-                }, '-',
-
-                {
-                    text: 'Importer des articles',
-                    tooltip: 'Importer stock',
-                    iconCls: 'importicon',
-                    scope: this,
-                    hidden: (lg_EMPLACEMENT_ID === '1'),
-                    handler: function () {
-
-                        const win = new Ext.window.Window({
-                            autoShow: false,
-                            title: 'Importer stock dépôt',
-                            width: 500,
-                            height: 150,
-                            layout: 'fit',
-                            plain: true,
-                            items: {
-                                xtype: 'form',
-                                bodyPadding: 10,
-                                defaults: {
-                                    anchor: '100%'
-                                },
-                                items: [{
-                                        xtype: 'fieldset',
-                                        bodyPadding: 20,
-                                        defaultType: 'filefield',
+                                const win = new Ext.window.Window({
+                                    autoShow: false,
+                                    title: 'Importer stock dépôt',
+                                    width: 500,
+                                    height: 150,
+                                    layout: 'fit',
+                                    plain: true,
+                                    items: {
+                                        xtype: 'form',
+                                        bodyPadding: 10,
                                         defaults: {
                                             anchor: '100%'
                                         },
-                                        items: [
-                                            {
-                                                xtype: 'filefield',
-                                                style: 'margin:5px !important;',
-                                                fieldLabel: 'Fichier xls',
-                                                emptyText: 'Fichier xls ',
-                                                name: 'fichier',
-                                                allowBlank: false,
-                                                buttonText: 'Choisir un fichier ',
-                                                width: 400
+                                        items: [{
+                                                xtype: 'fieldset',
+                                                bodyPadding: 20,
+                                                defaultType: 'filefield',
+                                                defaults: {
+                                                    anchor: '100%'
+                                                },
+                                                items: [
+                                                    {
+                                                        xtype: 'filefield',
+                                                        style: 'margin:5px !important;',
+                                                        fieldLabel: 'Fichier xls',
+                                                        emptyText: 'Fichier xls ',
+                                                        name: 'fichier',
+                                                        allowBlank: false,
+                                                        buttonText: 'Choisir un fichier ',
+                                                        width: 400
+                                                    }
+                                                ]
+                                            }]
+                                    },
+                                    buttons: [{
+                                            text: 'Enregistrer',
+                                            handler: this.onbtnImporter
+                                        }, {
+                                            text: 'Annuler',
+                                            handler: function () {
+                                                win.close();
                                             }
+                                        }]
+                                });
 
-
-                                        ]
-                                    }]
+                                win.show();
                             }
-                            ,
-                            buttons: [{
-                                    text: 'Enregistrer',
-                                    handler: this.onbtnImporter
-                                }, {
-                                    text: 'Annuler',
-                                    handler: function () {
-                                        win.close();
-                                    }
-                                }]
-                        });
-                        win.show();
-                    }
+                        },
+                        '->',
+                        {
+                            text: 'Imprimer',
+                            tooltip: 'imprimer',
+                            iconCls: 'printable',
+                            scope: this,
+                            handler: this.onPdfClick
+                        }
+                    ]
+                },
+                {
+                    xtype: 'toolbar',
+                    dock: 'top',
+                    items: [
+                        {
+                            xtype: 'combobox',
+                            name: 'str_TYPE_TRANSACTION',
+                            id: 'str_TYPE_TRANSACTION',
+                            store: store_type,
+                            valueField: 'str_TYPE_TRANSACTION',
+                            displayField: 'str_desc',
+                            typeAhead: true,
+                            queryMode: 'local',
+                            width: 220,
+                            emptyText: 'Filtre article...',
+                            listeners: {
+                                select: function () {
+                                    Me_Workflow.onRechClick();
+                                }
+                            }
+                        },
+                        '-',
+                        {
+                            xtype: 'combobox',
+                            name: 'lg_DCI_PRINCIPAL_ID',
+                            id: 'lg_DCI_PRINCIPAL_ID',
+                            store: store_dci,
+                            valueField: 'lg_DCI_ID',
+                            pageSize: 20,
+                            displayField: 'str_NAME',
+                            typeAhead: true,
+                            width: 350,
+                            minChars: 2,
+                            queryMode: 'remote',
+                            emptyText: 'Selectionner un DCI...',
+                            listeners: {
+                                select: function () {
+                                    Me_Workflow.onRechClick();
+                                }
+                            }
+                        },
+                        '-',
+                        {
+                            xtype: 'textfield',
+                            id: 'rechecher',
+                            name: 'user',
+                            width: 230,
+                            fieldStyle: 'background-color: orange; background-image: none;color:blue;font-weight:bold;font-size:1.3em',
+                            emptyText: 'Recherche',
+                            listeners: {
+                                render: function (cmp) {
+                                    cmp.getEl().on('keypress', function (e) {
+                                        if (e.getKey() === e.ENTER) {
+                                            Me_Workflow.onRechClick();
+                                        }
+                                    });
+                                }
+                            }
+                        },
+                        {
+                            text: '',
+                            tooltip: 'rechercher',
+                            scope: this,
+                            iconCls: 'searchicon',
+                            handler: this.onRechClick
+                        },
+                        '-',
+                        {
+                            xtype: 'combobox',
+                            name: 'lg_ZONE_GEO_ID',
+                            id: 'lg_ZONE_GEO_ID',
+                            store: rayons,
+                            valueField: 'id',
+                            displayField: 'libelle',
+                            typeAhead: false,
+                            queryMode: 'remote',
+                            minChars: 0,
+                            pageSize: 9999,
+                            width: 260,
+                            emptyText: 'Sélectionner un rayon...',
+                            forceSelection: true,
+                            listeners: {
+                                select: function () {
+                                    Me_Workflow.onRechClick();
+                                }
+                            }
+                        },
+                        {
+                            text: 'Effacer rayon',
+                            tooltip: 'Effacer le filtre rayon',
+                            iconCls: 'cancelicon',
+                            scope: this,
+                            handler: function () {
+                                Ext.getCmp('lg_ZONE_GEO_ID').clearValue();
+                                Me_Workflow.onRechClick();
+                            }
+                        }
+                    ]
                 }
             ],
             bbar: {
