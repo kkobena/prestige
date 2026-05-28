@@ -88,6 +88,30 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         });
 
 
+        const rayons = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields: [
+                {
+                    name: 'id',
+                    type: 'string'
+                },
+                {
+                    name: 'libelle',
+                    type: 'string'
+                }
+            ],
+            autoLoad: false,
+            pageSize: 9999,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/rayons',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
+        });
 
         Ext.apply(this, {
             width: '98%',
@@ -616,12 +640,40 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     iconCls: 'searchicon',
                     handler: this.onRechClick
                 }, '-', {
-                    text: 'Imprimer',
-                    tooltip: 'imprimer',
-                    iconCls: 'printable',
-                    scope: this,
-                    handler: this.onPdfClick
+                    xtype: 'combobox',
+                    name: 'lg_ZONE_GEO_ID',
+                    id: 'lg_ZONE_GEO_ID',
+                    store: rayons,
+                    valueField: 'id',
+                    displayField: 'libelle',
+                    typeAhead: false,
+                    queryMode: 'remote',
+                    minChars: 0,
+                    pageSize: 9999,
+                    width: 230,
+                    emptyText: 'Sélectionner un rayon...',
+                    forceSelection: true,
+                    listeners: {
+                        select: function () {
+                            Me_Workflow.onRechClick();
+                        }
+                    }
                 }, '-', {
+                    text: 'Effacer rayon',
+                    tooltip: 'Effacer le filtre rayon',
+                    iconCls: 'cancelicon',
+                    scope: this,
+                    handler: function () {
+                        Ext.getCmp('lg_ZONE_GEO_ID').clearValue();
+                        Me_Workflow.onRechClick();
+                    }
+                }, '-', {
+    text: 'Imprimer',
+    tooltip: 'imprimer',
+    iconCls: 'printable',
+    scope: this,
+    handler: this.onPdfClick
+}, '-', {
                     text: 'Importer',
                     tooltip: 'Importer',
                     id: 'btn_import',
@@ -814,18 +866,30 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         window.location = '../MigrationServlet?table_name=TABLE_FAMILLE' + "&extension=" + extension + "&liste_param=" + liste_param;
     },
     onPdfClick: function () {
-        let lg_DCI_PRINCIPAL_ID = "", str_TYPE_TRANSACTION = "";
-        if (Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue() != null) {
-            lg_DCI_PRINCIPAL_ID = Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue();
-        }
-        if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null) {
-            str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
-        }
-        const linkUrl = url_services_article_generate_pdf + '?str_TYPE_TRANSACTION=' + str_TYPE_TRANSACTION + '&lg_DCI_ID=' + lg_DCI_PRINCIPAL_ID + '&search_value=' + Ext.getCmp('rechecher').getValue();
+    let lg_DCI_PRINCIPAL_ID = "",
+            str_TYPE_TRANSACTION = "",
+            lg_ZONE_GEO_ID = "";
 
+    if (Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue() != null) {
+        lg_DCI_PRINCIPAL_ID = Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue();
+    }
 
-        window.open(linkUrl);
-    },
+    if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null) {
+        str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
+    }
+
+    if (Ext.getCmp('lg_ZONE_GEO_ID').getValue() != null) {
+        lg_ZONE_GEO_ID = Ext.getCmp('lg_ZONE_GEO_ID').getValue();
+    }
+
+    const linkUrl = url_services_article_generate_pdf
+            + '?str_TYPE_TRANSACTION=' + str_TYPE_TRANSACTION
+            + '&lg_DCI_ID=' + lg_DCI_PRINCIPAL_ID
+            + '&lg_ZONE_GEO_ID=' + lg_ZONE_GEO_ID
+            + '&search_value=' + Ext.getCmp('rechecher').getValue();
+
+    window.open(linkUrl);
+},
 
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
@@ -1074,14 +1138,15 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             params: {
                 search_value: val.getValue(),
                 str_TYPE_TRANSACTION: Ext.getCmp('str_TYPE_TRANSACTION').getValue(),
-                lg_DCI_ID: Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue()
-
+                lg_DCI_ID: Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue(),
+                lg_ZONE_GEO_ID: Ext.getCmp('lg_ZONE_GEO_ID').getValue()
             }
         });
+
         Ext.getCmp('rechecher').focus(true, 100, function () {
-//            Ext.getCmp('rechecher').selectText(0, 1);
         });
     },
+    
     onAddGrossisteClick: function (grid, rowIndex) {
 
         const rec = grid.getStore().getAt(rowIndex);
