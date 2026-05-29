@@ -163,7 +163,6 @@ public class DailyStockService {
         }
     }
 
-   
     @Asynchronous
     public void updateStockDailyValueAsync() {
         LOG.info("Stock daily value update started");

@@ -373,6 +373,18 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                         }]
                 },
+                {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            icon: 'resources/images/icons/fam/recherche.png',
+                            tooltip: 'Voir les lots / péremptions',
+                            scope: this,
+                            handler: this.onViewPerimesClick
+                        }]
+                },
 
                 {
                     xtype: 'actioncolumn',
@@ -1302,6 +1314,175 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 });
 
 
+    },
+
+    onViewPerimesClick: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
+        const cip = rec.get('int_CIP');
+        const designation = rec.get('str_DESCRIPTION') || rec.get('str_NAME') || '';
+
+        if (!cip) {
+            Ext.MessageBox.alert('Alerte Message', 'Code CIP introuvable pour ce produit.');
+            return;
+        }
+
+        const perimeStore = new Ext.data.Store({
+            fields: [
+                {name: 'datePerement', type: 'string'},
+                {name: 'quantiteLot', type: 'int'},
+                {name: 'numLot', type: 'string'},
+                {name: 'statut', type: 'string'},
+                {name: 'codeCip', type: 'string'}
+            ],
+            data: []
+        });
+
+        const printPerimeData = function () {
+            const rows = [];
+
+            perimeStore.each(function (record) {
+                rows.push(
+                        '<tr>' +
+                        '<td>' + Ext.String.htmlEncode(record.get('datePerement') || '') + '</td>' +
+                        '<td style="text-align:center;">' + Ext.String.htmlEncode(String(record.get('quantiteLot') || 0)) + '</td>' +
+                        '<td>' + Ext.String.htmlEncode(record.get('numLot') || '') + '</td>' +
+                        '<td>' + Ext.String.htmlEncode(record.get('statut') || '') + '</td>' +
+                        '</tr>'
+                        );
+            });
+
+            const html = '<!DOCTYPE html>' +
+                    '<html>' +
+                    '<head>' +
+                    '<meta charset="UTF-8">' +
+                    '<title>Lots / péremptions - ' + Ext.String.htmlEncode(String(cip)) + '</title>' +
+                    '<style>' +
+                    'body{font-family:Arial,Helvetica,sans-serif;font-size:12px;margin:20px;}' +
+                    'h2{font-size:16px;margin:0 0 12px 0;}' +
+                    'table{width:100%;border-collapse:collapse;}' +
+                    'th,td{border:1px solid #000;padding:6px;}' +
+                    'th{background:#f0f0f0;text-align:left;}' +
+                    '</style>' +
+                    '</head>' +
+                    '<body>' +
+                    '<h2>' + Ext.String.htmlEncode(String(cip)) + ' - ' + Ext.String.htmlEncode(designation) + '</h2>' +
+                    '<table>' +
+                    '<thead>' +
+                    '<tr>' +
+                    '<th>Date péremption</th>' +
+                    '<th>Quantité</th>' +
+                    '<th>N° Lot</th>' +
+                    '<th>Statut</th>' +
+                    '</tr>' +
+                    '</thead>' +
+                    '<tbody>' +
+                    (rows.length > 0 ? rows.join('') : '<tr><td colspan="4">Aucune donnée à imprimer</td></tr>') +
+                    '</tbody>' +
+                    '</table>' +
+                    '</body>' +
+                    '</html>';
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        };
+
+        const win = Ext.create('Ext.window.Window', {
+            title: cip + ' - ' + designation,
+            modal: true,
+            width: 850,
+            height: 360,
+            layout: 'fit',
+            items: [{
+                    xtype: 'grid',
+                    store: perimeStore,
+                    columns: [
+                        {
+                            text: 'Date péremption',
+                            dataIndex: 'datePerement',
+                            flex: 1
+                        },
+                        {
+                            text: 'Quantité',
+                            dataIndex: 'quantiteLot',
+                            align: 'center',
+                            flex: 0.7
+                        },
+                        {
+                            text: 'N° Lot',
+                            dataIndex: 'numLot',
+                            flex: 1
+                        },
+                        {
+                            text: 'Statut',
+                            dataIndex: 'statut',
+                            flex: 2
+                        }
+                    ],
+                    viewConfig: {
+                        emptyText: 'Aucun lot trouvé pour ce produit',
+                        deferEmptyText: false
+                    }
+                }],
+            dockedItems: [{
+                    xtype: 'toolbar',
+                    dock: 'bottom',
+                    ui: 'footer',
+                    layout: {
+                        pack: 'end',
+                        type: 'hbox'
+                    },
+                    items: [{
+                            text: 'Imprimer',
+                            iconCls: 'printable',
+                            handler: printPerimeData
+                        }, {
+                            text: 'Fermer',
+                            handler: function () {
+                                win.close();
+                            }
+                        }]
+                }],
+            listeners: {
+                close: function () {
+                    Ext.getCmp('rechecher').focus(true, 100);
+                }
+            }
+        });
+
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Chargement des lots');
+
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/fichearticle/perimes',
+            params: {
+                nbreMois: 24,
+                query: cip,
+                page: 1,
+                start: 0,
+                limit: 200
+            },
+            success: function (response) {
+                progress.hide();
+
+                const result = Ext.JSON.decode(response.responseText, true);
+                const data = result && result.data ? result.data : [];
+
+                const filteredData = Ext.Array.filter(data, function (item) {
+                    return String(item.codeCip) === String(cip);
+                });
+
+                perimeStore.loadData(filteredData);
+                win.show();
+            },
+            failure: function (response) {
+                progress.hide();
+                Ext.MessageBox.alert('Erreur', response.responseText || 'Impossible de charger les lots du produit.');
+            }
+        });
     },
 
 addPeremptiondate: function (grid, rowIndex) {
