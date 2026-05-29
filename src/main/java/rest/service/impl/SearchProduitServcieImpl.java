@@ -733,7 +733,6 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(deliveryDate));
         }
 
-
         long t0 = System.currentTimeMillis();
         json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
         LOG.info("PRODUCT STATE famille=" + t.getLgFAMILLEID() + " time=" + (System.currentTimeMillis() - t0) + " ms");
