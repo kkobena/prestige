@@ -1,26 +1,24 @@
-var rsvmgr_url_mouvements = '../api/v1/reserve/mouvements/';
+/* global Ext */
 
-Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
+// Historique global des mouvements de reserve, classe par date decroissante.
+//   typeFilter 'ALL'      -> assorts + reassorts combines
+//   typeFilter 'ASSORT'   -> reappros reserve uniquement
+//   typeFilter 'REASSORT' -> reassorts rayon uniquement
+Ext.define('testextjs.view.stockmanagement.reserve.action.historiqueGlobal', {
     extend: 'Ext.window.Window',
-    xtype: 'reservehistorique',
-    requires: [
-        'Ext.grid.*',
-        'Ext.data.*',
-        'Ext.window.Window',
-        'Ext.form.*'
-    ],
+    xtype: 'reservehistoriqueglobal',
+    requires: ['Ext.grid.*', 'Ext.data.*', 'Ext.window.Window', 'Ext.form.*'],
     config: {
-        odatasource: '',
+        typeFilter: 'ALL',
         titre: ''
     },
     initComponent: function () {
         var me = this;
-        var ds = me.getOdatasource() || {};
-        var familleId = ds.lg_FAMILLE_ID;
+        var typeFilter = me.getTypeFilter() || 'ALL';
 
         var store = new Ext.data.Store({
             fields: [
-                'lg_MOUVEMENT_ID', 'str_TYPE',
+                'lg_MOUVEMENT_ID', 'str_NAME', 'str_TYPE',
                 {name: 'int_QTE', type: 'int'},
                 {name: 'int_STOCK_RAYON_AVANT', type: 'int'},
                 {name: 'int_STOCK_RESERVE_AVANT', type: 'int'},
@@ -31,15 +29,16 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: rsvmgr_url_mouvements + familleId,
+                url: '../api/v1/reserve/mouvements',
                 reader: {type: 'json', root: 'results', totalProperty: 'total'}
             }
         });
 
-        var currentTypeFilter = 'TOUT';
-
         var loadWithFilters = function () {
             var extra = {};
+            if (typeFilter !== 'ALL') {
+                extra.type = typeFilter;
+            }
             var dtStart = dtStartField.getValue();
             var dtEnd   = dtEndField.getValue();
             if (dtStart) {
@@ -49,26 +48,13 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
                 extra.dtEnd = Ext.Date.format(dtEnd, 'Y-m-d');
             }
             store.getProxy().extraParams = extra;
-            store.load({
-                callback: function () {
-                    // reapply type filter after reload
-                    applyFilter(currentTypeFilter);
-                }
-            });
-        };
-
-        var applyFilter = function (type) {
-            currentTypeFilter = type;
-            store.clearFilter(true);
-            if (type === 'ASSORT' || type === 'REASSORT') {
-                store.filter('str_TYPE', type);
-            }
+            store.load();
         };
 
         var dtStartField = Ext.create('Ext.form.field.Date', {
             fieldLabel: 'Du',
             labelWidth: 25,
-            width: 155,
+            width: 160,
             format: 'd/m/Y',
             emptyText: 'jj/mm/aaaa'
         });
@@ -76,52 +62,48 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
         var dtEndField = Ext.create('Ext.form.field.Date', {
             fieldLabel: 'Au',
             labelWidth: 25,
-            width: 155,
+            width: 160,
             format: 'd/m/Y',
             emptyText: 'jj/mm/aaaa'
         });
 
-        var grid = {
-            xtype: 'grid',
+        var typeCombo = Ext.create('Ext.form.field.ComboBox', {
+            fieldLabel: 'Type',
+            labelWidth: 35,
+            width: 155,
+            store: [['ALL', 'Tous'], ['ASSORT', 'Assort'], ['REASSORT', 'Reassort']],
+            value: typeFilter,
+            editable: false,
+            listeners: {
+                select: function (cb) {
+                    typeFilter = cb.getValue();
+                }
+            }
+        });
+
+        var grid = Ext.create('Ext.grid.Panel', {
             store: store,
             border: false,
             tbar: [
                 dtStartField, ' ',
                 dtEndField, ' ',
+                typeCombo, ' ',
                 {text: 'Rechercher', handler: loadWithFilters},
                 '-',
-                'Filtrer :', ' ',
                 {
-                    text: 'Tout',
-                    enableToggle: true,
-                    pressed: true,
-                    toggleGroup: 'histofiltre',
-                    allowDepress: false,
-                    toggleHandler: function (btn, pressed) {
-                        if (pressed) { applyFilter('TOUT'); }
-                    }
-                },
-                {
-                    text: 'Assort',
-                    enableToggle: true,
-                    toggleGroup: 'histofiltre',
-                    allowDepress: false,
-                    toggleHandler: function (btn, pressed) {
-                        if (pressed) { applyFilter('ASSORT'); }
-                    }
-                },
-                {
-                    text: 'Reassort',
-                    enableToggle: true,
-                    toggleGroup: 'histofiltre',
-                    allowDepress: false,
-                    toggleHandler: function (btn, pressed) {
-                        if (pressed) { applyFilter('REASSORT'); }
+                    text: 'Effacer',
+                    handler: function () {
+                        dtStartField.reset();
+                        dtEndField.reset();
+                        typeCombo.setValue(me.getTypeFilter() || 'ALL');
+                        typeFilter = me.getTypeFilter() || 'ALL';
+                        loadWithFilters();
                     }
                 }
             ],
             columns: [
-                {header: 'Date', dataIndex: 'dt_CREATED', flex: 1.4},
+                {header: 'Date', dataIndex: 'dt_CREATED', flex: 1.3},
+                {header: 'Designation', dataIndex: 'str_NAME', flex: 1.6},
                 {
                     header: 'Type', dataIndex: 'str_TYPE', flex: 1,
                     renderer: function (v, m) {
@@ -129,39 +111,35 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
                             m.style = 'color:#1f7a1f; font-weight:bold;';
                         } else if (v === 'ASSORT') {
                             m.style = 'color:#cc6600; font-weight:bold;';
-                        } else {
-                            m.style = 'color:#888;';
                         }
                         return v;
                     }
                 },
                 {header: 'Qte', dataIndex: 'int_QTE', align: 'center', flex: 0.6},
                 {
-                    header: 'Rayon (avant -> apres)', align: 'center', flex: 1.4,
+                    header: 'Rayon (avant -> apres)', align: 'center', flex: 1.3,
                     renderer: function (v, m, r) {
                         return r.get('int_STOCK_RAYON_AVANT') + ' → ' + r.get('int_STOCK_RAYON_APRES');
                     }
                 },
                 {
-                    header: 'Reserve (avant -> apres)', align: 'center', flex: 1.4,
+                    header: 'Reserve (avant -> apres)', align: 'center', flex: 1.3,
                     renderer: function (v, m, r) {
                         return r.get('int_STOCK_RESERVE_AVANT') + ' → ' + r.get('int_STOCK_RESERVE_APRES');
                     }
                 },
                 {header: 'Utilisateur', dataIndex: 'str_USER', flex: 1}
             ],
-            viewConfig: {
-                emptyText: 'Aucun mouvement enregistre pour cet article.',
-                deferEmptyText: false
-            }
-        };
+            viewConfig: {emptyText: 'Aucun mouvement enregistre.', deferEmptyText: false}
+        });
 
         var openPrint = function () {
             var proxy = store.getProxy();
             var extra = proxy.extraParams || {};
-            var titre = me.getTitre() || 'Historique des mouvements';
-            var qs = 'mode=historique_article&familleId=' + encodeURIComponent(familleId)
-                    + '&titre=' + encodeURIComponent(titre);
+            var qs = 'mode=historique&titre=' + encodeURIComponent(me.getTitre() || 'Historique des mouvements');
+            if (extra.type) {
+                qs += '&type=' + encodeURIComponent(extra.type);
+            }
             if (extra.dtStart) {
                 qs += '&dtStart=' + encodeURIComponent(extra.dtStart);
             }
@@ -176,10 +154,10 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
         var win = new Ext.window.Window({
             autoShow: true,
             title: me.getTitre() || 'Historique des mouvements',
-            width: 800,
-            height: 460,
-            minWidth: 550,
-            minHeight: 320,
+            width: 950,
+            height: 530,
+            minWidth: 650,
+            minHeight: 380,
             layout: 'fit',
             modal: true,
             maximizable: true,
@@ -187,11 +165,15 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historique', {
             items: [grid],
             buttons: [
                 {text: 'Imprimer', handler: openPrint},
-                {text: 'Fermer', handler: function () { win.close(); }}
+                {text: 'Fermer', handler: function () {
+                        win.close();
+                    }}
             ]
         });
 
-        // Chargement initial
+        // Chargement initial avec le filtre type passe en config
         loadWithFilters();
+
+        me.callParent();
     }
 });

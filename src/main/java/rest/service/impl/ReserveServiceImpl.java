@@ -22,8 +22,9 @@ import org.json.JSONObject;
 import rest.service.ReserveService;
 
 /**
- * Implementation du service de reserve. Toute mutation rayon/reserve se fait dans une transaction JTA unique
- * (atomicite), avec validation prealable et trace systematique dans t_mouvement_reserve.
+ * Implementation du service de reserve. Toute mutation rayon/reserve se fait
+ * dans une transaction JTA unique (atomicite), avec validation prealable et
+ * trace systematique dans t_mouvement_reserve.
  */
 @Stateless
 public class ReserveServiceImpl implements ReserveService {
@@ -38,20 +39,41 @@ public class ReserveServiceImpl implements ReserveService {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
+    @javax.ejb.EJB
+    private rest.service.InventaireService inventaireService;
+
     // ----------------------------------------------------------------- LISTING
 
     @Override
     public JSONObject listArticles(TUser user, String search, String type, int start, int limit) {
+        // Compatibilite : "REASSORT" historique = articles a reassortir (suggestions reassort rayon)
         if ("REASSORT".equalsIgnoreCase(type)) {
             return suggestions(user, search, start, limit);
         }
         String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         String like = (search == null || search.trim().isEmpty()) ? "%" : "%" + search.trim() + "%";
 
-        String base = "FROM t_type_stock_famille tsf " + "JOIN t_famille f ON f.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
+        // Clause de filtre supplementaire selon l'onglet
+        String extra = "";
+        boolean reapproSuggestion = false;
+        if ("REAPPRO".equalsIgnoreCase(type)) {
+            // rayon -> reserve : stock rayon > stock reserve
+            extra = " AND fs.int_NUMBER_AVAILABLE > tsf.int_NUMBER ";
+            reapproSuggestion = true;
+        } else if ("REASSORT_RAYON".equalsIgnoreCase(type)) {
+            // reserve -> rayon : stock reserve > stock rayon
+            extra = " AND tsf.int_NUMBER > fs.int_NUMBER_AVAILABLE ";
+        }
+
+        String base = "FROM t_type_stock_famille tsf "
+                + "JOIN t_famille f ON f.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
+                + "JOIN t_famille_stock fs ON fs.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
+                + "  AND fs.lg_EMPLACEMENT_ID = tsf.lg_EMPLACEMENT_ID AND fs.str_STATUT = 'enable' "
                 + "WHERE tsf.lg_TYPE_STOCK_ID = '" + TYPE_STOCK_RESERVE + "' "
-                + "AND tsf.lg_EMPLACEMENT_ID = ?1 AND tsf.str_STATUT = 'enable' " + "AND f.bool_RESERVE = 1 "
-                + "AND (f.str_NAME LIKE ?2 OR f.str_DESCRIPTION LIKE ?2 OR f.int_CIP LIKE ?2) ";
+                + "AND tsf.lg_EMPLACEMENT_ID = ?1 AND tsf.str_STATUT = 'enable' "
+                + "AND f.bool_RESERVE = 1 "
+                + "AND (f.str_NAME LIKE ?2 OR f.str_DESCRIPTION LIKE ?2 OR f.int_CIP LIKE ?2) "
+                + extra;
 
         Query countQ = em.createNativeQuery("SELECT COUNT(DISTINCT tsf.lg_FAMILLE_ID) " + base);
         countQ.setParameter(1, empl);
@@ -74,7 +96,14 @@ public class ReserveServiceImpl implements ReserveService {
             if (f == null) {
                 continue;
             }
-            results.put(buildArticleJson(f, empl, true));
+            JSONObject json = buildArticleJson(f, empl, true);
+            if (reapproSuggestion) {
+                // Onglet REAPPRO RESERVE : suggestion = max(0, stock_rayon - stock_reserve)
+                int sr = json.optInt("int_STOCK_RAYON", 0);
+                int sv = json.optInt("int_STOCK_RESERVE", 0);
+                json.put("int_QTE_SUGGEREE", Math.max(0, sr - sv));
+            }
+            results.put(json);
         }
         return new JSONObject().put("total", total).put("results", results);
     }
@@ -86,9 +115,11 @@ public class ReserveServiceImpl implements ReserveService {
         String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         String like = (search == null || search.trim().isEmpty()) ? "%" : "%" + search.trim() + "%";
 
-        String base = "FROM t_type_stock_famille tsf " + "JOIN t_famille f ON f.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
+        String base = "FROM t_type_stock_famille tsf "
+                + "JOIN t_famille f ON f.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
                 + "WHERE tsf.lg_TYPE_STOCK_ID = '" + TYPE_STOCK_RESERVE + "' "
-                + "AND tsf.lg_EMPLACEMENT_ID = ?1 AND tsf.str_STATUT = 'enable' " + "AND f.bool_RESERVE = 1 "
+                + "AND tsf.lg_EMPLACEMENT_ID = ?1 AND tsf.str_STATUT = 'enable' "
+                + "AND f.bool_RESERVE = 1 "
                 + "AND (f.str_NAME LIKE ?2 OR f.str_DESCRIPTION LIKE ?2 OR f.int_CIP LIKE ?2) ";
 
         Query q = em.createNativeQuery("SELECT DISTINCT tsf.lg_FAMILLE_ID " + base + " ORDER BY f.str_DESCRIPTION ASC");
@@ -106,6 +137,52 @@ public class ReserveServiceImpl implements ReserveService {
             }
             JSONObject json = buildArticleJson(f, empl, true);
             if (json.optInt("int_QTE_SUGGEREE", 0) > 0) {
+                suggested.add(json);
+            }
+        }
+
+        long total = suggested.size();
+        JSONArray results = new JSONArray();
+        int from = Math.max(0, start);
+        int to = (limit > 0) ? Math.min(suggested.size(), from + limit) : suggested.size();
+        for (int i = from; i < to; i++) {
+            results.put(suggested.get(i));
+        }
+        return new JSONObject().put("total", total).put("results", results);
+    }
+
+    @Override
+    public JSONObject suggestionsReappro(TUser user, String search, int start, int limit) {
+        String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        String like = (search == null || search.trim().isEmpty()) ? "%" : "%" + search.trim() + "%";
+
+        String base = "FROM t_type_stock_famille tsf "
+                + "JOIN t_famille f ON f.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
+                + "JOIN t_famille_stock fs ON fs.lg_FAMILLE_ID = tsf.lg_FAMILLE_ID "
+                + "  AND fs.lg_EMPLACEMENT_ID = tsf.lg_EMPLACEMENT_ID AND fs.str_STATUT = 'enable' "
+                + "WHERE tsf.lg_TYPE_STOCK_ID = '" + TYPE_STOCK_RESERVE + "' "
+                + "AND tsf.lg_EMPLACEMENT_ID = ?1 AND tsf.str_STATUT = 'enable' "
+                + "AND f.bool_RESERVE = 1 "
+                + "AND fs.int_NUMBER_AVAILABLE > tsf.int_NUMBER "
+                + "AND (f.str_NAME LIKE ?2 OR f.str_DESCRIPTION LIKE ?2 OR f.int_CIP LIKE ?2) ";
+
+        Query q = em.createNativeQuery("SELECT DISTINCT tsf.lg_FAMILLE_ID " + base + " ORDER BY f.str_DESCRIPTION ASC");
+        q.setParameter(1, empl);
+        q.setParameter(2, like);
+        @SuppressWarnings("unchecked")
+        List<String> ids = q.getResultList();
+
+        // suggestion reappro = max(0, stock_rayon - stock_reserve), on garde > 0
+        List<JSONObject> suggested = new ArrayList<>();
+        for (String familleId : ids) {
+            TFamille f = em.find(TFamille.class, familleId);
+            if (f == null) {
+                continue;
+            }
+            JSONObject json = buildArticleJson(f, empl, true);
+            int sugg = Math.max(0, json.optInt("int_STOCK_RAYON", 0) - json.optInt("int_STOCK_RESERVE", 0));
+            json.put("int_QTE_SUGGEREE", sugg);
+            if (sugg > 0) {
                 suggested.add(json);
             }
         }
@@ -145,13 +222,31 @@ public class ReserveServiceImpl implements ReserveService {
             }
             details.put(r);
         }
-        return new JSONObject().put("success", ok == items.size()).put("traites", ok).put("total", items.size())
-                .put("details", details);
+        return new JSONObject().put("success", ok == items.size()).put("traites", ok)
+                .put("total", items.size()).put("details", details);
+    }
+
+    @Override
+    public JSONObject assortBatch(TUser user, List<JSONObject> items) {
+        JSONArray details = new JSONArray();
+        int ok = 0;
+        for (JSONObject item : items) {
+            String familleId = item.optString("lg_FAMILLE_ID", null);
+            int qte = item.optInt("int_QTE", 0);
+            JSONObject r = doMove(user, familleId, qte, TMouvementReserve.TYPE_ASSORT);
+            if (r.optBoolean("success", false)) {
+                ok++;
+            }
+            details.put(r);
+        }
+        return new JSONObject().put("success", ok == items.size()).put("traites", ok)
+                .put("total", items.size()).put("details", details);
     }
 
     /**
-     * Coeur transactionnel. Valide AVANT toute mutation : en cas d'erreur metier on retourne un echec sans avoir touche
-     * au stock. En cas d'erreur technique la transaction JTA est annulee automatiquement.
+     * Coeur transactionnel. Valide AVANT toute mutation : en cas d'erreur metier
+     * on retourne un echec sans avoir touche au stock. En cas d'erreur technique
+     * la transaction JTA est annulee automatiquement.
      */
     private JSONObject doMove(TUser user, String familleId, int qte, String typeMouvement) {
         if (familleId == null || familleId.trim().isEmpty()) {
@@ -207,11 +302,13 @@ public class ReserveServiceImpl implements ReserveService {
             em.merge(typeRayon);
             em.merge(typeReserve);
 
-            recordMouvement(famille, user, stockRayon.getLgEMPLACEMENTID(), typeMouvement, qte, rayonAvant,
-                    reserveAvant, stockRayon.getIntNUMBERAVAILABLE(), typeReserve.getIntNUMBER());
+            recordMouvement(famille, user, stockRayon.getLgEMPLACEMENTID(), typeMouvement, qte,
+                    rayonAvant, reserveAvant, stockRayon.getIntNUMBERAVAILABLE(), typeReserve.getIntNUMBER());
 
-            return new JSONObject().put("success", true).put("message", "Operation effectuee avec succes.")
-                    .put("lg_FAMILLE_ID", familleId).put("int_NUMBER", stockRayon.getIntNUMBERAVAILABLE())
+            return new JSONObject().put("success", true)
+                    .put("message", "Operation effectuee avec succes.")
+                    .put("lg_FAMILLE_ID", familleId)
+                    .put("int_NUMBER", stockRayon.getIntNUMBERAVAILABLE())
                     .put("int_STOCK_RESERVE", typeReserve.getIntNUMBER());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Echec doMove " + typeMouvement + " famille=" + familleId, e);
@@ -221,20 +318,38 @@ public class ReserveServiceImpl implements ReserveService {
 
     // ---------------------------------------------------------------- HISTORY
 
+    private java.util.Date parseDate(String iso) {
+        if (iso == null || iso.trim().isEmpty()) return null;
+        try { return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(iso.trim()); } catch (Exception e) { return null; }
+    }
+
     @Override
-    public JSONObject mouvements(String familleId, int start, int limit) {
-        Query q = em.createNamedQuery("TMouvementReserve.findByFamille");
-        q.setParameter("lgFAMILLEID", familleId);
-        if (limit > 0) {
-            q.setFirstResult(start);
-            q.setMaxResults(limit);
-        }
+    public JSONObject mouvements(String familleId, String dtStart, String dtEnd, int start, int limit) {
+        java.util.Date dStart = parseDate(dtStart);
+        java.util.Date dEnd   = parseDate(dtEnd);
+        // extend dEnd to end-of-day
+        if (dEnd != null) { dEnd = new java.util.Date(dEnd.getTime() + 86399999L); }
+
+        StringBuilder jpql = new StringBuilder("SELECT t FROM TMouvementReserve t WHERE t.lgFAMILLEID.lgFAMILLEID = :fid");
+        if (dStart != null) jpql.append(" AND t.dtCREATED >= :dStart");
+        if (dEnd   != null) jpql.append(" AND t.dtCREATED <= :dEnd");
+        jpql.append(" ORDER BY t.dtCREATED DESC");
+
+        Query q = em.createQuery(jpql.toString());
+        q.setParameter("fid", familleId);
+        if (dStart != null) q.setParameter("dStart", dStart, javax.persistence.TemporalType.TIMESTAMP);
+        if (dEnd   != null) q.setParameter("dEnd",   dEnd,   javax.persistence.TemporalType.TIMESTAMP);
+        if (limit > 0) { q.setFirstResult(start); q.setMaxResults(limit); }
+
         @SuppressWarnings("unchecked")
         List<TMouvementReserve> list = q.getResultList();
         JSONArray results = new JSONArray();
         for (TMouvementReserve m : list) {
-            results.put(new JSONObject().put("lg_MOUVEMENT_ID", m.getLgMOUVEMENTID()).put("str_TYPE", m.getStrTYPE())
-                    .put("int_QTE", nz(m.getIntQTE())).put("int_STOCK_RAYON_AVANT", nz(m.getIntSTOCKRAYONAVANT()))
+            results.put(new JSONObject()
+                    .put("lg_MOUVEMENT_ID", m.getLgMOUVEMENTID())
+                    .put("str_TYPE", m.getStrTYPE())
+                    .put("int_QTE", nz(m.getIntQTE()))
+                    .put("int_STOCK_RAYON_AVANT", nz(m.getIntSTOCKRAYONAVANT()))
                     .put("int_STOCK_RESERVE_AVANT", nz(m.getIntSTOCKRESERVEAVANT()))
                     .put("int_STOCK_RAYON_APRES", nz(m.getIntSTOCKRAYONAPRES()))
                     .put("int_STOCK_RESERVE_APRES", nz(m.getIntSTOCKRESERVEAPRES()))
@@ -242,6 +357,69 @@ public class ReserveServiceImpl implements ReserveService {
                     .put("dt_CREATED", m.getDtCREATED() != null ? m.getDtCREATED().toString() : ""));
         }
         return new JSONObject().put("total", results.length()).put("results", results);
+    }
+
+    @Override
+    public JSONObject allMouvements(String type, String dtStart, String dtEnd, int start, int limit) {
+        java.util.Date dStart = parseDate(dtStart);
+        java.util.Date dEnd   = parseDate(dtEnd);
+        if (dEnd != null) { dEnd = new java.util.Date(dEnd.getTime() + 86399999L); }
+
+        boolean hasType = type != null && !type.trim().isEmpty() && !"ALL".equalsIgnoreCase(type);
+        StringBuilder jpql = new StringBuilder("SELECT t FROM TMouvementReserve t WHERE 1=1");
+        if (hasType)   jpql.append(" AND t.strTYPE = :type");
+        if (dStart != null) jpql.append(" AND t.dtCREATED >= :dStart");
+        if (dEnd   != null) jpql.append(" AND t.dtCREATED <= :dEnd");
+        jpql.append(" ORDER BY t.dtCREATED DESC");
+
+        Query q = em.createQuery(jpql.toString());
+        if (hasType)   q.setParameter("type", type);
+        if (dStart != null) q.setParameter("dStart", dStart, javax.persistence.TemporalType.TIMESTAMP);
+        if (dEnd   != null) q.setParameter("dEnd",   dEnd,   javax.persistence.TemporalType.TIMESTAMP);
+        if (limit > 0) { q.setFirstResult(start); q.setMaxResults(limit); }
+
+        @SuppressWarnings("unchecked")
+        List<TMouvementReserve> list = q.getResultList();
+        JSONArray results = new JSONArray();
+        for (TMouvementReserve m : list) {
+            String name = "";
+            try { name = m.getLgFAMILLEID() != null ? m.getLgFAMILLEID().getStrNAME() : ""; } catch (Exception e) {}
+            results.put(new JSONObject()
+                    .put("lg_MOUVEMENT_ID", m.getLgMOUVEMENTID())
+                    .put("str_NAME", name)
+                    .put("str_TYPE", m.getStrTYPE())
+                    .put("int_QTE", nz(m.getIntQTE()))
+                    .put("int_STOCK_RAYON_AVANT", nz(m.getIntSTOCKRAYONAVANT()))
+                    .put("int_STOCK_RESERVE_AVANT", nz(m.getIntSTOCKRESERVEAVANT()))
+                    .put("int_STOCK_RAYON_APRES", nz(m.getIntSTOCKRAYONAPRES()))
+                    .put("int_STOCK_RESERVE_APRES", nz(m.getIntSTOCKRESERVEAPRES()))
+                    .put("str_USER", userLabel(m.getLgUSERID()))
+                    .put("dt_CREATED", m.getDtCREATED() != null ? m.getDtCREATED().toString() : ""));
+        }
+        return new JSONObject().put("total", results.length()).put("results", results);
+    }
+
+    @Override
+    public JSONObject createInventaire(TUser user, String search, String type) {
+        // Recupere tous les IDs affiches dans l'onglet (sans pagination)
+        JSONObject listing = listArticles(user, search, type, 0, 0);
+        JSONArray arr = listing.optJSONArray("results");
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        if (arr != null) {
+            for (int i = 0; i < arr.length(); i++) {
+                String id = arr.getJSONObject(i).optString("lg_FAMILLE_ID", null);
+                if (id != null && !id.isEmpty()) {
+                    ids.add(id);
+                }
+            }
+        }
+        if (ids.isEmpty()) {
+            return new JSONObject().put("count", 0).put("message", "Aucun produit a inventorier.");
+        }
+        String jour = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        String title = "Inventaire reserve du " + jour;
+        int count = inventaireService.create(ids, title);
+        return new JSONObject().put("count", count).put("message", title);
     }
 
     // ----------------------------------------------------------------- HELPERS
@@ -294,7 +472,8 @@ public class ReserveServiceImpl implements ReserveService {
             if (grossiste.getIntCOEFSECURITY() != null && grossiste.getIntCOEFSECURITY() > 0) {
                 coef = grossiste.getIntCOEFSECURITY();
             }
-            if (grossiste.getIntDELAIREAPPROVISIONNEMENT() != null && grossiste.getIntDELAIREAPPROVISIONNEMENT() > 0) {
+            if (grossiste.getIntDELAIREAPPROVISIONNEMENT() != null
+                    && grossiste.getIntDELAIREAPPROVISIONNEMENT() > 0) {
                 delai = grossiste.getIntDELAIREAPPROVISIONNEMENT();
             }
         }
@@ -322,8 +501,9 @@ public class ReserveServiceImpl implements ReserveService {
 
     private TFamilleStock findFamilleStock(String familleId, String empl) {
         try {
-            Query q = em.createQuery("SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 "
-                    + "AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT = 'enable'");
+            Query q = em.createQuery(
+                    "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 "
+                            + "AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT = 'enable'");
             q.setParameter(1, familleId);
             q.setParameter(2, empl);
             q.setMaxResults(1);
@@ -335,8 +515,9 @@ public class ReserveServiceImpl implements ReserveService {
 
     private TTypeStockFamille findTypeStock(String typeStockId, String familleId, String empl) {
         try {
-            Query q = em.createQuery("SELECT t FROM TTypeStockFamille t WHERE t.lgTYPESTOCKID.lgTYPESTOCKID = ?1 "
-                    + "AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?3");
+            Query q = em.createQuery(
+                    "SELECT t FROM TTypeStockFamille t WHERE t.lgTYPESTOCKID.lgTYPESTOCKID = ?1 "
+                            + "AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?3");
             q.setParameter(1, typeStockId);
             q.setParameter(2, familleId);
             q.setParameter(3, empl);
@@ -364,8 +545,8 @@ public class ReserveServiceImpl implements ReserveService {
 
     private Integer getTypeStockNumber(String typeStockId, String familleId, String empl) {
         try {
-            Query q = em
-                    .createNativeQuery("SELECT t.int_NUMBER FROM t_type_stock_famille t WHERE t.lg_TYPE_STOCK_ID = ?1 "
+            Query q = em.createNativeQuery(
+                    "SELECT t.int_NUMBER FROM t_type_stock_famille t WHERE t.lg_TYPE_STOCK_ID = ?1 "
                             + "AND t.lg_FAMILLE_ID = ?2 AND t.lg_EMPLACEMENT_ID = ?3");
             q.setParameter(1, typeStockId);
             q.setParameter(2, familleId);
@@ -391,7 +572,8 @@ public class ReserveServiceImpl implements ReserveService {
     }
 
     /**
-     * Libelle lisible de l'utilisateur : "Prenom Nom", a defaut le login, a defaut l'identifiant technique.
+     * Libelle lisible de l'utilisateur : "Prenom Nom", a defaut le login,
+     * a defaut l'identifiant technique.
      */
     private static String userLabel(TUser user) {
         if (user == null) {

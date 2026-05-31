@@ -1,7 +1,5 @@
 package rest;
 
-
-
 import dal.TUser;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +22,8 @@ import rest.service.ReserveService;
 import util.Constant;
 
 /**
- * Endpoints REST de gestion des reserves. Remplace les anciens JSP ws_data / ws_transaction.
+ * Endpoints REST de gestion des reserves. Remplace les anciens JSP
+ * ws_data / ws_transaction.
  */
 @Path("v1/reserve")
 @Produces("application/json")
@@ -42,7 +41,8 @@ public class ReserveRessource {
 
     @GET
     @Path("articles")
-    public Response articles(@QueryParam("search_value") String search, @QueryParam("str_TYPE_TRANSACTION") String type,
+    public Response articles(@QueryParam("search_value") String search,
+            @QueryParam("str_TYPE_TRANSACTION") String type,
             @QueryParam("start") int start, @QueryParam("limit") int limit) throws JSONException {
         TUser user = currentUser();
         if (user == null) {
@@ -54,13 +54,25 @@ public class ReserveRessource {
 
     @GET
     @Path("suggestions")
-    public Response suggestions(@QueryParam("search_value") String search, @QueryParam("start") int start,
-            @QueryParam("limit") int limit) throws JSONException {
+    public Response suggestions(@QueryParam("search_value") String search,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) throws JSONException {
         TUser user = currentUser();
         if (user == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = reserveService.suggestions(user, search, start, limit > 0 ? limit : 20);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("suggestions-reappro")
+    public Response suggestionsReappro(@QueryParam("search_value") String search,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) throws JSONException {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = reserveService.suggestionsReappro(user, search, start, limit > 0 ? limit : 20);
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -84,8 +96,7 @@ public class ReserveRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject in = new JSONObject(body);
-        JSONObject json = reserveService.reassort(user, in.optString("lg_FAMILLE_ID", null),
-                in.optInt("int_NUMBER", 0));
+        JSONObject json = reserveService.reassort(user, in.optString("lg_FAMILLE_ID", null), in.optInt("int_NUMBER", 0));
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -107,11 +118,55 @@ public class ReserveRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @POST
+    @Path("assort-batch")
+    public Response assortBatch(String body) throws JSONException {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONArray arr = new JSONObject(body).optJSONArray("items");
+        List<JSONObject> items = new ArrayList<>();
+        if (arr != null) {
+            for (int i = 0; i < arr.length(); i++) {
+                items.add(arr.getJSONObject(i));
+            }
+        }
+        JSONObject json = reserveService.assortBatch(user, items);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("mouvements")
+    public Response allMouvements(@QueryParam("type") String type,
+            @QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) throws JSONException {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = reserveService.allMouvements(type, dtStart, dtEnd, start, limit > 0 ? limit : 500);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("create-inventaire")
+    public Response createInventaire(@QueryParam("search_value") String search,
+            @QueryParam("str_TYPE_TRANSACTION") String type) throws JSONException {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = reserveService.createInventaire(user, search, type);
+        return Response.ok().entity(json.toString()).build();
+    }
+
     @GET
     @Path("mouvements/{id}")
-    public Response mouvements(@PathParam("id") String familleId, @QueryParam("start") int start,
-            @QueryParam("limit") int limit) throws JSONException {
-        JSONObject json = reserveService.mouvements(familleId, start, limit > 0 ? limit : 50);
+    public Response mouvements(@PathParam("id") String familleId,
+            @QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) throws JSONException {
+        JSONObject json = reserveService.mouvements(familleId, dtStart, dtEnd, start, limit > 0 ? limit : 200);
         return Response.ok().entity(json.toString()).build();
     }
 }
