@@ -21,14 +21,34 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveManager', {
     initComponent: function () {
         this.items = [
             {xtype: 'reservegrid', title: 'ALL', gridmode: 'ALL'},
-            {xtype: 'reservegrid', title: 'REAPPRO RESERVE', gridmode: 'REAPPRO'},
-            {xtype: 'reservegrid', title: 'REASSORT RAYON', gridmode: 'REASSORT'}
+            {xtype: 'reservegrid', gridmode: 'REAPPRO', title: 'REAPPRO RESERVE'},
+            {xtype: 'reservegrid', gridmode: 'REASSORT', title: 'REASSORT RAYON'}
         ];
         this.listeners = {
             tabchange: function (tabPanel, newCard) {
                 if (newCard && newCard.reloadGrid) {
                     newCard.reloadGrid();
                 }
+            },
+            afterrender: function (tp) {
+                Ext.defer(function () {
+                    var bar = tp.tabBar;
+                    if (!bar) { return; }
+                    var reapproTab = bar.items.getAt(1);
+                    var reassortTab = bar.items.getAt(2);
+                    if (reapproTab && reapproTab.el) {
+                        reapproTab.el.setStyle('background-color', '#e07b00');
+                        reapproTab.el.setStyle('border-color', '#c06800');
+                        var inner = reapproTab.el.down('.x-tab-inner');
+                        if (inner) { inner.setStyle('color', '#fff'); }
+                    }
+                    if (reassortTab && reassortTab.el) {
+                        reassortTab.el.setStyle('background-color', '#2e7d32');
+                        reassortTab.el.setStyle('border-color', '#1b5e20');
+                        var inner2 = reassortTab.el.down('.x-tab-inner');
+                        if (inner2) { inner2.setStyle('color', '#fff'); }
+                    }
+                }, 100);
             }
         };
         this.callParent();

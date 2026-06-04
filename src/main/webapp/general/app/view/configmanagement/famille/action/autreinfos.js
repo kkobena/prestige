@@ -33,8 +33,19 @@ Ext.define('testextjs.view.configmanagement.famille.action.autreinfos', {
         titre: ''
     },
     initComponent: function () {
-
-        Oview = this.getParentview();
+        // Nettoyage des IDs globaux partages avec d'autres vues (evite duplicate id)
+        var sharedIds = [
+            'lg_ZONE_GEO_ID', 'lg_CODE_ACTE_ID', 'lg_CODE_GESTION_ID', 'lg_TABLEAU_ID',
+            'int_STOCK_REAPROVISONEMENT', 'int_QTE_REAPPROVISIONNEMENT', 'int_DELAI_REAPPRO',
+            'int_SEUIL_RESERVE', 'int_SEUIL_MINI_RAYON', 'int_QTE_RESERVEE', 'int_QTE_MANQUANTE',
+            'int_SEUIL_MAX', 'int_PRICE_DETAIL', 'int_QTEDETAIL', 'int_QTEDETAIL',
+            'lg_INDICATEUR_REAPPROVISIONNEMENT_ID', 'dt_DATE_LAST_ENTREE', 'infosup',
+            'bool_DECONDITIONNE', 'autreinfosfamilleID'
+        ];
+        sharedIds.forEach(function (cid) {
+            var existing = Ext.getCmp(cid);
+            if (existing) { try { existing.destroy(); } catch (e) {} }
+        });
        
                 ref = this.getOdatasource();
                 alert("ref ---"+ref);
@@ -297,6 +308,16 @@ Ext.define('testextjs.view.configmanagement.famille.action.autreinfos', {
                                     emptyText: 'QUANTITE RESERVE',
                                     name: 'int_QTE_RESERVEE',
                                     id: 'int_QTE_RESERVEE'
+                                }, {
+                                    fieldLabel: 'Seuil mini rayon',
+                                    xtype: 'numberfield',
+                                    maskRe: /[0-9]/,
+                                    width: 400,
+                                    minValue: 0,
+                                    allowDecimals: false,
+                                    emptyText: 'Seuil mini rayon',
+                                    name: 'int_SEUIL_MINI_RAYON',
+                                    id: 'int_SEUIL_MINI_RAYON'
                                 }
                             ]
                         }, {
@@ -506,6 +527,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.autreinfos', {
             Ext.getCmp('int_STOCK_REAPROVISONEMENT').setValue(this.getOdatasource().int_STOCK_REAPROVISONEMENT);            
 //            Ext.getCmp('str_CODE_ETIQUETTE').setValue(this.getOdatasource().str_CODE_ETIQUETTE);
             Ext.getCmp('int_SEUIL_RESERVE').setValue(this.getOdatasource().int_SEUIL_RESERVE);
+            Ext.getCmp('int_SEUIL_MINI_RAYON').setValue(this.getOdatasource().int_SEUIL_MINI_RAYON);
             Ext.getCmp('int_PRICE_DETAIL').setValue(this.getOdatasource().int_PRICE_DETAIL);
             Ext.getCmp('int_DELAI_REAPPRO').setValue(this.getOdatasource().int_DELAI_REAPPRO);
             Ext.getCmp('lg_ZONE_GEO_ID').setValue(this.getOdatasource().lg_ZONE_GEO_ID);
@@ -591,6 +613,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.autreinfos', {
                 int_QTE_REAPPROVISIONNEMENT:Ext.getCmp('int_QTE_REAPPROVISIONNEMENT').getValue(),
 //                str_CODE_ETIQUETTE: Ext.getCmp('str_CODE_ETIQUETTE').getValue(),
                 int_SEUIL_RESERVE:Ext.getCmp('int_SEUIL_RESERVE').getValue(),
+                int_SEUIL_MINI_RAYON: Ext.getCmp('int_SEUIL_MINI_RAYON').getValue(),
                 int_PRICE_DETAIL: Ext.getCmp('int_PRICE_DETAIL').getValue(),
                 int_QTEDETAIL: Ext.getCmp('int_QTEDETAIL').getValue(),
                 int_DELAI_REAPPRO:Ext.getCmp('int_DELAI_REAPPRO').getValue(),

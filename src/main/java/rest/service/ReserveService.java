@@ -5,20 +5,24 @@ import java.util.List;
 import org.json.JSONObject;
 
 /**
- * Service de gestion des reserves : listing, mouvements rayon&lt;-&gt;reserve,
- * suggestions de reassort et historique. Remplace l'ancien backend JSP
- * (ws_data / ws_transaction).
+ * Service de gestion des reserves : listing, mouvements rayon&lt;-&gt;reserve, suggestions de reassort et historique.
+ * Remplace l'ancien backend JSP (ws_data / ws_transaction).
  */
 public interface ReserveService {
 
     /**
      * Liste paginee des articles en reserve.
      *
-     * @param user        utilisateur courant (fournit l'emplacement)
-     * @param search      filtre texte (nom, description, CIP, EAN)
-     * @param type        ALL ou REASSORT (articles a reassortir uniquement)
-     * @param start       offset de pagination
-     * @param limit       taille de page
+     * @param user
+     *            utilisateur courant (fournit l'emplacement)
+     * @param search
+     *            filtre texte (nom, description, CIP, EAN)
+     * @param type
+     *            ALL ou REASSORT (articles a reassortir uniquement)
+     * @param start
+     *            offset de pagination
+     * @param limit
+     *            taille de page
      */
     JSONObject listArticles(TUser user, String search, String type, int start, int limit);
 
@@ -28,8 +32,8 @@ public interface ReserveService {
     JSONObject suggestions(TUser user, String search, int start, int limit);
 
     /**
-     * Liste des articles a reapprovisionner en reserve (rayon -&gt; reserve)
-     * avec quantite suggeree = max(0, stock_rayon - stock_reserve).
+     * Liste des articles a reapprovisionner en reserve (rayon -&gt; reserve) avec quantite suggeree = max(0,
+     * stock_rayon - stock_reserve).
      */
     JSONObject suggestionsReappro(TUser user, String search, int start, int limit);
 
@@ -59,14 +63,13 @@ public interface ReserveService {
     JSONObject mouvements(String familleId, String dtStart, String dtEnd, int start, int limit);
 
     /**
-     * Historique global des mouvements, filtre optionnel par type et periode,
-     * classe par date decroissante.
+     * Historique global des mouvements, filtre optionnel par type et periode, classe par date decroissante.
      */
     JSONObject allMouvements(String type, String dtStart, String dtEnd, int start, int limit);
 
     /**
-     * Cree un inventaire a partir des articles affiches dans l'onglet courant
-     * (selon le filtre type + recherche). Nom : "Inventaire reserve du jj/MM/aaaa".
+     * Cree un inventaire a partir des articles affiches dans l'onglet courant (selon le filtre type + recherche). Nom :
+     * "Inventaire reserve du jj/MM/aaaa".
      */
     JSONObject createInventaire(TUser user, String search, String type);
 }
