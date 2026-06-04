@@ -5,8 +5,11 @@
  */
 package rest;
 
+import bll.report.Dashboard;
 import dal.TUser;
+import dal.dataManager;
 import java.time.LocalDate;
+import java.util.Date;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -16,12 +19,16 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DashBoardService;
 import rest.service.dto.BalanceParamsDTO;
 import toolkits.parameters.commonparameter;
+import toolkits.utils.Util;
+import toolkits.utils.date;
 import util.Constant;
 
 /**
@@ -137,6 +144,186 @@ public class DashBoardRessource {
         JSONObject jsono = dashBoardService.donneesRecapActiviteView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
                 TEmplacement, "");
         return Response.ok().entity(jsono.toString()).build();
+    }
+
+    // Endpoints utilisés par general/dashboard.html pour remplacer les anciens JSP webservices/dashboard/*.jsp.
+    @GET
+    @Path("dashboard/daily")
+    public Response getDashboardDaily() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return okDashboard(dashboardDailyData().toString());
+    }
+
+    @GET
+    @Path("dashboard/ca-graphe")
+    public Response getDashboardCaGraphe() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        Dashboard dashboard = dashboardReport();
+        JSONArray data = dashboard.getCaGrapheData();
+        int thisYear = Integer.valueOf(date.FORMATTERYEAR.format(new Date()));
+        JSONObject json = new JSONObject();
+        long janv = 0, fev = 0, mars = 0, mai = 0, avril = 0, juin = 0, juillet = 0, aout = 0, sept = 0, oct = 0,
+                nov = 0, dec = 0;
+
+        for (int i = 0; i < data.length(); i++) {
+            JSONObject object = data.getJSONObject(i);
+            if (object.get("MONTH").equals("01/" + thisYear)) {
+                janv = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("02/" + thisYear)) {
+                fev = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("03/" + thisYear)) {
+                mars = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("04/" + thisYear)) {
+                avril = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("05/" + thisYear)) {
+                mai = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("06/" + thisYear)) {
+                juin = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("07/" + thisYear)) {
+                juillet = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("08/" + thisYear)) {
+                aout = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("09/" + thisYear)) {
+                sept = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("10/" + thisYear)) {
+                oct = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("11/" + thisYear)) {
+                nov = object.getLong("MONTHCA");
+            }
+            if (object.get("MONTH").equals("12/" + thisYear)) {
+                dec = object.getLong("MONTHCA");
+            }
+        }
+        json.put("jan", janv);
+        json.put("fev", fev);
+        json.put("mars", mars);
+        json.put("avril", avril);
+        json.put("mai", mai);
+        json.put("juin", juin);
+        json.put("juillet", juillet);
+        json.put("aout", aout);
+        json.put("sept", sept);
+        json.put("oct", oct);
+        json.put("nov", nov);
+        json.put("dec", dec);
+        return okDashboard(json.toString());
+    }
+
+    @GET
+    @Path("dashboard/top5-qty")
+    public Response getDashboardTop5Quantity() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return dashboardDataResponse(dashboardReport().getTOP5ArticleVendueQTY());
+    }
+
+    @GET
+    @Path("dashboard/top5-ca")
+    public Response getDashboardTop5Ca() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return dashboardDataResponse(dashboardReport().getTOP5ArticleVendueCA());
+    }
+
+    @GET
+    @Path("dashboard/achat-grossiste")
+    public Response getDashboardAchatGrossiste() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return dashboardDataResponse(dashboardReport().getValeurAchatByGrossiste());
+    }
+
+    @GET
+    @Path("dashboard/achats-grossistes")
+    public Response getDashboardAchatsGrossistes() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return dashboardDataResponse(dashboardReport().getAllAchatByGrossiste());
+    }
+
+    @GET
+    @Path("dashboard/best-clients")
+    public Response getDashboardBestClients() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return dashboardDataResponse(dashboardReport().getBestClients());
+    }
+
+    @GET
+    @Path("dashboard/mouvements")
+    public Response getDashboardMouvements() {
+        TUser tu = connectedUser();
+        if (tu == null) {
+            return okDashboard(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE));
+        }
+        return dashboardDataResponse(dashboardReport().getListMVT());
+    }
+
+    private JSONObject dashboardDailyData() {
+        Dashboard dashboard = dashboardReport();
+        JSONObject data = dashboard.getDailyCA_AND_SalesCount();
+        JSONObject achat = dashboard.getAchatAmount();
+        JSONObject panierMoyen = dashboard.getPanierMoyen();
+        JSONObject margeNet = dashboard.getCANetAndMargeNet();
+        data.put("MARGENET", Util.getFormattedLongValue(margeNet.getLong("MARGENET")));
+        data.put("panierMYVNO", Util.getFormattedDoubleValue(panierMoyen.getDouble("panierMYVNO")));
+        data.put("PanierMYVO", Util.getFormattedDoubleValue(panierMoyen.getDouble("PanierMYVO")));
+        data.put("PanierMY", Util.getFormattedDoubleValue(panierMoyen.getDouble("PanierMY")));
+        data.put("MONTANTVO", panierMoyen.getDouble("MONTANTVO"));
+        data.put("MONTANTVNO", panierMoyen.getDouble("MONTANTVNO"));
+        data.put("DailyAchatAmount", Util.getFormattedDoubleValue(achat.getDouble("DailyAchatAmount")));
+        data.put("DailyAchatCount", Util.getFormattedDoubleValue(achat.getDouble("DailyAchatCount")));
+        data.put("MONTANTDEPO", panierMoyen.getDouble("MONTANTDEPO"));
+        return data;
+    }
+
+    private Response dashboardDataResponse(JSONArray data) {
+        JSONObject json = new JSONObject();
+        json.put("data", data);
+        return okDashboard(json.toString());
+    }
+
+    private Dashboard dashboardReport() {
+        return new Dashboard(new dataManager());
+    }
+
+    private TUser connectedUser() {
+        HttpSession hs = servletRequest.getSession();
+        return (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+    }
+
+    private Response okDashboard(Object entity) {
+        CacheControl cacheControl = new CacheControl();
+        cacheControl.setNoCache(true);
+        cacheControl.setNoStore(true);
+        cacheControl.setMustRevalidate(true);
+        return Response.ok().cacheControl(cacheControl).entity(entity).build();
     }
 
 }

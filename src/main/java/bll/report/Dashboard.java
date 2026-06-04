@@ -99,7 +99,7 @@ public class Dashboard extends bll.bllBase {
                 + "SUM(CASE WHEN (o.`str_TYPE_VENTE`='VNO' AND o.`lg_NATURE_VENTE_ID`<>'3' ) THEN (o.`int_PRICE`-o.`int_PRICE_REMISE`) ELSE 0 END), "
                 + "SUM(CASE WHEN( o.`str_TYPE_VENTE`='VO' AND o.`lg_NATURE_VENTE_ID`<>'3' )THEN (o.`int_PRICE`-(o.int_CUST_PART- o.`int_PRICE_REMISE`)) ELSE 0 END), "
                 + "SUM(CASE WHEN o.`lg_NATURE_VENTE_ID`='3' THEN (o.`int_PRICE`-o.`int_PRICE_REMISE`) ELSE 0 END), SUM(CASE WHEN o.`str_TYPE_VENTE` = 'VO' THEN (o.`int_CUST_PART` - o.`int_PRICE_REMISE`)ELSE 0 END)  FROM t_preenregistrement o "
-                + "WHERE  o.`int_PRICE` >0 AND o.`str_STATUT` ='is_Closed' AND DATE(o.`dt_UPDATED`)>=?1 AND DATE(o.`dt_UPDATED`) <= ?2 AND o.`b_IS_CANCEL`=0;";
+                + "WHERE  o.`int_PRICE` >0 AND o.`str_STATUT` ='is_Closed' AND o.`dt_UPDATED`>=?1 AND o.`dt_UPDATED` <= ?2 AND o.`b_IS_CANCEL`=0;";
         try {
             List<Object[]> list = this
                     .getOdataManager().getEm().createNativeQuery(query).setParameter(1,
@@ -152,7 +152,7 @@ public class Dashboard extends bll.bllBase {
                 + "t_preenregistrement p,t_famille f,t_famillearticle fa,t_code_tva v WHERE p.`lg_PREENREGISTREMENT_ID`=d.`lg_PREENREGISTREMENT_ID` AND f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID`"
                 + "AND fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID` AND v.`lg_CODE_TVA_ID`=f.`lg_CODE_TVA_ID` AND p.`int_PRICE`>0 AND p.`str_STATUT`='"
                 + commonparameter.statut_is_Closed + "'"
-                + "AND DATE(p.`dt_UPDATED`)>=?1 AND DATE(p.`dt_UPDATED`)<=?2  AND p.`b_IS_CANCEL`=0 AND  p.`lg_TYPE_VENTE_ID` <> '5' ";
+                + "AND p.`dt_UPDATED`>=?1 AND p.`dt_UPDATED`<=?2  AND p.`b_IS_CANCEL`=0 AND  p.`lg_TYPE_VENTE_ID` <> '5' ";
 
         try {
             List<Object[]> list = this
@@ -245,7 +245,7 @@ public class Dashboard extends bll.bllBase {
 
         JSONArray array = new JSONArray();
         String query = "SELECT COUNT(bn.`lg_BON_LIVRAISON_ID`),(SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
-                + " AND g.`str_LIBELLE` LIKE 'LABOREX%') , (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND "
+                + " AND (g.`str_LIBELLE` LIKE 'LABOREX%' OR g.`str_LIBELLE` LIKE 'UBI%')) , (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND "
                 + " o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND g.`str_LIBELLE` LIKE 'DPCI%' AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2  ) ,(SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE  o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
                 + "AND g.`str_LIBELLE`LIKE 'COPHARMED%' ), (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND g.`str_LIBELLE` LIKE 'TEDIS PHARMA%' AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
                 + " ) , (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID`  AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
