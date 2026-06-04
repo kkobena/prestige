@@ -13,51 +13,215 @@
 
   <style>
     :root {
-      --bg: #f4f6f8;
-      --card-bg: #ffffff;
-      --muted: #6b7280;
-      --text: #111827;
-      --shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
-      --ca: #23b7e5; --achat: #7266ba; --panier: #2baab1; --marge: #e36159; --typevente: #f39c12; --evo: #1ec1ed;
+      --prestige-primary: #0f766e;
+      --prestige-primary-dark: #0f4f4a;
+      --prestige-secondary: #1d4ed8;
+      --prestige-gold: #f59e0b;
+      --prestige-danger: #e11d48;
+      --prestige-purple: #7c3aed;
+      --prestige-teal: #0891b2;
+      --bg: #eef6f5;
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --muted: #64748b;
+      --text: #0f172a;
+      --border: rgba(15, 118, 110, 0.12);
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+      --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.07);
+      --radius: 22px;
     }
+
     * { box-sizing: border-box; }
     body {
-      background: var(--bg) url(../resources/images/background.png) repeat;
+      background:
+        radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(29, 78, 216, 0.12), transparent 30%),
+        linear-gradient(135deg, #f8fffe 0%, #eef6f5 42%, #f7fafc 100%);
       color: var(--text);
-      margin: 0 auto; min-height: 100vh; width: 97%;
+      margin: 0 auto;
+      min-height: 100vh;
+      width: 98%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
     }
 
-    /* Header supprimé à la demande */
+    .dashboard-shell { padding: 14px 0 28px; }
+    .prestige-hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 126px;
+      margin-bottom: 16px;
+      padding: 22px 24px;
+      border-radius: 28px;
+      color: #fff;
+      background:
+        linear-gradient(125deg, rgba(15, 79, 74, 0.98), rgba(15, 118, 110, 0.94) 52%, rgba(29, 78, 216, 0.88));
+      box-shadow: 0 20px 50px rgba(15, 79, 74, 0.22);
+    }
+    .prestige-hero:before,
+    .prestige-hero:after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      pointer-events: none;
+    }
+    .prestige-hero:before { width: 230px; height: 230px; top: -120px; right: 8%; }
+    .prestige-hero:after { width: 150px; height: 150px; bottom: -88px; right: 27%; }
+    .prestige-hero-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; opacity: .78; }
+    .prestige-hero h1 { margin: 0; font-size: 30px; line-height: 1.15; font-weight: 800; letter-spacing: -.03em; }
+    .prestige-hero .subtitle { margin: 8px 0 0; max-width: 640px; color: rgba(255, 255, 255, 0.78); font-size: 14px; }
+    .hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .hero-pill, .refresh-btn {
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.14);
+      color: #fff;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .refresh-btn { cursor: pointer; transition: background .18s ease, transform .18s ease; }
+    .refresh-btn:hover, .refresh-btn:focus { background: rgba(255,255,255,.22); color: #fff; text-decoration: none; transform: translateY(-1px); }
 
-    .kpi-card { background:var(--card-bg); border:0; border-radius:16px; box-shadow:var(--shadow); overflow:hidden; transition:transform .15s ease, box-shadow .2s ease; position:relative; min-height:124px; margin-bottom:12px; }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(2, 6, 23, 0.12); }
-    .kpi-head { display:flex; align-items:center; gap:14px; padding:16px; color:#fff; }
-    .kpi-icon { font-size:42px; opacity:.9; }
-    .kpi-meta { margin-left:auto; text-align:right; }
-    .kpi-label { font-size:13px; opacity:.9; }
-    .kpi-value { font-size:22px; font-weight:800; letter-spacing:.3px; }
-    .kpi-ca .kpi-head{background:var(--ca);} .kpi-achat .kpi-head{background:var(--achat);} .kpi-panier .kpi-head{background:var(--panier);} .kpi-marge .kpi-head{background:var(--marge);} 
+    .kpi-grid { margin-left: -8px; margin-right: -8px; }
+    .kpi-grid > [class*="col-"] { padding-left: 8px; padding-right: 8px; }
+    .kpi-card {
+      position: relative;
+      min-height: 138px;
+      margin-bottom: 16px;
+      padding: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.78);
+      border-radius: var(--radius);
+      background: var(--card-bg);
+      box-shadow: var(--shadow-soft);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--border); }
+    .kpi-card:after {
+      content: "";
+      position: absolute;
+      right: -36px;
+      top: -42px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(15, 118, 110, 0.08);
+    }
+    .kpi-head { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 14px; color: var(--text); }
+    .kpi-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 46px;
+      font-size: 20px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent, var(--prestige-primary)), #0f4f4a);
+      box-shadow: 0 10px 22px rgba(15, 118, 110, 0.22);
+    }
+    .kpi-meta { min-width: 0; flex: 1; }
+    .kpi-label { margin-bottom: 7px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .kpi-value { color: var(--text); font-size: 24px; font-weight: 850; letter-spacing: -.03em; line-height: 1.1; }
+    .kpi-secondary { margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 650; }
+    .kpi-secondary strong { color: var(--accent, var(--prestige-primary)); font-size: 15px; }
+    .kpi-ca { --accent: var(--prestige-primary); }
+    .kpi-achat { --accent: var(--prestige-purple); }
+    .kpi-panier { --accent: var(--prestige-teal); }
+    .kpi-marge { --accent: var(--prestige-danger); }
 
-    .panel-modern{ border:0!important; border-radius:16px; box-shadow:var(--shadow); overflow:hidden; background:var(--card-bg); margin-bottom:16px; }
-    .panel-modern .panel-heading{ border:0!important; color:#fff!important; padding:14px 16px!important; font-weight:700; }
-    .panel-modern .panel-body{ padding:12px 12px 8px; background:#fff; }
-    .heading-purple{background:#5e3da6!important;} .heading-green{background:#73c774!important;} .heading-orange{background:var(--typevente)!important;} .heading-blue{background:var(--evo)!important;} .heading-teal{background:#2baab1!important;} .heading-coral{background:#e36159!important;} .heading-dark{background:#3c3c3c!important;}
+    .content-grid { margin-left: -8px; margin-right: -8px; }
+    .content-grid > [class*="col-"] { padding-left: 8px; padding-right: 8px; }
+    .panel-modern {
+      position: relative;
+      border: 1px solid rgba(226, 232, 240, .9)!important;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      background: var(--card-bg);
+      margin-bottom: 16px;
+    }
+    .panel-modern .panel-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 58px;
+      border: 0!important;
+      border-bottom: 1px solid rgba(226, 232, 240, .88)!important;
+      color: var(--text)!important;
+      padding: 15px 18px!important;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96))!important;
+      font-weight: 800;
+    }
+    .panel-modern .panel-heading .title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .panel-modern .panel-heading i { color: var(--accent, var(--prestige-primary)); }
+    .panel-modern .panel-body { padding: 14px 14px 10px; background: #fff; }
+    .panel-modern.feature-card .panel-body { min-height: 332px; }
+    .heading-purple { --accent: var(--prestige-purple); }
+    .heading-green { --accent: #16a34a; }
+    .heading-orange { --accent: var(--prestige-gold); }
+    .heading-blue { --accent: var(--prestige-secondary); }
+    .heading-teal { --accent: var(--prestige-teal); }
+    .heading-coral { --accent: var(--prestige-danger); }
+    .heading-dark { --accent: #334155; }
 
-    .see-more { float:right; font-size:12px; font-weight:600; padding:2px 8px; border-radius:999px; color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,.6); }
-    .see-more:hover{ opacity:.9; text-decoration:none; }
+    .see-more {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px 11px;
+      border-radius: 999px;
+      color: var(--accent, var(--prestige-primary));
+      background: rgba(15, 118, 110, 0.08);
+      text-decoration: none;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      white-space: nowrap;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .see-more:hover, .see-more:focus { transform: translateY(-1px); text-decoration:none; color: var(--accent, var(--prestige-primary)); background: rgba(15, 118, 110, 0.12); }
 
-    #idtopCount,#idtopCA,#idtypevente,#idcachart,#idachatgrossiste,#toclients{ min-height:260px; }
+    #idtopCount,#idtopCA,#idtypevente,#idachatgrossiste,#toclients{ min-height:270px; }
+    #idcachart { min-height: 326px; }
+    #listemvt { margin-bottom: 0; }
+    #listemvt .list-group-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border:0;
+      border-bottom:1px dashed #e5e7eb;
+      padding:12px 4px;
+      color: var(--text);
+      font-weight: 650;
+    }
+    #listemvt .list-group-item:last-child { border-bottom: 0; }
+    #listemvt .badge{ border-radius:999px; font-weight:800; padding: 7px 10px; }
 
     .dataTable > tbody > tr > td, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > td, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > thead > tr > th { border:1px solid #e5e7eb; }
     .dataTable td,.dataTable th{ padding:10px; line-height:1.35; vertical-align:middle; background-clip:padding-box; }
     .dataTable tbody tr:nth-of-type(odd){ background:#fafafa; }
     .table > thead > tr > th { border-bottom:2px solid #e5e7eb; }
+    .modal .modal-content { border: 0; border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+    .modal .modal-header{ border:0; background: linear-gradient(125deg, var(--prestige-primary-dark), var(--prestige-primary)); color:#fff; }
+    .modal .modal-title{ font-weight:800; }
+    .modal .close { color: #fff; opacity: .9; text-shadow: none; }
 
-    .modal .modal-header{ border:0; } .modal .modal-title{ font-weight:700; }
-    #listemvt .list-group-item{ display:flex; align-items:center; justify-content:space-between; border:0; border-bottom:1px dashed #e5e7eb; padding:10px 6px; }
-    #listemvt .badge{ border-radius:10px; font-weight:700; }
-    @media (max-width: 991px) { .kpi-value{ font-size:20px; } .kpi-icon{ font-size:36px; } }
+    @media (max-width: 991px) {
+      body { width: 100%; }
+      .dashboard-shell { padding: 10px 8px 24px; }
+      .prestige-hero-content { align-items: flex-start; flex-direction: column; }
+      .hero-actions { justify-content: flex-start; }
+      .prestige-hero h1 { font-size: 25px; }
+      .kpi-value{ font-size:21px; }
+      .kpi-icon{ width: 42px; height: 42px; flex-basis: 42px; font-size: 18px; }
+      #idcachart { min-height: 280px; }
+    }
   </style>
 
   <!-- ====== Scripts (avec fallback jQuery) ====== -->
@@ -91,18 +255,32 @@
   <script src="../resources/boostrap/bb/js/datatable/dataTables.bootstrap.min.js" defer></script>
 </head>
 <body>
-  <div class="container-fluid" style="padding: 8px 0 24px;">
+  <div class="container-fluid dashboard-shell">
+    <section class="prestige-hero">
+      <div class="prestige-hero-content">
+        <div>
+          
+          <h1>Tableau de bord</h1>
+          
+        </div>
+        <div class="hero-actions">
+          <span class="hero-pill"><i class="fa fa-calendar"></i> <span id="dashboardDate">Aujourd'hui</span></span>
+          <span class="hero-pill"><i class="fa fa-clock-o"></i> <span id="lastRefresh">—</span></span>
+          <button type="button" class="refresh-btn" id="refreshDashboard"><i class="fa fa-refresh"></i> Actualiser</button>
+        </div>
+      </div>
+    </section>
+
     <!-- KPIs -->
-    <div class="row" style="margin-bottom: 10px;">
+    <div class="row kpi-grid">
       <div class="col-sm-6 col-md-3">
         <div class="kpi-card kpi-ca" data-toggle="tooltip" title="Chiffre d’affaires et nombre de clients du jour">
           <div class="kpi-head">
             <i class="fa fa-shopping-cart kpi-icon"></i>
             <div class="kpi-meta">
-              <div class="kpi-label">CA</div>
+              <div class="kpi-label">CA du jour</div>
               <div class="kpi-value" id="idCA">—</div>
-              <div class="kpi-label">Nombre de clients</div>
-              <div class="kpi-value" id="NBCLTS">—</div>
+              <div class="kpi-secondary"><strong id="NBCLTS">—</strong> clients servis</div>
             </div>
           </div>
         </div>
@@ -113,10 +291,9 @@
           <div class="kpi-head">
             <i class="fa fa-truck kpi-icon"></i>
             <div class="kpi-meta">
-              <div class="kpi-label">Valeur Achat</div>
+              <div class="kpi-label">Valeur achats</div>
               <div class="kpi-value" id="idAchat">—</div>
-              <div class="kpi-label">Nombre de BL</div>
-              <div class="kpi-value" id="NBBL">—</div>
+              <div class="kpi-secondary"><strong id="NBBL">—</strong> bons de livraison</div>
             </div>
           </div>
         </div>
@@ -127,8 +304,9 @@
           <div class="kpi-head">
             <i class="fa fa-shopping-basket kpi-icon"></i>
             <div class="kpi-meta">
-              <div class="kpi-label">Pan. Moy</div>
+              <div class="kpi-label">Panier moyen</div>
               <div class="kpi-value" id="idPANIERMOY">—</div>
+              <div class="kpi-secondary">Moyenne par client</div>
             </div>
           </div>
         </div>
@@ -137,67 +315,66 @@
       <div class="col-sm-6 col-md-3">
         <div class="kpi-card kpi-marge" data-toggle="tooltip" title="Marge nette du jour">
           <div class="kpi-head">
-            <i class="fa fa-money kpi-icon"></i>
+            <i class="fa fa-line-chart kpi-icon"></i>
             <div class="kpi-meta">
-              <div class="kpi-label">Marge Net</div>
+              <div class="kpi-label">Marge nette</div>
               <div class="kpi-value" id="MAGERNET">—</div>
+              <div class="kpi-secondary">Performance du jour</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Lignes 2 -->
-    <div class="row">
-      <div class="col-sm-12 col-md-6">
-        <div class="panel panel-modern">
-          <div class="panel-heading heading-purple">
-            <i class="fa fa-pie-chart"></i> Top 5 des quantités d'Articles
-            <a href="#" id="moretop5" class="see-more" style="display:none">Voir plus</a>
-          </div>
-          <div class="panel-body"><div id="idtopCount"></div></div>
-        </div>
-      </div>
-
-      <div class="col-sm-12 col-md-6">
-        <div class="panel panel-modern">
-          <div class="panel-heading heading-green">
-            <i class="fa fa-pie-chart"></i> Top 5 du Chiffre d'Affaires
-            <a href="#" id="moretop5CA" class="see-more" style="display:none">Voir plus</a>
-          </div>
-          <div class="panel-body"><div id="idtopCA"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Lignes 3 -->
-    <div class="row">
-      <div class="col-sm-12 col-md-6">
-        <div class="panel panel-modern">
-          <div class="panel-heading heading-orange">
-            <i class="fa fa-pie-chart"></i> Type de Vente
-          </div>
-          <div class="panel-body"><div id="idtypevente"></div></div>
-        </div>
-      </div>
-
-      <div class="col-sm-12 col-md-6">
-        <div class="panel panel-modern">
+    <!-- Vue principale -->
+    <div class="row content-grid">
+      <div class="col-sm-12 col-lg-8">
+        <div class="panel panel-modern feature-card">
           <div class="panel-heading heading-blue">
-            <i class="fa fa-line-chart"></i> Évolution du Net TTC
+            <span class="title-wrap"><i class="fa fa-line-chart"></i> Évolution du Net TTC</span>
           </div>
           <div class="panel-body"><div id="idcachart"></div></div>
         </div>
       </div>
+      <div class="col-sm-12 col-lg-4">
+        <div class="panel panel-modern feature-card">
+          <div class="panel-heading heading-orange">
+            <span class="title-wrap"><i class="fa fa-pie-chart"></i> Type de vente</span>
+          </div>
+          <div class="panel-body"><div id="idtypevente"></div></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Lignes 4 -->
-    <div class="row">
+    <!-- Analyses secondaires -->
+    <div class="row content-grid">
+      <div class="col-sm-12 col-md-6">
+        <div class="panel panel-modern">
+          <div class="panel-heading heading-green">
+            <span class="title-wrap"><i class="fa fa-trophy"></i> Top 5 du Chiffre d'Affaires</span>
+            <a href="#" id="moretop5CA" class="see-more" style="display:none">Voir plus <i class="fa fa-angle-right"></i></a>
+          </div>
+          <div class="panel-body"><div id="idtopCA"></div></div>
+        </div>
+      </div>
+
+      <div class="col-sm-12 col-md-6">
+        <div class="panel panel-modern">
+          <div class="panel-heading heading-purple">
+            <span class="title-wrap"><i class="fa fa-cubes"></i> Top 5 des quantités d'articles</span>
+            <a href="#" id="moretop5" class="see-more" style="display:none">Voir plus <i class="fa fa-angle-right"></i></a>
+          </div>
+          <div class="panel-body"><div id="idtopCount"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row content-grid">
       <div class="col-sm-12 col-md-6">
         <div class="panel panel-modern">
           <div class="panel-heading heading-teal">
-            <i class="fa fa-bar-chart-o"></i> Évolution des Achats
-            <a href="#" id="moreAchat" class="see-more">Voir plus</a>
+            <span class="title-wrap"><i class="fa fa-bar-chart-o"></i> Achats par grossiste</span>
+            <a href="#" id="moreAchat" class="see-more">Voir plus <i class="fa fa-angle-right"></i></a>
           </div>
           <div class="panel-body"><div id="idachatgrossiste"></div></div>
         </div>
@@ -206,7 +383,7 @@
       <div class="col-sm-12 col-md-6">
         <div class="panel panel-modern">
           <div class="panel-heading heading-coral">
-            <i class="fa fa-list"></i> Mouvements de Caisse
+            <span class="title-wrap"><i class="fa fa-list"></i> Mouvements de caisse</span>
           </div>
           <div class="panel-body">
             <ul class="list-group" id="listemvt"></ul>
@@ -215,13 +392,12 @@
       </div>
     </div>
 
-    <!-- Lignes 5 -->
-    <div class="row">
+    <div class="row content-grid">
       <div class="col-xs-12">
         <div class="panel panel-modern">
           <div class="panel-heading heading-dark">
-            <i class="fa fa-bar-chart"></i> Top 10 Tiers payants
-            <a href="#" id="moretopClient" class="see-more" style="display:none">Voir plus</a>
+            <span class="title-wrap"><i class="fa fa-users"></i> Top 10 Tiers payants</span>
+            <a href="#" id="moretopClient" class="see-more" style="display:none">Voir plus <i class="fa fa-angle-right"></i></a>
           </div>
           <div class="panel-body"><div id="toclients"></div></div>
         </div>
@@ -233,7 +409,7 @@
   <div id="staticCA" class="modal fade" role="dialog">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-warning">
+        <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">×</button>
           <h4 class="modal-title text-center">Meilleures ventes – Chiffre d'Affaires</h4>
         </div>
@@ -251,7 +427,7 @@
   <div id="static" class="modal fade" role="dialog">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-warning">
+        <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">×</button>
           <h4 class="modal-title text-center">Meilleures ventes – Quantités</h4>
         </div>
@@ -269,7 +445,7 @@
   <div id="staticTopClient" class="modal fade" role="dialog">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-warning">
+        <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">×</button>
           <h4 class="modal-title text-center">Top Tiers payants</h4>
         </div>
@@ -287,7 +463,7 @@
   <div id="staticAllGrossistes" class="modal fade" role="dialog">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-warning">
+        <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">×</button>
           <h4 class="modal-title text-center">Achats par grossiste</h4>
         </div>
@@ -332,6 +508,19 @@
       el.textContent = isCurrency ? fmtCurrencyValue(value) : fmtNumber(value);
     }
 
+    function updateDashboardTimestamps(){
+      var now = new Date();
+      var dateEl = document.getElementById('dashboardDate');
+      var refreshEl = document.getElementById('lastRefresh');
+      try {
+        if (dateEl) dateEl.textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' });
+        if (refreshEl) refreshEl.textContent = 'Mis à jour ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      } catch(e) {
+        if (dateEl) dateEl.textContent = "Aujourd\'hui";
+        if (refreshEl) refreshEl.textContent = 'Mis à jour';
+      }
+    }
+
     // -------- Boot --------
     (function boot(){
       var tries = 0; var t = setInterval(function(){
@@ -342,82 +531,102 @@
 
     function initDashboard($){
       $(function(){
-        // DataTables
-        window.dtTop5Qty = $('#top5allqty').DataTable({
-          language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
-          ajax: '../webservices/dashboard/ws_data_top5.jsp',
-          columns: [
-            { data: 'ID' },
-            { data: 'CIP' },
-            { data: 'str_NAME' },
-            { data: 'int_QUANTITY_SERVED', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR') : n; } }
-          ],
-          order: [[3, 'desc']]
-        });
+        updateDashboardTimestamps();
+        $('#refreshDashboard').on('click', function(){ refreshAll(); });
 
-        window.dtTop5CA = $('#top5allCA').DataTable({
-          language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
-          ajax: '../webservices/dashboard/ws_data_top5CA.jsp',
-          columns: [
-            { data: 'ID' },
-            { data: 'CIP' },
-            { data: 'str_NAME' },
-            { data: 'int_PRICE', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR')+' F CFA' : n; } }
-          ],
-          order: [[3, 'desc']]
-        });
+        // Les DataTables sont initialisées à la demande, uniquement quand l'utilisateur ouvre le détail.
+        $('#moretop5').on('click', function(e){ e.preventDefault(); initTop5QtyTable(); $('#static').modal('show'); });
+        $('#moretop5CA').on('click', function(e){ e.preventDefault(); initTop5CATable(); $('#staticCA').modal('show'); });
+        $('#moretopClient').on('click', function(e){ e.preventDefault(); initTopClientTable(); $('#staticTopClient').modal('show'); });
+        $('#moreAchat').on('click', function(e){ e.preventDefault(); initGrossisteTable(); $('#staticAllGrossistes').modal('show'); });
 
-        window.dtTopClient = $('#topallClient').DataTable({
-          language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
-          ajax: '../webservices/dashboard/ws_best_clients.jsp',
-          columns: [
-            { data: 'ID' },
-            { data: 'str_FULLNAME' },
-            { data: 'AMOUNT', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR')+' F CFA' : n; } }
-          ],
-          order: [[2, 'desc']]
-        });
-
-        window.dtGrossiste = $('#allGrossiste').DataTable({
-          language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
-          ajax: '../webservices/dashboard/ws_AchatByGrossistes.jsp',
-          columns: [
-            { data: 'ID' },
-            { data: 'LIBELLE' },
-            { data: 'MONTANT', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR')+' F CFA' : n; } }
-          ],
-          order: [[2, 'desc']]
-        });
-
-        // Voir plus (modals)
-        $('#moretop5').on('click', function(e){ e.preventDefault(); $('#static').modal('show'); });
-        $('#moretop5CA').on('click', function(e){ e.preventDefault(); $('#staticCA').modal('show'); });
-        $('#moretopClient').on('click', function(e){ e.preventDefault(); $('#staticTopClient').modal('show'); });
-        $('#moreAchat').on('click', function(e){ e.preventDefault(); $('#staticAllGrossistes').modal('show'); });
-
-        // Lancements initiaux + Auto-refresh 30s
+        // Charge d'abord les indicateurs visibles, puis décale les graphes pour libérer la navigation ExtJS.
         refreshAll();
         //if (window._autoRefresh) clearInterval(window._autoRefresh);
        // window._autoRefresh = setInterval(refreshAll, 30000);
       });
     }
 
+    function runLater(fn, delay) {
+      if ('requestIdleCallback' in window) {
+        window.setTimeout(function(){ window.requestIdleCallback(fn, { timeout: 1500 }); }, delay || 0);
+      } else {
+        window.setTimeout(fn, delay || 0);
+      }
+    }
+
     function refreshAll(){
+      updateDashboardTimestamps();
       getDailyCA_And_SalesNumber();
-      drawCALineChart();
-      drawTOP5Chart();
-      drawAChatGrossisteChart();
-      drawTOP5CAChart();
-      drawTop5ClientsChart();
-      getListMVT();
-      if (window.dtTop5Qty) window.dtTop5Qty.ajax.reload(null, false);
-      if (window.dtTop5CA) window.dtTop5CA.ajax.reload(null, false);
-      if (window.dtTopClient) window.dtTopClient.ajax.reload(null, false);
-      if (window.dtGrossiste) window.dtGrossiste.ajax.reload(null, false);
+      runLater(drawTOP5Chart, 150);
+      runLater(drawTOP5CAChart, 300);
+      runLater(drawAChatGrossisteChart, 450);
+      runLater(drawCALineChart, 600);
+      runLater(drawTop5ClientsChart, 750);
+      runLater(getListMVT, 900);
+    }
+
+    function initTop5QtyTable(){
+      if (window.dtTop5Qty) return;
+      window.dtTop5Qty = $('#top5allqty').DataTable({
+        language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
+        ajax: '../webservices/dashboard/ws_data_top5.jsp',
+        columns: [
+          { data: 'ID' },
+          { data: 'CIP' },
+          { data: 'str_NAME' },
+          { data: 'int_QUANTITY_SERVED', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR') : n; } }
+        ],
+        order: [[3, 'desc']]
+      });
+    }
+
+    function initTop5CATable(){
+      if (window.dtTop5CA) return;
+      window.dtTop5CA = $('#top5allCA').DataTable({
+        language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
+        ajax: '../webservices/dashboard/ws_data_top5CA.jsp',
+        columns: [
+          { data: 'ID' },
+          { data: 'CIP' },
+          { data: 'str_NAME' },
+          { data: 'int_PRICE', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR')+' F CFA' : n; } }
+        ],
+        order: [[3, 'desc']]
+      });
+    }
+
+    function initTopClientTable(){
+      if (window.dtTopClient) return;
+      window.dtTopClient = $('#topallClient').DataTable({
+        language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
+        ajax: '../webservices/dashboard/ws_best_clients.jsp',
+        columns: [
+          { data: 'ID' },
+          { data: 'str_FULLNAME' },
+          { data: 'AMOUNT', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR')+' F CFA' : n; } }
+        ],
+        order: [[2, 'desc']]
+      });
+    }
+
+    function initGrossisteTable(){
+      if (window.dtGrossiste) return;
+      window.dtGrossiste = $('#allGrossiste').DataTable({
+        language: { url: "../resources/boostrap/bb/js/datatable/french.json" },
+        ajax: '../webservices/dashboard/ws_AchatByGrossistes.jsp',
+        columns: [
+          { data: 'ID' },
+          { data: 'LIBELLE' },
+          { data: 'MONTANT', render: function(d,t){ var n=parseLocaleNumber(d)||0; return t==='display'? n.toLocaleString('fr-FR')+' F CFA' : n; } }
+        ],
+        order: [[2, 'desc']]
+      });
     }
 
     function getDailyCA_And_SalesNumber(){
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/DailyCA.jsp', type: 'GET', cache: false, dataType: 'json',
         success: function (data) {
           setTextSafe('#idCA', data.DailyCA, true);
@@ -437,6 +646,7 @@
 
     function drawCALineChart(){
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/ws_graphe_data.jsp', type: 'GET', cache: false, dataType: 'json',
         success: function (data) {
           var donne = [
@@ -470,6 +680,7 @@
 
     function drawTOP5Chart(){
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/ws_data_top5.jsp', type: 'GET', dataType: 'json', cache: false,
         success: function (data) {
           var s1 = [];
@@ -491,6 +702,7 @@
 
     function drawAChatGrossisteChart(){
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/ws_achat_by_grossiste.jsp', type: 'GET', dataType: 'json', cache: false,
         success: function (data) {
           if (data && data.data && data.data.length > 0) { $('#moreAchat').show(); }
@@ -515,6 +727,7 @@
 
     function drawTOP5CAChart(){
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/ws_data_top5CA.jsp', type: 'GET', dataType: 'json', cache: false,
         success: function (data) {
           var s1 = [];
@@ -536,6 +749,7 @@
 
     function drawTop5ClientsChart(){
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/ws_best_clients.jsp', type: 'GET', dataType: 'json', cache: false,
         success: function (data) {
           var s1 = [];
@@ -559,6 +773,7 @@
     function getListMVT(){
       $('#listemvt').empty();
       $.ajax({
+        global: false,
         url: '../webservices/dashboard/ws_data_mvt.jsp', type: 'GET', dataType: 'json', cache: false,
         success: function (data) {
           $.each((data && data.data) || [], function (index, val) {
