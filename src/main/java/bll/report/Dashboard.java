@@ -39,15 +39,59 @@ public class Dashboard extends bll.bllBase {
         super.checkDatamanager();
     }
 
+    private Date startOfToday() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
+
+    private Date startOfTomorrow() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startOfToday());
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        return calendar.getTime();
+    }
+
+    private Date startOfMonth() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
+
+    private Date startOfYear() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.MONTH, Calendar.JANUARY);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
+
+    private Date startOfNextYear() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startOfYear());
+        calendar.add(Calendar.YEAR, 1);
+        return calendar.getTime();
+    }
+
     public JSONObject getDailyCA_AND_SalesCount() {
         JSONObject json = new JSONObject();
 
         try {
             List<Object[]> list = this.getOdataManager().getEm().createQuery(
-                    "SELECT SUM(o.intPRICE),SUM(o.intPRICEREMISE),COUNT(o.lgPREENREGISTREMENTID) FROM TPreenregistrement o WHERE o.intPRICE >0 AND o.strSTATUT=?1 AND FUNCTION('DATE',o.dtUPDATED)   >=?2 AND  FUNCTION('DATE',o.dtUPDATED)  <=?3 AND o.bISCANCEL =FALSE AND o.lgTYPEVENTEID.lgTYPEVENTEID <> '5' ")
-                    .setParameter(1, commonparameter.statut_is_Closed).setParameter(2,
-                            java.sql.Date.valueOf(date.formatterMysqlShort.format(new Date())), TemporalType.DATE)
-                    .setParameter(3, new Date(), TemporalType.DATE).getResultList();
+                    "SELECT SUM(o.intPRICE),SUM(o.intPRICEREMISE),COUNT(o.lgPREENREGISTREMENTID) FROM TPreenregistrement o WHERE o.intPRICE >0 AND o.strSTATUT=?1 AND o.dtUPDATED >=?2 AND o.dtUPDATED <?3 AND o.bISCANCEL =FALSE AND o.lgTYPEVENTEID.lgTYPEVENTEID <> '5' ")
+                    .setParameter(1, commonparameter.statut_is_Closed)
+                    .setParameter(2, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(3, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
 
             for (Object[] objects : list) {
                 long ca = 0;
@@ -71,10 +115,10 @@ public class Dashboard extends bll.bllBase {
 
         try {
             List<Object[]> list = this.getOdataManager().getEm().createQuery(
-                    "SELECT SUM(o.intHTTC),COUNT(o.lgBONLIVRAISONID) FROM TBonLivraison o WHERE o.strSTATUT=?1 AND FUNCTION('DATE',o.dtUPDATED)  >=?2 AND FUNCTION('DATE',o.dtUPDATED) <=?3  ")
-                    .setParameter(1, commonparameter.statut_is_Closed).setParameter(2,
-                            java.sql.Date.valueOf(date.formatterMysqlShort.format(new Date())), TemporalType.DATE)
-                    .setParameter(3, new Date(), TemporalType.DATE).getResultList();
+                    "SELECT SUM(o.intHTTC),COUNT(o.lgBONLIVRAISONID) FROM TBonLivraison o WHERE o.strSTATUT=?1 AND o.dtUPDATED >=?2 AND o.dtUPDATED <?3  ")
+                    .setParameter(1, commonparameter.statut_is_Closed)
+                    .setParameter(2, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(3, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
 
             for (Object[] objects : list) {
                 long ca = 0;
@@ -99,12 +143,11 @@ public class Dashboard extends bll.bllBase {
                 + "SUM(CASE WHEN (o.`str_TYPE_VENTE`='VNO' AND o.`lg_NATURE_VENTE_ID`<>'3' ) THEN (o.`int_PRICE`-o.`int_PRICE_REMISE`) ELSE 0 END), "
                 + "SUM(CASE WHEN( o.`str_TYPE_VENTE`='VO' AND o.`lg_NATURE_VENTE_ID`<>'3' )THEN (o.`int_PRICE`-(o.int_CUST_PART- o.`int_PRICE_REMISE`)) ELSE 0 END), "
                 + "SUM(CASE WHEN o.`lg_NATURE_VENTE_ID`='3' THEN (o.`int_PRICE`-o.`int_PRICE_REMISE`) ELSE 0 END), SUM(CASE WHEN o.`str_TYPE_VENTE` = 'VO' THEN (o.`int_CUST_PART` - o.`int_PRICE_REMISE`)ELSE 0 END)  FROM t_preenregistrement o "
-                + "WHERE  o.`int_PRICE` >0 AND o.`str_STATUT` ='is_Closed' AND o.`dt_UPDATED`>=?1 AND o.`dt_UPDATED` <= ?2 AND o.`b_IS_CANCEL`=0;";
+                + "WHERE  o.`int_PRICE` >0 AND o.`str_STATUT` ='is_Closed' AND o.`dt_UPDATED` >= ?1 AND o.`dt_UPDATED` < ?2 AND o.`b_IS_CANCEL`=0;";
         try {
-            List<Object[]> list = this
-                    .getOdataManager().getEm().createNativeQuery(query).setParameter(1,
-                            java.sql.Date.valueOf(date.formatterMysqlShort.format(new Date())), TemporalType.DATE)
-                    .setParameter(2, new Date(), TemporalType.DATE).getResultList();
+            List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
+                    .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(2, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
             double panierMoy = 0;
             double totalcount;
             double panierMYVO = 0, panierMYVNO = 0, AmontVO = 0, AmontVNO = 0;
@@ -149,16 +192,15 @@ public class Dashboard extends bll.bllBase {
         String query = "SELECT (ROUND(SUM((d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN  d.`int_PRICE_REMISE` ELSE 0 END))/(1+(v.`int_VALUE`/100))))-SUM(f.`int_PAF`*d.`int_QUANTITY`))"
                 + ",SUM(d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN d.`int_PRICE_REMISE` ELSE 0 END)),SUM(f.`int_PAF`*d.`int_QUANTITY`),COUNT(p.`lg_PREENREGISTREMENT_ID`),SUM((d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
                 + "d.`int_PRICE_REMISE` ELSE 0 END))/(1+(v.`int_VALUE`/100))) FROM  t_preenregistrement_detail d,"
-                + "t_preenregistrement p,t_famille f,t_famillearticle fa,t_code_tva v WHERE p.`lg_PREENREGISTREMENT_ID`=d.`lg_PREENREGISTREMENT_ID` AND f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID`"
+                + "t_preenregistrement p,t_famille f,t_famillearticle fa,t_code_tva v WHERE p.`lg_PREENREGISTREMENT_ID`=d.`lg_PREENREGISTREMENT_ID` AND f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` "
                 + "AND fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID` AND v.`lg_CODE_TVA_ID`=f.`lg_CODE_TVA_ID` AND p.`int_PRICE`>0 AND p.`str_STATUT`='"
                 + commonparameter.statut_is_Closed + "'"
-                + "AND p.`dt_UPDATED`>=?1 AND p.`dt_UPDATED`<=?2  AND p.`b_IS_CANCEL`=0 AND  p.`lg_TYPE_VENTE_ID` <> '5' ";
+                + " AND p.`dt_UPDATED` >= ?1 AND p.`dt_UPDATED` < ?2  AND p.`b_IS_CANCEL`=0 AND  p.`lg_TYPE_VENTE_ID` <> '5' ";
 
         try {
-            List<Object[]> list = this
-                    .getOdataManager().getEm().createNativeQuery(query).setParameter(1,
-                            java.sql.Date.valueOf(date.formatterMysqlShort.format(new Date())), TemporalType.DATE)
-                    .setParameter(2, new Date(), TemporalType.DATE).getResultList();
+            List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
+                    .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(2, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
             long margenet = 0;
             for (Object[] objects : list) {
                 long count = Long.valueOf(objects[3] + "");
@@ -182,11 +224,12 @@ public class Dashboard extends bll.bllBase {
         String query = "SELECT SUM(o.`int_PRICE`-o.`int_PRICE_REMISE`),COUNT(o.`lg_PREENREGISTREMENT_ID`),DATE_FORMAT(o.`dt_UPDATED`,'%m/%Y') FROM t_preenregistrement o"
                 + " WHERE  o.lg_TYPE_VENTE_ID <> '5' AND     o.`int_PRICE` >0 AND o.`str_STATUT` ='"
                 + commonparameter.statut_is_Closed
-                + "' AND YEAR(o.`dt_UPDATED`) =?1 GROUP BY DATE_FORMAT(o.`dt_UPDATED`,'%m/%Y') ORDER BY DATE_FORMAT(o.`dt_UPDATED`,'%m/%Y')";
+                + "' AND o.`dt_UPDATED` >= ?1 AND o.`dt_UPDATED` < ?2 GROUP BY DATE_FORMAT(o.`dt_UPDATED`,'%m/%Y') ORDER BY DATE_FORMAT(o.`dt_UPDATED`,'%m/%Y')";
         try {
             new logger().OCategory.info("query:" + query);
-            List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query).setParameter(1, new Date())
-                    .getResultList();
+            List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
+                    .setParameter(1, startOfYear(), TemporalType.TIMESTAMP)
+                    .setParameter(2, startOfNextYear(), TemporalType.TIMESTAMP).getResultList();
             for (Object[] objects : list) {
                 JSONObject json = new JSONObject();
                 long count = Long.valueOf(objects[1] + "");
@@ -211,11 +254,12 @@ public class Dashboard extends bll.bllBase {
         JSONArray array = new JSONArray();
         String query = "SELECT  f.`str_NAME`,SUM(d.`int_QUANTITY`) ,f.`int_CIP` FROM  t_preenregistrement_detail d,  t_preenregistrement p, "
                 + " t_famille f  WHERE p.`lg_PREENREGISTREMENT_ID`=d.`lg_PREENREGISTREMENT_ID`  AND f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND p.`int_PRICE`>0 AND p.`str_STATUT`='is_Closed' AND p.`b_IS_CANCEL`=0"
-                + " AND DATE(p.`dt_CREATED`) =?1 AND p.lg_TYPE_VENTE_ID <> '5' "
+                + " AND p.`dt_CREATED` >= ?1 AND p.`dt_CREATED` < ?2 AND p.lg_TYPE_VENTE_ID <> '5' "
                 + " GROUP BY f.`str_NAME` ORDER BY SUM(d.`int_QUANTITY`) DESC ";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
-                    .setParameter(1, date.formatterMysqlShort.format(new Date())).getResultList();
+                    .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(2, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
             long k = 1;
             for (Object[] objects : list) {
 
@@ -240,21 +284,22 @@ public class Dashboard extends bll.bllBase {
     }
 
     public JSONArray getValeurAchatByGrossiste() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1, 0, 0, 0);
 
         JSONArray array = new JSONArray();
-        String query = "SELECT COUNT(bn.`lg_BON_LIVRAISON_ID`),(SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
-                + " AND (g.`str_LIBELLE` LIKE 'LABOREX%' OR g.`str_LIBELLE` LIKE 'UBI%')) , (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND "
-                + " o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND g.`str_LIBELLE` LIKE 'DPCI%' AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2  ) ,(SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE  o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
-                + "AND g.`str_LIBELLE`LIKE 'COPHARMED%' ), (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND g.`str_LIBELLE` LIKE 'TEDIS PHARMA%' AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
-                + " ) , (SELECT SUM(b.`int_MHT`)  FROM  t_bon_livraison b,t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID`  AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 "
-                + " AND g.`str_LIBELLE` NOT LIKE 'TEDIS PHARMA%'  AND g.`str_LIBELLE` NOT LIKE 'COPHARMED%' AND g.`str_LIBELLE`NOT LIKE 'DPCI%' AND g.`str_LIBELLE` NOT LIKE'LABOREX%' AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 ) FROM  t_bon_livraison  bn,t_order ord,t_grossiste gr WHERE  ord.`lg_ORDER_ID`=bn.`lg_ORDER_ID` AND  ord.`lg_GROSSISTE_ID`=gr.`lg_GROSSISTE_ID` AND bn.`str_STATUT`='is_Closed'"
-                + " AND bn.`dt_UPDATED` >=?1 AND bn.`dt_UPDATED` <=?2 ";
+        String query = "SELECT COUNT(b.`lg_BON_LIVRAISON_ID`),"
+                + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'LABOREX%' THEN b.`int_MHT` ELSE 0 END),"
+                + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'DPCI%' THEN b.`int_MHT` ELSE 0 END),"
+                + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'COPHARMED%' THEN b.`int_MHT` ELSE 0 END),"
+                + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'TEDIS PHARMA%' THEN b.`int_MHT` ELSE 0 END),"
+                + "SUM(CASE WHEN g.`str_LIBELLE` NOT LIKE 'TEDIS PHARMA%' AND g.`str_LIBELLE` NOT LIKE 'COPHARMED%' "
+                + "AND g.`str_LIBELLE` NOT LIKE 'DPCI%' AND g.`str_LIBELLE` NOT LIKE 'LABOREX%' THEN b.`int_MHT` ELSE 0 END) "
+                + "FROM t_bon_livraison b,t_order o,t_grossiste g WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` "
+                + "AND o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND b.`str_STATUT`='is_Closed' "
+                + "AND b.`dt_UPDATED` >= ?1 AND b.`dt_UPDATED` <= ?2";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
-                    .setParameter(1, date.formatterMysqlShort.format(calendar.getTime())).setParameter(2, new Date())
-                    .getResultList();
+                    .setParameter(1, startOfMonth(), TemporalType.TIMESTAMP)
+                    .setParameter(2, new Date(), TemporalType.TIMESTAMP).getResultList();
             for (Object[] objects : list) {
                 // JSONObject json = new JSONObject();
                 long count = Long.valueOf(objects[0] + "");
@@ -289,11 +334,12 @@ public class Dashboard extends bll.bllBase {
         JSONArray array = new JSONArray();
         String query = "SELECT  f.`str_NAME`,COUNT(d.`int_QUANTITY`),SUM(d.`int_PRICE`),f.`int_CIP` FROM  t_preenregistrement_detail d,  t_preenregistrement p,"
                 + "  t_famille f  WHERE p.`lg_PREENREGISTREMENT_ID`=d.`lg_PREENREGISTREMENT_ID`  AND f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND p.`int_PRICE`>0 AND p.`str_STATUT`='is_Closed'"
-                + " AND  DATE(p.`dt_CREATED`) =?1  AND p.`b_IS_CANCEL`=0   AND p.lg_TYPE_VENTE_ID <> '5' "
+                + " AND  p.`dt_CREATED` >= ?1 AND p.`dt_CREATED` < ?2  AND p.`b_IS_CANCEL`=0   AND p.lg_TYPE_VENTE_ID <> '5' "
                 + " GROUP BY f.`str_NAME` ORDER BY SUM(d.`int_PRICE`) DESC  ";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
-                    .setParameter(1, date.formatterMysqlShort.format(new Date())).getResultList();
+                    .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(2, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
             long k = 1;
             for (Object[] objects : list) {
                 JSONObject json = new JSONObject();
@@ -319,8 +365,6 @@ public class Dashboard extends bll.bllBase {
 
     public JSONArray getBestClients() {
         JSONArray array = new JSONArray();
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1, 0, 0, 0);
         String query = "SELECT  `t_tiers_payant`.`str_FULLNAME`,COUNT(`t_preenregistrement_compte_client_tiers_payent`.`lg_PREENREGISTREMENT_COMPTE_CLIENT_PAYENT_ID`) ,SUM(`t_preenregistrement_compte_client_tiers_payent`.`int_PRICE`) "
                 + "  FROM ((((`t_tiers_payant` JOIN `t_compte_client_tiers_payant` ON((`t_tiers_payant`.`lg_TIERS_PAYANT_ID` = `t_compte_client_tiers_payant`.`lg_TIERS_PAYANT_ID`))) "
                 + " JOIN `t_preenregistrement_compte_client_tiers_payent` ON((`t_compte_client_tiers_payant`.`lg_COMPTE_CLIENT_TIERS_PAYANT_ID` = `t_preenregistrement_compte_client_tiers_payent`.`lg_COMPTE_CLIENT_TIERS_PAYANT_ID`))) "
@@ -330,8 +374,8 @@ public class Dashboard extends bll.bllBase {
                 + " AND `t_type_tiers_payant`.`lg_TYPE_TIERS_PAYANT_ID`  GROUP BY `t_tiers_payant`.`str_FULLNAME` ORDER BY SUM(`t_preenregistrement_compte_client_tiers_payent`.`int_PRICE`) DESC ";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
-                    .setParameter(1, date.formatterMysqlShort.format(calendar.getTime())).setParameter(2, new Date())
-                    .getResultList();
+                    .setParameter(1, startOfMonth(), TemporalType.TIMESTAMP)
+                    .setParameter(2, new Date(), TemporalType.TIMESTAMP).getResultList();
             int k = 1;
             for (Object[] objects : list) {
                 JSONObject json = new JSONObject();
@@ -355,17 +399,15 @@ public class Dashboard extends bll.bllBase {
 
     public JSONArray getListMVT() {
         JSONArray array = new JSONArray();
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1, 0, 0, 0);
         String query = "SELECT t.`str_NAME`,SUM(m.`int_AMOUNT`)  FROM t_mvt_caisse m,t_type_mvt_caisse t  WHERE "
                 + " t.`lg_TYPE_MVT_CAISSE_ID`=m.`lg_TYPE_MVT_CAISSE_ID` AND t.`lg_TYPE_MVT_CAISSE_ID` <> '"
                 + Parameter.TYPE_MV_CAISSE_VNO + "' AND " + " t.`lg_TYPE_MVT_CAISSE_ID` <> '"
                 + Parameter.TYPE_MV_CAISSE_VO
-                + "' AND DATE(m.`dt_CREATED`) >=?1  AND DATE(m.`dt_CREATED`) <=?2 GROUP BY t.`str_NAME`";
+                + "' AND m.`dt_CREATED` >= ?1 AND m.`dt_CREATED` < ?2 GROUP BY t.`str_NAME`";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
-                    .setParameter(1, new Date(), TemporalType.DATE).setParameter(2, new Date(), TemporalType.DATE)
-                    .getResultList();
+                    .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
+                    .setParameter(2, startOfTomorrow(), TemporalType.TIMESTAMP).getResultList();
             for (Object[] objects : list) {
                 JSONObject json = new JSONObject();
 
@@ -383,16 +425,14 @@ public class Dashboard extends bll.bllBase {
 
     public JSONArray getAllAchatByGrossiste() {
         JSONArray array = new JSONArray();
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1, 0, 0, 0);
         try {
             String query = "SELECT  SUM(b.`int_MHT`) AS MONTANT,g.`str_LIBELLE` AS LIBELLE FROM  t_bon_livraison b, "
                     + "t_order o,t_grossiste g  WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` AND  o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID`   "
                     + " AND b.`dt_UPDATED` >=?1 AND b.`dt_UPDATED` <=?2 AND  b.`str_STATUT`='is_Closed' GROUP BY g.`lg_GROSSISTE_ID`  "
                     + " ORDER BY SUM(b.`int_MHT`) DESC";
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
-                    .setParameter(1, date.formatterMysqlShort.format(calendar.getTime())).setParameter(2, new Date())
-                    .getResultList();
+                    .setParameter(1, startOfMonth(), TemporalType.TIMESTAMP)
+                    .setParameter(2, new Date(), TemporalType.TIMESTAMP).getResultList();
 
             long k = 1;
             for (Object[] objects : list) {
