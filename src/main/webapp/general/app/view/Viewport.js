@@ -26,25 +26,12 @@ Ext.define('testextjs.view.Viewport', {
         {
             region: 'west',
             xtype: 'navigation',
-            width: 250,
-            minWidth: 100,
-            height: 200,
+            width: 260,
+            minWidth: 180,
             split: true,
-            stateful: true,
-            stateId: 'mainnav.west',
             collapsible: true,
-            tools: [{
-                    type: 'gear',
-                    regionTool: true
-                }],
-            listeners: {
-                ///a decommenter la ligne le lundi avant la livraison
-                beforerender: function() // au chargement de la page
-                {
-                    this.collapse(); // refermer le menu au chargement de la page
-                }
-                
-            }
+            collapsed: true,
+            animCollapse: true
         },
         {
             region: 'center',
