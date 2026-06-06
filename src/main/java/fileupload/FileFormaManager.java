@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.EntityManager;
@@ -94,6 +95,17 @@ public class FileFormaManager extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
 
+        // Relecture des produits non reconnus deja persistes pour une commande donnee
+        if ("reconciliation".equals(request.getParameter("action"))) {
+            handleReconciliationRead(request, response);
+            return;
+        }
+        // Mise a jour du fichier persiste (retrait des lignes deja traitees)
+        if ("reconciliation-save".equals(request.getParameter("action"))) {
+            handleReconciliationSave(request, response);
+            return;
+        }
+
         String lgGROSSISTEID = "";
 
         if (request.getParameter("lg_GROSSISTE_ID") != null) {
@@ -125,16 +137,24 @@ public class FileFormaManager extends HttpServlet {
 
                 break;
             }
+            json.add("orderId", responseJson.optString("orderId", ""));
             if (!items.isEmpty()) {
-
                 json.add("toBe", true);
                 String finalFile = fichierReponse(request.getServletContext(),
                         fileName.substring(0, fileName.indexOf('.') - 1), Format.valueOf(modeBL), items);
                 jdom.InitRessource();
-                json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
-                        + responseJson.getInt("ligne")
-                        + "\n</span> produits mis à jour <a href=\"../VericationCommande?fileName=" + finalFile
-                        + " \" style=\"color:red !important;\">Cliquer sur le lien pour télécharger les produits non pris en compte</a>");
+                json.add("success",
+                        "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
+                                + responseJson.getInt("ligne")
+                                + "\n</span> produits mis à jour <a href=\"../VericationCommande?fileName=" + finalFile
+                                + " \" style=\"color:red !important;\">Voir le contenu à traiter</a>");
+                javax.json.JsonArray nonReconnusArray = buildItemsJsonArray(items);
+                json.add("nonReconnus", nonReconnusArray);
+                json.add("nbReconnus", responseJson.getInt("count"));
+                json.add("nbTotal", responseJson.getInt("ligne"));
+                // persistance pour pouvoir rouvrir la reconciliation plus tard
+                persistReconciliationFile(responseJson.optString("orderId", ""), lgGROSSISTEID,
+                        responseJson.getInt("count"), responseJson.getInt("ligne"), nonReconnusArray);
             } else {
                 json.add("toBe", false);
                 json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
@@ -259,6 +279,7 @@ public class FileFormaManager extends HttpServlet {
         TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
         userTransaction.begin();
         TOrder order = createOrder(grossiste, user);
+        json.put("orderId", order.getLgORDERID());
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -296,6 +317,7 @@ public class FileFormaManager extends HttpServlet {
             TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
             userTransaction.begin();
             TOrder order = createOrder(grossiste, user);
+            json.put("orderId", order.getLgORDERID());
             CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()),
                     CSVFormat.EXCEL.withDelimiter(';'));
             switch (mode) {
@@ -797,5 +819,105 @@ public class FileFormaManager extends HttpServlet {
                 cSVRecord.get(4), Integer.valueOf(cSVRecord.get(5)), Integer.parseInt(cSVRecord.get(6)),
                 Integer.valueOf(cSVRecord.get(7)), Double.valueOf(cSVRecord.get(8)), Double.valueOf(cSVRecord.get(9)),
                 cSVRecord.get(10), Double.valueOf(cSVRecord.get(11))));
+    }
+
+    private javax.json.JsonArray buildItemsJsonArray(List<OrderItem> list) {
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        for (OrderItem item : list) {
+            JsonObjectBuilder obj = Json.createObjectBuilder();
+            obj.add("cip", item.getCip() != null ? item.getCip() : "");
+            obj.add("libelle", item.getLibelle() != null ? item.getLibelle() : "");
+            obj.add("cmde", item.getCmde() != null ? item.getCmde() : 0);
+            obj.add("cmdeL", item.getCmdeL() != null ? item.getCmdeL() : 0);
+            obj.add("prixAchat", item.getPrixAchat() != null ? item.getPrixAchat() : 0);
+            obj.add("prixUn", item.getPrixUn() != null ? item.getPrixUn() : 0);
+            obj.add("ug", item.getUg() != null ? item.getUg() : 0);
+            obj.add("tva", item.getTva() != null ? item.getTva() : 0.0);
+            obj.add("facture", item.getFacture() != null ? item.getFacture() : "");
+            obj.add("ligne", item.getLigne() != null ? item.getLigne() : 0);
+            arrayBuilder.add(obj);
+        }
+        return arrayBuilder.build();
+    }
+
+    private java.nio.file.Path reconciliationFilePath(String orderId) {
+        jdom.InitRessource();
+        return Paths.get(jdom.path_commande + "recon_" + orderId + ".json");
+    }
+
+    private void persistReconciliationFile(String orderId, String grossisteId, int nbReconnus, int nbTotal,
+            javax.json.JsonArray nonReconnus) {
+        if (orderId == null || orderId.isEmpty()) {
+            return;
+        }
+        try {
+            JsonObjectBuilder obj = Json.createObjectBuilder();
+            obj.add("orderId", orderId);
+            obj.add("grossisteId", grossisteId != null ? grossisteId : "");
+            obj.add("nbReconnus", nbReconnus);
+            obj.add("nbTotal", nbTotal);
+            obj.add("nonReconnus", nonReconnus);
+            String content = obj.build().toString();
+            Files.write(reconciliationFilePath(orderId), content.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Impossible de persister le fichier de reconciliation", e);
+        }
+    }
+
+    private void handleReconciliationSave(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String orderId = request.getParameter("orderId");
+        try (PrintWriter out = response.getWriter()) {
+            if (orderId == null || orderId.isEmpty()) {
+                out.println("{\"success\":false}");
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+            JSONObject payload = new JSONObject(sb.toString());
+            JSONArray remaining = payload.optJSONArray("nonReconnus");
+            java.nio.file.Path path = reconciliationFilePath(orderId);
+            if (remaining == null || remaining.length() == 0) {
+                Files.deleteIfExists(path);
+            } else {
+                Files.write(path, payload.toString().getBytes(StandardCharsets.UTF_8));
+            }
+            out.println("{\"success\":true}");
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Erreur sauvegarde fichier de reconciliation", e);
+            try (PrintWriter out = response.getWriter()) {
+                out.println("{\"success\":false}");
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    private void handleReconciliationRead(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String orderId = request.getParameter("orderId");
+        try (PrintWriter out = response.getWriter()) {
+            if (orderId == null || orderId.isEmpty()) {
+                out.println("{\"success\":false,\"nonReconnus\":[]}");
+                return;
+            }
+            java.nio.file.Path path = reconciliationFilePath(orderId);
+            if (!Files.exists(path)) {
+                out.println("{\"success\":false,\"nonReconnus\":[]}");
+                return;
+            }
+            String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+            JSONObject stored = new JSONObject(content);
+            stored.put("success", true);
+            out.println(stored.toString());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Erreur lecture fichier de reconciliation", e);
+            try (PrintWriter out = response.getWriter()) {
+                out.println("{\"success\":false,\"nonReconnus\":[]}");
+            } catch (Exception ignore) {
+            }
+        }
     }
 }
