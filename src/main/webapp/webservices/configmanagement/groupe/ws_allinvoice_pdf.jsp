@@ -82,6 +82,10 @@
 
     String P_H_LOGO = jdom.scr_report_file_logo;
     invoicesToPrint = (Map<String, LinkedHashSet<TFacture>>) session.getAttribute("groupeinvoicesToPrint");
+    if (invoicesToPrint == null) {
+        invoicesToPrint = new HashMap<>();
+    }
+
     /* les factures à imprimer */
     long P_ATT_AMOUNTGROUPE = 0l;
     String P_FOOTER_RC = "";
@@ -137,9 +141,17 @@
         LinkedHashSet<TFacture> factures = en.getValue();
 
         String codeFac = en.getKey();
+        if (factures == null || factures.isEmpty()) {
+            continue;
+        }
+
 
         TGroupeTierspayant g = controller.getGroupByCODEFACT(codeFac);
         TGroupeFactures gp = controller.getgroupeFactureByCodeFacture(codeFac);
+        if (g == null || gp == null) {
+            continue;
+        }
+
         String footer = "";
         Integer AMOUTGRP = controller.groupeTiersPayantAmount(g.getLgGROUPEID(), codeFac);
         String P_H_CLT_INFOS = "PERIODE DU " + date.formatterShort.format(gp.getDtDEBUTFACTURE()) + " AU " + date.formatterShort.format(gp.getDtFINFACTURE());
