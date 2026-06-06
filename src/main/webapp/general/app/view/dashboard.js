@@ -1,7 +1,3 @@
-
-
-/* global Ext, panel */
-
 Ext.define('testextjs.view.dashboard', {
     extend: 'Ext.panel.Panel',
     xtype: 'dashboard',
@@ -27,7 +23,15 @@ Ext.define('testextjs.view.dashboard', {
                 autoScroll: false,
                 autoEl: {
                     tag: "iframe",
-                    src: url_order_component
+                    src: "about:blank",
+                    loading: "lazy"
+                },
+                listeners: {
+                    afterrender: function (component) {
+                        Ext.defer(function () {
+                            component.getEl().dom.src = url_order_component;
+                        }, 250);
+                    }
                 }
             }],
                 this.callParent();
@@ -35,4 +39,3 @@ Ext.define('testextjs.view.dashboard', {
     }
 
 });
-

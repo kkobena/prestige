@@ -77,7 +77,7 @@ public class DashBoardServiceImpl implements DashBoardService {
             + "(SELECT tp.lg_TIERS_PAYANT_ID AS tiersPayantId, tp.str_NAME AS libelleTiersPayant,typeTp.str_LIBELLE_TYPE_TIERS_PAYANT AS typeTiersPayant, "
             + " SUM(cp.int_PRICE) AS cpAmount , cpt.lg_CLIENT_ID AS nbreClient ,cp.lg_PREENREGISTREMENT_ID AS lg_PREENREGISTREMENT_ID FROM  t_preenregistrement_compte_client_tiers_payent cp,t_compte_client_tiers_payant cl, t_tiers_payant tp, t_compte_client cpt,t_type_tiers_payant typeTp WHERE "
             + "cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND cl.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND cl.lg_COMPTE_CLIENT_ID=cpt.lg_COMPTE_CLIENT_ID AND tp.lg_TYPE_TIERS_PAYANT_ID=typeTp.`lg_TYPE_TIERS_PAYANT_ID` GROUP BY lg_PREENREGISTREMENT_ID )"
-            + " AS sqlQ WHERE DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND sqlQ.lg_PREENREGISTREMENT_ID=p.`lg_PREENREGISTREMENT_ID` AND  m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 AND m.`typeTransaction`=1 %s {excludeStatement} GROUP BY  tiersPayantId ORDER BY libelleTiersPayant ";
+            + " AS sqlQ WHERE p.`dt_UPDATED` >= ?3 AND p.`dt_UPDATED` <= ?4 AND sqlQ.lg_PREENREGISTREMENT_ID=p.`lg_PREENREGISTREMENT_ID` AND  m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 AND m.`typeTransaction`=1 %s {excludeStatement} GROUP BY  tiersPayantId ORDER BY libelleTiersPayant ";
     private static final String RAPPORT_SQL_LIKE = " AND (sqlQ.libelleTiersPayant LIKE '%s' OR sqlQ.typeTiersPayant LIKE '%s') ";
 
     private static final String RAPPORT_COUNT_SQL_QUERY = "SELECT count_tmp.tiersPayantId FROM (SELECT COUNT(DISTINCT sqlQ.tiersPayantId) as tiersPayantId,sqlQ.libelleTiersPayant AS libelleTiersPayant,sqlQ.typeTiersPayant,sqlQ.lg_PREENREGISTREMENT_ID"
@@ -86,7 +86,7 @@ public class DashBoardServiceImpl implements DashBoardService {
             + "t_compte_client_tiers_payant cl, t_tiers_payant tp, t_compte_client cpt,t_type_tiers_payant typeTp WHERE \n"
             + "cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND cl.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND \n"
             + "cl.lg_COMPTE_CLIENT_ID=cpt.lg_COMPTE_CLIENT_ID AND tp.lg_TYPE_TIERS_PAYANT_ID=typeTp.`lg_TYPE_TIERS_PAYANT_ID` GROUP BY lg_PREENREGISTREMENT_ID ) "
-            + " AS sqlQ WHERE DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND sqlQ.lg_PREENREGISTREMENT_ID=p.`lg_PREENREGISTREMENT_ID`  AND m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 AND m.`typeTransaction`=1 %s {excludeStatement} ) AS count_tmp ";
+            + " AS sqlQ WHERE p.`dt_UPDATED` >= ?3 AND p.`dt_UPDATED` <= ?4 AND sqlQ.lg_PREENREGISTREMENT_ID=p.`lg_PREENREGISTREMENT_ID`  AND m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 AND m.`typeTransaction`=1 %s {excludeStatement} ) AS count_tmp ";
 
     private static final String RAPPORT_TOTAUX_SQL_QUERY = " SELECT SUM(sqlQ.cpAmount) AS amount ,SUM(m.`montantCredit`) AS montantCredit,COUNT(DISTINCT sqlQ.nbreClient) as nbreClient,\n"
             + "COUNT(DISTINCT p.`lg_PREENREGISTREMENT_ID`) AS nbreBon,sqlQ.lg_PREENREGISTREMENT_ID FROM t_preenregistrement p,mvttransaction m,\n"
@@ -96,7 +96,7 @@ public class DashBoardServiceImpl implements DashBoardService {
             + "t_compte_client_tiers_payant cl, t_tiers_payant tp, t_compte_client cpt,t_type_tiers_payant typeTp WHERE \n"
             + "cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND cl.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND \n"
             + "cl.lg_COMPTE_CLIENT_ID=cpt.lg_COMPTE_CLIENT_ID AND tp.lg_TYPE_TIERS_PAYANT_ID=typeTp.`lg_TYPE_TIERS_PAYANT_ID` GROUP BY cp.`lg_PREENREGISTREMENT_ID` )  "
-            + " AS sqlQ WHERE DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND sqlQ.lg_PREENREGISTREMENT_ID=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 AND m.`typeTransaction`=1 %s {excludeStatement} ";
+            + " AS sqlQ WHERE p.`dt_UPDATED` >= ?3 AND p.`dt_UPDATED` <= ?4 AND sqlQ.lg_PREENREGISTREMENT_ID=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 AND m.`typeTransaction`=1 %s {excludeStatement} ";
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
