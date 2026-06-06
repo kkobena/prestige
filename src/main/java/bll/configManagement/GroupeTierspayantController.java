@@ -742,7 +742,10 @@ public class GroupeTierspayantController implements Serializable {
                 em.merge(OParameters);
                 LinkedHashSet<TFacture> listfact = generateInvoices(t.getValue(), dt_start, dt_end, g, em, CODEFACTURE,
                         OUser);
-                _grfact.put(CODEFACTURE, listfact);
+                if (!listfact.isEmpty()) {
+                    _grfact.put(CODEFACTURE, listfact);
+                }
+
                 String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end
                         + " groupe tiers-payant: " + g.getStrLIBELLE() + " ";
                 updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", em);
@@ -1808,16 +1811,12 @@ public class GroupeTierspayantController implements Serializable {
     // TGroupeFactures
 
     public TGroupeTierspayant getGroupByCODEFACT(String codeFacture) {
-        TGroupeTierspayant groupeTierspayant = null;
-        try {
+        List<TGroupeTierspayant> groupes = getEntityManager()
+                .createQuery("SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ",
+                        TGroupeTierspayant.class)
+                .setParameter(1, codeFacture).setMaxResults(1).getResultList();
+        return groupes.isEmpty() ? null : groupes.get(0);
 
-            groupeTierspayant = (TGroupeTierspayant) getEntityManager()
-                    .createQuery("SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ")
-                    .setParameter(1, codeFacture).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return groupeTierspayant;
     }
 
     public TGroupeTierspayant findById(int id) {
@@ -1825,16 +1824,11 @@ public class GroupeTierspayantController implements Serializable {
     }
 
     public TGroupeFactures getgroupeFactureByCodeFacture(String codeFacture) {
-        TGroupeFactures groupeTierspayant = null;
-        try {
-            EntityManager em = getEntityManager();
-            groupeTierspayant = (TGroupeFactures) em
-                    .createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ")
-                    .setParameter(1, codeFacture).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return groupeTierspayant;
+        List<TGroupeFactures> groupeFactures = getEntityManager()
+                .createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ", TGroupeFactures.class)
+                .setParameter(1, codeFacture).setMaxResults(1).getResultList();
+        return groupeFactures.isEmpty() ? null : groupeFactures.get(0);
+
     }
 
     public JSONArray getGroupeInvoice(boolean all, String dt_start, String dt_end, String search, Integer idGrp,
@@ -2210,6 +2204,10 @@ public class GroupeTierspayantController implements Serializable {
             List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1,
                     p.getLgTIERSPAYANTID(), lgGRP, "");
 
+            if (finalTp.isEmpty()) {
+                return;
+            }
+
             switch (getCase(p)) {
 
             case 1:
@@ -2354,7 +2352,9 @@ public class GroupeTierspayantController implements Serializable {
             }
 
         });
-        grfact.put(CODEFACTURE, factures);
+        if (!factures.isEmpty()) {
+            grfact.put(CODEFACTURE, factures);
+        }
 
         em.getTransaction().commit();
         return grfact;
@@ -4942,13 +4942,14 @@ public class GroupeTierspayantController implements Serializable {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         Map<String, LinkedHashSet<TFacture>> grfact = new HashMap<>();
-        LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
+
         Map<TGroupeTierspayant, List<TTiersPayant>> lgGRPgroupe = payants.stream()
                 .collect(Collectors.groupingBy(s -> s.getLgGROUPEID()));
         lgGRPgroupe.forEach((g, u) -> {
             if (!em.getTransaction().isActive()) {
                 em.getTransaction().begin();
             }
+            LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
             TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
             String CODEFACTURE = OParameters.getStrVALUE();
             OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
@@ -4960,6 +4961,10 @@ public class GroupeTierspayantController implements Serializable {
             u.forEach((p) -> {
                 List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1,
                         -1, p.getLgTIERSPAYANTID(), g.getLgGROUPEID(), "");
+                if (finalTp.isEmpty()) {
+                    return;
+                }
+
                 switch (getCase(p)) {
                 case 1:
                     long montantFact = finalTp.stream().mapToLong((_qty) -> {
@@ -5098,7 +5103,10 @@ public class GroupeTierspayantController implements Serializable {
                     break;
                 }
             });
-            grfact.put(codeFacture, factures);
+            if (!factures.isEmpty()) {
+                grfact.put(codeFacture, factures);
+            }
+
             em.getTransaction().commit();
         });
 
