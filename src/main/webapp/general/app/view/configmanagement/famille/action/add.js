@@ -387,17 +387,17 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     allowDecimals: false,
                                     listeners: {
                                         change: function (fld, newVal) {
-                                            // Auto-calcul seuil mini rayon UNIQUEMENT en creation (pas en modification)
-                                            var miniField = fld.up('#info_reserve') && fld.up('#info_reserve').down('#int_SEUIL_MINI_RAYON');
-                                            if (!miniField || miniField._userModified) { return; }
+                                            var miniField = fld.up('fieldset') && fld.up('fieldset').down('#int_SEUIL_MINI_RAYON');
+                                            if (!miniField) { return; }
+                                            // Creation : auto-calcul a chaque changement.
+                                            // Modification : auto-calcul seulement si le seuil mini rayon est vide
+                                            // (produit qu'on active en reserve), jamais sur une valeur deja enregistree.
+                                            if (Omode !== 'create') {
+                                                var cur = miniField.getValue();
+                                                if (cur !== null && cur !== '' && cur > 0) { return; }
+                                            }
                                             var v = Math.max(0, parseInt(newVal, 10) || 0);
-                                            var mini;
-                                            if (v === 0) { mini = 0; }
-                                            else if (v === 1) { mini = 1; }
-                                            else { mini = Math.ceil(v / 2); }
-                                            miniField._autoCalc = true;
-                                            miniField.setValue(mini);
-                                            miniField._autoCalc = false;
+                                            miniField.setValue(v === 0 ? 0 : Math.ceil(v / 2));
                                         }
                                     }
                                 },
@@ -411,15 +411,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     name: 'int_SEUIL_MINI_RAYON',
                                     itemId: 'int_SEUIL_MINI_RAYON',
                                     xtype: 'numberfield',
-                                    allowDecimals: false,
-                                    listeners: {
-                                        change: function (fld) {
-                                            if (!fld._autoCalc) { fld._userModified = true; }
-                                        },
-                                        focus: function (fld) {
-                                            fld._userModified = true;
-                                        }
-                                    }
+                                    allowDecimals: false
                                 },
                                 { xtype: 'splitter' },
                                 {
@@ -574,7 +566,9 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             if (ds.bool_RESERVE) {
                 var dfReserve = g('int_RESERVE');
                 var seuil = g('int_SEUIL_RESERVE');
+                var seuilMini = form.down('#int_SEUIL_MINI_RAYON');
                 if (seuil) { seuil.setValue(ds.int_SEUIL_RESERVE); seuil.show(); }
+                if (seuilMini) { seuilMini.setValue(ds.int_SEUIL_MINI_RAYON); seuilMini.show(); }
                 if (dfReserve) { dfReserve.setValue(ds.int_STOCK_RESERVE); dfReserve.show(); }
             }
 
@@ -689,6 +683,34 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             if (parseInt(g('int_PAF').getValue()) > parseInt(g('int_PRICE').getValue())) {
                 Ext.MessageBox.alert('Impossible', 'Le prix d\'achat doit etre inferieur au prix de vente');
                 return;
+            }
+
+            // Validation seuil reserve / seuil mini rayon
+            if (g('bool_RESERVE') && g('bool_RESERVE').getValue()) {
+                var seuilField = form.down('#int_SEUIL_RESERVE');
+                var seuilMiniField = form.down('#int_SEUIL_MINI_RAYON');
+                var srVal = seuilField ? seuilField.getValue() : '';
+                var smrVal = seuilMiniField ? seuilMiniField.getValue() : '';
+                var sr = (srVal === null || srVal === '') ? 0 : (parseInt(srVal, 10) || 0);
+                var smr = (smrVal === null || smrVal === '') ? null : (parseInt(smrVal, 10) || 0);
+                if (sr <= 0 && (smr === null || smr <= 0)) {
+                    Ext.MessageBox.alert('Validation',
+                        'Avec la reserve activee, le seuil reserve et le seuil mini rayon doivent etre renseignes et superieurs a 0.',
+                        function () { if (seuilField) { seuilField.focus(true, 100); } });
+                    return;
+                }
+                if (sr > 0 && (smr === null || smr <= 0)) {
+                    Ext.MessageBox.alert('Validation',
+                        'Le seuil mini rayon doit etre renseigne et superieur a 0.',
+                        function () { if (seuilMiniField) { seuilMiniField.focus(true, 100); } });
+                    return;
+                }
+                if (sr <= 0 && smr > 0) {
+                    Ext.MessageBox.alert('Validation',
+                        'Le seuil reserve doit etre renseigne et superieur a 0.',
+                        function () { if (seuilField) { seuilField.focus(true, 100); } });
+                    return;
+                }
             }
 
             var int_PRICE_TIPS = g('int_PRICE_TIPS').getValue() || 0,

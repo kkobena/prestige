@@ -48,5 +48,9 @@ public interface InventaireService {
 
     int create(Set<String> produitIds, String description);
 
+    int createReserveInventaire(Set<String> produitIds, String description);
+
+    int createReserveInventaire(Set<String> produitIds, String name, String description);
+
     JSONObject createInventaireFromCsv(String csvContent, TUser tUser);
 }
