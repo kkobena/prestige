@@ -256,7 +256,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                 '-',
                                 {xtype: 'combobox', cls: 'glass-input', margins: '0 0 0 10', store: store_datecontrol,
                                     valueField: 'name', displayField: 'value', typeAhead: true, queryMode: 'local',
-                                    hidden: DISPLAYFILTER, width: 260, emptyText: 'Filtre par...',
+                                    hidden: false, width: 260, emptyText: 'Filtre par...',
                                     listeners: {select: function (cmp) {
                                             const value = cmp.getValue();
                                             const store = Ext.getCmp('gridpanelID').getStore();
