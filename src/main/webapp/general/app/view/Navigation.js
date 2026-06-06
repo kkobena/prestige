@@ -97,6 +97,7 @@ Ext.define('testextjs.view.Navigation', {
                 }
                 if (record.isLeaf()) { me.callItemMenu(view, record); }
             },
+            itemdblclick: function () { return false; },
             /* Survol d'un menu principal → afficher son flyout immédiatement */
             itemmouseenter: function (view, record, item) {
                 if (!record.isLeaf() && record.childNodes && record.childNodes.length > 0) {
@@ -135,9 +136,9 @@ Ext.define('testextjs.view.Navigation', {
                     return false;
                 }
             },
-            /* Empêcher le fixage (expand) du panel — toujours en mode flottant */
-            beforeexpand: function () { return false; },
-            collapse: function () {},
+            /* Empêcher le dépliage vertical des nœuds par double-clic */
+            beforeitemexpand: function () { return false; },
+            collapse: function () {}
         };
     },
 
