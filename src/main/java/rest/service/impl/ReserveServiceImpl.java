@@ -22,6 +22,11 @@ import org.json.JSONObject;
 import rest.service.ReserveService;
 
 /**
+ *
+ * @author Hermann N'ZI
+ */
+
+/**
  * Implementation du service de reserve. Toute mutation rayon/reserve se fait dans une transaction JTA unique
  * (atomicite), avec validation prealable et trace systematique dans t_mouvement_reserve.
  */

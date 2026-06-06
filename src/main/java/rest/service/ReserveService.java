@@ -5,6 +5,10 @@ import java.util.List;
 import org.json.JSONObject;
 
 /**
+ *
+ * @author Hermann N'ZI
+ */
+/**
  * Service de gestion des reserves : listing, mouvements rayon&lt;-&gt;reserve, suggestions de reassort et historique.
  * Remplace l'ancien backend JSP (ws_data / ws_transaction).
  */

@@ -22,6 +22,11 @@ import rest.service.ReserveService;
 import util.Constant;
 
 /**
+ *
+ * @author Hermann N'ZI
+ */
+
+/**
  * Endpoints REST de gestion des reserves. Remplace les anciens JSP ws_data / ws_transaction.
  */
 @Path("v1/reserve")
