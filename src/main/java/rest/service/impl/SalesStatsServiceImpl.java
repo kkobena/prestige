@@ -48,7 +48,6 @@ import dal.TUser_;
 import dal.TZoneGeographique_;
 import dal.enumeration.TypeTransaction;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -714,7 +713,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     @Override
     public List<VenteDTO> listeVentesReport(SalesStatsParams params) {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
@@ -730,14 +729,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
                 predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
             }
-            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                            params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"),
-                            formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                            params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"),
-                            formatter)));
-            predicates.add(btw);
+            Date dtStart = java.sql.Timestamp.valueOf(LocalDateTime.of(params.getDtStart(), params.gethStart()));
+            Date dtEnd = java.sql.Timestamp
+                    .valueOf(LocalDateTime.of(params.getDtEnd(), params.gethEnd()).withSecond(59));
+            predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtStart));
+            predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtEnd));
+
             predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_CLOSED)));
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
@@ -1262,7 +1259,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     List<Predicate> articlesVendusSpecialisation(CriteriaBuilder cb, Root<TPreenregistrementDetail> root,
             Join<TPreenregistrementDetail, TPreenregistrement> jp, Join<TPreenregistrementDetail, TFamille> jf,
             Join<TFamille, TFamilleStock> st, SalesStatsParams param) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String lgEmplacementId = this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmplacementId));
@@ -1277,12 +1274,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.or(cb.like(jf.get(TFamille_.strDESCRIPTION), searchQ),
                     cb.like(jf.get(TFamille_.intCIP), searchQ), cb.like(jf.get(TFamille_.intEAN13), searchQ)));
         }
-        Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, jp.get(TPreenregistrement_.dtUPDATED)),
-                java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                        param.getDtStart().toString() + " " + param.gethStart().toString().concat(":00"), formatter)),
-                java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                        param.getDtEnd().toString() + " " + param.gethEnd().toString().concat(":59"), formatter)));
-        predicates.add(btw);
+        Date dtStart = java.sql.Timestamp.valueOf(LocalDateTime.of(param.getDtStart(), param.gethStart()));
+        Date dtEnd = java.sql.Timestamp.valueOf(LocalDateTime.of(param.getDtEnd(), param.gethEnd()).withSecond(59));
+        predicates.add(cb.greaterThanOrEqualTo(jp.get(TPreenregistrement_.dtUPDATED), dtStart));
+        predicates.add(cb.lessThanOrEqualTo(jp.get(TPreenregistrement_.dtUPDATED), dtEnd));
 
         if (!StringUtils.isEmpty(param.getUser())) {
             predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
@@ -1542,26 +1537,27 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
-    private long getArticlesVendusCountRecap(SalesStatsParams params) {
+    private long[] getArticlesVendusRecapSummary(SalesStatsParams params) {
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            // CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            CriteriaQuery<Tuple> cq = cb.createTupleQuery();
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
             Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)))
-                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+            cq.multiselect(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)).alias("count"),
+                    cb.coalesce(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)), 0L).alias("montantTotal"));
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            Query q = getEntityManager().createQuery(cq);
-            return q.getResultList().size();
+            Tuple tuple = getEntityManager().createQuery(cq).getSingleResult();
+            return new long[] { tuple.get("count", Long.class), tuple.get("montantTotal", Long.class) };
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
 
-            return 0;
+            return new long[] { 0, 0 };
         }
 
     }
@@ -1570,7 +1566,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     public JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException {
         params.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
-        long count = getArticlesVendusCountRecap(params);
+        long[] summary = getArticlesVendusRecapSummary(params);
+        long count = summary[0];
 
         if (count == 0) {
             json.put("total", count);
@@ -1579,8 +1576,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         List<VenteDetailsDTO> data = getArticlesVendusRecap(params);
         json.put("total", count);
-        json.put("data", new JSONArray(data)).put("metaData",
-                new JSONObject().put("montantTotal", totalMontantArticleVendus(params)));
+        json.put("data", new JSONArray(data)).put("metaData", new JSONObject().put("montantTotal", summary[1]));
         return json;
     }
 
@@ -2101,7 +2097,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     List<Predicate> predicatesVentes(SalesStatsParams params, CriteriaBuilder cb, Root<TPreenregistrementDetail> root,
             Join<TPreenregistrementDetail, TPreenregistrement> st) {
         List<Predicate> predicates = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Date dtStart = java.sql.Timestamp.valueOf(LocalDateTime.of(params.getDtStart(), params.gethStart()));
+        Date dtEnd = java.sql.Timestamp.valueOf(LocalDateTime.of(params.getDtEnd(), params.gethEnd()).withSecond(59));
+
         if (params.isDepotOnly()) {
             CriteriaBuilder.In<String> types = cb
                     .in(st.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID));
@@ -2123,23 +2122,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         if (params.isOnlyAvoir()) {
             predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
             predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
-            predicates.add(cb.between(
-                    cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.completionDate)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                            params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"),
-                            formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                            params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"),
-                            formatter))));
+            predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.completionDate), dtStart));
+            predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.completionDate), dtEnd));
 
         } else {
-            predicates.add(cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                            params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"),
-                            formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(
-                            params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"),
-                            formatter))));
+            predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtStart));
+            predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtEnd));
 
         }
 
@@ -2157,15 +2145,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                             cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), search)));
             predicates.add(predicate);
         }
+        TUser currentUser = params.getUserId();
         if (!params.isShowAll()) {
-            predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID),
-                    params.getUserId().getLgUSERID()));
+            predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID), currentUser));
         }
         if (!params.isShowAllActivities()) {
-            TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
-            predicates.add(
-                    cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
-                            te.getLgEMPLACEMENTID()));
+            TEmplacement te = currentUser.getLgEMPLACEMENTID();
+            predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID), te));
         }
         if (params.isDiscountStat()) {
             predicates.add(cb.notEqual(st.get(TPreenregistrement_.intPRICEREMISE), 0));
