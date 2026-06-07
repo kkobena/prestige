@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -500,7 +501,9 @@ public class FacturationServiceImpl implements FacturationService {
         SimpleDateFormat dHeure = new SimpleDateFormat("HH:mm:ss");
         ReportTypeTiersPayantFactureDTO reportTypeTiersPayantFacture = new ReportTypeTiersPayantFactureDTO();
         Map<TTiersPayant, List<TFacture>> factureByTp = fetchFactures(invoiceFilter, tiersPayantId, codeFacture,
-                searchTerm, dtStart, dtEnd).stream().collect(Collectors.groupingBy(TFacture::getTiersPayant));
+                searchTerm, dtStart, dtEnd).stream().collect(
+                        Collectors.groupingBy(TFacture::getTiersPayant, LinkedHashMap::new, Collectors.toList()));
+
         BigDecimal montantFacture = BigDecimal.ZERO;
         BigDecimal montantRegle = BigDecimal.ZERO;
         BigDecimal montantRestant = BigDecimal.ZERO;
@@ -589,8 +592,11 @@ public class FacturationServiceImpl implements FacturationService {
             CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
             Root<TFacture> root = cq.from(TFacture.class);
             Join<TFacture, TTiersPayant> st = root.join(TFacture_.tiersPayant, JoinType.INNER);
-            cq.select(root).orderBy(cb.desc(st.get(TTiersPayant_.dtCREATED)),
-                    cb.asc(st.get(TTiersPayant_.strFULLNAME)));
+            Join<TTiersPayant, TTypeTiersPayant> typeTiersPayant = st.join(TTiersPayant_.lgTYPETIERSPAYANTID,
+                    JoinType.LEFT);
+            cq.select(root).orderBy(cb.asc(typeTiersPayant.get(TTypeTiersPayant_.strLIBELLETYPETIERSPAYANT)),
+                    cb.asc(st.get(TTiersPayant_.strFULLNAME)), cb.asc(root.get(TFacture_.strCODEFACTURE)));
+
             List<Predicate> predicates = fetchFacturesPredicates(cb, root, st, searchTerm, tiersPayantId, codeFacture,
                     invoiceFilter, DateCommonUtils.from(dtStart), DateCommonUtils.toDateAtEndOfDay(dtEnd));
 
