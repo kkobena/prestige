@@ -1,6 +1,6 @@
 <%-- 
     Document   : ws_rp_print_all_invoices
-    Created on : 8 déc. 2015, 10:21:33
+    Created on : 8 dï¿½c. 2015, 10:21:33
     Author     : KKOFFI
 --%>
 
@@ -49,6 +49,19 @@
 <%@page import="bll.userManagement.privilege"  %>
 <%@page import="toolkits.parameters.commonparameter"  %>
 
+<%!
+    // Garantit un nom de fichier unique au sein du PDF de groupe (sinon suffixe _2, _3, ...)
+    private String uniqueName(java.util.Set<String> used, String base) {
+        String name = base + ".pdf";
+        int i = 2;
+        while (used.contains(name)) {
+            name = base + "_" + (i++) + ".pdf";
+        }
+        used.add(name);
+        return name;
+    }
+%>
+
 <%
     Translate OTranslate = new Translate();
     dataManager OdataManager = new dataManager();
@@ -86,22 +99,22 @@
         invoicesToPrint = new HashMap<>();
     }
 
-    /* les factures à imprimer */
+    /* les factures ï¿½ imprimer */
     long P_ATT_AMOUNTGROUPE = 0l;
     String P_FOOTER_RC = "";
 
     if (oTOfficine.getStrREGISTRECOMMERCE() != null) {
-        P_FOOTER_RC += "RC N° " + oTOfficine.getStrREGISTRECOMMERCE();
+        P_FOOTER_RC += "RC Nï¿½ " + oTOfficine.getStrREGISTRECOMMERCE();
     }
 
     if (oTOfficine.getStrCOMPTECONTRIBUABLE() != null) {
-        P_FOOTER_RC += " - CC N° " + oTOfficine.getStrCOMPTECONTRIBUABLE();
+        P_FOOTER_RC += " - CC Nï¿½ " + oTOfficine.getStrCOMPTECONTRIBUABLE();
     }
     if (oTOfficine.getStrREGISTREIMPOSITION() != null) {
-        P_FOOTER_RC += " - Régime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
+        P_FOOTER_RC += " - Rï¿½gime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
     }
     if (oTOfficine.getStrCENTREIMPOSITION() != null) {
-        P_FOOTER_RC += " - Centre des Impôts: " + oTOfficine.getStrCENTREIMPOSITION();
+        P_FOOTER_RC += " - Centre des Impï¿½ts: " + oTOfficine.getStrCENTREIMPOSITION();
     }
 
     if (oTOfficine.getStrPHONE() != null) {
@@ -120,7 +133,7 @@
         P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
     }
     if (oTOfficine.getStrNUMCOMPTABLE() != null) {
-        P_INSTITUTION_ADRESSE += " - CPT N°: " + oTOfficine.getStrNUMCOMPTABLE();
+        P_INSTITUTION_ADRESSE += " - CPT Nï¿½: " + oTOfficine.getStrNUMCOMPTABLE();
     }
     Map parameters = new HashMap();
     parameters.put("P_H_LOGO", P_H_LOGO);
@@ -137,6 +150,8 @@
         recapParam = OdataManager.getEm().find(dal.TParameters.class, "KEY_IMPRESSION_RECAP_FACTURE");
     } catch (Exception e) {
     }
+    String firstGroupeName = "";
+    java.util.Set<String> usedNames = new java.util.HashSet<>();
     for (Map.Entry<String, LinkedHashSet<TFacture>> en : invoicesToPrint.entrySet()) {
         LinkedHashSet<TFacture> factures = en.getValue();
 
@@ -150,6 +165,10 @@
         TGroupeFactures gp = controller.getgroupeFactureByCodeFacture(codeFac);
         if (g == null || gp == null) {
             continue;
+        }
+        // Nom du 1er groupe, capture une seule fois pour le nom du fichier de sortie
+        if ("".equals(firstGroupeName) && g.getStrLIBELLE() != null) {
+            firstGroupeName = g.getStrLIBELLE();
         }
 
         String footer = "";
@@ -174,16 +193,20 @@
         OreportManager.BuildReport(parameters, Ojconnexion);
         inputPdfList.add(new FileInputStream(jdom.scr_report_pdf + footer));
 
-        String CODEFATUREGROUPE = "FACTURE N° :";
+        String CODEFATUREGROUPE = "FACTURE Nï¿½ :";
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS);
         LongAdder count = new LongAdder();
         for (TFacture OFacture : factures) {
             count.increment();
-            String factuteFileName = "rp_facture_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyy_MM_dd_H_mm_ss")) + count.intValue() + ".pdf";
             String tauxpath = "";
             CODEFATUREGROUPE += OFacture.getStrCODEFACTURE() + ",";
             String scr_report_file = "rp_facturerecap";
             TTiersPayant OTiersPayant = OdataManager.getEm().find(TTiersPayant.class, OFacture.getStrCUSTOMER());
+            // Nom lisible de la sous-facture : Facture_<TiersPayant>-<debut ddMMyyyy>_<fin ddMMyyyy>-<HHmmss>.pdf
+            String subTpName = (OTiersPayant.getStrNAME() != null ? OTiersPayant.getStrNAME() : "").replaceAll("[^A-Za-z0-9]", "");
+            String subDebut = OFacture.getDtDEBUTFACTURE() != null ? new java.text.SimpleDateFormat("ddMMyyyy").format(OFacture.getDtDEBUTFACTURE()) : "";
+            String subFin = OFacture.getDtFINFACTURE() != null ? new java.text.SimpleDateFormat("ddMMyyyy").format(OFacture.getDtFINFACTURE()) : "";
+            String factuteFileName = uniqueName(usedNames, "Facture_" + subTpName + "-" + subDebut + "_" + subFin + "-" + new java.text.SimpleDateFormat("HHmmss").format(new Date()));
             TTypeMvtCaisse OTypeMvtCaisse = OdataManager.getEm().find(TTypeMvtCaisse.class, OFacture.getLgTYPEFACTUREID().getLgTYPEFACTUREID());
             String report_generate_file = key.GetNumberRandom();
             report_generate_file = report_generate_file + ".pdf";
@@ -196,15 +219,15 @@
 
             parameters.put("P_LG_FACTURE_ID", OFacture.getLgFACTUREID());
             parameters.put("P_LG_TIERS_PAYANT_ID", OTiersPayant.getLgTIERSPAYANTID());
-            parameters.put("P_CODE_FACTURE", "FACTURE N° " + OFacture.getStrCODEFACTURE() + " (" + OTiersPayant.getStrNAME() + ")");
+            parameters.put("P_CODE_FACTURE", "FACTURE Nï¿½ " + OFacture.getStrCODEFACTURE() + " (" + OTiersPayant.getStrNAME() + ")");
             parameters.put("P_TIERS_PAYANT_NAME", OTiersPayant.getStrFULLNAME());
             parameters.put("P_CODE_COMPTABLE", "CODE COMPTABLE : " + OTypeMvtCaisse.getStrCODECOMPTABLE());
 
             // parameters.put("P_NUMBERPERPAGE", 12);
             parameters.put("P_CODE_POSTALE", (OTiersPayant.getStrADRESSE() != null && !"".equals(OTiersPayant.getStrADRESSE())) ? OTiersPayant.getStrADRESSE() : "");
-            parameters.put("P_COMPTE_CONTRIBUABLE", (OTiersPayant.getStrCOMPTECONTRIBUABLE() != null && !"".equals(OTiersPayant.getStrCOMPTECONTRIBUABLE())) ? "N ° CC :" + OTiersPayant.getStrCOMPTECONTRIBUABLE() : "");
-            parameters.put("P_CODE_OFFICINE", (OTiersPayant.getStrCODEOFFICINE() != null && !"".equals(OTiersPayant.getStrCODEOFFICINE())) ? "N ° CO :" + OTiersPayant.getStrCODEOFFICINE() : "");
-            parameters.put("P_REGISTRE_COMMERCE", (OTiersPayant.getStrREGISTRECOMMERCE() != null && !"".equals(OTiersPayant.getStrREGISTRECOMMERCE())) ? "N ° RC :" + OTiersPayant.getStrREGISTRECOMMERCE() : "");
+            parameters.put("P_COMPTE_CONTRIBUABLE", (OTiersPayant.getStrCOMPTECONTRIBUABLE() != null && !"".equals(OTiersPayant.getStrCOMPTECONTRIBUABLE())) ? "N ï¿½ CC :" + OTiersPayant.getStrCOMPTECONTRIBUABLE() : "");
+            parameters.put("P_CODE_OFFICINE", (OTiersPayant.getStrCODEOFFICINE() != null && !"".equals(OTiersPayant.getStrCODEOFFICINE())) ? "N ï¿½ CO :" + OTiersPayant.getStrCODEOFFICINE() : "");
+            parameters.put("P_REGISTRE_COMMERCE", (OTiersPayant.getStrREGISTRECOMMERCE() != null && !"".equals(OTiersPayant.getStrREGISTRECOMMERCE())) ? "N ï¿½ RC :" + OTiersPayant.getStrREGISTRECOMMERCE() : "");
             /* fin du recap */
             if (recapParam != null && Integer.valueOf(recapParam.getStrVALUE()) == 1) {
                 OreportManager.BuildReport(parameters, Ojconnexion);
@@ -355,8 +378,12 @@
         }
 
     }
-    String rp_Invoices_ = "rp_facture_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyy_MM_dd_H_mm_ss")) + ".pdf";
-    //  String str_file = "rp_Invoices_" + key.GetNumberRandom() + ".pdf";
+    // Nom de sortie : Facture_Groupe_<NomGroupe>_<dd-MM-yyyy>_<HHmmss>.pdf
+    String safeGroupe = firstGroupeName.replaceAll("[^A-Za-z0-9]", "");
+    String rp_Invoices_ = "Facture_Groupe_"
+            + (safeGroupe.isEmpty() ? "" : safeGroupe + "_")
+            + new java.text.SimpleDateFormat("dd-MM-yyyy").format(new Date()) + "_"
+            + new java.text.SimpleDateFormat("HHmmss").format(new Date()) + ".pdf";
     String outputStreamFile = jdom.scr_report_pdf + rp_Invoices_;
     OutputStream outputStream = new FileOutputStream(outputStreamFile);
 
