@@ -788,7 +788,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             }
                         },
                         {
-                            text: '',
+                            text: 'Rechercher',
                             tooltip: 'rechercher',
                             scope: this,
                             iconCls: 'searchicon',
