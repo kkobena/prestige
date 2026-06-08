@@ -691,6 +691,7 @@ Ext.define('testextjs.controller.DevisCtr', {
                         } else if (records.length === 1) {
                             me.client = records[0];
                             me.updateClientLambdInfos();
+                            me.persistClientChangeIfEditing();
                             me.getClientLambda().destroy();
                             me.getVnoproduitCombo().focus(true, 100);
                         } else {
@@ -897,6 +898,7 @@ Ext.define('testextjs.controller.DevisCtr', {
         me.getNomAssure().setValue(record.get('strFIRSTNAME'));
         me.getPrenomAssure().setValue(record.get('strLASTNAME'));
         me.getNumAssure().setValue(record.get('strADRESSE'));
+        me.persistClientChangeIfEditing();
         me.closeClientLambdaWindow();
     },
     onClientLambdaSpecialKey: function (field, e, options) {
@@ -912,6 +914,40 @@ Ext.define('testextjs.controller.DevisCtr', {
         me.getPrenomAssure().setValue(client.get('strLASTNAME'));
         me.getNumAssure().setValue(client.get('strADRESSE'));
 
+    },
+    /**
+     * Persiste le changement de client lorsqu'on modifie une proforma déjà
+     * enregistrée. Sur une nouvelle proforma, le client est rattaché au moment
+     * de l'ajout du premier article : on ne fait donc rien tant qu'il n'existe
+     * pas de préenregistrement courant.
+     */
+    persistClientChangeIfEditing: function () {
+        var me = this, vente = me.getCurrent(), client = me.getClient();
+        if (!vente || !vente.lgPREENREGISTREMENTID || !client) {
+            return;
+        }
+        var data = {
+            "venteId": vente.lgPREENREGISTREMENTID,
+            "clientId": client.get('lgCLIENTID')
+        };
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Mise à jour du client');
+        Ext.Ajax.request({
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/vente/update/client',
+            params: Ext.JSON.encode(data),
+            success: function (response, options) {
+                progress.hide();
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (!result.success) {
+                    Ext.Msg.alert('Message', result.msg || "La mise à jour du client a échoué");
+                }
+            },
+            failure: function (response, options) {
+                progress.hide();
+                Ext.Msg.alert('Message', 'Erreur serveur ' + response.status);
+            }
+        });
     },
     registerNewClient: function () {
         var me = this, form = me.getClientLambdaform();
@@ -929,6 +965,7 @@ Ext.define('testextjs.controller.DevisCtr', {
                     if (result.success) {
                         me.client = new testextjs.model.caisse.ClientLambda(result.data);
                         me.updateClientLambdInfos();
+                        me.persistClientChangeIfEditing();
                         me.closeClientLambdaWindow();
                         me.getVnoproduitCombo().focus(true, 50);
                     } else {
@@ -1187,7 +1224,9 @@ Ext.define('testextjs.controller.DevisCtr', {
         };
         me.refresh();
         me.client = client;
-        clientSearchBox.hide();
+        // On garde le champ de recherche client visible afin de pouvoir
+        // modifier le client d'une proforma existante.
+        clientSearchBox.show();
         me.loadClient(client.lgCLIENTID, lgTYPEVENTEID, record.lgPREENREGISTREMENTID, intPRICE);
 
 
@@ -1248,15 +1287,13 @@ Ext.define('testextjs.controller.DevisCtr', {
         if (e.getKey() === e.ENTER) {
             var me = this, typeVenteId = me.getTypeVenteCombo().getValue();
             if (field.getValue() && field.getValue().trim() !== '') {
-                if (me.getCurrent()) {
-
+                // La recherche client fonctionne aussi bien sur une nouvelle
+                // proforma que sur une proforma existante (modification du client).
+                me.client = null;
+                if (typeVenteId === '1') {
+                    me.showAndHideInfosStandardClient(true);
                 } else {
-                    me.client = null;
-                    if (typeVenteId === '1') {
-                        me.showAndHideInfosStandardClient(true);
-                    } else {
-                        me.loadAssuranceClient(field.getValue());
-                    }
+                    me.loadAssuranceClient(field.getValue());
                 }
             }
 
@@ -1353,6 +1390,7 @@ Ext.define('testextjs.controller.DevisCtr', {
             me.updateAssurerCmp();
         }
         me.updateCarnetTp(client);
+        me.persistClientChangeIfEditing();
         me.onBtnCancelClient();
         me.getVnoproduitCombo().focus(true, 100);
     },
@@ -1362,7 +1400,7 @@ Ext.define('testextjs.controller.DevisCtr', {
         var client = me.getClient();
         if (client) {
             me.updateAssurerCmp();
-
+            me.persistClientChangeIfEditing();
         }
 
     },
@@ -1492,8 +1530,24 @@ Ext.define('testextjs.controller.DevisCtr', {
     },
     doCloture: function () {
 
-        var me = this;
+        var me = this, vente = me.getCurrent();
+        // On mémorise l'identifiant de la proforma enregistrée avant de vider
+        // la vue, afin de pouvoir l'imprimer si l'utilisateur le souhaite.
+        var venteId = vente ? vente.lgPREENREGISTREMENTID : null;
         me.resetAlls();
+        Ext.MessageBox.show({
+            title: 'Impression',
+            msg: 'Voulez-vous imprimer la proforma ?',
+            buttons: Ext.MessageBox.YESNO,
+            icon: Ext.MessageBox.QUESTION,
+            fn: function (button) {
+                if (button === 'yes' && venteId) {
+                    // Même action que le bouton "Re-imprimer la proforma" de la liste.
+                    window.open('../FacturePdfServlet?mode=DEVIS&venteId=' + venteId);
+                }
+                me.goBack();
+            }
+        });
 
     },
 
