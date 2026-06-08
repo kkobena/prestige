@@ -262,14 +262,13 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     dataIndex: 'int_STOCK_RESERVE',
                     align: 'center',
                     flex: 0.5,
-                    hidden: true,
+                    hidden: false,
                     renderer: function (v, m, r) {
                         if (!r.data.bool_RESERVE) {
                             return '';
                         }
-
                         const reserve = v != null ? v : 0;
-
+/*
                         // Appliquer la même mise en forme que Stock
                         if (reserve < 0) {
                             // Valeurs négatives : texte en rouge, fond rosé
@@ -280,6 +279,15 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         } else {
                             // Valeurs positives : texte en vert
                             m.style = 'color:green; font-weight:bold;font-size: 18px;';
+                        }*/
+                        
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
+                            m.style = 'color: black; font-weight:bold;background-color:#B0F2B6;font-weight:bold;font-size: 18px;';
+                        } else if (stock > 0) {
+                            m.style = 'color: black; font-weight:bold;font-weight:bold;font-size: 18px;';
+                        } else if (stock < 0) {
+                            m.style = 'color: black; font-weight:bold;background-color:#F5BCA9;font-weight:bold;font-size: 18px;';
                         }
 
                         return reserve;

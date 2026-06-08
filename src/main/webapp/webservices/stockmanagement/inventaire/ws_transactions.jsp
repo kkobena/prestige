@@ -224,9 +224,6 @@
                 if (nligne > 0) {
                     success = 1;
                     result = nligne + " Articles Inventoriés";
-                } else if (str_TYPE_TRANSACTION.equalsIgnoreCase("Famille") && !lg_FAMILLEARTICLE_ID.equals("%%")) {
-                    success = 1;
-                    result = "Aucun article trouve pour cette famille avec les criteres selectionnes";
                 }
                 // ObllBase.setMessage(OInventaireManager.getMessage());
             } catch (Exception e) {
