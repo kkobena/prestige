@@ -386,18 +386,21 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     allowBlank: false,
                                     allowDecimals: false,
                                     listeners: {
-                                        change: function (fld, newVal) {
-                                            var miniField = fld.up('fieldset') && fld.up('fieldset').down('#int_SEUIL_MINI_RAYON');
-                                            if (!miniField) { return; }
-                                            // Creation : auto-calcul a chaque changement.
-                                            // Modification : auto-calcul seulement si le seuil mini rayon est vide
-                                            // (produit qu'on active en reserve), jamais sur une valeur deja enregistree.
-                                            if (Omode !== 'create') {
-                                                var cur = miniField.getValue();
-                                                if (cur !== null && cur !== '' && cur > 0) { return; }
+                                        change: {
+                                            buffer: 400,
+                                            fn: function (fld, newVal) {
+                                                var miniField = fld.up('fieldset') && fld.up('fieldset').down('#int_SEUIL_MINI_RAYON');
+                                                if (!miniField) { return; }
+                                                // Création ou réserve venant d'être activée : toujours auto-calculer.
+                                                // Modification d'un article qui avait déjà une réserve : on n'écrase
+                                                // la valeur existante que si elle est vide (0 / null).
+                                                if (Omode !== 'create' && !miniField._reserveJustActivated) {
+                                                    var cur = miniField.getValue();
+                                                    if (cur !== null && cur !== '' && cur > 0) { return; }
+                                                }
+                                                var v = Math.max(0, parseInt(newVal, 10) || 0);
+                                                miniField.setValue(v === 0 ? 0 : Math.ceil(v / 2));
                                             }
-                                            var v = Math.max(0, parseInt(newVal, 10) || 0);
-                                            miniField.setValue(v === 0 ? 0 : Math.ceil(v / 2));
                                         }
                                     }
                                 },
