@@ -620,596 +620,135 @@ public class StatisticsFamilleArticle extends bll.bllBase {
         return object;
     }
 
+    private static final String[] CA_MONTH_FIELDS = { "janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet",
+            "aout", "sep", "oct", "nov", "dec" };
+    private static final String[] CA_MONTH_PERCENT_FIELDS = { "P_janvier", "P_fevrier", "P_mars", "P_avril", "P_mai",
+            "P_juin", "P_juillet", "P_aout", "P_sep", "P_oct", "P_nov", "P_dec" };
+    private static final String[] CA_MONTH_PROGRESS_FIELDS = { "Prog_janvier", "Prog_fevrier", "Prog_mars",
+            "Prog_avril", "Prog_mai", "Prog_juin", "Prog_juillet", "Prog_aout", "Prog_sep", "Prog_oct", "Prog_nov",
+            "Prog_dec" };
+
+    private static class FamilleCAAccumulator {
+        private final String libelle;
+        private final String codeFamille;
+        private final double[] currentYearAmounts = new double[12];
+        private final double[] previousYearAmounts = new double[12];
+
+        FamilleCAAccumulator(String libelle, String codeFamille) {
+            this.libelle = libelle;
+            this.codeFamille = codeFamille;
+        }
+    }
+
     public JSONArray getFamilleCA_Data(String search_value, String periode, String periode_1) {
         JSONArray array = new JSONArray();
-        String query = "SELECT  fa.`str_LIBELLE`, fa.`str_CODE_FAMILLE` ,\n" + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='"
-                + periode
-                + "' AND MONTH(d.`dt_CREATED`)='01'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS UN,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='01'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS UN_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='02'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS DEUX,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='02'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS DEUX_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='03'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS TROIS,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='03'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS TROIS_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='04'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS QUATRE,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='04'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS QUATRE_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='05'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS CINQ,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='05'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS CINQ_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='06'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS SIX,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='06'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS SIX_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='07'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS SEPT,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='07'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS SEPT_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='08'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS HUIT,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='08'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS HUIT_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='09'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS NEUF,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='09'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS NEUF_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='10'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS DIX,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='10'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS DIX_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='11'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS ONZE,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='11'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS ONZE_1,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode
-                + "' AND MONTH(d.`dt_CREATED`)='12'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS DOUZE,\n"
-                + "(SUM(CASE WHEN (YEAR(d.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(d.`dt_CREATED`)='12'  ) THEN  (d.`int_PRICE`-(CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END))ELSE 0 END))  AS DOUZE_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='01'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_UN,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='01'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_UN_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='02'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_DEUX,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='02'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_DEUX_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='03'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_TROIS,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='03'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_TROIS_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='04'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_QUATRE,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='04'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_QUATRE_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='05'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_CINQ,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='05'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_CINQ_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='06'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_SIX,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='06'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_SIX_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='07'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_SEPT,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='07'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_SEPT_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='08'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_HUIT,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='08'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_HUIT_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='09'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_NEUF,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='09'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_NEUF_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='10'\n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_DIX,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='10'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0 ) AS TOTAL_DIX_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='11'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0 ) AS TOTAL_ONZE,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='11'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0) AS TOTAL_ONZE_1,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode
-                + "' AND MONTH(p.`dt_CREATED`)='12'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0 ) AS TOTAL_DOUZE,\n"
-                + "(SELECT SUM(d.`int_PRICE`-CASE WHEN d.`int_PRICE_REMISE`!= NULL THEN\n"
-                + "                 d.`int_PRICE_REMISE` ELSE 0 END)   FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' AND YEAR(p.`dt_CREATED`)='" + periode_1
-                + "' AND MONTH(p.`dt_CREATED`)='12'\n"
-                + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0 ) AS TOTAL_DOUZE_1\n"
-                + "FROM t_preenregistrement_detail d,\n"
-                + "                t_preenregistrement p,t_famille f,t_famillearticle fa\n"
-                + "                WHERE d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID` AND\n"
-                + "                f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` AND \n"
-                + "                fa.`lg_FAMILLEARTICLE_ID`=f.`lg_FAMILLEARTICLE_ID`  \n"
-                + "AND p.`str_STATUT`='is_Closed' \n" + "AND p.`int_PRICE` >0 AND p.`b_IS_CANCEL` =0 \n"
-                + " AND (fa.`str_LIBELLE` LIKE '%%' )\n" + "                GROUP BY fa.`str_LIBELLE`,\n"
-                + "fa.`str_CODE_FAMILLE` ORDER BY DATE_FORMAT(d.`dt_CREATED`,'%m/%Y');";
-        try {
+        int currentYear = extractYear(periode, Integer.valueOf(date.FORMATTERYEAR.format(new Date())));
+        int previousYear = extractYear(periode_1, currentYear - 1);
+        LocalDate startDate = LocalDate.of(previousYear, 1, 1);
+        LocalDate endDate = LocalDate.of(currentYear + 1, 1, 1);
+        String search = search_value == null ? "" : search_value.trim();
+        String searchPattern = "%" + search + "%";
 
-            List<Object[]> ob = this.getOdataManager().getEm().createNativeQuery(query).getResultList();
-            double un = 0, un_1 = 0, total_un = 0, total_un_1 = 0, un_pr = 0, un_percent = 0, un_1_percent = 0;
-            double deux = 0, deux_1 = 0, total_deux = 0, total_deux_1 = 0, deux_pr = 0, deux_percent = 0,
-                    deux_1_percent = 0;
-            double trois = 0, trois_1 = 0, total_trois = 0, total_trois_1 = 0, trois_pr = 0, trois_percent = 0,
-                    trois_1_percent = 0;
-            double quatre = 0, quatre_1 = 0, total_quatre = 0, total_quatre_1 = 0, quatre_pr = 0, quatre_percent = 0,
-                    quatre_1_percent = 0;
-            double cinq = 0, cinq_1 = 0, total_cinq = 0, total_cinq_1 = 0, cinq_pr = 0, cinq_percent = 0,
-                    cinq_1_percent = 0;
-            double six = 0, six_1 = 0, total_six = 0, total_six_1 = 0, six_pr = 0, six_percent = 0, six_1_percent = 0;
-            double sept = 0, sept_1 = 0, total_sept = 0, total_sept_1 = 0, sept_pr = 0, sept_percent = 0,
-                    sept_1_percent = 0;
-            double huit = 0, huit_1 = 0, total_huit = 0, total_huit_1 = 0, huit_pr = 0, huit_percent = 0,
-                    huit_1_percent = 0;
-            double neuf = 0, neuf_1 = 0, total_neuf = 0, total_neuf_1 = 0, neuf_pr = 0, neuf_percent = 0,
-                    neuf_1_percent = 0;
-            double dix = 0, dix_1 = 0, total_dix = 0, total_dix_1 = 0, dix_pr = 0, dix_percent = 0, dix_1_percent = 0;
-            double onze = 0, onze_1 = 0, total_onze = 0, total_onze_1 = 0, onze_pr = 0, onze_percent = 0,
-                    onze_1_percent = 0;
-            double douze = 0, douze_1 = 0, total_douze = 0, total_douze_1 = 0, douze_pr = 0, douze_percent = 0,
-                    douze_1_percent = 0;
+        String query = "SELECT fa.`str_LIBELLE`, fa.`str_CODE_FAMILLE`, YEAR(d.`dt_CREATED`) AS annee, "
+                + "MONTH(d.`dt_CREATED`) AS mois, SUM(d.`int_PRICE` - COALESCE(d.`int_PRICE_REMISE`, 0)) AS montant "
+                + "FROM t_preenregistrement_detail d "
+                + "JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID` = d.`lg_PREENREGISTREMENT_ID` "
+                + "JOIN t_famille f ON f.`lg_FAMILLE_ID` = d.`lg_FAMILLE_ID` "
+                + "JOIN t_famillearticle fa ON fa.`lg_FAMILLEARTICLE_ID` = f.`lg_FAMILLEARTICLE_ID` "
+                + "WHERE p.`str_STATUT` = ?1 AND p.`int_PRICE` > 0 AND p.`b_IS_CANCEL` = 0 "
+                + "AND d.`dt_CREATED` >= ?2 AND d.`dt_CREATED` < ?3 "
+                + "AND (?4 = '' OR fa.`str_LIBELLE` LIKE ?5 OR fa.`str_CODE_FAMILLE` LIKE ?5) "
+                + "GROUP BY fa.`str_LIBELLE`, fa.`str_CODE_FAMILLE`, YEAR(d.`dt_CREATED`), MONTH(d.`dt_CREATED`) "
+                + "ORDER BY fa.`str_LIBELLE`, fa.`str_CODE_FAMILLE`, annee, mois";
+        try {
+            Query nativeQuery = this.getOdataManager().getEm().createNativeQuery(query);
+            nativeQuery.setParameter(1, commonparameter.statut_is_Closed);
+            nativeQuery.setParameter(2, java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
+            nativeQuery.setParameter(3, java.sql.Timestamp.valueOf(endDate.atStartOfDay()));
+            nativeQuery.setParameter(4, search);
+            nativeQuery.setParameter(5, searchPattern);
+
+            List<Object[]> rows = nativeQuery.getResultList();
+            Map<String, FamilleCAAccumulator> familles = new java.util.LinkedHashMap<>();
+            double[] currentYearTotals = new double[12];
+            double[] previousYearTotals = new double[12];
+
+            for (Object[] row : rows) {
+                String libelle = row[0] != null ? row[0].toString() : "";
+                String codeFamille = row[1] != null ? row[1].toString() : "";
+                int year = ((Number) row[2]).intValue();
+                int monthIndex = ((Number) row[3]).intValue() - 1;
+                double amount = row[4] != null ? Double.valueOf(row[4].toString()) : 0;
+                String key = codeFamille + "|" + libelle;
+                FamilleCAAccumulator famille = familles.computeIfAbsent(key,
+                        k -> new FamilleCAAccumulator(libelle, codeFamille));
+
+                if (monthIndex >= 0 && monthIndex < 12) {
+                    if (year == currentYear) {
+                        famille.currentYearAmounts[monthIndex] = amount;
+                        currentYearTotals[monthIndex] += amount;
+                    } else if (year == previousYear) {
+                        famille.previousYearAmounts[monthIndex] = amount;
+                        previousYearTotals[monthIndex] += amount;
+                    }
+                }
+            }
+
             int count = 0;
-            for (Object[] data : ob) {
+            for (FamilleCAAccumulator famille : familles.values()) {
                 JSONObject json = new JSONObject();
                 json.put("id", count);
-                json.put("GP", data[1]);
-                json.put("str_Libelle_Produit", data[0]);
-                json.put("janvier", data[2]);
-                un = Double.valueOf(data[2] + "");
-                json.put("janvier_1", data[3]);
-                un_1 = Double.valueOf(data[3] + "");
-                json.put("fevrier", data[4]);
-                deux = Double.valueOf(data[4] + "");
-                json.put("fevrier_1", data[5]);
-                deux_1 = Double.valueOf(data[5] + "");
-                json.put("mars", data[6]);
-                trois = Double.valueOf(data[6] + "");
-                json.put("mars_1", data[7]);
-                trois_1 = Double.valueOf(data[7] + "");
-                json.put("avril", data[8]);
-                quatre = Double.valueOf(data[8] + "");
-                json.put("avril_1", data[9]);
-                quatre_1 = Double.valueOf(data[9] + "");
-                json.put("mai", data[10]);
-                cinq = Double.valueOf(data[10] + "");
-                json.put("mai_1", data[11]);
-                cinq_1 = Double.valueOf(data[11] + "");
-                json.put("juin", data[12]);
-                six = Double.valueOf(data[12] + "");
-                json.put("juin_1", data[13]);
-                six_1 = Double.valueOf(data[13] + "");
-                json.put("juillet", data[14]);
-                sept = Double.valueOf(data[14] + "");
-                json.put("juillet_1", data[15]);
-                sept_1 = Double.valueOf(data[15] + "");
-                json.put("aout", data[16]);
-                huit = Double.valueOf(data[16] + "");
-                json.put("aout_1", data[17]);
-                huit_1 = Double.valueOf(data[17] + "");
-                json.put("sep", data[18]);
-                neuf = Double.valueOf(data[18] + "");
-                json.put("sep_1", data[19]);
-                neuf_1 = Double.valueOf(data[19] + "");
-                json.put("oct", data[20]);
-                dix = Double.valueOf(data[20] + "");
-                json.put("oct_1", data[21]);
-                dix_1 = Double.valueOf(data[21] + "");
-                json.put("nov", data[22]);
-                onze = Double.valueOf(data[22] + "");
-                json.put("nov_1", data[23]);
-                onze_1 = Double.valueOf(data[23] + "");
-                json.put("dec", data[24]);
-                douze = Double.valueOf(data[24] + "");
-                json.put("dec_1", data[25]);
-                douze_1 = Double.valueOf(data[25] + "");
+                json.put("GP", famille.codeFamille);
+                json.put("str_Libelle_Produit", famille.libelle);
+                for (int monthIndex = 0; monthIndex < 12; monthIndex++) {
+                    double currentAmount = famille.currentYearAmounts[monthIndex];
+                    double previousAmount = famille.previousYearAmounts[monthIndex];
+                    json.put(CA_MONTH_FIELDS[monthIndex], currentAmount);
+                    json.put(CA_MONTH_FIELDS[monthIndex] + "_1", previousAmount);
+                    json.put(CA_MONTH_PERCENT_FIELDS[monthIndex],
+                            Math.round(percent(currentAmount, currentYearTotals[monthIndex])));
+                    json.put(CA_MONTH_PERCENT_FIELDS[monthIndex] + "_1",
+                            Math.round(percent(previousAmount, previousYearTotals[monthIndex])));
+                    json.put(CA_MONTH_PROGRESS_FIELDS[monthIndex], Math.round(progress(currentAmount, previousAmount)));
 
-                total_un = (data[26] != null ? Double.valueOf(data[26] + "") : 0);
-                if (total_un > 0) {
-                    un_percent = (un * 100) / total_un;
+                    array.put(json);
+                    count++;
                 }
-                json.put("P_janvier", Math.round(un_percent));
-                total_un_1 = (data[27] != null ? Double.valueOf(data[27] + "") : 0);
-                if (total_un_1 > 0) {
-                    un_1_percent = (un_1 * 100) / total_un_1;
-                }
-                json.put("P_janvier_1", Math.round(un_1_percent));
-                if (un_1 > 0) {
-                    un_pr = ((un - un_1) * 100) / un_1;
-                    if (un_pr > 1000) {
-                        un_pr = 1000;
-                    }
-                }
-                json.put("Prog_janvier", Math.round(un_pr));
-
-                total_deux = (data[28] != null ? Double.valueOf(data[28] + "") : 0);
-                if (total_deux > 0) {
-                    deux_percent = (deux * 100) / total_deux;
-                }
-                json.put("P_fevrier", Math.round(deux_percent));
-                total_deux_1 = (data[29] != null ? Double.valueOf(data[29] + "") : 0);
-                if (total_deux_1 > 0) {
-                    deux_1_percent = (deux_1 * 100) / total_deux_1;
-                }
-                json.put("P_fevrier_1", Math.round(deux_1_percent));
-                if (deux_1 > 0) {
-                    deux_pr = ((deux - deux_1) * 100) / deux_1;
-                    if (deux_pr > 1000) {
-                        deux_pr = 1000;
-                    }
-                }
-                json.put("Prog_fevrier", Math.round(deux_pr));
-
-                total_trois = (data[30] != null ? Double.valueOf(data[30] + "") : 0);
-                if (total_trois > 0) {
-                    trois_percent = (trois * 100) / total_trois;
-                }
-                json.put("P_mars", Math.round(trois_percent));
-                total_trois_1 = (data[31] != null ? Double.valueOf(data[31] + "") : 0);
-                if (total_trois_1 > 0) {
-                    trois_1_percent = (trois_1 * 100) / total_trois_1;
-                }
-                json.put("P_mars_1", Math.round(trois_1_percent));
-                if (trois_1 > 0) {
-                    trois_pr = ((trois - trois_1) * 100) / trois_1;
-                    if (trois_pr > 1000) {
-                        trois_pr = 1000;
-                    }
-                }
-                json.put("Prog_mars", Math.round(trois_pr));
-
-                total_quatre = (data[32] != null ? Double.valueOf(data[32] + "") : 0);
-                if (total_quatre > 0) {
-                    quatre_percent = (quatre * 100) / total_quatre;
-                }
-                json.put("P_avril", Math.round(quatre_percent));
-                total_quatre_1 = (data[33] != null ? Double.valueOf(data[33] + "") : 0);
-                if (total_quatre_1 > 0) {
-                    quatre_1_percent = (quatre_1 * 100) / total_quatre_1;
-                }
-                json.put("P_avril_1", Math.round(quatre_1_percent));
-                if (quatre_1 > 0) {
-                    quatre_pr = ((quatre - quatre_1) * 100) / quatre_1;
-                    if (quatre_pr > 1000) {
-                        quatre_pr = 1000;
-                    }
-                }
-                json.put("Prog_avril", Math.round(quatre_pr));
-
-                total_cinq = (data[34] != null ? Double.valueOf(data[34] + "") : 0);
-                if (total_cinq > 0) {
-                    cinq_percent = (cinq * 100) / total_cinq;
-                }
-                json.put("P_mai", Math.round(cinq_percent));
-                total_cinq_1 = (data[35] != null ? Double.valueOf(data[35] + "") : 0);
-                if (total_cinq_1 > 0) {
-                    cinq_1_percent = (cinq_1 * 100) / total_cinq_1;
-                }
-                json.put("P_mai_1", Math.round(cinq_1_percent));
-                if (cinq_1 > 0) {
-                    cinq_pr = ((cinq - cinq_1) * 100) / cinq_1;
-                    if (cinq_pr > 1000) {
-                        cinq_pr = 1000;
-                    }
-                }
-                json.put("Prog_mai", Math.round(cinq_pr));
-
-                total_six = (data[36] != null ? Double.valueOf(data[36] + "") : 0);
-                if (total_six > 0) {
-                    six_percent = (six * 100) / total_six;
-                }
-                json.put("P_juin", Math.round(six_percent));
-                total_six_1 = (data[37] != null ? Double.valueOf(data[37] + "") : 0);
-                if (total_six_1 > 0) {
-                    six_1_percent = (six_1 * 100) / total_six_1;
-                }
-                json.put("P_juin_1", Math.round(six_1_percent));
-                if (six_1 > 0) {
-                    six_pr = ((six - six_1) * 100) / six_1;
-                    if (six_pr > 1000) {
-                        six_pr = 1000;
-                    }
-                }
-                json.put("Prog_juin", Math.round(six_pr));
-
-                total_sept = (data[38] != null ? Double.valueOf(data[38] + "") : 0);
-                if (total_sept > 0) {
-                    sept_percent = (sept * 100) / total_sept;
-                }
-                json.put("P_juillet", Math.round(sept_percent));
-                total_sept_1 = (data[39] != null ? Double.valueOf(data[39] + "") : 0);
-                if (total_sept_1 > 0) {
-                    sept_1_percent = (sept_1 * 100) / total_sept_1;
-                }
-                json.put("P_juillet_1", Math.round(sept_1_percent));
-                if (sept_1 > 0) {
-                    sept_pr = ((sept - sept_1) * 100) / sept_1;
-                    if (sept_pr > 1000) {
-                        sept_pr = 1000;
-                    }
-                }
-                json.put("Prog_juillet", Math.round(sept_pr));
-
-                total_huit = (data[40] != null ? Double.valueOf(data[40] + "") : 0);
-                if (total_huit > 0) {
-                    huit_percent = (huit * 100) / total_huit;
-                }
-                json.put("P_aout", Math.round(huit_percent));
-                total_huit_1 = (data[41] != null ? Double.valueOf(data[41] + "") : 0);
-                if (total_huit_1 > 0) {
-                    huit_1_percent = (huit_1 * 100) / total_huit_1;
-                }
-                json.put("P_aout_1", Math.round(huit_1_percent));
-                if (huit_1 > 0) {
-                    huit_pr = ((huit - huit_1) * 100) / huit_1;
-                    if (huit_pr > 1000) {
-                        huit_pr = 1000;
-                    }
-                }
-                json.put("Prog_aout", Math.round(huit_pr));
-
-                total_neuf = (data[42] != null ? Double.valueOf(data[42] + "") : 0);
-                if (total_neuf > 0) {
-                    neuf_percent = (neuf * 100) / total_neuf;
-                }
-                json.put("P_sep", Math.round(neuf_percent));
-                total_neuf_1 = (data[43] != null ? Double.valueOf(data[43] + "") : 0);
-                if (total_neuf_1 > 0) {
-                    neuf_1_percent = (neuf_1 * 100) / total_neuf_1;
-                }
-                json.put("P_sep_1", Math.round(neuf_1_percent));
-                if (neuf_1 > 0) {
-                    neuf_pr = ((neuf - neuf_1) * 100) / neuf_1;
-                    if (neuf_pr > 1000) {
-                        neuf_pr = 1000;
-                    }
-                }
-                json.put("Prog_sep", Math.round(neuf_pr));
-
-                total_dix = (data[44] != null ? Double.valueOf(data[44] + "") : 0);
-                if (total_dix > 0) {
-                    dix_percent = (dix * 100) / total_dix;
-                }
-                json.put("P_oct", Math.round(dix_percent));
-                total_dix_1 = (data[45] != null ? Double.valueOf(data[45] + "") : 0);
-                if (total_dix_1 > 0) {
-                    dix_1_percent = (dix_1 * 100) / total_dix_1;
-                }
-                json.put("P_oct_1", Math.round(dix_1_percent));
-                if (dix_1 > 0) {
-                    dix_pr = ((dix - dix_1) * 100) / dix_1;
-                    if (dix_pr > 1000) {
-                        dix_pr = 1000;
-                    }
-                }
-                json.put("Prog_oct", Math.round(dix_pr));
-
-                total_onze = (data[46] != null ? Double.valueOf(data[46] + "") : 0);
-                if (total_onze > 0) {
-                    onze_percent = (onze * 100) / total_onze;
-                }
-                json.put("P_nov", Math.round(onze_percent));
-                total_onze_1 = (data[47] != null ? Double.valueOf(data[47] + "") : 0);
-                if (total_onze_1 > 0) {
-                    onze_1_percent = (onze_1 * 100) / total_onze_1;
-                }
-                json.put("P_nov_1", Math.round(onze_1_percent));
-                if (onze_1 > 0) {
-                    onze_pr = ((onze - onze_1) * 100) / onze_1;
-                    if (onze_pr > 1000) {
-                        onze_pr = 1000;
-                    }
-                }
-                json.put("Prog_nov", Math.round(onze_pr));
-
-                total_douze = (data[48] != null ? Double.valueOf(data[48] + "") : 0);
-                if (total_douze > 0) {
-                    douze_percent = (douze * 100) / total_douze;
-                }
-                json.put("P_dec", Math.round(douze_percent));
-                total_douze_1 = (data[49] != null ? Double.valueOf(data[49] + "") : 0);
-                if (total_douze_1 > 0) {
-                    douze_1_percent = (douze_1 * 100) / total_douze_1;
-                }
-                json.put("P_dec_1", Math.round(douze_1_percent));
-                if (douze_1 > 0) {
-                    douze_pr = ((douze - douze_1) * 100) / douze_1;
-                    if (douze_pr > 1000) {
-                        douze_pr = 1000;
-                    }
-                }
-                json.put("Prog_dec", Math.round(douze_pr));
-                array.put(json);
-                count++;
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
+
         return array;
+    }
+
+    private int extractYear(String periode, int defaultYear) {
+        try {
+            if (periode != null && periode.length() >= 4) {
+                return Integer.valueOf(periode.substring(0, 4));
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return defaultYear;
+    }
+
+    private double percent(double amount, double total) {
+        if (total <= 0) {
+            return 0;
+        }
+        return (amount * 100) / total;
+    }
+
+    private double progress(double currentAmount, double previousAmount) {
+        if (previousAmount <= 0) {
+            return 0;
+        }
+        double value = ((currentAmount - previousAmount) * 100) / previousAmount;
+        if (value > 1000) {
+            return 1000;
+        }
+        return value;
     }
 
     public List<EntityData> getAllShopRuptureStocks(String searchvalue, String dt_start, String dt_end) {

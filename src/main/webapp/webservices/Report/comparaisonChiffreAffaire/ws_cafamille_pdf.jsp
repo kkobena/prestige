@@ -133,7 +133,7 @@
         }
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Integer.valueOf(dt_start.split("-")[0]), Integer.valueOf(dt_start.split("-")[1]), Integer.valueOf(dt_start.split("-")[2]));
+        calendar.set(Integer.valueOf(dt_start.split("-")[0]), Integer.valueOf(dt_start.split("-")[1]) - 1, Integer.valueOf(dt_start.split("-")[2]));
         calendar.add(Calendar.YEAR, -1);
         parameters.put("P_DATE_END", date.formatterMysqlShort.format(calendar.getTime()));
         parameters.put("P_H_CLT_INFOS", "Comparaison des Chiffres d'Affaires des Familles \n De  " + calendar.get(Calendar.YEAR) + " à " + date.FORMATTERYEAR.format(java.sql.Date.valueOf(dt_start)));

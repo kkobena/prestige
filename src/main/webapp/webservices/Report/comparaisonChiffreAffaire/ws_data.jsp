@@ -72,7 +72,7 @@
     }
     StatisticsFamilleArticle statisticSales = new StatisticsFamilleArticle(OManager);
     Calendar calendar=Calendar.getInstance();
-    calendar.set(Integer.valueOf(dt_start.split("-")[0]), Integer.valueOf(dt_start.split("-")[1]), Integer.valueOf(dt_start.split("-")[2])); 
+    calendar.set(Integer.valueOf(dt_start.split("-")[0]), Integer.valueOf(dt_start.split("-")[1]) - 1, Integer.valueOf(dt_start.split("-")[2])); 
      calendar.add(Calendar.YEAR, -1);
      String periode=date.formatterMysqlShort.format(calendar.getTime());
     
