@@ -20,4 +20,7 @@ public interface SearchProduitServcie {
     JSONObject fetchOrderProduits(TUser user, String produitId, String search, int limit, int start);
 
     JSONObject fetchOne(List<TPrivilege> usersPrivileges, TUser user, String produitId);
+
+    List<String> fetchProduitIds(TUser user, String search, String diciId, String type, String zoneGeoId,
+            String stockOperator, String stockValue, boolean onlyReserve);
 }

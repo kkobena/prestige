@@ -270,6 +270,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             // Valeurs positives : texte en bleu
                             m.style = 'color:green; font-weight:bold;font-size: 18px;';
                         }
+                        var rayonQte = parseInt(stock, 10);
+                        if (isNaN(rayonQte)) { rayonQte = 0; }
+                        var reserveQte = parseInt(r.data.int_STOCK_RESERVE, 10);
+                        if (isNaN(reserveQte)) { reserveQte = 0; }
+                        var totalQte = rayonQte + reserveQte;
+                        m.tdAttr = 'data-qtip="<span style=\'color:blue;font-weight:bold;white-space:nowrap;\'>Stock Total : ' + totalQte + '</span>" data-qwidth="160"';
                         return v;
                     }
                 }, {
@@ -304,6 +310,13 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         } else if (stock < 0) {
                             m.style = 'color:#6600cc; font-weight:bold;background-color:#F5BCA9;font-weight:bold;font-size: 18px;';
                         }
+
+                        var rayonQte = parseInt(stock, 10);
+                        if (isNaN(rayonQte)) { rayonQte = 0; }
+                        var reserveQte = parseInt(reserve, 10);
+                        if (isNaN(reserveQte)) { reserveQte = 0; }
+                        var totalQte = rayonQte + reserveQte;
+                        m.tdAttr = 'data-qtip="<span style=\'color:blue;font-weight:bold;white-space:nowrap;\'>Stock Total : ' + totalQte + '</span>" data-qwidth="160"';
 
                         return reserve;
                     }
@@ -783,6 +796,14 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         },
                         '->',
                         {
+                            text: 'Creer inventaire',
+                            tooltip: 'Creer un inventaire a partir du resultat de la recherche courante',
+                            iconCls: 'addicon',
+                            scope: this,
+                            handler: this.onCreateInventaireClick
+                        },
+                        '-',
+                        {
                             text: 'Effacer tous les filtres',
                             tooltip: 'Vider tous les filtres et revenir a la 1ere page',
                             icon: 'resources/images/icons/fam/delete.png',
@@ -1077,12 +1098,28 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         stock_value = Ext.getCmp('stock_value').getValue();
     }
 
+    const rayonLabel = Ext.getCmp('lg_ZONE_GEO_ID').getRawValue();
+    const search_value = Ext.getCmp('rechecher').getValue();
+    const opSymbols = {LESS: '<', MORE: '>', EQUAL: '=', LESSOREQUAL: '<=', MOREOREQUAL: '>='};
+    const filtreParts = [];
+    if (lg_ZONE_GEO_ID && rayonLabel) {
+        filtreParts.push('emplacement ' + rayonLabel);
+    }
+    if (stock_operator && opSymbols[stock_operator] && stock_value !== '') {
+        filtreParts.push('stock ' + opSymbols[stock_operator] + ' ' + stock_value);
+    }
+    if (search_value) {
+        filtreParts.push('recherche "' + search_value + '"');
+    }
+    const titre_filtre = filtreParts.join(' et ');
+
     const linkUrl = url_services_article_generate_pdf
             + '?str_TYPE_TRANSACTION=' + str_TYPE_TRANSACTION
             + '&lg_DCI_ID=' + lg_DCI_PRINCIPAL_ID
             + '&lg_ZONE_GEO_ID=' + lg_ZONE_GEO_ID
             + '&stock_operator=' + stock_operator
             + '&stock_value=' + stock_value
+            + '&titre_filtre=' + encodeURIComponent(titre_filtre)
             + '&search_value=' + Ext.getCmp('rechecher').getValue();
 
     window.open(linkUrl);
@@ -1345,7 +1382,111 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         Ext.getCmp('rechecher').focus(true, 100, function () {
         });
     },
-    
+
+    // Construit le nom de l'inventaire a partir des filtres actifs (concatenation) + HHmmss.
+    buildInventaireName: function () {
+        const typeLabels = {
+            RESERVE: 'reserve',
+            DECONDITION: 'deconditionnables',
+            DECONDITIONNE: 'deconditionnes',
+            SANSEMPLACEMENT: 'sansemplacement'
+        };
+        const typeVal = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
+        const rayonCmp = Ext.getCmp('lg_ZONE_GEO_ID');
+        const parts = [];
+        if (typeVal && typeVal !== 'ALL' && typeLabels[typeVal]) {
+            parts.push(typeLabels[typeVal]);
+        }
+        if (rayonCmp.getValue() && rayonCmp.getRawValue()) {
+            parts.push(rayonCmp.getRawValue());
+        }
+        const now = new Date();
+        const pad = function (n) {
+            return (n < 10 ? '0' : '') + n;
+        };
+        const hhmmss = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+        return 'inventaire ' + (parts.length ? parts.join('-') : 'courant') + ' ' + hhmmss;
+    },
+
+    onCreateInventaireClick: function () {
+        const me = this;
+        const baseName = me.buildInventaireName();
+
+        const dlg = Ext.create('Ext.window.Window', {
+            title: 'Creer un inventaire',
+            modal: true,
+            width: 420,
+            bodyPadding: 12,
+            layout: 'anchor',
+            items: [{
+                    xtype: 'displayfield',
+                    value: 'Sur quel stock voulez-vous creer l\'inventaire&nbsp;?'
+                }],
+            buttons: [
+                {
+                    text: 'Stock rayon',
+                    handler: function () {
+                        dlg.close();
+                        me.doCreateInventaire('RAYON', baseName);
+                    }
+                },
+                {
+                    text: 'Stock reserve',
+                    handler: function () {
+                        dlg.close();
+                        me.doCreateInventaire('RESERVE', baseName);
+                    }
+                },
+                {
+                    text: 'Annuler',
+                    handler: function () {
+                        dlg.close();
+                    }
+                }
+            ]
+        });
+        dlg.show();
+    },
+
+    doCreateInventaire: function (mode, name) {
+        const params = {
+            search_value: Ext.getCmp('rechecher').getValue() || '',
+            str_TYPE_TRANSACTION: Ext.getCmp('str_TYPE_TRANSACTION').getValue() || '',
+            lg_DCI_ID: Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue() || '',
+            lg_ZONE_GEO_ID: Ext.getCmp('lg_ZONE_GEO_ID').getValue() || '',
+            stock_operator: Ext.getCmp('stock_operator').getValue() || '',
+            stock_value: Ext.getCmp('stock_value').getValue() || '',
+            mode: mode,
+            name: name
+        };
+        const progress = Ext.MessageBox.wait('Veuillez patienter...', 'Creation de l\'inventaire');
+        Ext.Ajax.request({
+            url: '../api/v1/produit-search/create-inventaire',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            jsonData: params,
+            timeout: 600000,
+            success: function (response) {
+                progress.hide();
+                const res = Ext.JSON.decode(response.responseText, true) || {};
+                if (res.success) {
+                    Ext.MessageBox.alert('Inventaire',
+                            'Inventaire cree.<br/>Produits en compte : <b>' + (res.count || 0) + '</b>',
+                            function () {
+                                testextjs.app.getController('App')
+                                        .onLoadNewComponent('inventaire', 'Liste des inventaires', 'inventaire');
+                            });
+                } else {
+                    Ext.MessageBox.alert('Information', res.message || 'Aucun produit a inventorier.');
+                }
+            },
+            failure: function () {
+                progress.hide();
+                Ext.MessageBox.alert('Erreur', 'La creation de l\'inventaire a echoue.');
+            }
+        });
+    },
+
     onAddGrossisteClick: function (grid, rowIndex) {
 
         const rec = grid.getStore().getAt(rowIndex);
