@@ -103,7 +103,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
         const store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
-            data: [{str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}, {str_TYPE_TRANSACTION: 'DECONDITION', str_desc: 'Les articles deconditionnables'}, {str_TYPE_TRANSACTION: 'DECONDITIONNE', str_desc: 'Les articles deconditionnes'}, {str_TYPE_TRANSACTION: 'SANSEMPLACEMENT', str_desc: 'Les articles sans emplacement'}]
+            data: [{str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}, {str_TYPE_TRANSACTION: 'DECONDITION', str_desc: 'Les articles deconditionnables'}, {str_TYPE_TRANSACTION: 'DECONDITIONNE', str_desc: 'Les articles deconditionnes'}, {str_TYPE_TRANSACTION: 'SANSEMPLACEMENT', str_desc: 'Les articles sans emplacement'}, {str_TYPE_TRANSACTION: 'RESERVE', str_desc: 'Les articles en reserve'}]
         });
 
         const store_stock_operator = new Ext.data.Store({
@@ -298,11 +298,11 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         
                         const stock = r.data.int_NUMBER_AVAILABLE;
                         if (stock == 0) {
-                            m.style = 'color: black; font-weight:bold;background-color:#B0F2B6;font-weight:bold;font-size: 18px;';
+                            m.style = 'color:#6600cc; font-weight:bold;background-color:#B0F2B6;font-weight:bold;font-size: 18px;';
                         } else if (stock > 0) {
-                            m.style = 'color: black; font-weight:bold;font-weight:bold;font-size: 18px;';
+                            m.style = 'color:#6600cc; font-weight:bold;font-weight:bold;font-size: 18px;';
                         } else if (stock < 0) {
-                            m.style = 'color: black; font-weight:bold;background-color:#F5BCA9;font-weight:bold;font-size: 18px;';
+                            m.style = 'color:#6600cc; font-weight:bold;background-color:#F5BCA9;font-weight:bold;font-size: 18px;';
                         }
 
                         return reserve;
@@ -690,7 +690,11 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             emptyText: 'Operateur stock...',
                             listeners: {
                                 select: function () {
-                                    Me_Workflow.onRechClick();
+                                    // Au choix d'un operateur : envoyer le focus sur la quantite.
+                                    const qte = Ext.getCmp('stock_value');
+                                    if (qte) {
+                                        qte.focus(true, 100);
+                                    }
                                 }
                             }
                         },
@@ -778,6 +782,23 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             }
                         },
                         '->',
+                        {
+                            text: 'Effacer tous les filtres',
+                            tooltip: 'Vider tous les filtres et revenir a la 1ere page',
+                            icon: 'resources/images/icons/fam/delete.png',
+                            style: 'background-color:#add8e6; border-color:#add8e6;',
+                            scope: this,
+                            handler: function () {
+                                Ext.getCmp('rechecher').setValue('');
+                                Ext.getCmp('str_TYPE_TRANSACTION').clearValue();
+                                Ext.getCmp('lg_DCI_PRINCIPAL_ID').clearValue();
+                                Ext.getCmp('lg_ZONE_GEO_ID').clearValue();
+                                Ext.getCmp('stock_operator').clearValue();
+                                Ext.getCmp('stock_value').setValue('');
+                                Me_Workflow.onRechClick();
+                            }
+                        },
+                        '-',
                         {
                             text: 'Imprimer',
                             tooltip: 'imprimer',

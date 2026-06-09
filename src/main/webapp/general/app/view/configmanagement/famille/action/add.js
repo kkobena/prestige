@@ -881,20 +881,30 @@ Ext.Ajax.request({
                     });
                 }
                     if (object.success == '0') {
-                        Ext.MessageBox.show({ title: 'Message d\'erreur', width: 320, msg: object.errors, buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.WARNING });
+                        // Differe pour eviter la course hide()/show() du MessageBox singleton
+                        // (StopWaitingProcess vient de masquer ce meme singleton).
+                        Ext.defer(function () {
+                            Ext.MessageBox.show({ title: 'Message d\'erreur', width: 320, msg: object.errors, buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.WARNING });
+                        }, 10);
                     } else {
                         win.close();
-                        Ext.MessageBox.alert('Confirmation', object.errors, function () {
-                            if (Omode === 'create' || Omode === 'update' || Omode === 'decondition') {
-                                if (type == 'famillemanager') {
-                                    Me_Workflow = Oview;
-                                    Me_Workflow.onRechClick();
-                                } else if (type == 'commande') {
-                                    Ext.getCmp('lgFAMILLEID').setValue(str_DESCRIPTION);
-                                    Ext.getCmp('lgFAMILLEID').getStore().reload();
-                                }
+                        // Pas de popup de confirmation au succes : on garde le flux d'origine, fluide.
+                        // (Supprime aussi la course hide()/show() du MessageBox singleton qui pouvait
+                        // laisser un masque modal orphelin -> gel loupe / touche Entree.)
+                        var body = Ext.getBody();
+                        if (body && Ext.isFunction(body.unmask)) { body.unmask(); }
+                        if (Omode === 'create' || Omode === 'update' || Omode === 'decondition') {
+                            if (type == 'famillemanager') {
+                                Me_Workflow = Oview;
+                                // Rester sur la page courante : reload() conserve currentPage
+                                // (contrairement a onRechClick qui force loadPage(1)).
+                                Me_Workflow.getStore().reload();
+                                Ext.getCmp('rechecher').focus(true, 100);
+                            } else if (type == 'commande') {
+                                Ext.getCmp('lgFAMILLEID').setValue(str_DESCRIPTION);
+                                Ext.getCmp('lgFAMILLEID').getStore().reload();
                             }
-                        });
+                        }
                     }
                 },
                 failure: function (response) {
@@ -1034,17 +1044,21 @@ Ext.Ajax.request({
                     Ext.MessageBox.show({ title: 'Message d\'erreur', width: 320, msg: object.errors, buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.WARNING });
                 } else {
                     win.close();
-                    Ext.MessageBox.alert('Confirmation', 'Opération effectuée avec succès', function () {
-                        if (mode === 'create' || mode === 'update' || mode === 'decondition') {
-                            if (type == 'famillemanager') {
-                                Me_Workflow = view;
-                                Me_Workflow.onRechClick();
-                            } else if (type == 'commande') {
-                                Ext.getCmp('lgFAMILLEID').setValue(strDescription);
-                                Ext.getCmp('lgFAMILLEID').getStore().reload();
-                            }
+                    // Pas de popup de confirmation au succes : flux fluide.
+                    var body = Ext.getBody();
+                    if (body && Ext.isFunction(body.unmask)) { body.unmask(); }
+                    if (mode === 'create' || mode === 'update' || mode === 'decondition') {
+                        if (type == 'famillemanager') {
+                            Me_Workflow = view;
+                            // Rester sur la page courante : reload() conserve currentPage
+                            // (contrairement a onRechClick qui force loadPage(1)).
+                            Me_Workflow.getStore().reload();
+                            Ext.getCmp('rechecher').focus(true, 100);
+                        } else if (type == 'commande') {
+                            Ext.getCmp('lgFAMILLEID').setValue(strDescription);
+                            Ext.getCmp('lgFAMILLEID').getStore().reload();
                         }
-                    });
+                    }
                 }
             },
             failure: function (response) {
