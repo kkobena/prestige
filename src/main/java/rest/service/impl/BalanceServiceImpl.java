@@ -110,8 +110,8 @@ public class BalanceServiceImpl implements BalanceService {
             + "SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail,  SUM(CASE  WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente, SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove,"
-            + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.imported=0 AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  {excludeStatement}  GROUP BY mvtDate";
-    private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM mvttransaction m JOIN t_grossiste g ON m.grossisteId=g.`lg_GROSSISTE_ID` LEFT JOIN groupefournisseur gf ON g.`groupeId`=gf.id WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2 AND m.`lg_EMPLACEMENT_ID` =?3  GROUP BY m.`grossisteId`,mvtdate ORDER BY mvtDate";
+            + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d JOIN t_preenregistrement p2 ON p2.`lg_PREENREGISTREMENT_ID`=d.`lg_PREENREGISTREMENT_ID` WHERE   d.`bool_ACCOUNT` AND p2.`dt_UPDATED` >= ?3 AND p2.`dt_UPDATED` < DATE_ADD(?4, INTERVAL 1 DAY) AND p2.`str_STATUT`='is_Closed' AND p2.imported=0 AND p2.`lg_TYPE_VENTE_ID` <> ?1 GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  p.`dt_UPDATED` >= ?3 AND p.`dt_UPDATED` < DATE_ADD(?4, INTERVAL 1 DAY) AND p.`str_STATUT`='is_Closed'  AND p.imported=0 AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  {excludeStatement}  GROUP BY mvtDate";
+    private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM mvttransaction m JOIN t_grossiste g ON m.grossisteId=g.`lg_GROSSISTE_ID` LEFT JOIN groupefournisseur gf ON g.`groupeId`=gf.id WHERE m.mvtdate >= ?1 AND m.mvtdate < DATE_ADD(?2, INTERVAL 1 DAY) AND m.`typeTransaction` =2 AND m.`lg_EMPLACEMENT_ID` =?3  GROUP BY m.`grossisteId`,mvtdate ORDER BY mvtDate";
 
     private static final String FLAGED_AMOUNT = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL AND p.imported=0 ";
     private static final String FLAGED_AMOUNT_GROUP_BY_DAY = "SELECT m.mvtdate AS mvtdate,COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL  AND p.imported=0 GROUP BY mvtdate";
@@ -120,6 +120,8 @@ public class BalanceServiceImpl implements BalanceService {
             + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed'  AND p.imported=0 AND YEAR(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 GROUP BY annee,mois ";
 
     private static final String TYPE_REGELEMENT_QUERY = "SELECT SUM(vr.flaged_amount) AS flaged_amount, p.`lg_TYPE_VENTE_ID` AS typeVente, r.`str_NAME` AS libelle, vr.type_regelement AS typeReglement,SUM(vr.montant) AS montant,SUM(vr.montant_attentu) AS montant_attendu,SUM(vr.ug_amount) AS ug_amount,SUM(vr.ug_amount_net) AS ug_amount_net,SUM(vr.amount_non_ca) AS amount_non_ca FROM  vente_reglement vr JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID`=vr.vente_id JOIN mvttransaction m ON m.pkey=p.`lg_PREENREGISTREMENT_ID` JOIN t_type_reglement r ON r.`lg_TYPE_REGLEMENT_ID`=vr.type_regelement WHERE DATE(p.`dt_UPDATED`) BETWEEN   ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.`lg_TYPE_VENTE_ID` <>  ?1  AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement}  GROUP BY typeReglement,typeVente ";
+
+    private static final String TYPE_REGELEMENT_QUERY_BY_DAY = "SELECT DATE_FORMAT(p.`dt_UPDATED`,'%Y-%m-%d') AS mvtDate, SUM(vr.flaged_amount) AS flaged_amount, p.`lg_TYPE_VENTE_ID` AS typeVente, r.`str_NAME` AS libelle, vr.type_regelement AS typeReglement,SUM(vr.montant) AS montant,SUM(vr.montant_attentu) AS montant_attendu,SUM(vr.ug_amount) AS ug_amount,SUM(vr.ug_amount_net) AS ug_amount_net,SUM(vr.amount_non_ca) AS amount_non_ca FROM  vente_reglement vr JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID`=vr.vente_id JOIN mvttransaction m ON m.pkey=p.`lg_PREENREGISTREMENT_ID` JOIN t_type_reglement r ON r.`lg_TYPE_REGLEMENT_ID`=vr.type_regelement WHERE p.`dt_UPDATED` >= ?3 AND p.`dt_UPDATED` < DATE_ADD(?4, INTERVAL 1 DAY) AND p.`str_STATUT`='is_Closed'  AND p.`lg_TYPE_VENTE_ID` <>  ?1  AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement}  GROUP BY mvtDate,typeReglement,typeVente ";
 
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
 
@@ -211,19 +213,24 @@ public class BalanceServiceImpl implements BalanceService {
     public JSONObject tableauBoardDatas(BalanceParamsDTO balanceParams) throws JSONException {
 
         JSONObject json = new JSONObject();
+        long tData = System.currentTimeMillis();
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = getTableauBoardData(balanceParams);
+        LOG.log(Level.INFO, "[PERF] getTableauBoardData (SQL + build Java): {0} ms",
+                System.currentTimeMillis() - tData);
 
         if (map.isEmpty()) {
             json.put("total", 0);
             json.put("data", new JSONArray());
 
         }
+        long tJson = System.currentTimeMillis();
         map.forEach((k, v) -> {
             json.put("total", v.size());
             json.put("data", new JSONArray(v));
             json.put("metaData", new JSONObject(k));
 
         });
+        LOG.log(Level.INFO, "[PERF] Serialisation JSON tableau board: {0} ms", System.currentTimeMillis() - tJson);
         return json;
 
     }
@@ -742,7 +749,11 @@ public class BalanceServiceImpl implements BalanceService {
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
-            return query.getResultList();
+            long t0 = System.currentTimeMillis();
+            List<Tuple> result = query.getResultList();
+            LOG.log(Level.INFO, "[PERF] SQL ventes (TABLEAU_BOARD_SQL): {0} ms - {1} lignes",
+                    new Object[] { System.currentTimeMillis() - t0, result.size() });
+            return result;
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -757,7 +768,11 @@ public class BalanceServiceImpl implements BalanceService {
                     .setParameter(3, balanceParams.getEmplacementId())
                     .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()));
-            return query.getResultList();
+            long t0 = System.currentTimeMillis();
+            List<Tuple> result = query.getResultList();
+            LOG.log(Level.INFO, "[PERF] SQL achats (TABLEAU_BOARD_SQL_ACHATS): {0} ms - {1} lignes",
+                    new Object[] { System.currentTimeMillis() - t0, result.size() });
+            return result;
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -921,13 +936,16 @@ public class BalanceServiceImpl implements BalanceService {
         List<TableauBaordPhDTO> list = new ArrayList<>();
         boolean checkUg = checkUg();
         if (CollectionUtils.isNotEmpty(tuple)) {
+            // Une seule requete groupee par jour, puis lookup en memoire (evite le N+1 par jour)
+            Map<String, List<VenteReglementReportDTO>> reglementsByDay = fetchByModeReglementsGroupByDay(balanceParams);
             for (Tuple t : tuple) {
                 TableauBaordPhDTO o = new TableauBaordPhDTO();
 
                 int flagedAmountModeReglement = 0;
                 int montantAttentu = 0;
                 o.setVente(true);
-                o.setMvtDate(LocalDate.parse(t.get("mvtDate", String.class)));
+                String mvtDay = t.get("mvtDate", String.class);
+                o.setMvtDate(LocalDate.parse(mvtDay));
                 int montantTTC = t.get("montantTTCDetatil", BigDecimal.class).intValue();
                 int montantNet = t.get("montantNet", BigDecimal.class).intValue();
                 int montantRemise = t.get("montantRemise", BigDecimal.class).intValue();
@@ -939,10 +957,8 @@ public class BalanceServiceImpl implements BalanceService {
                 o.setMontantRemise(montantRemise);
                 o.setMontantCredit(montantCredit + montantDiffere);
                 o.setNbreVente(totalVente);
-                balanceParams.setDtStart(o.getMvtDate().toString());
-                balanceParams.setDtEnd(balanceParams.getDtStart());
-                List<VenteReglementReportDTO> reglementReports = fetchByModeReglements(balanceParams).stream()
-                        .map(this::buildVenteReglementReportDTO).collect(Collectors.toList());
+                List<VenteReglementReportDTO> reglementReports = reglementsByDay.getOrDefault(mvtDay,
+                        Collections.emptyList());
 
                 for (VenteReglementReportDTO reglementReport : reglementReports) {
                     // montantRegle += reglementReport.getMontant();
@@ -1195,6 +1211,28 @@ public class BalanceServiceImpl implements BalanceService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new ArrayList<>();
+        }
+    }
+
+    private Map<String, List<VenteReglementReportDTO>> fetchByModeReglementsGroupByDay(BalanceParamsDTO balanceParams) {
+        String sql = replacePlaceHolder(TYPE_REGELEMENT_QUERY_BY_DAY, balanceParams);
+        LOG.log(Level.INFO, "sql--- balance vente mode reglement (group by day) {0}", sql);
+        Map<String, List<VenteReglementReportDTO>> map = new HashMap<>();
+        try {
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
+                    .setParameter(2, balanceParams.getEmplacementId())
+                    .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
+                    .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
+            List<Tuple> rows = query.getResultList();
+            for (Tuple t : rows) {
+                String day = t.get("mvtDate", String.class);
+                map.computeIfAbsent(day, k -> new ArrayList<>()).add(buildVenteReglementReportDTO(t));
+            }
+            return map;
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return map;
         }
     }
 
