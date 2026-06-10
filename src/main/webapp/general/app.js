@@ -15,7 +15,7 @@ if (Ext.repoDevMode) {
 
 Ext.Loader.setConfig({
     enabled: true,
-    disableCaching: true,
+    disableCaching: false,
     paths: {
         'testextjs': '/prestige/general/app'
         //,'Ext.ux': '/prestige/general/ux'
