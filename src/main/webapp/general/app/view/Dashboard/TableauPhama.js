@@ -239,7 +239,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
             items: [
                 {
                     xtype: 'gridpanel',
-                    title: 'Tableau de Bord du Pharmacien x',
+                    title: 'Tableau de Bord du Pharmacien',
                     border: false,
                     features: [
                         {
