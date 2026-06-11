@@ -62,13 +62,8 @@ Ext.define('testextjs.view.commandemanagement.lots.LotGrid', {
                     flex: 2
                 },
                 {
-                    header: 'R&eacute;f.Livraison',
+                    header: 'Numero BL',
                     dataIndex: 'REFBL',
-                    flex: 1
-                },
-                {
-                    header: 'R&eacute;f.CMDE',
-                    dataIndex: 'REFCMDE',
                     flex: 1
                 },
                 {
@@ -97,7 +92,7 @@ Ext.define('testextjs.view.commandemanagement.lots.LotGrid', {
                     renderer: amountformat
                 },
                 {
-                    text: 'Date Entr&eaacute;e',
+                    text: 'Date Entr&eacute;e',
                     dataIndex: 'DATESORTIE',
                     flex: 0.7,
                     align: 'center'
@@ -300,15 +295,15 @@ Ext.define('testextjs.view.commandemanagement.lots.LotGrid', {
                     beforechange: function (page, currentPage) {
                         var myProxy = this.store.getProxy();
                         myProxy.params = {
-                            dt_start_vente: '',
-                            dt_end_vente: '',
+                            dtStart: '',
+                            dtEnd: '',
                             search_value: ''
                         };
                         var search_value = Ext.getCmp('rechlot').getValue();
                         var dt_start = Ext.getCmp('dt_start_lot').getSubmitValue();
                         var dt_end = Ext.getCmp('dt_end_lot').getSubmitValue();
-                        myProxy.setExtraParam('dt_start_vente', dt_start);
-                        myProxy.setExtraParam('dt_end_vente', dt_end);
+                        myProxy.setExtraParam('dtStart', dt_start);
+                        myProxy.setExtraParam('dtEnd', dt_end);
                         myProxy.setExtraParam('search_value', search_value);
 
                     }
