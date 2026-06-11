@@ -1008,9 +1008,7 @@ public class StatisticSales extends bll.bllBase {
             Object obj = this.getOdataManager().getEm().createNativeQuery(
                     "SELECT COUNT(*) FROM t_preenregistrement p WHERE p.`int_PRICE`>0 AND p.`b_IS_CANCEL`=0 AND p.`str_STATUT`='is_Closed' "
                             + "AND p.`dt_CREATED` >= ?1 AND p.`dt_CREATED` < ?2")
-                    .setParameter(1, dt_start)
-                    .setParameter(2, dtEndExclusive)
-                    .getSingleResult();
+                    .setParameter(1, dt_start).setParameter(2, dtEndExclusive).getSingleResult();
 
             count = (obj != null && Long.parseLong(obj.toString()) > 0) ? 1L : 0L;
         } catch (Exception e) {
@@ -1048,14 +1046,11 @@ public class StatisticSales extends bll.bllBase {
                     + "COUNT(CASE WHEN HOUR(o.`dt_CREATED`) BETWEEN 20 AND 23 THEN 1 END) AS NEUF_COUNT, "
                     + "SUM(CASE WHEN HOUR(o.`dt_CREATED`) BETWEEN 0 AND 6 THEN o.`int_PRICE` ELSE 0 END) AS DIX_MONTANT, "
                     + "COUNT(CASE WHEN HOUR(o.`dt_CREATED`) BETWEEN 0 AND 6 THEN 1 END) AS DIX_COUNT "
-                    + "FROM t_preenregistrement o "
-                    + "WHERE o.`dt_CREATED` >= ?1 AND o.`dt_CREATED` < ?2 "
+                    + "FROM t_preenregistrement o " + "WHERE o.`dt_CREATED` >= ?1 AND o.`dt_CREATED` < ?2 "
                     + "AND o.`int_PRICE`>0 AND o.`b_IS_CANCEL`=0 AND o.`str_STATUT`='is_Closed'";
 
             Object[] m = (Object[]) this.getOdataManager().getEm().createNativeQuery(montantQuery)
-                    .setParameter(1, dt_start)
-                    .setParameter(2, dtEndExclusive)
-                    .getSingleResult();
+                    .setParameter(1, dt_start).setParameter(2, dtEndExclusive).getSingleResult();
 
             // Nombre de lignes (quantites vendues) par tranche horaire, meme periode.
             // Une seule jointure agregee remplace les anciennes sous-requetes correlees.
@@ -1075,10 +1070,8 @@ public class StatisticSales extends bll.bllBase {
                     + "AND p.`dt_CREATED` >= ?1 AND p.`dt_CREATED` < ?2 "
                     + "AND p.`int_PRICE`>0 AND p.`b_IS_CANCEL`=0 AND p.`str_STATUT`='is_Closed'";
 
-            Object[] r = (Object[]) this.getOdataManager().getEm().createNativeQuery(refQuery)
-                    .setParameter(1, dt_start)
-                    .setParameter(2, dtEndExclusive)
-                    .getSingleResult();
+            Object[] r = (Object[]) this.getOdataManager().getEm().createNativeQuery(refQuery).setParameter(1, dt_start)
+                    .setParameter(2, dtEndExclusive).getSingleResult();
 
             // Tranches dans l'ordre UN..NEUF puis DIX (00:00-06:59).
             long[] montant = new long[10];
@@ -1112,16 +1105,16 @@ public class StatisticSales extends bll.bllBase {
             entityData.setStr_value1(buildPeriodLabel(dt_start, dt_end));
             entityData.setStr_value2("CUMUL");
             entityData.setStr_value3("val_nbre_pan_lig");
-            entityData.setStr_value4(cell[0]);   // 7:00 - 8:59
-            entityData.setStr_value5(cell[1]);   // 9:00 - 10:59
-            entityData.setStr_value6(cell[2]);   // 11:00 - 13:59
-            entityData.setStr_value7(cell[3]);   // 14:00 - 15:59
-            entityData.setStr_value8(cell[4]);   // 16:00 - 16:59
-            entityData.setStr_value9(cell[5]);   // 17:00 - 17:59
-            entityData.setStr_value10(cell[6]);  // 18:00 - 18:59
-            entityData.setStr_value11(cell[7]);  // 19:00 - 19:59
-            entityData.setStr_value12(cell[8]);  // 20:00 - 23:59
-            entityData.setStr_value13(cell[9]);  // 00:00 - 6:59
+            entityData.setStr_value4(cell[0]); // 7:00 - 8:59
+            entityData.setStr_value5(cell[1]); // 9:00 - 10:59
+            entityData.setStr_value6(cell[2]); // 11:00 - 13:59
+            entityData.setStr_value7(cell[3]); // 14:00 - 15:59
+            entityData.setStr_value8(cell[4]); // 16:00 - 16:59
+            entityData.setStr_value9(cell[5]); // 17:00 - 17:59
+            entityData.setStr_value10(cell[6]); // 18:00 - 18:59
+            entityData.setStr_value11(cell[7]); // 19:00 - 19:59
+            entityData.setStr_value12(cell[8]); // 20:00 - 23:59
+            entityData.setStr_value13(cell[9]); // 00:00 - 6:59
             entityData.setStr_value14(totalAmont + "_" + totalCount + "_" + totalPMOY + "_" + totalREF);
             data.add(entityData);
         } catch (Exception e) {
