@@ -59,7 +59,6 @@ public class LotServiceImpl implements LotService {
     private final String pattern = "dd/MM/YYYY";
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
 
-
     private static final String GRID_SELECT = "SELECT l.lg_LOT_ID AS c_lot_id, f.int_CIP AS c_cip, "
             + "f.str_NAME AS c_libelle, l.int_NUM_LOT AS c_numlot, l.str_REF_LIVRAISON AS c_refbl, "
             + "l.str_REF_ORDER AS c_refcmde, l.int_NUMBER AS c_number, l.int_NUMBER_GRATUIT AS c_numbergt, "
