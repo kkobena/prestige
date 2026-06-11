@@ -816,6 +816,7 @@ Ext.application({
         'MotifReglementCtr',
         'EtatControlAnnuelCtr',
         'TableauBoardCarnetCtr',
+        'AchatGrossisteMensuelCtr',
         'FactureSubrogatoireCtr',
         'ProuduitsVenteAnnulesCtr',
         'NotificationCtr',
