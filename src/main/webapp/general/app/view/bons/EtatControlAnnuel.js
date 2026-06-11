@@ -4,7 +4,7 @@ Ext.define('testextjs.view.bons.EtatControlAnnuel', {
     extend: 'Ext.panel.Panel',
     xtype: 'etatannuel',
     frame: true,
-    title: 'Etat de control annuel',
+    title: 'Etat de controle annuel',
     width: '98%',
     // height:  580,
     minHeight: 580,
@@ -313,7 +313,7 @@ Ext.define('testextjs.view.bons.EtatControlAnnuel', {
                     columns: [
 
                         {
-                            header: 'Libellé',
+                            header: 'Grossiste',
                             dataIndex: 'groupByLibelle',
                             flex: 1.2
 
