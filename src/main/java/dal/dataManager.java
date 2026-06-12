@@ -4,6 +4,10 @@
  */
 package dal;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -24,6 +28,16 @@ public class dataManager {
     // La creation d'une EntityManagerFactory est tres couteuse (bootstrap JPA + pool de connexions) :
     // elle doit etre partagee par toute l'application et non recree a chaque requete.
     private static volatile EntityManagerFactory SHARED_EMF;
+    // Nom de session EclipseLink UNIQUE par deploiement. EclipseLink met en
+    // cache les sessions par nom dans un registre statique au niveau du
+    // SERVEUR (il survit aux redeploiements) ; avec le nom par defaut
+    // ("DALPU"), un redeploiement a chaud recupere la session de l'ancienne
+    // application et ses entites chargees par l'ancien classloader, d'ou des
+    // ClassCastException du type "TSousMenu cannot be cast to TSousMenu".
+    // Cette constante etant initialisee au chargement de la classe, chaque
+    // deploiement (= nouveau classloader) obtient un nom different et donc
+    // une session neuve.
+    private static final String ECLIPSELINK_SESSION_NAME = PERSISTENCE_UNIT_NAME + "-" + UUID.randomUUID();
 
     private static EntityManagerFactory sharedEntityManagerFactory() {
         EntityManagerFactory factory = SHARED_EMF;
@@ -31,12 +45,34 @@ public class dataManager {
             synchronized (dataManager.class) {
                 factory = SHARED_EMF;
                 if (factory == null || !factory.isOpen()) {
-                    factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+                    Map<String, Object> props = new HashMap<>();
+                    props.put("eclipselink.session-name", ECLIPSELINK_SESSION_NAME);
+                    factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, props);
                     SHARED_EMF = factory;
                 }
             }
         }
         return factory;
+    }
+
+    /**
+     * Ferme la factory partagee. A appeler UNIQUEMENT a l'arret/undeploy de l'application (voir dal.AppContextListener)
+     * : sans cette fermeture, la session EclipseLink de l'ancien deploiement survit dans le registre du serveur et
+     * renvoie des entites chargees par l'ancien classloader, d'ou des ClassCastException (TSousMenu -> TSousMenu) apres
+     * un redeploiement a chaud.
+     */
+    public static void closeSharedEntityManagerFactory() {
+        synchronized (dataManager.class) {
+            EntityManagerFactory factory = SHARED_EMF;
+            SHARED_EMF = null;
+            if (factory != null && factory.isOpen()) {
+                try {
+                    factory.close();
+                } catch (RuntimeException e) {
+                    // Rien a faire : l'application s'arrete.
+                }
+            }
+        }
     }
 
     private EntityTransaction Transaction;

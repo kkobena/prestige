@@ -13,75 +13,20 @@ Ext.define('testextjs.view.Header', {
     xtype: 'appHeader',
     id: 'app-header',
     height: 52,
-    bodyStyle: "background-image:url(../../../resources/images/headerlb.png) !important",
     layout: {
         type: 'hbox',
         align: 'middle'
     },
-    tools: [
-        {
-            type: 'toggle'
-        },
-        {
-            type: 'close'
-        },
-        {
-            type: 'minimize'
-        },
-        {
-            type: 'maximize'
-        },
-        {
-            type: 'restore'
-        },
-        {
-            type: 'gear'
-        },
-        {
-            type: 'pin'
-        },
-        {
-            type: 'unpin'
-        },
-        {
-            type: 'right'
-        },
-        {
-            type: 'left'
-        },
-        {
-            type: 'down'
-        },
-        {
-            type: 'refresh'
-        },
-        {
-            type: 'minus'
-        },
-        {
-            type: 'plus'
-        },
-        {
-            type: 'help'
-        },
-        {
-            type: 'search'
-        },
-        {
-            type: 'save'
-        },
-        {
-            type: 'print'
-        }
-    ],
     initComponent: function () {
         Me_header = this;
 //alert("str_PIC:"+str_PIC);
         this.items = [{
                 xtype: 'component',
                 id: 'app-header-title',
-                html: '<a href="#" onclick="loadMainMenu();" style="text-decoration:none; color:#FFFFFF;">PRESTIGE 2</a>',
-                flex: 1
+                html: '<a href="#" onclick="loadMainMenu();" class="hdr-brand" title="Retour au menu principal">'
+                        + '<span class="hdr-brand-ico"><i class="fa fa-plus"></i></span>'
+                        + '<span class="hdr-brand-txt">PRESTIGE 3</span>'
+                        + '</a>'
             }
         ];
 
@@ -97,71 +42,150 @@ Ext.define('testextjs.view.Header', {
 
 
 
+        /* Icone + libelle d'un item du menu Options (meme rendu que les
+         * flyouts du menu navigation) */
+        var mkOptionItem = function (faIcon, label) {
+            return '<span style="display:inline-flex;align-items:center;justify-content:center;'
+                    + 'width:22px;height:22px;flex-shrink:0;margin-right:8px;vertical-align:middle">'
+                    + '<i class="fa ' + faIcon + '" style="color:#85c1e9;font-size:13px"></i>'
+                    + '</span><span style="vertical-align:middle">' + label + '</span>';
+        };
+
         var btnConfig = new Ext.button.Split({
             xtype: 'splitbutton',
             icon: 'resources/images/icons/fam/cog.png',
             id: 'commonsettingapp',
+            tooltip: 'Options',
             text: '',
-            menu: [{
-                    text: 'Mon compte',
-                    handler: function () {
-                        testextjs.app.getController('App').onLoadNewComponent("myaccountmanager", "Mon compte", "");
-                    }
-                }, {
-                    text: 'Deconnexion',
-                    handler: function () {
-                        Me_header.Deconnexion();
-                    }
+            /* Ext.create explicite : l'alias widget "menu" est ecrase par
+             * testextjs.store.Menu (xtype errone herite du KitchenSink),
+             * une config objet creerait donc un store au lieu d'un menu */
+            menu: Ext.create('Ext.menu.Menu', {
+                cls: 'prestige-flyout-menu',
+                plain: true,
+                items: [{
+                        xtype: 'component',
+                        cls: 'pft-header-wrap',
+                        html: '<div class="pft-title">Options</div>'
+                    }, {
+                        xtype: 'menuseparator'
+                    }, {
+                        text: mkOptionItem('fa-user', 'Mon compte'),
+                        cls: 'pft-item',
+                        handler: function () {
+                            testextjs.app.getController('App').onLoadNewComponent("myaccountmanager", "Mon compte", "");
+                        }
+                    }, {
+                        text: mkOptionItem('fa-power-off', 'Deconnexion'),
+                        cls: 'pft-item',
+                        handler: function () {
+                            Me_header.Deconnexion();
+                        }
 
-                }, {
-                    text: 'Aide',
-                    handler: function () {
-                        alert("Pas implementé");
+                    }, {
+                        text: mkOptionItem('fa-question-circle', 'Aide'),
+                        cls: 'pft-item',
+                        handler: function () {
+                            alert("Veuillez Appeler le service D.I.C.I au 0708080068");
+                        }
                     }
-                }
-                , {
-                    text: 'Metro',
-                    handler: function () {
+                    , {
+                        text: mkOptionItem('fa-th-large', 'Metro'),
+                        cls: 'pft-item',
+                        handler: function () {
 //                        testextjs.app.getController('App').onLoadNewComponent("mainmenumanager", "", "");
-                        testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
+                            testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
 
+                        }
                     }
-                }
 
-                , {
-                    text: 'A propos',
-                    handler: function () {
-                        // testextjs.app.getController('App').onLoadNewComponent("aboutmanager", "A Propos","");
-                        testextjs.app.getController('App').onLoadNewComponent("aboutmanager", "A Propos", "");
-                    }
-                }]
+                    , {
+                        text: mkOptionItem('fa-info-circle', 'A propos'),
+                        cls: 'pft-item',
+                        handler: function () {
+                            // testextjs.app.getController('App').onLoadNewComponent("aboutmanager", "A Propos","");
+                            testextjs.app.getController('App').onLoadNewComponent("aboutmanager", "A Propos", "");
+                        }
+                    }]
+            })
         });
 
 
 
 
+        /* NOTE anti-chevauchement : chaque element du header a une largeur
+         * FIXE cote ExtJS (le contenu charge en Ajax ne peut plus deborder
+         * sur ses voisins) ; seul le nom de l'officine est flexible et
+         * absorbe le manque de place sur les petits ecrans (ellipse CSS). */
         if (!Ext.getCmp('options-toolbar')) {
             this.items.push(
+                    /* Horloge : date et heure du jour, a droite de PRESTIGE 3 */
                     {
                         xtype: 'component',
-                        cls: 'liner',
-
-                        html: '<p class="microsoft marquee"><span id="bienvenu" >Bienvenue à   <span id="officine">  * ' + OFFICINE + ' *</span>  </span></p>'
-                                //  html: '<span style="font-size: 2.5em;font-weight:bold;font-family:Buxton Sketch;color:white;display:inline-block;margin-right:350px;margin-top:20px;width: 100%;">' + OFFICINE + '</span>'
+                        id: 'hdr-clock',
+                        width: 225,
+                        margin: '0 0 0 12',
+                        html: '<div class="hdr-clock">'
+                                + '<i class="fa fa-clock-o"></i>'
+                                + '<span id="hdr-clock-text"></span>'
+                                + '</div>'
+                    },
+                    /* Acces direct au menu Metro (largeur fixe : pas de chevauchement) */
+                    {
+                        xtype: 'component',
+                        id: 'hdr-metro-btn',
+                        width: 38,
+                        margin: '0 0 0 12',
+                        html: '<span class="hdr-metro" onclick="prestigeShowMetro()" title="Menu principal (Metro)">'
+                                + '<i class="fa fa-th-large"></i>'
+                                + '</span>'
+                    },
+                    /* Nom de l'officine : flexible, centre, ellipse si etroit */
+                    {
+                        xtype: 'component',
+                        id: 'hdr-officine',
+                        flex: 1,
+                        minWidth: 0,
+                        html: '<div class="hdr-officine" title="' + OFFICINE + '">'
+                                + '<i class="fa fa-medkit"></i>'
+                                + '<span id="officine">' + OFFICINE + '</span>'
+                                + '</div>'
                     }, {
                 xtype: 'component',
                 id: 'notif-bell',
-                html: '<span style="position:relative; cursor:pointer; margin:0 12px; display:inline-block;" onclick="showNotificationCenter()" title="Notifications">'
-                        + '<i class="fa fa-bell" style="font-size:22px;color:#ffffff;"></i>'
-                        + '<span id="notif-badge" style="display:none; position:absolute; top:-9px; right:-11px; background:#e74c3c; color:#fff; border-radius:10px; padding:1px 6px; font-size:11px; font-weight:bold; line-height:1.4;">0</span>'
+                width: 38,
+                margin: '0 14 0 6',
+                html: '<span class="hdr-bell" onclick="showNotificationCenter()" title="Notifications">'
+                        + '<i class="fa fa-bell"></i>'
+                        + '<span id="notif-badge" style="display:none;">0</span>'
                         + '</span>'
-            }, {
-                xtype: 'component',
-                html: '<img src="' + str_PIC + '" style="cursor: pointer; width: 45px; height: 45px; border-radius: 5px; margin-right: 5px;" alt="photo_profile" id="photo_profile" onclick="changePicture()"/>'
             },
+                    /* Carte utilisateur : photo + nom + role (informatif, sans action) */
+                    {
+                        xtype: 'component',
+                        id: 'hdr-user-card',
+                        width: 195,
+                        margin: '0 12 0 0',
+                        html: '<div class="hdr-user">'
+                                + '<img src="' + str_PIC + '" class="hdr-avatar" alt="photo_profile" id="photo_profile"/>'
+                                + '<div class="hdr-user-info">'
+                                + '<div class="hdr-user-name" id="hdr-user-name">...</div>'
+                                + '<div class="hdr-user-role" id="hdr-user-role">Profil</div>'
+                                + '</div>'
+                                + '</div>'
+                    },
                     {
                         xtype: 'themeSwitcher'
-                    }, lg_USER_ID, btnConfig
+                    }, lg_USER_ID, btnConfig,
+                    {
+                        xtype: 'component',
+                        id: 'hdr-logout-btn',
+                        width: 36,
+                        margin: '0 12 0 10',
+                        html: '<span class="hdr-logout" onclick="prestigeHeaderLogout()" title="Se déconnecter">'
+                                + '<i class="fa fa-power-off"></i>'
+                                + '</span>'
+                    }
 
                     );
         }
@@ -177,6 +201,11 @@ Ext.define('testextjs.view.Header', {
                 window.PRESTIGE_NOTIF_TIMER = setInterval(function () {
                     refreshNotificationBadge();
                 }, 60000);
+            }
+            // Horloge du header (date + heure, mise a jour chaque seconde)
+            prestigeHeaderClock();
+            if (!window.PRESTIGE_CLOCK_TIMER) {
+                window.PRESTIGE_CLOCK_TIMER = setInterval(prestigeHeaderClock, 1000);
             }
         }, this, {delay: 500, single: true});
     },
@@ -212,9 +241,65 @@ Ext.define('testextjs.view.Header', {
 });
 
 
-function changePicture() {
-    alert("My picture");
-    //testextjs.app.getController('App').onLoadNewComponent("updatepicture", "Mise a jour de la photo de profil", "");
+// Affiche le menu principal Metro (icone 4 carres du header)
+function prestigeShowMetro() {
+    try {
+        loadMainMenu();
+    } catch (e) {
+        // Secours si loadMainMenu n'est pas encore charge
+        try {
+            testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
+        } catch (e2) {
+        }
+    }
+}
+
+// Deconnexion depuis le bouton rond du header (avec confirmation)
+function prestigeHeaderLogout() {
+    Ext.Msg.confirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function (btn) {
+        if (btn === 'yes' && typeof Me_header !== 'undefined' && Me_header) {
+            Me_header.Deconnexion();
+        }
+    });
+}
+
+// Renseigne nom + role dans la carte utilisateur du header.
+// Retente quelques fois si le DOM n'est pas encore rendu (Ajax plus rapide que le rendu).
+function prestigeSetHeaderUser(name, role, attempt) {
+    var nameEl = document.getElementById('hdr-user-name');
+    var roleEl = document.getElementById('hdr-user-role');
+    if (!nameEl) {
+        if ((attempt || 0) < 10) {
+            setTimeout(function () {
+                prestigeSetHeaderUser(name, role, (attempt || 0) + 1);
+            }, 400);
+        }
+        return;
+    }
+    nameEl.textContent = name || 'Utilisateur';
+    if (roleEl && role) {
+        roleEl.textContent = role;
+    }
+}
+
+// Horloge du header : "jeu. 12 juin 2026 - 14:35:09"
+function prestigeHeaderClock() {
+    var el = document.getElementById('hdr-clock-text');
+    if (!el) {
+        return;
+    }
+    var now = new Date();
+    var dateStr;
+    try {
+        dateStr = now.toLocaleDateString('fr-FR', {weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'});
+    } catch (e) {
+        dateStr = now.toLocaleDateString();
+    }
+    function pad(n) {
+        return n < 10 ? '0' + n : '' + n;
+    }
+    var timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    el.innerHTML = dateStr + ' <b>' + timeStr + '</b>';
 }
 
 // ===================================================================
@@ -369,9 +454,7 @@ function buildNotificationWindow() {
         var rows = '';
         for (var i = 0; i < items.length; i++) {
             var line = p.renderItem ? p.renderItem(items[i]) : (items[i].str_NAME || '');
-            rows += '<div class="notif-item" '
-                    + 'style="padding:10px 14px; border-bottom:1px solid #eee; cursor:pointer; background:#fff;" '
-                    + 'onmouseover="this.style.background=\'#f5f7fa\'" onmouseout="this.style.background=\'#fff\'" '
+            rows += '<div class="notif-item pn-row" '
                     + 'onclick="prestigeNotifItemClick(\'' + p.key + '\',' + i + ')">'
                     + line + '</div>';
         }
@@ -379,15 +462,13 @@ function buildNotificationWindow() {
         // Titre cliquable + bouton toggle (replie par defaut)
         sections += '<div class="pn-section">'
                 // En-tete : titre (cliquable) + toggle (+ / -)
-                + '<div style="display:flex; align-items:center; padding:9px 12px; background:' + (p.color || '#2c7873') + '; color:#fff;">'
-                +   '<span style="flex:1; cursor:pointer; font-weight:bold;" '
+                + '<div class="pn-head">'
+                +   '<span class="pn-label" '
                 +         'onclick="prestigeNotifCategoryClick(\'' + p.key + '\')">'
-                +     '<i class="fa ' + (p.icon || 'fa-bell') + '" style="margin-right:7px;"></i>'
+                +     '<i class="fa ' + (p.icon || 'fa-bell') + '" style="color:' + (p.color || '#5dade2') + '; margin-right:8px;"></i>'
                 +     p.label + ' (' + total + ')'
                 +   '</span>'
-                +   '<span class="pn-toggle" '
-                +         'style="cursor:pointer; font-size:18px; line-height:1; padding:0 4px; user-select:none;" '
-                +         'onclick="prestigeNotifToggle(this)">'
+                +   '<span class="pn-toggle" onclick="prestigeNotifToggle(this)">'
                 +     '+'
                 +   '</span>'
                 + '</div>'
@@ -397,13 +478,14 @@ function buildNotificationWindow() {
     });
 
     if (sections === '') {
-        sections = '<div style="padding:24px; text-align:center; color:#888;">Aucune notification.</div>';
+        sections = '<div class="pn-empty">Aucune notification.</div>';
     }
 
     var html = '<div id="pn-scroll">' + sections + '</div>';
 
     Ext.create('Ext.window.Window', {
         id: 'notif-center-win',
+        cls: 'prestige-notif-win',
         title: 'Notifications (' + grandTotal + ')',
         width: 400,
         height: 420,
@@ -482,14 +564,14 @@ PrestigeNotif.register({
     key: 'reserve',
     label: 'Articles a reassortir',
     icon: 'fa-exchange',
-    color: '#2c7873',
+    color: '#48c9b0',
     url: '../api/v1/reserve/suggestions',
     limit: 50,
     renderItem: function (n) {
-        return '<div style="font-weight:bold; color:#333;">'
+        return '<div style="font-weight:bold; color:#eaf4fc;">'
                 + '<i class="fa fa-exclamation-circle" style="color:#e74c3c; margin-right:6px;"></i>'
                 + (n.str_NAME || n.str_DESCRIPTION || '') + '</div>'
-                + '<div style="font-size:12px; color:#666; margin-top:3px;">A reassortir : <b>' + (n.int_QTE_SUGGEREE || 0) + '</b>'
+                + '<div style="font-size:12px; color:#85c1e9; margin-top:3px;">A reassortir : <b>' + (n.int_QTE_SUGGEREE || 0) + '</b>'
                 + ' &nbsp;|&nbsp; Rayon : ' + (n.int_STOCK_RAYON || 0)
                 + ' &nbsp;|&nbsp; Reserve : ' + (n.int_STOCK_RESERVE || 0) + '</div>';
     },
@@ -506,14 +588,14 @@ PrestigeNotif.register({
     key: 'perimes',
     label: 'Peremptions proches (6 mois)',
     icon: 'fa-flask',
-    color: '#c0392b',
+    color: '#ff6b6b',
     url: '../api/v1/fichearticle/perimes?nbreMois=6&codeFamile=&codeRayon=&codeGrossiste=&query=&dtStart=&dtEnd=',
     limit: 50,
     renderItem: function (p) {
-        return '<div style="font-weight:bold; color:#333;">'
-                + '<i class="fa fa-clock-o" style="color:#c0392b; margin-right:6px;"></i>'
+        return '<div style="font-weight:bold; color:#eaf4fc;">'
+                + '<i class="fa fa-clock-o" style="color:#ff6b6b; margin-right:6px;"></i>'
                 + (p.libelle || '') + '</div>'
-                + '<div style="font-size:12px; color:#666; margin-top:3px;">'
+                + '<div style="font-size:12px; color:#85c1e9; margin-top:3px;">'
                 + (p.statut || '') + ' &nbsp;|&nbsp; Lot : ' + (p.numLot || '-')
                 + ' &nbsp;|&nbsp; Qte : ' + (p.quantiteLot || 0)
                 + ' &nbsp;|&nbsp; ' + (p.datePerement || '') + '</div>';
