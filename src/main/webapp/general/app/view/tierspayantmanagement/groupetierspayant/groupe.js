@@ -98,6 +98,12 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 
                 },
                 {
+                    header: 'TRI',
+                    dataIndex: 'str_MODE_TRI_FACTURE',
+                    flex: 1
+
+                },
+                {
                     xtype: 'actioncolumn',
                     width: 30,
                     sortable: false,
@@ -117,7 +123,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                                     layout: {
                                         type: 'fit'
                                     },
-                                    height: 200,
+                                    height: 290,
                                     items: [{
                                             xtype: 'form',
                                             id: 'editform',
@@ -128,7 +134,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                                                 {
                                                     xtype: 'fieldset',
 
-                                                    height: 160,
+                                                    height: 250,
                                                     title: 'Modification du groupe',
                                                     layout: 'vbox',
                                                     defaults: {
@@ -200,6 +206,26 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 
 
 
+                                                        },
+                                                        {
+                                                            xtype: 'combobox',
+                                                            fieldLabel: 'Tri édition facture',
+                                                            name: 'str_MODE_TRI_FACTURE',
+                                                            id: 'str_MODE_TRI_FACTURE_GR_edit',
+                                                            width: '100%',
+                                                            editable: false,
+                                                            queryMode: 'local',
+                                                            forceSelection: true,
+                                                            valueField: 'value',
+                                                            displayField: 'label',
+                                                            value: record.get('str_MODE_TRI_FACTURE') || 'ALPHABETIQUE',
+                                                            store: Ext.create('Ext.data.Store', {
+                                                                fields: ['value', 'label'],
+                                                                data: [
+                                                                    {value: 'ALPHABETIQUE', label: 'Alphabétique - nom assurance'},
+                                                                    {value: 'NUMERIQUE', label: 'Numérique - numéro facture'}
+                                                                ]
+                                                            })
                                                         },
                                                         {
                                                             xtype: 'textfield',
@@ -489,7 +515,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
             layout: {
                 type: 'fit'
             },
-            height: 200,
+            height: 290,
             items: [{
                     xtype: 'form',
                     id: 'newform',
@@ -500,7 +526,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                         {
                             xtype: 'fieldset',
 
-                            height: 160,
+                            height: 250,
                             title: 'Ajout de nouveau groupe',
                             layout: 'vbox',
                             defaults: {
@@ -520,6 +546,9 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                                     enableKeyEvents: true,
                                     listeners: {
 
+                                        afterrender: function (field) {
+                                            field.focus(false, 100);
+                                        },
                                         specialKey: function (field, e, options) {
                                             if (e.getKey() === e.ENTER)
                                             {
@@ -571,6 +600,26 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 
 
 
+                                },
+                                {
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Tri édition facture',
+                                    name: 'str_MODE_TRI_FACTURE',
+                                    id: 'str_MODE_TRI_FACTURE_GR',
+                                    width: '100%',
+                                    editable: false,
+                                    queryMode: 'local',
+                                    forceSelection: true,
+                                    valueField: 'value',
+                                    displayField: 'label',
+                                    value: 'ALPHABETIQUE',
+                                    store: Ext.create('Ext.data.Store', {
+                                        fields: ['value', 'label'],
+                                        data: [
+                                            {value: 'ALPHABETIQUE', label: 'Alphabétique - nom assurance'},
+                                            {value: 'NUMERIQUE', label: 'Numérique - numéro facture'}
+                                        ]
+                                    })
                                 },
                                 {
                                     xtype: 'textfield',
@@ -662,7 +711,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
             layout: {
                 type: 'fit'
             },
-            height: 200,
+            height: 290,
             items: [{
                     xtype: 'form',
                     id: 'editform',
@@ -673,7 +722,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                         {
                             xtype: 'fieldset',
 
-                            height: 160,
+                            height: 250,
                             title: 'Modification du groupe',
                             layout: 'vbox',
                             defaults: {
@@ -745,6 +794,26 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 
 
 
+                                },
+                                {
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Tri édition facture',
+                                    name: 'str_MODE_TRI_FACTURE',
+                                    id: 'str_MODE_TRI_FACTURE_GR_edit',
+                                    width: '100%',
+                                    editable: false,
+                                    queryMode: 'local',
+                                    forceSelection: true,
+                                    valueField: 'value',
+                                    displayField: 'label',
+                                    value: record.get('str_MODE_TRI_FACTURE') || 'ALPHABETIQUE',
+                                    store: Ext.create('Ext.data.Store', {
+                                        fields: ['value', 'label'],
+                                        data: [
+                                            {value: 'ALPHABETIQUE', label: 'Alphabétique - nom assurance'},
+                                            {value: 'NUMERIQUE', label: 'Numérique - numéro facture'}
+                                        ]
+                                    })
                                 },
                                 {
                                     xtype: 'textfield',
@@ -832,6 +901,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
             var lib = Ext.getCmp('str_LIBELLE_GR').getValue();
             var str_ADRESSE = Ext.getCmp('str_ADRESSE_GR').getValue();
             var str_TELEPHONE = Ext.getCmp('str_TELEPHONE_GR').getValue();
+            var str_MODE_TRI_FACTURE = Ext.getCmp('str_MODE_TRI_FACTURE_GR').getValue();
 
 
             Ext.Ajax.request({
@@ -840,7 +910,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                     mode: 0,
                     str_LIBELLE: lib,
                     str_ADRESSE: str_ADRESSE,
-                    str_TELEPHONE: str_TELEPHONE
+                    str_TELEPHONE: str_TELEPHONE,
+                    str_MODE_TRI_FACTURE: str_MODE_TRI_FACTURE
 
 
                 },
@@ -883,6 +954,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
             var lib = Ext.getCmp('str_LIBELLE_GR_edit').getValue();
             var str_ADRESSE = Ext.getCmp('str_ADRESSE_GR_edit').getValue();
             var str_TELEPHONE = Ext.getCmp('str_TELEPHONE_GR_edit').getValue();
+            var str_MODE_TRI_FACTURE = Ext.getCmp('str_MODE_TRI_FACTURE_GR_edit').getValue();
 
 
             Ext.Ajax.request({
@@ -892,7 +964,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                     lg_GROUPE_ID: record.get('lg_GROUPE_ID'),
                     str_LIBELLE: lib,
                     str_ADRESSE: str_ADRESSE,
-                    str_TELEPHONE: str_TELEPHONE
+                    str_TELEPHONE: str_TELEPHONE,
+                    str_MODE_TRI_FACTURE: str_MODE_TRI_FACTURE
 
 
                 },
@@ -903,7 +976,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                     if (object.status === 1) {
                         grid.getStore().load();
                         Ext.MessageBox.alert('INFO', 'Groupe modifié');
-                        win.hide();
+                        win.destroy();
                     } else {
                         Ext.MessageBox.alert('ERROR', 'Erreur de modification');
 
@@ -918,7 +991,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                 failure: function (response)
                 {
 
-                    win.hide();
+                    win.destroy();
                 }
             });
 
