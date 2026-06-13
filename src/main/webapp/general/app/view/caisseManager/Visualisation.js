@@ -17,9 +17,12 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
     height: Ext.getBody().getViewSize().height * 0.85,
     minHeight: 550,
     cls: 'custompanel',
-    layout: {
-        type: 'fit'
-
+    layout: 'anchor',
+    fitToContentPanel: function () {
+        var content = Ext.getCmp('content-panel');
+        if (this.rendered && content && content.body) {
+            this.setHeight(content.body.getHeight(true));
+        }
     },
     initComponent: function () {
 
@@ -155,6 +158,7 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
                 }
             ],
             items: [{
+                    anchor: '100% 100%',
                     xtype: 'visualisationGrid',
                     plugins: [{
                             ptype: 'rowexpander',
@@ -167,6 +171,11 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
 
         });
         me.callParent(arguments);
+        me.on('afterrender', me.fitToContentPanel, me, {delay: 50});
+        Ext.EventManager.onWindowResize(me.fitToContentPanel, me, {buffer: 100});
+        me.on('destroy', function () {
+            Ext.EventManager.removeResizeListener(me.fitToContentPanel, me);
+        });
     }
 });
 
