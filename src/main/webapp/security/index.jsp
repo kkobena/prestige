@@ -72,9 +72,12 @@
 
           <!-- Bouton vert “pill” -->
           <button type="button" id="login" name="login" class="pl-btn">Connexion</button>
-          <span class="pl-loader">
-            <img src="../resources/images/gears.gif" id="loader" alt="Chargement…" style="display:none;">
-          </span>
+          <span class="pl-loader" id="loader" role="status" aria-live="polite" aria-label="Connexion en cours" style="display:none;">
+            <span class="pl-loader__orbit" aria-hidden="true">
+              <span class="pl-loader__dot"></span>
+            </span>
+            <span class="pl-loader__text">Connexion sécurisée…</span>
+
         </div>
 
         <!-- Colonne avatar -->

@@ -29,7 +29,7 @@ function Doconnexion(str_LOGIN, Str_PASSWORD) {
 
 function authenticate(str_LOGIN, Str_PASSWORD) {
     //  alert(str_LOGIN);
-    $("#loader").show();
+        $("#loader").show();
     jQuery.ajax(
             {
                 type: "POST",
@@ -54,9 +54,13 @@ function authenticate(str_LOGIN, Str_PASSWORD) {
                             window.location.replace("../general/");
                         }
                     }else{
-                        alert("Erreur de connexion. Veuillez  ressayer"); 
+                        alert("Erreur de connexion. Veuillez  ressayer");
+                        $("#loader").hide();
                     }
-                  
+
+                }, error: function () {
+                    alert("Erreur de connexion. Veuillez  ressayer");
+                    $("#loader").hide();
                 }
             }
     );/*
