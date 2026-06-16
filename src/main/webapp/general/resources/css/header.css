@@ -484,3 +484,109 @@
     font-weight: 600 !important;
     letter-spacing: 0.5px !important;
 }
+
+/* ============================================================
+   Menu "Liste des avoirs" : couleur portee par l'ONGLET.
+   On distingue nettement l'onglet ACTIF (pleine couleur, texte
+   blanc, trait epais en bas, legerement souleve) de l'onglet
+   INACTIF (couleur attenuee, texte sombre, aspect en retrait).
+   ============================================================ */
+
+/* ---- Etat INACTIF : couleur pale + texte sombre ---- */
+.avoir-tab-encours,
+.avoir-tab-encours .x-frame-mc,
+.avoir-tab-encours .x-tab-inner {
+    background-color: #f5cfa8 !important;
+    background-image: none !important;
+    border-color: #e0a96d !important;
+}
+.avoir-tab-cloture,
+.avoir-tab-cloture .x-frame-mc,
+.avoir-tab-cloture .x-tab-inner {
+    background-color: #aee0c4 !important;
+    background-image: none !important;
+    border-color: #82c9a3 !important;
+}
+.avoir-tab-encours .x-tab-inner,
+.avoir-tab-cloture .x-tab-inner {
+    color: #34495e !important;
+    font-weight: bold !important;
+    opacity: 0.9;
+}
+
+/* ---- Etat ACTIF : pleine couleur, texte blanc, accent net ---- */
+.avoir-tab-encours.x-tab-active,
+.avoir-tab-encours.x-tab-active .x-frame-mc,
+.avoir-tab-encours.x-tab-active .x-tab-inner {
+    background-color: #e67e22 !important;
+    border-color: #a04e10 !important;
+}
+.avoir-tab-cloture.x-tab-active,
+.avoir-tab-cloture.x-tab-active .x-frame-mc,
+.avoir-tab-cloture.x-tab-active .x-tab-inner {
+    background-color: #27ae60 !important;
+    border-color: #14622f !important;
+}
+.avoir-tab-encours.x-tab-active .x-tab-inner,
+.avoir-tab-cloture.x-tab-active .x-tab-inner {
+    color: #ffffff !important;
+    opacity: 1;
+}
+/* Marqueur fort de l'onglet actif : trait epais en bas + leger relief */
+.avoir-tab-encours.x-tab-active {
+    box-shadow: inset 0 -4px 0 0 #a04e10, 0 -2px 4px rgba(0,0,0,0.18) !important;
+}
+.avoir-tab-cloture.x-tab-active {
+    box-shadow: inset 0 -4px 0 0 #14622f, 0 -2px 4px rgba(0,0,0,0.18) !important;
+}
+
+/* Animation d'appel UNIQUEMENT sur l'onglet "en cours" quand il n'est PAS actif :
+   invite a basculer dessus. Pulse de couleur (toujours visible). */
+@keyframes avoirPulse {
+    0%, 100% { background-color: #f5cfa8; }
+    50%      { background-color: #f0b27a; }
+}
+.avoir-tab-encours:not(.x-tab-active) {
+    animation: avoirPulse 1.4s infinite;
+}
+
+/* ---- Pastille sur l'onglet ACTIF du menu des avoirs ---- */
+.avoir-pastille {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid rgba(0, 0, 0, 0.35);
+    margin-right: 7px;
+    vertical-align: middle;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.65);
+    animation: avoirPastille 1.1s infinite;
+}
+@keyframes avoirPastille {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.3); opacity: 0.7; }
+}
+.avoir-tab-on-label {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ============================================================
+   Cloche du centre de notifications : battement type pacemaker
+   lorsqu'il y a au moins une notification (.has-notif).
+   ============================================================ */
+@keyframes hdrBellBeat {
+    0%   { transform: scale(1); }
+    10%  { transform: scale(1.35); }
+    20%  { transform: scale(1); }
+    30%  { transform: scale(1.35); }
+    42%  { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+.hdr-bell.has-notif i.fa-bell {
+    color: #f1c40f !important;
+    display: inline-block;
+    transform-origin: center;
+    animation: hdrBellBeat 1.2s ease-in-out infinite;
+}

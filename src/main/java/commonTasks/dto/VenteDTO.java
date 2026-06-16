@@ -45,6 +45,8 @@ public class VenteDTO implements Serializable {
     private Integer montantPaye = 0;// arrondi de la caisse
     private String dtUPDATED;
     private String heure;
+    private String dtCLOTUREAVOIR;
+    private String userValidateur;
     private String strSTATUT;
     private String strREFBON;
     private String lgUPDATEDBY;
@@ -416,6 +418,22 @@ public class VenteDTO implements Serializable {
 
     public void setHeure(String heure) {
         this.heure = heure;
+    }
+
+    public String getDtCLOTUREAVOIR() {
+        return dtCLOTUREAVOIR;
+    }
+
+    public void setDtCLOTUREAVOIR(String dtCLOTUREAVOIR) {
+        this.dtCLOTUREAVOIR = dtCLOTUREAVOIR;
+    }
+
+    public String getUserValidateur() {
+        return userValidateur;
+    }
+
+    public void setUserValidateur(String userValidateur) {
+        this.userValidateur = userValidateur;
     }
 
     public String getStrSTATUT() {
@@ -835,6 +853,10 @@ public class VenteDTO implements Serializable {
         this.HEUREVENTE = heureFormat.format(tp.getDtUPDATED());
         this.strSTATUT = tp.getStrSTATUT();
         this.avoir = tp.getBISAVOIR();
+        if (tp.getDtCLOTUREAVOIR() != null) {
+            this.dtCLOTUREAVOIR = dateFormat.format(tp.getDtCLOTUREAVOIR()) + " "
+                    + heureFormat.format(tp.getDtCLOTUREAVOIR());
+        }
         this.cancel = tp.getBISCANCEL();
         this.beCancel = becancel;
         this.modification = params.isModification();
@@ -888,6 +910,15 @@ public class VenteDTO implements Serializable {
             }
 
         });
+
+        // Produits UNIQUEMENT en avoir (avec leur quantite en avoir), exposes pour
+        // le centre de notifications. Utilise la quantite historisee si l'avoir
+        // est cloture (int_AVOIR remis a zero).
+        this.items = tpds.stream().filter(tpd -> {
+            Integer a = tpd.getIntAVOIR();
+            int eff = (a != null && a > 0) ? a : tpd.getIntAVOIRINITIAL();
+            return eff > 0;
+        }).map(VenteDetailsDTO::new).collect(Collectors.toList());
 
         this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
     }

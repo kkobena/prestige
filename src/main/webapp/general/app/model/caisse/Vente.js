@@ -57,6 +57,14 @@ Ext.define('testextjs.model.caisse.Vente', {
         {
             name: 'heure',
             type: 'string'
+        },
+        {
+            name: 'dtCLOTUREAVOIR',
+            type: 'string'
+        },
+        {
+            name: 'userValidateur',
+            type: 'string'
         }
 
         , {

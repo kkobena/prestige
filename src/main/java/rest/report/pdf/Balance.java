@@ -929,17 +929,20 @@ public class Balance {
 
     public String listeVentes(SalesStatsParams params) {
 
+        boolean cloture = params.isAvoirCloture();
         String scr_report_file = "rp_list_avoirs";
         Map<String, Object> parameters = reportUtil.officineData(params.getUserId());
-        parameters.put("P_H_CLT_INFOS", "LISTE DES AVOIRS");
+        parameters.put("P_H_CLT_INFOS", cloture ? "LISTE DES AVOIRS CLOTURES" : "LISTE DES AVOIRS EN COURS");
         parameters.put("avoir_subreport", jdom.scr_report_file);
 
+        // Prefixe distinct dans le nom du fichier selon l'onglet imprime
+        String prefix = cloture ? "avoirs_clotures_" : "avoirs_encours_";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"))
                 + ".pdf";
         List<VenteDTO> data = salesStatsService.listeVentesReport(params);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
-                jdom.scr_report_pdf + "avoirs_" + report_generate_file, data);
-        return "/data/reports/pdf/avoirs_" + report_generate_file;
+                jdom.scr_report_pdf + prefix + report_generate_file, data);
+        return "/data/reports/pdf/" + prefix + report_generate_file;
     }
 
     public String tbalancePara(Params parasm) {

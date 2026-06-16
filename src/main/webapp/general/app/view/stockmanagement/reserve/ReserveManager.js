@@ -33,19 +33,37 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveManager', {
                 '.btn-reappro-orange.x-btn { background-color: #ff9500 !important; background-image: none !important; border-color: #b05a00 !important; }',
                 '.btn-reappro-orange.x-btn .x-btn-inner { color: #fff !important; font-weight: bold !important; }',
                 '.btn-reassort-green.x-btn { background-color: #3daa42 !important; background-image: none !important; border-color: #1a4a1e !important; }',
-                '.btn-reassort-green.x-btn .x-btn-inner { color: #fff !important; font-weight: bold !important; }'
+                '.btn-reassort-green.x-btn .x-btn-inner { color: #fff !important; font-weight: bold !important; }',
+                // Pastille sur l'onglet ACTIF (copie isolee de la pastille des avoirs)
+                '.reserve-pastille { display:inline-block; width:10px; height:10px; border-radius:50%; background:#fff; border:2px solid rgba(0,0,0,0.35); margin-right:7px; vertical-align:middle; box-shadow:0 0 0 2px rgba(255,255,255,0.65); animation:reservePastille 1.1s infinite; }',
+                '@keyframes reservePastille { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.3); opacity:0.7; } }',
+                '.reserve-tab-on-label { text-decoration:underline; text-underline-offset:3px; }'
             ].join('\n');
             document.head.appendChild(s);
         }
 
+        // Met une pastille + libelle souligne sur l'onglet actif, libelle brut sur les autres.
+        var updateReservePastille = function (tabPanel) {
+            var active = tabPanel.getActiveTab();
+            tabPanel.items.each(function (card) {
+                var label = card.baseTitle || card.title;
+                if (card === active) {
+                    card.setTitle('<span class="reserve-pastille"></span><span class="reserve-tab-on-label">'
+                            + label + '</span>');
+                } else {
+                    card.setTitle(label);
+                }
+            });
+        };
+
         this.items = [
-            {xtype: 'reservegrid', title: 'TOUT', gridmode: 'ALL'},
+            {xtype: 'reservegrid', title: 'TOUT', baseTitle: 'TOUT', gridmode: 'ALL'},
             {
-                xtype: 'reservegrid', gridmode: 'REAPPRO', title: 'REAPPRO RESERVE',
+                xtype: 'reservegrid', gridmode: 'REAPPRO', title: 'REAPPRO RESERVE', baseTitle: 'REAPPRO RESERVE',
                 tabConfig: {cls: 'tab-reappro'}
             },
             {
-                xtype: 'reservegrid', gridmode: 'REASSORT', title: 'REASSORT RAYON',
+                xtype: 'reservegrid', gridmode: 'REASSORT', title: 'REASSORT RAYON', baseTitle: 'REASSORT RAYON',
                 tabConfig: {cls: 'tab-reassort'}
             }
         ];
@@ -54,6 +72,10 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveManager', {
                 if (newCard && newCard.reloadGrid) {
                     newCard.reloadGrid();
                 }
+                updateReservePastille(tabPanel);
+            },
+            afterrender: function (tabPanel) {
+                updateReservePastille(tabPanel);
             }
         };
         this.callParent();

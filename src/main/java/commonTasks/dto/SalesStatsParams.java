@@ -33,6 +33,8 @@ public class SalesStatsParams implements Serializable {
     private boolean depotOnly;
     private boolean sansBon;
     private boolean onlyAvoir;
+    private String avoirStatut;
+    private String caissierId;
     private boolean modification;
     private boolean modificationClientTp;
     private int nbre;
@@ -257,6 +259,26 @@ public class SalesStatsParams implements Serializable {
 
     public void setOnlyAvoir(boolean onlyAvoir) {
         this.onlyAvoir = onlyAvoir;
+    }
+
+    public String getAvoirStatut() {
+        return avoirStatut;
+    }
+
+    public void setAvoirStatut(String avoirStatut) {
+        this.avoirStatut = avoirStatut;
+    }
+
+    public boolean isAvoirCloture() {
+        return "CLOTURE".equalsIgnoreCase(avoirStatut);
+    }
+
+    public String getCaissierId() {
+        return caissierId;
+    }
+
+    public void setCaissierId(String caissierId) {
+        this.caissierId = caissierId;
     }
 
     public boolean isShowAllActivities() {

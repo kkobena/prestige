@@ -424,7 +424,8 @@ public class VenteDetailsDTO implements Serializable {
         this.intQUANTITYSERVED = (p.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)
                 ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
         this.intPRICE = d.getIntPRICE();
-        this.intAVOIR = d.getIntAVOIR();
+        // Avoir cloture : int_AVOIR est remis a zero, on retombe sur la quantite historisee
+        this.intAVOIR = (d.getIntAVOIR() != null && d.getIntAVOIR() > 0) ? d.getIntAVOIR() : d.getIntAVOIRINITIAL();
         this.bISAVOIR = d.getBISAVOIR();
         this.intPRICEREMISE = d.getIntPRICEREMISE();
         this.dateOp = DateConverter.convertDateToLocalDateTime(p.getDtUPDATED());
@@ -462,7 +463,8 @@ public class VenteDetailsDTO implements Serializable {
         this.intQUANTITYSERVED = (p.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)
                 ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
         this.intPRICE = d.getIntPRICE();
-        this.intAVOIR = d.getIntAVOIR();
+        // Avoir cloture : int_AVOIR est remis a zero, on retombe sur la quantite historisee
+        this.intAVOIR = (d.getIntAVOIR() != null && d.getIntAVOIR() > 0) ? d.getIntAVOIR() : d.getIntAVOIRINITIAL();
         this.bISAVOIR = d.getBISAVOIR();
         this.intPRICEREMISE = d.getIntPRICEREMISE();
         this.dtCREATED = dateFormat.format(d.getDtUPDATED());

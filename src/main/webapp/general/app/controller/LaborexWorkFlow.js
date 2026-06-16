@@ -2873,6 +2873,17 @@ Ext.define('testextjs.controller.LaborexWorkFlow', {
                 } else {
                     Ext.MessageBox.alert('Information', object.errors, function () {
                         var xtype = "venteavoirmanager";
+                        // Apres cloture, ouvre l'onglet "Avoir cloture" sur une periode
+                        // glissante d'un mois afin de voir l'avoir qu'on vient de cloturer.
+                        var end = new Date();
+                        var start = new Date();
+                        start.setMonth(start.getMonth() - 1);
+                        start.setDate(start.getDate() + 1);
+                        window.PRESTIGE_AVOIR_PARAMS = {
+                            dtStart: Ext.Date.format(start, 'Y-m-d'),
+                            dtEnd: Ext.Date.format(end, 'Y-m-d'),
+                            activeTab: 'CLOTURE'
+                        };
                         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
                     });
                 }

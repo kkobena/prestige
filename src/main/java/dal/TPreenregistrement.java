@@ -204,6 +204,11 @@ public class TPreenregistrement implements Serializable {
     private Caution caution;
     @Column(name = "has_price_option")
     private Boolean hasPriceOption = false;
+    @Column(name = "b_HAS_AVOIR")
+    private boolean bHASAVOIR = false;
+    @Column(name = "dt_CLOTURE_AVOIR")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dtCLOTUREAVOIR;
 
     public boolean isImported() {
         return imported;
@@ -524,6 +529,22 @@ public class TPreenregistrement implements Serializable {
 
     public boolean getBISAVOIR() {
         return bISAVOIR;
+    }
+
+    public boolean getBHASAVOIR() {
+        return bHASAVOIR;
+    }
+
+    public void setBHASAVOIR(boolean bHASAVOIR) {
+        this.bHASAVOIR = bHASAVOIR;
+    }
+
+    public Date getDtCLOTUREAVOIR() {
+        return dtCLOTUREAVOIR;
+    }
+
+    public void setDtCLOTUREAVOIR(Date dtCLOTUREAVOIR) {
+        this.dtCLOTUREAVOIR = dtCLOTUREAVOIR;
     }
 
     public void setBISAVOIR(boolean bISAVOIR) {

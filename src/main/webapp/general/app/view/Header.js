@@ -382,6 +382,15 @@ var PrestigeNotif = (function () {
     }
 
     function updateBadge(total) {
+        // Battement de la cloche tant qu'il y a des notifications
+        var bell = Ext.query('.hdr-bell')[0];
+        if (bell) {
+            if (total > 0) {
+                Ext.fly(bell).addCls('has-notif');
+            } else {
+                Ext.fly(bell).removeCls('has-notif');
+            }
+        }
         var badge = Ext.get('notif-badge');
         if (!badge) {
             return;
@@ -609,3 +618,61 @@ PrestigeNotif.register({
         }
     }
 });
+
+// Periode glissante d'un mois : dtEnd = aujourd'hui, dtStart = aujourd'hui - 1 mois + 1 jour
+function prestigeAvoirPeriode() {
+    var end = new Date();
+    var start = new Date();
+    start.setMonth(start.getMonth() - 1);
+    start.setDate(start.getDate() + 1);
+    return {
+        dtStart: Ext.Date.format(start, 'Y-m-d'),
+        dtEnd: Ext.Date.format(end, 'Y-m-d')
+    };
+}
+
+// Categorie AVOIRS : ventes ayant un avoir en cours (non cloture)
+(function () {
+    var p = prestigeAvoirPeriode();
+    PrestigeNotif.register({
+        key: 'avoirs',
+        label: 'Ventes en avoir',
+        icon: 'fa-reply-all',
+        color: '#e67e22',
+        url: '../api/v1/ventestats?onlyAvoir=true&sansBon=false&typeVenteId=&avoirStatut=EN_COURS'
+                + '&dtStart=' + p.dtStart + '&dtEnd=' + p.dtEnd,
+        limit: 50,
+        renderItem: function (v) {
+            // Produits uniquement en avoir, avec leur quantite en avoir
+            var produits = '';
+            if (v.items && v.items.length) {
+                for (var i = 0; i < v.items.length; i++) {
+                    var it = v.items[i];
+                    produits += '<div style="font-size:12px; color:#cfe8fb; margin-left:18px;">- '
+                            + (it.intCIP || '') + ' ' + (it.ticketName || it.strNAME || '')
+                            + ' <b>(' + (it.intAVOIR || 0) + ')</b></div>';
+                }
+            }
+            return '<div style="font-weight:bold; color:#eaf4fc;">'
+                    + '<i class="fa fa-reply-all" style="color:#e67e22; margin-right:6px;"></i>'
+                    + (v.strREF || '') + ' &nbsp;|&nbsp; ' + (v.clientFullName || 'Client comptant') + '</div>'
+                    + '<div style="font-size:12px; color:#85c1e9; margin-top:3px;">'
+                    + (v.strTYPEVENTE || '') + ' &nbsp;|&nbsp; Montant : <b>' + (v.intPRICE || 0) + '</b>'
+                    + ' &nbsp;|&nbsp; ' + (v.dtUPDATED || '') + ' ' + (v.heure || '') + '</div>'
+                    + produits;
+        },
+        onItemClick: function () {
+            try {
+                // Ouvre le menu des avoirs sur l'onglet "en cours", periode glissante, recherche auto
+                var per = prestigeAvoirPeriode();
+                window.PRESTIGE_AVOIR_PARAMS = {
+                    dtStart: per.dtStart,
+                    dtEnd: per.dtEnd,
+                    activeTab: 'EN_COURS'
+                };
+                testextjs.app.getController('App').onLoadNewComponent("venteavoirmanager", "Liste des avoirs", "");
+            } catch (e) {
+            }
+        }
+    });
+})();

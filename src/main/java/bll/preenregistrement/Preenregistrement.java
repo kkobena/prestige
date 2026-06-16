@@ -5848,6 +5848,13 @@ public class Preenregistrement extends bll.bllBase {
                 updateSnaphotAvoirclient(OTPreenregistrement);
                 for (TPreenregistrementDetail OTPreenregistrementDetail : lstTPreenregistrementDetail) {
                     OTPreenregistrementDetail.setDtUPDATED(new Date());
+                    // Conserve la quantite mise en avoir avant la remise a zero,
+                    // pour pouvoir reafficher les produits dans l'onglet "Avoir cloture"
+                    int qteAvoir = OTPreenregistrementDetail.getIntAVOIR() == null ? 0
+                            : OTPreenregistrementDetail.getIntAVOIR();
+                    if (qteAvoir > OTPreenregistrementDetail.getIntAVOIRINITIAL()) {
+                        OTPreenregistrementDetail.setIntAVOIRINITIAL(qteAvoir);
+                    }
                     OTPreenregistrementDetail.setBISAVOIR(false);
                     // OTPreenregistrementDetail.setIntAVOIRSERVED(OTPreenregistrementDetail.getIntQUANTITY()); // a
                     // decommenter en cas de probleme 04/11/2016
@@ -5872,6 +5879,9 @@ public class Preenregistrement extends bll.bllBase {
                 if (lstTPreenregistrementDetail.size() == i++) {
                     OTPreenregistrement.setLgUSERID(this.getOTUser());
                     OTPreenregistrement.setBISAVOIR(false);
+                    // Trace d'historique : la vente a fait l'objet d'un avoir, desormais cloture
+                    OTPreenregistrement.setBHASAVOIR(true);
+                    OTPreenregistrement.setDtCLOTUREAVOIR(new Date());
                     this.persiste(OTPreenregistrement);
                     this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
                     result = true;

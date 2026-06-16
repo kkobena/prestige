@@ -276,10 +276,13 @@ public class SalesStatsRessource {
             @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "sansBon") boolean sansBon,
             @QueryParam(value = "onlyAvoir") boolean onlyAvoir, @QueryParam(value = "typeVenteId") String typeVenteId,
             @QueryParam(value = "nature") String nature, @QueryParam(value = "depotOnly") Boolean depotOnly,
-            @QueryParam(value = "typeDepotId") String typeDepotId, @QueryParam(value = "depotId") String depotId)
+            @QueryParam(value = "typeDepotId") String typeDepotId, @QueryParam(value = "depotId") String depotId,
+            @QueryParam(value = "avoirStatut") String avoirStatut, @QueryParam(value = "caissierId") String caissierId)
             throws JSONException {
         SalesStatsParams body = buildParams(start, limit, query, dtStart, dtEnd, hStart, hEnd, sansBon, onlyAvoir,
                 typeVenteId, nature, depotOnly, typeDepotId, depotId);
+        body.setAvoirStatut(avoirStatut);
+        body.setCaissierId(caissierId);
         JSONObject jsono = salesService.getVenteTerminees(body);
         return Response.ok().entity(jsono.toString()).build();
     }

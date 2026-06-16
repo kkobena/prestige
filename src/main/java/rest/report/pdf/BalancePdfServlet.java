@@ -234,6 +234,8 @@ public class BalancePdfServlet extends HttpServlet {
             SalesStatsParams body = buildSalesStatsParams(request, session, oUser);
             body.setOnlyAvoir(true);
             body.setSansBon(false);
+            body.setAvoirStatut(request.getParameter("statutAvoir"));
+            body.setCaissierId(request.getParameter("caissierId"));
 
             try {
                 body.sethEnd(LocalTime.parse(hEnd));

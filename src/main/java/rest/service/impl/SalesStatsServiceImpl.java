@@ -115,7 +115,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private static final String SEARCH_CLOSE = " AND ((p.lg_PREENREGISTREMENT_ID  IN (SELECT d.lg_PREENREGISTREMENT_ID FROM  t_preenregistrement_detail d JOIN t_famille f ON d.lg_FAMILLE_ID=f.lg_FAMILLE_ID WHERE f.int_CIP LIKE '%s' OR f.str_NAME LIKE '%s' )) OR p.str_REF LIKE '%s' )";
     private static final String NATURE_CLOSE = " AND p.str_TYPE_VENTE='%s' ";
     private static final String VENTE_SQL = "SELECT {distinct} p.lg_PREENREGISTREMENT_ID as lgPREENREGISTREMENTID,p.str_REF as strREF,p.str_REF_TICKET as strREFTICKET,p.int_PRICE as intPRICE,p.int_CUST_PART as intCUSTPART,p.int_PRICE_REMISE as intPRICEREMISE,p.str_STATUT as strSTATUT,p.dt_CREATED as dtCREATED, p.dt_UPDATED as dtUPDATED,p.str_TYPE_VENTE as strTYPEVENTE,p.b_IS_AVOIR as avoir,p.b_IS_CANCEL as cancel,p.b_WITHOUT_BON as sansbon, p.lg_TYPE_VENTE_ID as lgTYPEVENTEID,p.copy as copy,"
-            + "p.dt_ANNULER as dtANNULER,p.lg_USER_CAISSIER_ID as lgUSERCAISSIERID,CONCAT(caissier.str_FIRST_NAME,' ',caissier.str_LAST_NAME) AS userCaissierName,CONCAT(c.str_FIRST_NAME,' ',c.str_LAST_NAME) AS clientFullName, CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeurName,em.lg_EMPLACEMENT_ID AS  pkBrand from {select_placeholder} INNER JOIN t_user caissier ON caissier.lg_USER_ID=p.lg_USER_CAISSIER_ID LEFT JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID LEFT  JOIN  t_client c ON p.lg_CLIENT_ID=c.lg_CLIENT_ID "
+            + "p.dt_ANNULER as dtANNULER,p.lg_USER_CAISSIER_ID as lgUSERCAISSIERID,CONCAT(caissier.str_FIRST_NAME,' ',caissier.str_LAST_NAME) AS userCaissierName,CONCAT(c.str_FIRST_NAME,' ',c.str_LAST_NAME) AS clientFullName, CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeurName,CONCAT(op.str_FIRST_NAME,' ',op.str_LAST_NAME) AS userValidateur,p.dt_CLOTURE_AVOIR as dtClotureAvoir,em.lg_EMPLACEMENT_ID AS  pkBrand from {select_placeholder} INNER JOIN t_user caissier ON caissier.lg_USER_ID=p.lg_USER_CAISSIER_ID LEFT JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID LEFT JOIN t_user op ON op.lg_USER_ID=p.lg_USER_ID LEFT  JOIN  t_client c ON p.lg_CLIENT_ID=c.lg_CLIENT_ID "
             + " LEFT JOIN t_emplacement em ON em.lg_EMPLACEMENT_ID=p.PK_BRAND {produit_join} where p.dt_UPDATED >=:dtStart and p.dt_UPDATED <=:dtEnd and p.str_STATUT=:status";
     private static final String NATURE_CLOSE2 = " and p.lg_NATURE_VENTE_ID=:natureVente";
     private static final String TYPE_CLOSE = " and p.str_TYPE_VENTE=:typeVente";
@@ -725,17 +725,32 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bWITHOUTBON))));
                 predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
             }
-            if (params.isOnlyAvoir()) {
-                predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
-                predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
-            }
             Date dtStart = java.sql.Timestamp.valueOf(LocalDateTime.of(params.getDtStart(), params.gethStart()));
             Date dtEnd = java.sql.Timestamp
                     .valueOf(LocalDateTime.of(params.getDtEnd(), params.gethEnd()).withSecond(59));
-            predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtStart));
-            predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtEnd));
+            if (params.isOnlyAvoir()) {
+                // Impression alignee sur la grille : meme filtre et meme colonne de date par onglet
+                predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
+                if (params.isAvoirCloture()) {
+                    predicates.add(cb.isTrue(st.get(TPreenregistrement_.bHASAVOIR)));
+                    predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISAVOIR)));
+                    predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtCLOTUREAVOIR), dtStart));
+                    predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtCLOTUREAVOIR), dtEnd));
+                } else {
+                    predicates.add(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR)));
+                    predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtStart));
+                    predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtEnd));
+                }
+            } else {
+                predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtStart));
+                predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtEnd));
+            }
 
             predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_CLOSED)));
+            if (StringUtils.isNotEmpty(params.getCaissierId())) {
+                predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERCAISSIERID).get(TUser_.lgUSERID),
+                        params.getCaissierId()));
+            }
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
             }
@@ -2120,10 +2135,20 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
         }
         if (params.isOnlyAvoir()) {
-            predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
             predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
-            predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.completionDate), dtStart));
-            predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.completionDate), dtEnd));
+            if (params.isAvoirCloture()) {
+                // Onglet "Avoir cloture" : avoirs historises et desormais fermes,
+                // filtres sur la date de cloture de l'avoir
+                predicates.add(cb.isTrue(st.get(TPreenregistrement_.bHASAVOIR)));
+                predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISAVOIR)));
+                predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtCLOTUREAVOIR), dtStart));
+                predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.dtCLOTUREAVOIR), dtEnd));
+            } else {
+                // Onglet "Avoir en cours" : avoirs ouverts, filtres sur la date de vente
+                predicates.add(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR)));
+                predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.completionDate), dtStart));
+                predicates.add(cb.lessThanOrEqualTo(st.get(TPreenregistrement_.completionDate), dtEnd));
+            }
 
         } else {
             predicates.add(cb.greaterThanOrEqualTo(st.get(TPreenregistrement_.dtUPDATED), dtStart));
@@ -2425,6 +2450,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         if (StringUtils.isNotEmpty(params.getDepotId())) {
             query.setParameter("depotId", params.getDepotId());
         }
+        if (StringUtils.isNotEmpty(params.getCaissierId())) {
+            query.setParameter("caissierId", params.getCaissierId());
+        }
     }
 
     private List<VenteDTO> getTransformTuple(List<Tuple> tuples, boolean canexport, SalesStatsParams params) {
@@ -2489,6 +2517,17 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         venteDTO.setUserCaissierName(tuple.get("userCaissierName", String.class));
         venteDTO.setClientFullName(tuple.get("clientFullName", String.class));
 
+        // Utilisateur ayant valide (cloture) l'avoir : porte par lg_USER_ID
+        venteDTO.setUserValidateur(tuple.get("userValidateur", String.class));
+        Date dtClotureAvoir = tuple.get("dtClotureAvoir", Date.class);
+        if (dtClotureAvoir != null) {
+            venteDTO.setDtCLOTUREAVOIR(dateFormat.format(dtClotureAvoir) + " " + heureFormat.format(dtClotureAvoir));
+        }
+        // Produits uniquement en avoir (pour le centre de notifications)
+        if (params.isOnlyAvoir()) {
+            venteDTO.setItems(avoirItems(venteDTO.getLgPREENREGISTREMENTID()));
+        }
+
         String pkBrand = tuple.get("pkBrand", String.class);
         if (StringUtils.isNotEmpty(pkBrand)) {
             MagasinDTO magasin = new MagasinDTO(findEmplacementById(pkBrand));
@@ -2497,6 +2536,21 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         venteDTO.setModification(params.isModification());
         venteDTO.setModificationClientTp(params.isModificationClientTp());
         return venteDTO;
+    }
+
+    // Lignes effectivement en avoir d'une vente (quantite courante ou historisee > 0),
+    // utilisees pour afficher les produits en avoir dans les notifications.
+    private List<VenteDetailsDTO> avoirItems(String venteId) {
+        try {
+            List<TPreenregistrementDetail> lines = getEntityManager().createQuery(
+                    "SELECT d FROM TPreenregistrementDetail d WHERE d.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = :id "
+                            + "AND (d.intAVOIR > 0 OR d.intAVOIRINITIAL > 0)",
+                    TPreenregistrementDetail.class).setParameter("id", venteId).getResultList();
+            return lines.stream().map(VenteDetailsDTO::new).collect(Collectors.toList());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
     }
 
     private String buildSqlCountQuery(SalesStatsParams params) {
@@ -2531,6 +2585,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             sql = sql.replace("{distinct}", "");
         }
 
+        // Onglet "Avoir cloture" : on filtre la periode sur la date de cloture
+        // de l'avoir (et non sur la date de mise a jour de la vente).
+        if (params.isOnlyAvoir() && params.isAvoirCloture()) {
+            sql = sql.replace("p.dt_UPDATED >=:dtStart and p.dt_UPDATED <=:dtEnd",
+                    "p.dt_CLOTURE_AVOIR >=:dtStart and p.dt_CLOTURE_AVOIR <=:dtEnd");
+        }
+
         StringBuilder finalSql = new StringBuilder(sql);
 
         if (StringUtils.isNotEmpty(params.getNature())) {
@@ -2553,7 +2614,16 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             finalSql.append(" AND p.b_WITHOUT_BON=TRUE ");
         }
         if (params.isOnlyAvoir()) {
-            finalSql.append(" AND p.b_IS_AVOIR=TRUE ");
+            if (params.isAvoirCloture()) {
+                // Avoirs historises et desormais fermes
+                finalSql.append(" AND p.b_HAS_AVOIR=TRUE AND p.b_IS_AVOIR=FALSE ");
+            } else {
+                // Avoirs encore ouverts
+                finalSql.append(" AND p.b_IS_AVOIR=TRUE ");
+            }
+        }
+        if (StringUtils.isNotEmpty(params.getCaissierId())) {
+            finalSql.append(" AND p.lg_USER_CAISSIER_ID=:caissierId ");
         }
         if (StringUtils.isNotEmpty(params.getProduitId())) {
             finalSql.append(" AND tpreenregi0_.lg_FAMILLE_ID=:produitId ");

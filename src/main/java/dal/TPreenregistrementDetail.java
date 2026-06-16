@@ -46,6 +46,8 @@ public class TPreenregistrementDetail implements Serializable {
     private Integer intAVOIR;
     @Column(name = "int_AVOIR_SERVED")
     private Integer intAVOIRSERVED;
+    @Column(name = "int_AVOIR_INITIAL")
+    private Integer intAVOIRINITIAL = 0;
     @Column(name = "int_PRICE")
     private Integer intPRICE;
     @Column(name = "int_PRICE_UNITAIR")
@@ -174,6 +176,14 @@ public class TPreenregistrementDetail implements Serializable {
 
     public Integer getIntAVOIRSERVED() {
         return intAVOIRSERVED;
+    }
+
+    public Integer getIntAVOIRINITIAL() {
+        return intAVOIRINITIAL == null ? 0 : intAVOIRINITIAL;
+    }
+
+    public void setIntAVOIRINITIAL(Integer intAVOIRINITIAL) {
+        this.intAVOIRINITIAL = intAVOIRINITIAL;
     }
 
     public void setIntAVOIRSERVED(Integer intAVOIRSERVED) {
@@ -349,6 +359,7 @@ public class TPreenregistrementDetail implements Serializable {
         this.intQUANTITYSERVED = p.getIntQUANTITYSERVED();
         this.intAVOIR = p.getIntAVOIR();
         this.intAVOIRSERVED = p.getIntAVOIRSERVED();
+        this.intAVOIRINITIAL = p.getIntAVOIRINITIAL();
         this.intPRICE = p.getIntPRICE();
         this.intPRICEUNITAIR = p.getIntPRICEUNITAIR();
         this.intNUMBER = p.getIntNUMBER();
