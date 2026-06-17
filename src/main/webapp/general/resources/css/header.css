@@ -5,6 +5,7 @@
 
 /* ---- Barre du header : même palette navy que le menu ---- */
 #app-header {
+    min-height: 64px !important;
     background-image: linear-gradient(180deg, var(--nav-bg, #1e3a5f) 0%, var(--nav-header-bg, #152d4e) 100%) !important;
     background-color: var(--nav-bg, #1e3a5f) !important;
     border-bottom: 2px solid rgba(93, 173, 226, 0.45) !important;
@@ -13,6 +14,7 @@
 
 /* Navigateurs sans gradient (fallback image du thème KitchenSink) */
 .x-nlg #app-header {
+    min-height: 64px !important;
     background-image: none !important;
 }
 
@@ -103,6 +105,9 @@
     display: flex !important;
     justify-content: center;
     align-items: center;
+    height: 100% !important;
+    box-sizing: border-box;
+    padding: 0 6px;
 }
 
 #app-header .hdr-officine {
@@ -111,8 +116,8 @@
     gap: 10px;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 6px 22px;
-    border-radius: 19px;
+    padding: 6px 24px;
+    border-radius: 22px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(93, 173, 226, 0.25);
     font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -121,19 +126,30 @@
 }
 
 #app-header .hdr-officine .fa-medkit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    line-height: 1;
     font-size: 20px;
     color: var(--nav-accent-2, #48c9b0);
     flex-shrink: 0;
 }
 
 #app-header .hdr-officine span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    vertical-align: middle;
     color: #ffffff;
     font-size: 21px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1;
 }
 
 /* ---- Animation moderne au survol du nom de l'officine ---- */
@@ -193,6 +209,36 @@
     letter-spacing: 2.5px;
     color: #eafaf5;
     text-shadow: 0 0 16px rgba(72, 201, 176, 0.55);
+}
+
+#app-header .hdr-animated-word {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+#app-header .hdr-animated-text--pharmacy .hdr-animated-word:not(:last-child) {
+    margin-right: .35em;
+}
+
+#app-header .hdr-animated-letter {
+    display: inline-block;
+    line-height: 1;
+    transform-origin: 50% 85%;
+    animation: hdrLetterWave 30s ease-in-out infinite;
+    animation-delay: calc(var(--hdr-letter-offset, 0s) + (var(--hdr-letter-index, 0) * .16s));
+}
+
+#app-header .hdr-animated-text--brand .hdr-animated-letter {
+    --hdr-letter-offset: 8s;
+}
+
+#app-header .hdr-animated-text--pharmacy .hdr-animated-letter {
+    --hdr-letter-offset: .8s;
+}
+
+@keyframes hdrLetterWave {
+    0%, 4%, 100% { transform: translateY(0) scale(1); filter: none; text-shadow: none; }
+    1.6% { transform: translateY(-3px) scale(1.22); filter: drop-shadow(0 0 10px rgba(255,255,255,.58)); text-shadow: 0 0 14px rgba(255,255,255,.82); }
 }
 
 @keyframes hdrMedkitBeat {

@@ -12,7 +12,7 @@ Ext.define('testextjs.view.Header', {
     extend: 'Ext.Container',
     xtype: 'appHeader',
     id: 'app-header',
-    height: 52,
+    height: 64,
     layout: {
         type: 'hbox',
         align: 'middle'
@@ -25,7 +25,7 @@ Ext.define('testextjs.view.Header', {
                 id: 'app-header-title',
                 html: '<a href="#" onclick="loadMainMenu();" class="hdr-brand" title="Retour au menu principal">'
                         + '<span class="hdr-brand-ico"><i class="fa fa-plus"></i></span>'
-                        + '<span class="hdr-brand-txt">PRESTIGE 3</span>'
+                        + '<span class="hdr-brand-txt hdr-animated-text--brand">PRESTIGE 3</span>'
                         + '</a>'
             }
         ];
@@ -148,7 +148,7 @@ Ext.define('testextjs.view.Header', {
                         minWidth: 0,
                         html: '<div class="hdr-officine" title="' + OFFICINE + '">'
                                 + '<i class="fa fa-medkit"></i>'
-                                + '<span id="officine">' + OFFICINE + '</span>'
+                                + '<span id="officine" class="hdr-animated-text--pharmacy">' + OFFICINE + '</span>'
                                 + '</div>'
                     }, {
                 xtype: 'component',
@@ -202,6 +202,9 @@ Ext.define('testextjs.view.Header', {
                     refreshNotificationBadge();
                 }, 60000);
             }
+            // Animation lettre par lettre du branding et du nom officine.
+            prestigeHeaderAnimateTexts();
+
             // Horloge du header (date + heure, mise a jour chaque seconde)
             prestigeHeaderClock();
             if (!window.PRESTIGE_CLOCK_TIMER) {
@@ -239,6 +242,50 @@ Ext.define('testextjs.view.Header', {
 
     }
 });
+
+// Animation lettre par lettre du header, avec mots non coupés.
+function prestigeHeaderHasClass(target, className) {
+    return (' ' + target.className + ' ').indexOf(' ' + className + ' ') > -1;
+}
+
+function prestigeHeaderRenderAnimatedLetters(target, text, modifier) {
+    var safeText = text || '';
+    var tokens = safeText.split(/(\s+)/);
+    var letterIndex = 0;
+    target.innerHTML = '';
+    if (modifier && !prestigeHeaderHasClass(target, modifier)) {
+        target.className = (target.className + ' ' + modifier).replace(/\s+/g, ' ');
+    }
+    for (var i = 0; i < tokens.length; i += 1) {
+        if (/^\s+$/.test(tokens[i])) {
+            target.appendChild(document.createTextNode(' '));
+            continue;
+        }
+        var word = document.createElement('span');
+        word.className = 'hdr-animated-word';
+        for (var j = 0; j < tokens[i].length; j += 1) {
+            var letter = document.createElement('span');
+            letter.className = 'hdr-animated-letter';
+            letter.style.cssText = '--hdr-letter-index:' + letterIndex + ';';
+            letter.textContent = tokens[i].charAt(j);
+            word.appendChild(letter);
+            letterIndex += 1;
+        }
+        target.appendChild(word);
+    }
+}
+
+function prestigeHeaderAnimateTexts() {
+    var brandText = document.querySelector('#app-header .hdr-brand-txt');
+    var officineText = document.getElementById('officine');
+    if (brandText) {
+        prestigeHeaderRenderAnimatedLetters(brandText, brandText.textContent, 'hdr-animated-text--brand');
+    }
+    if (officineText) {
+        prestigeHeaderRenderAnimatedLetters(officineText, officineText.textContent, 'hdr-animated-text--pharmacy');
+    }
+}
+
 
 
 // Affiche le menu principal Metro (icone 4 carres du header)
