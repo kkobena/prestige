@@ -303,12 +303,28 @@ function prestigeShowMetro() {
 
 // Deconnexion depuis le bouton rond du header (avec confirmation)
 function prestigeHeaderLogout() {
-    Ext.Msg.confirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function (btn) {
-        if (btn === 'yes' && typeof Me_header !== 'undefined' && Me_header) {
-            Me_header.Deconnexion();
+    Ext.Msg.show({
+        title: 'Déconnexion',
+        msg: '<div class="prestige-confirm-content">'
+                + '<span class="prestige-confirm-icon"><i class="fa fa-power-off"></i></span>'
+                + '<span><strong>Se déconnecter ?</strong><br>'
+                + '</div>',
+        buttons: Ext.Msg.YESNO,
+        buttonText: {
+            yes: '<i class="fa fa-sign-out"></i> OUI',
+            no: '<i class="fa fa-times"></i> ANNULER'
+        },
+
+        icon: Ext.Msg.QUESTION,
+        cls: 'prestige-confirm-win',
+        fn: function (btn) {
+            if (btn === 'yes' && typeof Me_header !== 'undefined' && Me_header) {
+                Me_header.Deconnexion();
+            }
         }
     });
 }
+
 
 // Renseigne nom + role dans la carte utilisateur du header.
 // Retente quelques fois si le DOM n'est pas encore rendu (Ajax plus rapide que le rendu).
