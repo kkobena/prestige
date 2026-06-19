@@ -35,6 +35,13 @@ import dal.TWarehouse_;
 import dal.TZoneGeographique;
 import dal.TZoneGeographique_;
 import enumeration.MargeEnum;
+import static enumeration.MargeEnum.EQUAL;
+import static enumeration.MargeEnum.GREATER;
+import static enumeration.MargeEnum.GREATER_EQUAL;
+import static enumeration.MargeEnum.LESS;
+import static enumeration.MargeEnum.LESS_EQUAL;
+import static enumeration.MargeEnum.NOT;
+import static enumeration.MargeEnum.STOCK_LESS_THAN_SEUIL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -1012,6 +1019,11 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             TZoneGeographique geographique = em.find(TZoneGeographique.class, updateProduit.getRayonId());
             famille.setLgZONEGEOID(geographique);
             famille.setLgZONEGEOID(geographique);
+        }
+        // Code Geo article (localisation fine - socle ABC Lot 0).
+        // != null : une chaine vide permet d'effacer la valeur existante.
+        if (updateProduit.getCodeGeoArticle() != null) {
+            famille.setStrCODEGEOARTICLE(updateProduit.getCodeGeoArticle().trim());
         }
         em.merge(famille);
     }
