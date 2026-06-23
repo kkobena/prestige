@@ -367,6 +367,15 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
     }
 
+    private int globalParamInt(String key, int def) {
+        try {
+            TParameters p = this.getOdataManager().getEm().find(TParameters.class, key);
+            return (p != null && p.getStrVALUE() != null) ? Integer.parseInt(p.getStrVALUE().trim()) : def;
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
     // mise a jour famille depuis inventaire
     public boolean update(String lg_FAMILLE_ID, int int_NUMBER, Date dt_LAST_INVENTAIRE, TTypeStock OTypeStock) {
 
@@ -2620,7 +2629,9 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             OTFamille.getIntNUMBERDETAIL(), 0, tabString[9].trim(), "", tabString[17].trim(),
                             OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(),
                             OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "",
-                            "", null, null)) {
+                            "", null, null, OTFamille.getBoolCALCULSEUIL(), OTFamille.getBoolSUGGERABLE(),
+                            OTFamille.getBoolREMISE(), OTFamille.getIntQ1SEUILREAPPRO(),
+                            OTFamille.getIntQ2QTEREAPPRO())) {
                         count++;
                         if (updateStock) {
                             OTFamilleStock = OtellerManagement.getTProductItemStock(OTFamille.getLgFAMILLEID());
@@ -2725,7 +2736,9 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             "", (OTFamille.getLgCODETVAID() != null ? OTFamille.getLgCODETVAID().getLgCODETVAID() : ""),
                             OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(),
                             OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "",
-                            "", null, null)) {
+                            "", null, null, OTFamille.getBoolCALCULSEUIL(), OTFamille.getBoolSUGGERABLE(),
+                            OTFamille.getBoolREMISE(), OTFamille.getIntQ1SEUILREAPPRO(),
+                            OTFamille.getIntQ2QTEREAPPRO())) {
 
                         OTFamilleStock = OtellerManagement.getTProductItemStock(OTFamille.getLgFAMILLEID());
                         OTTypeStockFamille = OStockManager.getTTypeStockFamilleByTypestock("1",
@@ -3856,7 +3869,9 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             String str_CODE_TAUX_REMBOURSEMENT, String lg_ZONE_GEO_ID, int int_QTEDETAIL, int int_PRICE_DETAIL,
             String lg_TYPEETIQUETTE_ID, String lg_REMISE_ID, String lg_CODE_TVA_ID, boolean bool_RESERVE,
             int int_SEUIL_RESERVE, int int_STOCK_REAPROVISONEMENT, int int_QTE_REAPPROVISIONNEMENT, String dt_Peremtion,
-            String gammeId, String laboratoireId, Integer cmuPrice, Integer int_SEUIL_MINI_RAYON) {
+            String gammeId, String laboratoireId, Integer cmuPrice, Integer int_SEUIL_MINI_RAYON,
+            Boolean boolCalculSeuil, Boolean boolSuggerable, Boolean boolRemise, Integer q1SeuilReappro,
+            Integer q2QteReappro) {
         String lg_TYPE_STOCK_RESERVE_ID = "2";
         int int_PRICE_OLD = 0, int_PAT_OLD = 0, int_PAF_OLD = 0, int_TAUX = 0;
 
@@ -4024,6 +4039,12 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             if (int_SEUIL_MINI_RAYON != null) {
                 OTFamille.setIntSEUILMINIRAYON(int_SEUIL_MINI_RAYON);
             }
+            // Config reappro/suggestion de la fiche (Phase A) - meme entite/merge que les autres champs
+            OTFamille.setBoolCALCULSEUIL(boolCalculSeuil != null ? boolCalculSeuil : Boolean.TRUE);
+            OTFamille.setBoolSUGGERABLE(boolSuggerable != null ? boolSuggerable : Boolean.TRUE);
+            OTFamille.setBoolREMISE(boolRemise != null ? boolRemise : Boolean.TRUE);
+            OTFamille.setIntQ1SEUILREAPPRO(q1SeuilReappro != null ? q1SeuilReappro : globalParamInt("Q1", 4));
+            OTFamille.setIntQ2QTEREAPPRO(q2QteReappro != null ? q2QteReappro : globalParamInt("Q2", 2));
             // OTFamille.setIntPRICEDETAIL(int_PRICE_DETAIL);
             OTFamille.setStrSTATUT(commonparameter.statut_enable);
             OTFamille.setDtUPDATED(new Date());
@@ -6451,7 +6472,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             String lg_TYPEETIQUETTE_ID, String lg_REMISE_ID, String lg_CODE_TVA_ID, boolean bool_RESERVE,
             int int_SEUIL_RESERVE, String lg_FAMILLE_PARENT_ID, int int_STOCK_REAPROVISONEMENT,
             int int_QTE_REAPPROVISIONNEMENT, int int_QUANTITY_STOCK, String dt_Peremtion, String gammeId,
-            String laboratoireId, Integer cmuPrice, Integer int_SEUIL_MINI_RAYON) {
+            String laboratoireId, Integer cmuPrice, Integer int_SEUIL_MINI_RAYON, Boolean boolCalculSeuil,
+            Boolean boolSuggerable, Boolean boolRemise, Integer q1SeuilReappro, Integer q2QteReappro) {
         TFamille OTFamille = null;
         TParameters OParameters, OParametersPerime;
         String lg_TYPE_STOCK_RESERVE_ID = "2";
@@ -6558,6 +6580,12 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             if (int_SEUIL_MINI_RAYON != null) {
                 OTFamille.setIntSEUILMINIRAYON(int_SEUIL_MINI_RAYON);
             }
+            // Config reappro/suggestion de la fiche (Phase A) - meme entite/merge que les autres champs
+            OTFamille.setBoolCALCULSEUIL(boolCalculSeuil != null ? boolCalculSeuil : Boolean.TRUE);
+            OTFamille.setBoolSUGGERABLE(boolSuggerable != null ? boolSuggerable : Boolean.TRUE);
+            OTFamille.setBoolREMISE(boolRemise != null ? boolRemise : Boolean.TRUE);
+            OTFamille.setIntQ1SEUILREAPPRO(q1SeuilReappro != null ? q1SeuilReappro : globalParamInt("Q1", 4));
+            OTFamille.setIntQ2QTEREAPPRO(q2QteReappro != null ? q2QteReappro : globalParamInt("Q2", 2));
             OTFamille.setBoolACCOUNT(true);
             OTFamille.setIntPAF(int_PAF);
             OTFamille.setIntPAT(int_PAT);
