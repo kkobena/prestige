@@ -26,7 +26,7 @@ public interface AbcAnalysisService {
      */
     JSONObject grid(String dtStart, String dtEnd, String type, String classe, String search, String codeFamille,
             String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax, int start,
-            int limit, String sort, String dir);
+            int limit, String sort, String dir, Integer topN);
 
     /**
      * Recalcule la classification et renvoie uniquement le resume par classe (sans ecriture sur les fiches articles).
@@ -53,25 +53,28 @@ public interface AbcAnalysisService {
 
     /** Export Excel du resultat filtre courant (memes filtres que la grille, sans pagination). */
     byte[] buildExcel(String dtStart, String dtEnd, String type, String classe, String search, String codeFamille,
-            String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax);
+            String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax,
+            Integer topN);
 
     /** Export CSV du resultat filtre courant. */
     byte[] buildCsv(String dtStart, String dtEnd, String type, String classe, String search, String codeFamille,
-            String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax);
+            String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax,
+            Integer topN);
 
     /** Impression PDF (tableau) du resultat filtre courant. */
     byte[] buildPdf(String dtStart, String dtEnd, String type, String classe, String search, String codeFamille,
-            String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax);
+            String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax,
+            Integer topN);
 
     /** Cree un inventaire a partir de TOUT le resultat filtre courant. */
     JSONObject createInventaire(String dtStart, String dtEnd, String type, String classe, String search,
             String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,
-            Integer stockMax);
+            Integer stockMax, Integer topN);
 
     /** Cree des suggestions de commande (groupees par grossiste) a partir du resultat filtre. */
     JSONObject createSuggestion(String dtStart, String dtEnd, String type, String classe, String search,
             String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,
-            Integer stockMax);
+            Integer stockMax, Integer topN, boolean isReappro);
 
     /**
      * Detail de consommation mensuelle d'un produit (equivalent boite) : mois courant + N-1 mois precedents, consolide

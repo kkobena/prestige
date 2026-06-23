@@ -59,9 +59,11 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                     };
                     proxy.setExtraParam('dtStart', me.down('#dtStart').getSubmitValue());
                     proxy.setExtraParam('dtEnd', me.down('#dtEnd').getSubmitValue());
-                    proxy.setExtraParam('type', v('comboType') || 'CA');
+                    proxy.setExtraParam('type', v('comboType') || 'QTY');
                     proxy.setExtraParam('classe', v('comboClasse') || 'ALL');
                     proxy.setExtraParam('stockFilter', v('comboStock') || 'ALL');
+                    proxy.setExtraParam('stockMin', v('stockValue'));
+                    proxy.setExtraParam('topN', v('topN'));
                     proxy.setExtraParam('search', v('searchField'));
                     proxy.setExtraParam('codeRayon', v('rayons'));
                     proxy.setExtraParam('codeGrossiste', v('grossiste'));
@@ -90,9 +92,9 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
         const filtreType = new Ext.data.Store({
             fields: ['id', 'libelle'],
             data: [
-                {id: 'CA', libelle: "Chiffre d'Affaires"},
                 {id: 'QTY', libelle: "Quantité"},
-                {id: 'MARGE', libelle: "Marge"}
+                {id: 'MARGE', libelle: "Marge"},
+                {id: 'CA', libelle: "Chiffre d'Affaires"}
             ]
         });
         const filtreClasse = new Ext.data.Store({
@@ -108,13 +110,19 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
             fields: ['id', 'libelle'],
             data: [
                 {id: 'ALL', libelle: 'Tous les stocks'},
-                {id: 'SUP0', libelle: 'Stock > 0'},
-                {id: 'EGAL0', libelle: 'Stock = 0'},
-                {id: 'INF_SEUIL', libelle: 'Stock < seuil'},
-                {id: 'INF_EGAL_SEUIL', libelle: 'Stock <= seuil'},
-                {id: 'NEGATIF', libelle: 'Stock négatif'}
+                {id: 'SUP', libelle: 'Stock supérieur à'},
+                {id: 'SUPEQ', libelle: 'Stock supérieur ou égal à'},
+                {id: 'INF', libelle: 'Stock inférieur à'},
+                {id: 'INFEQ', libelle: 'Stock inférieur ou égal à'},
+                {id: 'EGAL', libelle: 'Stock égal à'},
+                {id: 'INF_SEUIL', libelle: 'Stock inférieur au seuil'},
+                {id: 'INF_EGAL_SEUIL', libelle: 'Stock inférieur ou égal au seuil'}
             ]
         });
+        // Opérateurs nécessitant une valeur saisie
+        const stockNeedsValue = function (op) {
+            return op === 'SUP' || op === 'SUPEQ' || op === 'INF' || op === 'INFEQ' || op === 'EGAL';
+        };
 
         Ext.applyIf(me, {
             dockedItems: [
@@ -126,17 +134,56 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                         {xtype: 'datefield', fieldLabel: 'Au', itemId: 'dtEnd', labelWidth: 20, flex: 1, maxValue: new Date(), value: new Date(), margin: '0 9 0 0', submitFormat: 'Y-m-d', format: 'd/m/Y'},
                         {xtype: 'combobox', flex: 1, margin: '0 5 0 0', labelWidth: 5, itemId: 'rayons', store: rayons, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true, queryMode: 'remote', minChars: 2, emptyText: 'Emplacement / rayon'},
                         {xtype: 'combobox', flex: 1, margin: '0 5 0 0', labelWidth: 5, itemId: 'grossiste', store: grossiste, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true, queryMode: 'remote', minChars: 2, emptyText: 'Grossiste'},
-                        {xtype: 'combobox', flex: 1, margin: '0 5 0 0', labelWidth: 5, itemId: 'codeFamile', store: familles, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true, queryMode: 'remote', minChars: 2, emptyText: 'Famille'}
+                        {xtype: 'combobox', flex: 1, margin: '0 5 0 0', labelWidth: 5, itemId: 'codeFamile', store: familles, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true, queryMode: 'remote', minChars: 2, emptyText: 'Famille'},
+                        {xtype: 'numberfield', itemId: 'topN', width: 90, minValue: 1, allowDecimals: false, emptyText: 'Top N', margin: '0 5 0 0',
+                            fieldStyle: 'background-color:#FFA500;color:#000;font-weight:bold;',
+                            listeners: {specialkey: function (f, e) { if (e.getKey() === e.ENTER) { me.gridStore.loadPage(1); } }}}
                     ]
                 },
                 {
                     xtype: 'toolbar',
                     dock: 'top',
                     items: [
-                        {xtype: 'combo', value: 'CA', flex: 1, itemId: 'comboType', labelWidth: 1, editable: false, store: filtreType, valueField: 'id', displayField: 'libelle'},
+                        {xtype: 'combo', value: 'QTY', flex: 1, itemId: 'comboType', labelWidth: 1, editable: false, store: filtreType, valueField: 'id', displayField: 'libelle',
+                            fieldStyle: 'color:#d10000;font-weight:bold',
+                            listeners: {
+                                select: function (cmb) {
+                                    const t = cmb.getValue();
+                                    cmb.setFieldStyle('color:' + (t === 'MARGE' ? '#0000ff' : '#d10000') + ';font-weight:bold');
+                                }
+                            }},
                         {xtype: 'combo', value: 'ALL', flex: 1, itemId: 'comboClasse', labelWidth: 1, editable: false, store: filtreClasse, valueField: 'id', displayField: 'libelle'},
-                        {xtype: 'combo', value: 'ALL', flex: 1, itemId: 'comboStock', labelWidth: 1, editable: false, store: filtreStock, valueField: 'id', displayField: 'libelle'},
-                        {xtype: 'textfield', flex: 1, itemId: 'searchField', emptyText: 'CIP, libellé, EAN, code Geo'},
+                        {
+                            xtype: 'combo', value: 'ALL', flex: 1, itemId: 'comboStock', labelWidth: 1, editable: false,
+                            store: filtreStock, valueField: 'id', displayField: 'libelle',
+                            listeners: {
+                                select: function (combo, recs) {
+                                    const op = (recs && recs[0]) ? recs[0].get('id') : combo.getValue();
+                                    const champ = me.down('#stockValue');
+                                    if (stockNeedsValue(op)) {
+                                        champ.show();
+                                        champ.focus(true, 50); // focus automatique
+                                    } else {
+                                        champ.hide();
+                                        champ.setValue(null);
+                                        me.gridStore.loadPage(1); // pas de valeur a saisir -> recherche immediate
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            xtype: 'numberfield', itemId: 'stockValue', width: 90, hidden: true, hideLabel: true,
+                            emptyText: 'valeur', minValue: 0, allowDecimals: false,
+                            listeners: {
+                                specialkey: function (f, e) {
+                                    if (e.getKey() === e.ENTER) {
+                                        me.gridStore.loadPage(1);
+                                    }
+                                }
+                            }
+                        },
+                        {xtype: 'textfield', flex: 1, itemId: 'searchField', emptyText: 'CIP, libellé, EAN, code Geo',
+                            fieldStyle: 'border:2px solid #1565C0;'},
                         {text: 'Rechercher', itemId: 'rechercher', iconCls: 'searchicon', scope: this},
                         {xtype: 'tbseparator'},
                         {text: 'Recalculer classification', itemId: 'recalculer', iconCls: 'suggestionreapro', tooltip: 'Recalcule la classification ABC sur la période'},
@@ -161,7 +208,16 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                                 {text: 'Exporter CSV', itemId: 'exporterCsv', iconCls: 'export_csv_icon'}
                             ]
                         },
-                        {text: 'Créer suggestion', itemId: 'creerSuggestion', iconCls: 'suggestionreapro', tooltip: 'Créer des suggestions de commande à partir du résultat filtré'},
+                        {
+                            xtype: 'splitbutton', text: 'Créer suggestion', itemId: 'creerSuggestion',
+                            iconCls: 'suggestionreapro',
+                            tooltip: 'Créer des suggestions de commande à partir du résultat filtré',
+                            handler: function (b) { b.showMenu(); },
+                            menu: [
+                                {text: 'Suggérer les quantités de réappro', itemId: 'suggReappro', iconCls: 'suggestionreapro'},
+                                {text: 'Suggérer les quantités vendues', itemId: 'suggVendues', iconCls: 'suggestionreapro'}
+                            ]
+                        },
                         {text: 'Créer inventaire', itemId: 'creerInventaire', iconCls: 'addicon', tooltip: 'Créer un inventaire à partir du résultat filtré'}
                     ]
                 }
@@ -178,16 +234,47 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                         {header: 'CIP', dataIndex: 'cip', width: 80},
                         {header: 'EAN', dataIndex: 'ean', width: 100, hidden: true},
                         {header: 'Libellé', dataIndex: 'libelle', flex: 1.6},
-                        {header: 'Classe', dataIndex: 'classe', width: 60, align: 'center'},
+                        {header: 'Classe', dataIndex: 'classe', width: 60, align: 'center',
+                            renderer: function (v) {
+                                const map = {A: '#1a7e1a', B: '#e67e00', C: '#d10000'};
+                                return '<span style="color:' + (map[v] || '#000') + ';font-weight:bold">' + (v || '') + '</span>';
+                            }},
                         {header: 'Famille', dataIndex: 'famille', flex: 1},
                         {header: 'Rayon', dataIndex: 'rayon', flex: 1},
-                        {header: 'Code Geo', dataIndex: 'codeGeoArticle', width: 100},
+                        {header: 'Code Geo', dataIndex: 'codeGeoArticle', width: 100, hidden: true},
                         {header: 'Stock', dataIndex: 'stockDisponible', width: 70, align: 'right', renderer: moneyRenderer},
                         {header: 'Seuil', dataIndex: 'seuilMini', width: 70, align: 'right', renderer: moneyRenderer},
                         {header: 'Qté réappro', dataIndex: 'quantiteReappro', width: 80, align: 'right', renderer: moneyRenderer},
-                        {header: 'Qté vendue', dataIndex: 'quantiteVendue', width: 80, align: 'right', renderer: moneyRenderer},
-                        {header: "Chiffre d'Affaires", dataIndex: 'chiffreAffaires', flex: 1, align: 'right', renderer: moneyRenderer},
-                        {header: 'Marge', dataIndex: 'marge', flex: 1, align: 'right', renderer: moneyRenderer},
+                        {header: 'Qté vendue', dataIndex: 'quantiteVendue', width: 80, align: 'right',
+                            renderer: function (v) {
+                                const cmp = me.down('#comboType');
+                                const t = (cmp && cmp.getValue()) || 'QTY';
+                                // QTY -> rouge, CA -> vert, MARGE -> bleu
+                                const c = (t === 'MARGE') ? '#0000ff' : (t === 'CA') ? '#1a7e1a' : '#d10000';
+                                return '<span style="color:' + c + ';font-weight:bold">' + Ext.util.Format.number(v, '0,000.') + '</span>';
+                            }},
+                        {header: "Chiffre d'Affaires", dataIndex: 'chiffreAffaires', flex: 1, align: 'right',
+                            renderer: function (v, meta, rec) {
+                                const ca = v || 0;
+                                const qte = rec.get('quantiteVendue') || 0;
+                                const pu = qte ? Math.round(ca / qte) : 0;
+                                const html = "<span style='color:#0000ff'>"
+                                        + "Chiffre d'affaires = total des ventes du produit sur la periode.<br>"
+                                        + "Calcul : quantite vendue (" + nf(qte) + ") x prix de vente (~" + nf(pu) + ").<br>"
+                                        + "Resultat : <span style='color:red;font-weight:bold'>" + nf(ca) + " F.CFA</span></span>";
+                                meta.tdAttr = 'data-abctip="' + html + '"';
+                                return nf(ca);
+                            }},
+                        {header: 'Marge', dataIndex: 'marge', flex: 1, align: 'right',
+                            renderer: function (v, meta) {
+                                const marge = v || 0;
+                                const html = "<span style='color:#0000ff'>"
+                                        + "Marge = benefice du produit sur la periode.<br>"
+                                        + "Formule : (prix de vente - remise - TVA) - (prix d'achat x quantite), cumule.<br>"
+                                        + "Resultat : <span style='color:red;font-weight:bold'>" + nf(marge) + " F.CFA</span></span>";
+                                meta.tdAttr = 'data-abctip="' + html + '"';
+                                return nf(marge);
+                            }},
                         {header: 'Part %', dataIndex: 'partPourcentage', width: 70, align: 'right',
                             renderer: function (v, meta, rec, ri, ci, store) {
                                 const val = Ext.util.Format.number(v, '0.00');
@@ -200,20 +287,23 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                                         + totalTxt + " puis x 100.<br>"
                                         + "Resultat : <span style='color:red;font-weight:bold'>" + val + " %</span></span>";
                                 meta.tdAttr = 'data-abctip="' + html + '"';
-                                return val;
+                                return '<span style="color:#000000;font-weight:bold">' + val + '</span>';
                             }},
                         {header: 'Cumul %', dataIndex: 'cumulPourcentage', width: 75, align: 'right',
                             renderer: function (v, meta, rec) {
                                 const val = Ext.util.Format.number(v, '0.00');
-                                const part = Ext.util.Format.number(rec.get('partPourcentage'), '0.00');
+                                const partNum = rec.get('partPourcentage') || 0;
+                                const cumNum = rec.get('cumulPourcentage') || 0;
+                                const part = Ext.util.Format.number(partNum, '0.00');
+                                const prev = Ext.util.Format.number(cumNum - partNum, '0.00'); // cumul du produit precedent
                                 const html = "<span style='color:#0000ff'>"
                                         + "Cumul % = somme des Part % en cumulant du plus gros au plus petit.<br>"
-                                        + "Calcul : Part % de ce produit (" + part + " %) + Cumul % du produit precedent.<br>"
+                                        + "Calcul : Part % de ce produit (" + part + " %) + Cumul % du produit precedent (" + prev + " %).<br>"
                                         + "Resultat : <span style='color:red;font-weight:bold'>" + val + " %</span>.<br>"
                                         + "Sert a placer le produit en classe A, B ou C selon les bornes."
                                         + "</span>";
                                 meta.tdAttr = 'data-abctip="' + html + '"';
-                                return val;
+                                return '<span style="color:#191970;font-weight:bold">' + val + '</span>';
                             }},
                         {header: 'Q1', dataIndex: 'q1', width: 45, align: 'right', hidden: true},
                         {header: 'Q2', dataIndex: 'q2', width: 45, align: 'right', hidden: true},

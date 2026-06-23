@@ -202,6 +202,8 @@ public class SemoisService {
             computeReapproAbc();
             return;
         }
+        // Journal de calcul (toujours actif) -> ~/Documents/reappro_logs/semois_normal_<date>.json
+        final org.json.JSONArray normalLog = new org.json.JSONArray();
         int start = 0;
         int limit = 1000;
         int q1 = 4;
@@ -253,6 +255,8 @@ public class SemoisService {
 
                         Pair<Integer, Integer> computesValues = calculSeuiQteReappro(q1, q2, conso, q3);
                         updateProduitSeuilAndQtyReappro(produitId, computesValues.getLeft(), computesValues.getRight());
+                        normalLog.put(semoisNormalEntry(produitId, "simple", q1, q2, q3, conso,
+                                computesValues.getLeft(), computesValues.getRight()));
 
                     }
 
@@ -272,15 +276,27 @@ public class SemoisService {
 
             }
 
-            traiterReapproBoite(q1, q2, q3, mapBoite, items);
+            traiterReapproBoite(q1, q2, q3, mapBoite, items, normalLog);
+            ReapproLogWriter.write(em, "semois_normal", normalLog);
 
         }
+    }
+
+    /** Construit une entree de journal pour le calcul SEMOIS standard. */
+    private static org.json.JSONObject semoisNormalEntry(String produitId, String type, int q1, int q2, int q3,
+            int conso, int seuil, int qte) {
+        double diviseur = q3 * 4d;
+        double consoHebdo = diviseur > 0 ? (conso / diviseur) : 0d;
+        return new org.json.JSONObject().put("produitId", produitId).put("type", type).put("q1", q1).put("q2", q2)
+                .put("q3Mois", q3).put("conso", conso).put("consoHebdo", consoHebdo).put("seuil", seuil)
+                .put("quantiteReappro", qte);
     }
 
     /*
      * On traite les boites , on ajoute la quantite du detail a la boite
      */
-    private void traiterReapproBoite(int q1, int q2, int q3, Map<String, Tuple> mapBoite, Map<String, Tuple> items) {
+    private void traiterReapproBoite(int q1, int q2, int q3, Map<String, Tuple> mapBoite, Map<String, Tuple> items,
+            org.json.JSONArray log) {
 
         try {
             userTransaction.begin();
@@ -295,8 +311,10 @@ public class SemoisService {
                 Pair<Integer, Integer> computesValues = calculSeuiQteReappro(q1, q2, totalQuantiteVendue, q3);
 
                 updateProduitSeuilAndQtyReappro(produitId, computesValues.getLeft(), computesValues.getRight());
+                log.put(semoisNormalEntry(produitId, "boite", q1, q2, q3, totalQuantiteVendue, computesValues.getLeft(),
+                        computesValues.getRight()));
             });
-            traiterReapproDetail(q1, q2, q3, items);
+            traiterReapproDetail(q1, q2, q3, items, log);
             userTransaction.commit();
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
                 | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
@@ -315,7 +333,7 @@ public class SemoisService {
     /*
      * On traite les details dont les boites n'ont pas ete vendues
      */
-    private void traiterReapproDetail(int q1, int q2, int q3, Map<String, Tuple> items) {
+    private void traiterReapproDetail(int q1, int q2, int q3, Map<String, Tuple> items, org.json.JSONArray log) {
         Map<String, Integer> maps = loadItemsDetail(items.keySet());
 
         items.forEach((produitId, v) -> {
@@ -328,6 +346,8 @@ public class SemoisService {
 
             Pair<Integer, Integer> computesValues = calculSeuiQteReappro(q1, q2, finalQty, q3);
             updateProduitSeuilAndQtyReappro(produitId, computesValues.getLeft(), computesValues.getRight());
+            log.put(semoisNormalEntry(produitId, "detail", q1, q2, q3, finalQty, computesValues.getLeft(),
+                    computesValues.getRight()));
         });
 
     }
@@ -476,6 +496,9 @@ public class SemoisService {
             Map<String, Map<String, Double>> conso = loadMonthlyConsoAbc(firstMonth, lastMonthEnd);
             Map<String, String> produitClasse = loadProduitClasseAbc();
 
+            // Journal de calcul (toujours actif) -> ~/Documents/reappro_logs/semois_abc_<date>.json
+            final org.json.JSONArray logArr = new org.json.JSONArray();
+
             // 4) Calcul + mise a jour par lots
             List<String> produitIds = new ArrayList<>(conso.keySet());
             int chunk = 1000;
@@ -529,6 +552,20 @@ public class SemoisService {
                         int seuil = (int) Math.ceil(q4 * q1);
                         int qte = (int) Math.ceil(q4 * q2);
                         updateProduitSeuilAndQtyReappro(produitId, seuil, qte);
+
+                        org.json.JSONObject o = new org.json.JSONObject();
+                        o.put("produitId", produitId);
+                        o.put("classe", cls != null ? cls.getStrCODE() : "(sans classe)");
+                        o.put("unite", jour ? "JOUR" : "SEMAINE");
+                        o.put("q1", q1);
+                        o.put("q2", q2);
+                        o.put("q3Mois", q3w);
+                        o.put("consoTotale", consoTotale);
+                        o.put(jour ? "nombreJours" : "nombreSemaines", jour ? nbJours : (q3w * 4));
+                        o.put("conso", q4);
+                        o.put("seuilMini", seuil);
+                        o.put("quantiteReappro", qte);
+                        logArr.put(o);
                     }
                     userTransaction.commit();
                 } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
@@ -543,6 +580,8 @@ public class SemoisService {
                     }
                 }
             }
+
+            ReapproLogWriter.write(em, "semois_abc", logArr);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }

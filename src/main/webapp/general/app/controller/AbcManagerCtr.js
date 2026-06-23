@@ -21,7 +21,6 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
             'abcmanager #codeFamile': {select: this.doSearch},
             'abcmanager #comboType': {select: this.doSearch},
             'abcmanager #comboClasse': {select: this.doSearch},
-            'abcmanager #comboStock': {select: this.doSearch},
             'abcmanager #searchField': {specialkey: this.onSearchKey},
             'abcmanager #recalculer': {click: this.onRecalculer},
             'abcmanager #appliquer': {click: this.onAppliquer},
@@ -31,7 +30,8 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
             'abcmanager #btnExporter': {click: this.onExportExcel},
             'abcmanager #exporterExcel': {click: this.onExportExcel},
             'abcmanager #exporterCsv': {click: this.onExportCsv},
-            'abcmanager #creerSuggestion': {click: this.onCreerSuggestion},
+            'abcmanager #suggReappro': {click: this.onSuggReappro},
+            'abcmanager #suggVendues': {click: this.onSuggVendues},
             'abcmanager #creerInventaire': {click: this.onCreerInventaire}
         });
     },
@@ -46,9 +46,11 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
         return {
             dtStart: abc.down('#dtStart').getSubmitValue(),
             dtEnd: abc.down('#dtEnd').getSubmitValue(),
-            type: v('comboType') || 'CA',
+            type: v('comboType') || 'QTY',
             classe: v('comboClasse') || 'ALL',
             stockFilter: v('comboStock') || 'ALL',
+            stockMin: v('stockValue'),
+            topN: v('topN'),
             search: v('searchField'),
             codeFamille: v('codeFamile'),
             codeRayon: v('rayons'),
@@ -56,22 +58,47 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
         };
     },
 
+    // Garde : rien a traiter si la grille n'affiche aucun produit (evite un appel serveur inutile)
+    hasRows: function () {
+        const grid = this.getGrid();
+        return !!(grid && grid.getStore() && grid.getStore().getCount() > 0);
+    },
+
+    guardEmpty: function () {
+        if (!this.hasRows()) {
+            Ext.Msg.alert('Information', 'Aucun produit à traiter.');
+            return false;
+        }
+        return true;
+    },
+
     onImprimer: function () {
+        if (!this.guardEmpty()) { return; }
         window.open('../api/v1/articles/abc/print?' + Ext.Object.toQueryString(this.buildExportParams()));
     },
 
     onExportExcel: function () {
+        if (!this.guardEmpty()) { return; }
         window.open('../api/v1/articles/abc/excel?' + Ext.Object.toQueryString(this.buildExportParams()));
     },
 
     onExportCsv: function () {
+        if (!this.guardEmpty()) { return; }
         window.open('../api/v1/articles/abc/csv?' + Ext.Object.toQueryString(this.buildExportParams()));
     },
 
-    onCreerSuggestion: function () {
+    onSuggReappro: function () { this.onCreerSuggestion(true); },
+    onSuggVendues: function () { this.onCreerSuggestion(false); },
+
+    onCreerSuggestion: function (isReappro) {
         const me = this;
+        if (!me.guardEmpty()) { return; }
+        const reappro = isReappro === true;
+        const params = Ext.apply({}, me.buildExportParams());
+        params.isReappro = reappro;
+        const libelle = reappro ? 'quantités de réappro' : 'quantités vendues';
         Ext.MessageBox.confirm('Confirmation',
-                'Créer des suggestions de commande à partir du résultat ABC filtré ?',
+                'Créer des suggestions (' + libelle + ') à partir du résultat ABC filtré ?',
                 function (btn) {
                     if (btn !== 'yes') {
                         return;
@@ -79,7 +106,7 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
                     const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Création des suggestions');
                     Ext.Ajax.request({
                         method: 'POST',
-                        url: '../api/v1/articles/abc/suggestion?' + Ext.Object.toQueryString(me.buildExportParams()),
+                        url: '../api/v1/articles/abc/suggestion?' + Ext.Object.toQueryString(params),
                         timeout: 2400000,
                         success: function (response) {
                             progress.hide();
@@ -101,6 +128,7 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
 
     onCreerInventaire: function () {
         const me = this;
+        if (!me.guardEmpty()) { return; }
         Ext.MessageBox.confirm('Confirmation',
                 'Créer un inventaire à partir du résultat ABC filtré ?',
                 function (btn) {
@@ -150,7 +178,7 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
         return {
             dtStart: abc.down('#dtStart').getSubmitValue(),
             dtEnd: abc.down('#dtEnd').getSubmitValue(),
-            type: v('comboType') || 'CA',
+            type: v('comboType') || 'QTY',
             codeFamille: v('codeFamile'),
             codeRayon: v('rayons'),
             codeGrossiste: v('grossiste')
@@ -159,6 +187,7 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
 
     onRecalculer: function () {
         const me = this;
+        if (!me.guardEmpty()) { return; }
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Recalcul de la classification ABC');
         Ext.Ajax.request({
             method: 'POST',
@@ -173,10 +202,21 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
                     const x = s[c] || {};
                     return c + ' : ' + (x.nbProduits || 0) + ' produits';
                 };
+                // 1) Resume, puis 2) au clic OK on propose d'appliquer aux fiches
                 Ext.Msg.alert('Classification ABC',
                         'Recalcul effectué sur ' + (r.total || 0) + ' produits.<br/><br/>'
-                        + line('A') + '<br/>' + line('B') + '<br/>' + line('C'));
-                me.doSearch();
+                        + line('A') + '<br/>' + line('B') + '<br/>' + line('C'),
+                        function () {
+                            Ext.MessageBox.confirm('Appliquer aux fiches',
+                                    'Souhaitez-vous appliquer cette classification aux fiches articles ?',
+                                    function (btn) {
+                                        if (btn === 'yes') {
+                                            me.doApply();
+                                        } else {
+                                            me.doSearch();
+                                        }
+                                    });
+                        });
             },
             failure: function (response) {
                 progress.hide();
@@ -187,34 +227,41 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
 
     onAppliquer: function () {
         const me = this;
+        if (!me.guardEmpty()) { return; }
         Ext.MessageBox.confirm('Confirmation',
                 'Appliquer la classification ABC calculée sur les fiches articles ?',
                 function (btn) {
-                    if (btn !== 'yes') {
-                        return;
+                    if (btn === 'yes') {
+                        me.doApply();
                     }
-                    const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Application aux fiches articles');
-                    Ext.Ajax.request({
-                        method: 'POST',
-                        url: '../api/v1/articles/abc/apply?' + Ext.Object.toQueryString(me.buildParams()),
-                        timeout: 2400000,
-                        success: function (response) {
-                            progress.hide();
-                            const r = Ext.JSON.decode(response.responseText, true) || {};
-                            Ext.Msg.alert('Classification ABC',
-                                    'Classes appliquées sur ' + (r.count || 0) + ' fiches articles.');
-                            me.doSearch();
-                        },
-                        failure: function (response) {
-                            progress.hide();
-                            Ext.Msg.alert('Erreur', 'Échec de l\'application. Code HTTP : ' + response.status);
-                        }
-                    });
                 });
+    },
+
+    // Coeur de l'application aux fiches (reutilise par Appliquer et par Recalculer->Oui)
+    doApply: function () {
+        const me = this;
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Application aux fiches articles');
+        Ext.Ajax.request({
+            method: 'POST',
+            url: '../api/v1/articles/abc/apply?' + Ext.Object.toQueryString(me.buildParams()),
+            timeout: 2400000,
+            success: function (response) {
+                progress.hide();
+                const r = Ext.JSON.decode(response.responseText, true) || {};
+                Ext.Msg.alert('Classification ABC',
+                        'Classes appliquées sur ' + (r.count || 0) + ' fiches articles.');
+                me.doSearch();
+            },
+            failure: function (response) {
+                progress.hide();
+                Ext.Msg.alert('Erreur', 'Échec de l\'application. Code HTTP : ' + response.status);
+            }
+        });
     },
 
     onEvolution: function () {
         const me = this;
+        if (!me.guardEmpty()) { return; }
         const baseParams = me.buildExportParams();
 
         const store = Ext.create('Ext.data.Store', {
@@ -316,6 +363,26 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
 
         const cellEditing = Ext.create('Ext.grid.plugin.CellEditing', {clicksToEdit: 1});
 
+        // Validation immediate de la cellule sur Entree (champs numeriques)
+        const enterCompletes = {
+            specialkey: function (f, e) {
+                if (e.getKey() === e.ENTER) {
+                    cellEditing.completeEdit();
+                }
+            }
+        };
+
+        // Q3 (mois) -> nombre reel de jours des Q3 derniers mois clotures (longueurs reelles)
+        const q3Days = function (q3) {
+            const n = parseInt(q3, 10) || 0;
+            const d = new Date();
+            let total = 0;
+            for (let i = 1; i <= n; i++) {
+                total += new Date(d.getFullYear(), d.getMonth() - i + 1, 0).getDate();
+            }
+            return total;
+        };
+
         const saveRow = function (rec) {
             Ext.Ajax.request({
                 method: 'POST',
@@ -348,7 +415,7 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
         Ext.create('Ext.window.Window', {
             title: 'Paramétrage des classes ABC',
             modal: true,
-            width: 760,
+            width: 880,
             height: 260,
             layout: 'fit',
             plain: true,
@@ -360,16 +427,31 @@ Ext.define('testextjs.controller.AbcManagerCtr', {
                 columns: [
                     {header: 'Code', dataIndex: 'code', width: 60, align: 'center'},
                     {header: 'Libellé', dataIndex: 'libelle', flex: 1},
-                    {header: 'Q1', dataIndex: 'q1', width: 60, align: 'right', editor: {xtype: 'numberfield', minValue: 0, allowBlank: false}},
-                    {header: 'Q2', dataIndex: 'q2', width: 60, align: 'right', editor: {xtype: 'numberfield', minValue: 0, allowBlank: false}},
-                    {header: 'Q3 (mois)', dataIndex: 'q3', width: 80, align: 'right', editor: {xtype: 'numberfield', minValue: 1, allowBlank: false}},
-                    {header: 'Unité Q1/Q2', dataIndex: 'unite', width: 110, editor: {xtype: 'combobox', store: uniteStore, valueField: 'id', displayField: 'id', editable: false, forceSelection: true}},
-                    {header: 'Cumul min %', dataIndex: 'seuilMin', width: 95, align: 'right', editor: {xtype: 'numberfield', minValue: 0, maxValue: 100}},
-                    {header: 'Cumul max %', dataIndex: 'seuilMax', width: 95, align: 'right', editor: {xtype: 'numberfield', minValue: 0, maxValue: 100}},
-                    {header: 'Statut', dataIndex: 'statut', width: 80, renderer: function (v) { return v === 'enable' ? 'Actif' : 'Inactif'; }, editor: {xtype: 'combobox', store: statutStore, valueField: 'id', displayField: 'libelle', editable: false, forceSelection: true}}
+                    {header: 'Q1', dataIndex: 'q1', width: 60, align: 'right', editor: {xtype: 'numberfield', minValue: 0, allowBlank: false, listeners: enterCompletes}},
+                    {header: 'Q2', dataIndex: 'q2', width: 60, align: 'right', editor: {xtype: 'numberfield', minValue: 0, allowBlank: false, listeners: enterCompletes}},
+                    {header: 'Q3 (mois)', dataIndex: 'q3', width: 80, align: 'right', editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, listeners: enterCompletes}},
+                    {header: 'Q3 (≈ j)', dataIndex: 'q3', width: 70, align: 'right', sortable: false,
+                        renderer: function (v) { return q3Days(v) + ' j'; }},
+                    {header: 'Unité Q1/Q2', dataIndex: 'unite', width: 110, editor: {xtype: 'combobox', store: uniteStore, valueField: 'id', displayField: 'id', editable: false, forceSelection: true,
+                        listeners: {select: function () { cellEditing.completeEdit(); }}}},
+                    {header: 'Cumul min %', dataIndex: 'seuilMin', width: 95, align: 'right', editor: {xtype: 'numberfield', minValue: 0, maxValue: 100, listeners: enterCompletes}},
+                    {header: 'Cumul max %', dataIndex: 'seuilMax', width: 95, align: 'right', editor: {xtype: 'numberfield', minValue: 0, maxValue: 100, listeners: enterCompletes}},
+                    {header: 'Statut', dataIndex: 'statut', width: 80, renderer: function (v) { return v === 'enable' ? 'Actif' : 'Inactif'; }, editor: {xtype: 'combobox', store: statutStore, valueField: 'id', displayField: 'libelle', editable: false, forceSelection: true,
+                        listeners: {select: function () { cellEditing.completeEdit(); }}}}
                 ],
                 listeners: {
                     edit: function (editor, e) {
+                        // Conversion automatique Q1/Q2 au changement d'unite (1 semaine = 7 jours)
+                        if (e.field === 'unite' && e.value !== e.originalValue) {
+                            const q1 = e.record.get('q1') || 0, q2 = e.record.get('q2') || 0;
+                            if (e.value === 'JOUR' && e.originalValue === 'SEMAINE') {
+                                e.record.set('q1', q1 * 7);
+                                e.record.set('q2', q2 * 7);
+                            } else if (e.value === 'SEMAINE' && e.originalValue === 'JOUR') {
+                                e.record.set('q1', Math.max(1, Math.round(q1 / 7)));
+                                e.record.set('q2', Math.max(1, Math.round(q2 / 7)));
+                            }
+                        }
                         saveRow(e.record);
                     }
                 }
