@@ -3,6 +3,9 @@
 
 var url_services_transaction_suggerercmde = '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=';
 var Me;
+// Suivi des suggestions cochees (selection conservee a travers les pages) pour "Supprimer"
+var suggCheckedIds = [];
+var suggHeaderChecked = false;
 
 
 
@@ -91,6 +94,11 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                 {
                     name: 'int_DATE_BUTOIR_ARTICLE',
                     type: 'int'
+                },
+                {
+                    name: 'isChecked',
+                    type: 'boolean',
+                    defaultValue: false
                 }
             ],
             pageSize: itemsPerPage,
@@ -102,6 +110,15 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     type: 'json',
                     root: 'data',
                     totalProperty: 'total'
+                }
+            },
+            listeners: {
+                // Restaure les cases cochees apres chaque (re)chargement (selection multi-pages)
+                load: function (st) {
+                    st.each(function (rec) {
+                        rec.set('isChecked', suggCheckedIds.indexOf(rec.get('lg_SUGGESTION_ORDER_ID')) !== -1);
+                    });
+                    st.commitChanges();
                 }
             }
 
@@ -261,6 +278,28 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                             scope: this,
                             handler: this.onCloneSuggestionClick
                         }]
+                },
+                {
+                    xtype: 'checkcolumn',
+                    text: '&#10003;',
+                    tooltip: "Cliquer l'entête pour tout cocher / décocher (page courante)",
+                    dataIndex: 'isChecked',
+                    width: 40,
+                    sortable: false,
+                    menuDisabled: true,
+                    listeners: {
+                        checkchange: function (col, rowIndex, checked) {
+                            var rec = Me.getStore().getAt(rowIndex);
+                            if (!rec) { return; }
+                            var id = rec.get('lg_SUGGESTION_ORDER_ID');
+                            var idx = suggCheckedIds.indexOf(id);
+                            if (checked && idx === -1) {
+                                suggCheckedIds.push(id);
+                            } else if (!checked && idx !== -1) {
+                                suggCheckedIds.splice(idx, 1);
+                            }
+                        }
+                    }
                 }
             ],
             selModel: {
@@ -295,8 +334,30 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     iconCls: 'searchicon',
                     scope: this,
                     handler: this.onRechClick
+                },
+                '->',
+                {
+                    xtype: 'numberfield',
+                    itemId: 'nxField',
+                    width: 80,
+                    minValue: 1,
+                    allowDecimals: false,
+                    emptyText: 'Nx',
+                    fieldStyle: 'background-color:#FFA500;color:#000;font-weight:bold;'
+                },
+                {
+                    text: 'Créer suggestion',
+                    iconCls: 'suggestionreapro',
+                    tooltip: 'Créer une suggestion (réappro) à partir du Top Nx de la classification ABC, sur les 3 derniers mois clôturés',
+                    scope: this,
+                    handler: this.onCreerSuggestionAbc
+                },
+                {
+                    text: 'Supprimer suggestion',
+                    tooltip: 'Supprimer les suggestions cochées (sur une ou plusieurs pages)',
+                    scope: this,
+                    handler: this.onViderSuggestion
                 }
-
             ],
             bbar: {
                 xtype: 'pagingtoolbar',
@@ -308,6 +369,25 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
         });
 
         this.callParent();
+
+        // Tout cocher / decocher en cliquant sur l'entete de la colonne a cocher (page courante)
+        this.on('headerclick', function (ct, column) {
+            if (!column || column.dataIndex !== 'isChecked') { return; }
+            suggHeaderChecked = !suggHeaderChecked;
+            var st = Me.getStore();
+            st.each(function (rec) {
+                rec.set('isChecked', suggHeaderChecked);
+                var id = rec.get('lg_SUGGESTION_ORDER_ID');
+                var idx = suggCheckedIds.indexOf(id);
+                if (suggHeaderChecked && idx === -1) {
+                    suggCheckedIds.push(id);
+                } else if (!suggHeaderChecked && idx !== -1) {
+                    suggCheckedIds.splice(idx, 1);
+                }
+            });
+            st.commitChanges();
+            return false;
+        });
 
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
@@ -441,7 +521,96 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             }
         });
     },
-    
+
+    // Cree une suggestion (reappro) a partir du Top Nx de la classification ABC, sur les 3 derniers mois clotures
+    onCreerSuggestionAbc: function () {
+        const me = this;
+        const nxFld = me.down('#nxField');
+        const nxRaw = nxFld ? nxFld.getValue() : null;
+        // Nx obligatoire et numerique
+        if (nxRaw === null || nxRaw === '' || isNaN(nxRaw) || Number(nxRaw) <= 0) {
+            Ext.MessageBox.show({
+                title: 'Valeur Nx requise',
+                width: 420,
+                msg: 'Veuillez saisir une valeur <b>numérique</b> dans le champ <b>Nx</b> (nombre de produits les plus importants à suggérer).',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING,
+                fn: function () { if (nxFld) { nxFld.focus(true, 100); } }
+            });
+            return;
+        }
+        const nx = nxRaw;
+        const now = new Date();
+        const endPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0); // dernier jour du mois precedent
+        const startWindow = new Date(endPrevMonth.getFullYear(), endPrevMonth.getMonth() - 2, 1);
+        const dtStart = Ext.Date.format(startWindow, 'Y-m-d');
+        const dtEnd = Ext.Date.format(endPrevMonth, 'Y-m-d');
+        const params = {dtStart: dtStart, dtEnd: dtEnd, type: 'QTY', classe: 'ALL', stockFilter: 'ALL', isReappro: true};
+        if (nx) { params.topN = nx; }
+        Ext.MessageBox.confirm('Créer suggestion',
+                'Créer une suggestion de réappro à partir du Top ' + (nx || 'tous') + ' produits de la classification ABC'
+                + ' (période du ' + dtStart + ' au ' + dtEnd + ') ?',
+                function (btn) {
+                    if (btn !== 'yes') { return; }
+                    const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Création des suggestions');
+                    Ext.Ajax.request({
+                        url: '../api/v1/articles/abc/suggestion?' + Ext.Object.toQueryString(params),
+                        method: 'POST',
+                        timeout: 2400000,
+                        success: function (resp) {
+                            progress.hide();
+                            const r = Ext.JSON.decode(resp.responseText, true) || {};
+                            Ext.MessageBox.show({
+                                title: 'Suggestion',
+                                width: 460,
+                                msg: r.success
+                                        ? ('Suggestions créées pour <b>' + (r.count || 0) + '</b> produit(s).')
+                                        : 'Aucune suggestion créée.',
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.INFO
+                            });
+                            Me.getStore().reload();
+                        },
+                        failure: function (resp) {
+                            progress.hide();
+                            Ext.Msg.alert('Erreur', 'Échec. Code HTTP : ' + resp.status);
+                        }
+                    });
+                });
+    },
+
+    // Supprime les suggestions cochees (selection multi-pages)
+    onViderSuggestion: function () {
+        if (!suggCheckedIds.length) {
+            Ext.Msg.alert('Information', 'Veuillez cocher au moins une suggestion à supprimer.');
+            return;
+        }
+        Ext.MessageBox.confirm('Vider suggestion',
+                'Supprimer ' + suggCheckedIds.length + ' suggestion(s) cochée(s) ?',
+                function (btn) {
+                    if (btn !== 'yes') { return; }
+                    const ids = suggCheckedIds.slice();
+                    const progress = Ext.MessageBox.wait('Suppression . . .', 'Veuillez patienter');
+                    let remaining = ids.length;
+                    const done = function () {
+                        remaining--;
+                        if (remaining <= 0) {
+                            progress.hide();
+                            suggCheckedIds = [];
+                            Me.getStore().reload();
+                            Ext.Msg.alert('Vider suggestion', ids.length + ' suggestion(s) supprimée(s).');
+                        }
+                    };
+                    Ext.each(ids, function (id) {
+                        Ext.Ajax.request({
+                            url: '../api/v1/suggestion/suggestion/' + id,
+                            method: 'DELETE',
+                            callback: done
+                        });
+                    });
+                });
+    },
+
     onCloneSuggestionClick: function (grid, rowIndex) {
     const me = this;
     const rec = grid.getStore().getAt(rowIndex);
