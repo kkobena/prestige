@@ -268,6 +268,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                             plugins: [this.cellEditing],
                             store: store_details_sugg,
                             height: 370,
+                            listeners: {
+                                cellclick: function (view, td, cellIndex, record) {
+                                    Me_Window.showProduitInfos(record);
+                                },
+                                select: function (sm, record) {
+                                    Me_Window.showProduitInfos(record);
+                                }
+                            },
                             columns: [
                                 {text: 'CIP', flex: 0.7, sortable: true, dataIndex: 'str_FAMILLE_CIP', renderer: Me_Window.columnRenderer},
                                 {text: 'LIBELLE', flex: 2.5, sortable: true, dataIndex: 'str_FAMILLE_NAME', renderer: Me_Window.columnRenderer},
@@ -364,7 +372,11 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{icon: 'resources/images/icons/fam/application_view_list.png', tooltip: 'Detail sur l\'article', scope: this, handler: this.onDetailClick}]},
                                 {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{/*icon: 'resources/images/icons/fam/delete.png',*/ tooltip: 'Supprimer', scope: this/*, handler: this.onRemoveClick*/}]}
                             ],
-                        tbar: [{xtype: 'textfield', id: 'rechercherDetail', name: 'rechercherDetail', emptyText: 'Recherche', width: 300, listeners: {'render': function (cmp) {cmp.getEl().on('keypress', function (e) {if (e.getKey() === e.ENTER) {Me_Window.onRechClick();}});}}}],
+                        tbar: [
+                            {xtype: 'textfield', id: 'rechercherDetail', name: 'rechercherDetail', emptyText: 'Recherche', width: 190, listeners: {'render': function (cmp) {cmp.getEl().on('keypress', function (e) {if (e.getKey() === e.ENTER) {Me_Window.onRechClick();}});}}},
+                            {xtype: 'tbseparator'},
+                            {xtype: 'tbtext', id: 'suggInfoBar', flex: 1, text: "Sélectionnez un produit (colonne QTE) pour voir ses informations d'aide à la décision."}
+                        ],
                         
                         bbar: {
                             xtype: 'pagingtoolbar',
@@ -474,6 +486,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 var qteColumn = grid.down('gridcolumn[dataIndex=int_NUMBER]');
                 if(recordToFocus && qteColumn) {
                     grid.getPlugin('cellplugin').startEdit(recordToFocus, qteColumn);
+                    // Aide a la decision : infos du produit en cours (focus initial + navigation Entree)
+                    Me_Window.showProduitInfos(recordToFocus);
                 }
             }, 150);
         }
@@ -779,6 +793,48 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 close: function() {
                     Me_Window.restoreLastFocus();
                 }
+            }
+        });
+    },
+
+    // Aide a la decision : affiche les infos du produit (colonne QTE) dans le bandeau de recherche
+    showProduitInfos: function (record) {
+        var bar = Ext.getCmp('suggInfoBar');
+        if (!bar || !record) {
+            return;
+        }
+        var moisFr = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août',
+            'septembre', 'octobre', 'novembre', 'décembre'];
+        var mois = moisFr[new Date().getMonth()];
+        // Moyenne d'achat 3 mois = somme des 3 derniers mois fermes (colonnes) / 3 ; vente hebdo = moyenne / 4
+        var v1 = Number(record.get('int_VALUE1')) || 0,
+                v2 = Number(record.get('int_VALUE2')) || 0,
+                v3 = Number(record.get('int_VALUE3')) || 0;
+        var moy3 = Math.round((v1 + v2 + v3) / 3);
+        var venteHebdo = Math.round((moy3 / 4) * 100) / 100;
+        var nom = record.get('str_FAMILLE_NAME') || '';
+        bar.setText('Chargement des infos . . .');
+        Ext.Ajax.request({
+            url: '../api/v1/commande/produit/reappro-infos/' + record.get('lg_FAMILLE_ID'),
+            method: 'GET',
+            success: function (resp) {
+                var d = Ext.JSON.decode(resp.responseText, true) || {};
+                var sr = Number(d.stockReserve) || 0;
+                var srColor = sr > 0 ? 'green' : 'red';
+                // Moyenne d'achat 3 mois = quantites RECUES (achats) des 3 derniers mois fermes / 3 (backend)
+                var moyAchat3 = Math.round((Number(d.moyenneAchat3Mois) || 0) * 100) / 100;
+                var html = '<b style="color:blue;">' + Ext.String.htmlEncode(nom) + '</b> &nbsp;|&nbsp; '
+                        + 'Date dernière entrée : <span style="color:red;font-weight:bold;">' + (d.derniereEntreeDate || '-') + '</span> '
+                        + '(qté <span style="color:red;font-weight:bold;">' + (d.derniereEntreeQte || 0) + '</span>) &nbsp;|&nbsp; '
+                        + "Fréquence achat (" + mois + ") : <span style=\"color:orange;font-weight:bold;\">" + (d.frequenceAchatMois || 0) + '</span> &nbsp;|&nbsp; '
+                        + 'Qté total entrée (' + mois + ') : <span style="color:orange;font-weight:bold;">' + (d.qteEntreeMois || 0) + '</span> &nbsp;|&nbsp; '
+                        + 'Stock Reserve : <span style="color:' + srColor + ';font-weight:bold;">' + sr + '</span> &nbsp;|&nbsp; '
+                        + 'Vente hebdo (MOY/4) : <span style="color:red;font-weight:bold;">' + venteHebdo + '</span> &nbsp;|&nbsp; '
+                        + "Moyenne d'achat 3mois : <span style=\"color:red;font-weight:bold;\">" + moyAchat3 + '</span>';
+                bar.setText(html, false);
+            },
+            failure: function () {
+                bar.setText('Infos produit indisponibles.');
             }
         });
     },

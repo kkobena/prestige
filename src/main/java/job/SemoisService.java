@@ -166,11 +166,38 @@ public class SemoisService {
             if (isActive) {
                 LOG.log(Level.INFO, "*****************  DEBUT TRAITEMENT  SEMOIS A {0}", LocalDateTime.now());
                 computeReappro();
+                // MAJ de la date de dernier calcul (utile pour le recalcul manuel ; en debut de mois
+                // execute() la repositionne aussi a la meme valeur -> aucun effet de bord)
+                markReapproDate();
                 LOG.log(Level.INFO, "*****************  FIN TRAITEMENT  SEMOIS A {0}", LocalDateTime.now());
             }
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
+        }
+    }
+
+    /** Positionne KEY_DAY_SEUIL_REAPPRO a aujourd'hui (date de dernier calcul des seuils). */
+    private void markReapproDate() {
+        try {
+            TParameters key = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");
+            if (key == null) {
+                return;
+            }
+            userTransaction.begin();
+            key.setStrVALUE(LocalDate.now().toString());
+            key.setDtUPDATED(new Date());
+            em.merge(key);
+            userTransaction.commit();
+        } catch (Exception e) {
+            try {
+                if (userTransaction.getStatus() == Status.STATUS_ACTIVE
+                        || userTransaction.getStatus() == Status.STATUS_MARKED_ROLLBACK) {
+                    userTransaction.rollback();
+                }
+            } catch (SystemException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -325,8 +352,8 @@ public class SemoisService {
                 Pair<Integer, Integer> computesValues = calculSeuiQteReappro(q1, q2, totalQuantiteVendue, q3);
 
                 updateProduitSeuilAndQtyReappro(produitId, computesValues.getLeft(), computesValues.getRight());
-                log.put(semoisNormalEntry(produitId, "boite", q1, q2, q3, totalQuantiteVendue,
-                        computesValues.getLeft(), computesValues.getRight()));
+                log.put(semoisNormalEntry(produitId, "boite", q1, q2, q3, totalQuantiteVendue, computesValues.getLeft(),
+                        computesValues.getRight()));
             });
             traiterReapproDetail(q1, q2, q3, items, log);
             userTransaction.commit();
@@ -377,8 +404,8 @@ public class SemoisService {
             q.set(root.get(TFamille_.intQTEREAPPROVISIONNEMENT), qteCalule);
             // bool_CALCUL_SEUIL = false -> on saute le produit (aucune ligne mise a jour, valeurs intactes)
             q.where(cb.and(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId),
-                    cb.or(cb.isNull(root.<Boolean>get("boolCALCULSEUIL")),
-                            cb.isTrue(root.<Boolean>get("boolCALCULSEUIL")))));
+                    cb.or(cb.isNull(root.<Boolean> get("boolCALCULSEUIL")),
+                            cb.isTrue(root.<Boolean> get("boolCALCULSEUIL")))));
             em.createQuery(q).executeUpdate();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getLocalizedMessage());
@@ -431,8 +458,7 @@ public class SemoisService {
                     + "JOIN t_famille f ON f.lg_FAMILLE_ID=d.lg_FAMILLE_ID "
                     + "LEFT JOIN t_famille parent ON parent.lg_FAMILLE_ID=f.lg_FAMILLE_PARENT_ID "
                     + "WHERE p.str_STATUT='is_Closed' AND p.int_PRICE>0 AND p.lg_TYPE_VENTE_ID<>'5' AND f.str_STATUT='enable' "
-                    + "AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2"
-                    + ") t GROUP BY t.eff_id, t.ym";
+                    + "AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2" + ") t GROUP BY t.eff_id, t.ym";
             Query q = em.createNativeQuery(sql);
             q.setParameter(1, dtStart);
             q.setParameter(2, dtEnd);
@@ -505,7 +531,8 @@ public class SemoisService {
             // 1) Classes ABC actives
             Map<String, TClasseAbc> classes = new HashMap<>();
             int maxQ3 = 0;
-            for (TClasseAbc c : em.createQuery("SELECT c FROM TClasseAbc c WHERE c.strSTATUT='enable'", TClasseAbc.class)
+            for (TClasseAbc c : em
+                    .createQuery("SELECT c FROM TClasseAbc c WHERE c.strSTATUT='enable'", TClasseAbc.class)
                     .getResultList()) {
                 classes.put(c.getLgCLASSEABCID(), c);
                 maxQ3 = Math.max(maxQ3, c.getIntQ3());
@@ -635,8 +662,7 @@ public class SemoisService {
                 gq3 = 3;
             }
 
-            List<LocalDate> moisAsc = nombreMoisPleinsConsommation(gq3).stream().sorted()
-                    .collect(Collectors.toList());
+            List<LocalDate> moisAsc = nombreMoisPleinsConsommation(gq3).stream().sorted().collect(Collectors.toList());
             if (moisAsc.isEmpty()) {
                 return;
             }

@@ -168,8 +168,8 @@ public class StockReapproServiceImpl implements StockReapproService {
     }
 
     /** Construit une entree de journal pour le calcul du mode par defaut. */
-    private org.json.JSONObject defaultEntry(String produitId, String type, int conso, int dayStock,
-            int delayReappro, Reappro r) {
+    private org.json.JSONObject defaultEntry(String produitId, String type, int conso, int dayStock, int delayReappro,
+            Reappro r) {
         double consoMoyenneJour = conso / 84.0d;
         return new org.json.JSONObject().put("produitId", produitId).put("type", type).put("conso", conso)
                 .put("consoMoyenneJour", consoMoyenneJour).put("dayStock", dayStock).put("delayReappro", delayReappro)
@@ -217,9 +217,8 @@ public class StockReapproServiceImpl implements StockReapproService {
         update.set(TFamille_.DT_UP_DA_TE_D, now);
         update.set(TFamille_.DT_LA_ST_UP_DA_TE_SE_UI_LR_EA_PP_RO, now);
         // bool_CALCUL_SEUIL = false -> produit saute (aucune mise a jour, valeurs intactes)
-        update.where(cb.and(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId),
-                cb.or(cb.isNull(root.<Boolean>get("boolCALCULSEUIL")),
-                        cb.isTrue(root.<Boolean>get("boolCALCULSEUIL")))));
+        update.where(cb.and(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId), cb.or(
+                cb.isNull(root.<Boolean> get("boolCALCULSEUIL")), cb.isTrue(root.<Boolean> get("boolCALCULSEUIL")))));
         this.em.createQuery(update).executeUpdate();
     }
 
@@ -234,9 +233,8 @@ public class StockReapproServiceImpl implements StockReapproService {
         update.set(TFamille_.DT_UP_DA_TE_D, now);
         update.set(TFamille_.DT_LA_ST_UP_DA_TE_SE_UI_LR_EA_PP_RO, now);
         // bool_CALCUL_SEUIL = false -> produit saute (aucune mise a jour, valeurs intactes)
-        update.where(cb.and(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId),
-                cb.or(cb.isNull(root.<Boolean>get("boolCALCULSEUIL")),
-                        cb.isTrue(root.<Boolean>get("boolCALCULSEUIL")))));
+        update.where(cb.and(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId), cb.or(
+                cb.isNull(root.<Boolean> get("boolCALCULSEUIL")), cb.isTrue(root.<Boolean> get("boolCALCULSEUIL")))));
         this.em.createQuery(update).executeUpdate();
     }
 
