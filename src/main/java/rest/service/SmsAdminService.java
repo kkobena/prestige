@@ -32,6 +32,23 @@ public interface SmsAdminService {
     /** Crée une souscription aux Delivery Receipts (nécessite l'URL de callback). */
     JSONObject createDeliveryReceiptSubscription();
 
+    /**
+     * URL de callback DR et configuration de protection : {@code {url, source, secret, protected}}.
+     */
+    JSONObject getCallbackUrlInfo();
+
+    /**
+     * Enregistre l'URL et/ou le jeton secret du callback DR dans les paramètres. Un argument {@code null} laisse le
+     * paramètre correspondant inchangé.
+     */
+    JSONObject saveCallbackConfig(String url, String secret);
+
+    /**
+     * Vérifie le jeton fourni par l'appelant du callback. Retourne true si aucun secret n'est configuré (protection
+     * désactivée) ou si le jeton correspond.
+     */
+    boolean isCallbackKeyValid(String providedKey);
+
     /** Liste les souscriptions DR existantes. */
     JSONObject getDeliveryReceiptSubscriptions();
 

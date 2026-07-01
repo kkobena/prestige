@@ -8,6 +8,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import rest.service.SmsAdminService;
 import rest.service.SmsService;
@@ -73,6 +74,29 @@ public class SmsResource {
         return Response.ok(smsAdminService.createDeliveryReceiptSubscription().toString()).build();
     }
 
+    /** URL de callback DR actuelle (et sa source : paramètre base ou fichier). */
+    @GET
+    @Path("dr-callback-url")
+    public Response getDrCallbackUrl() {
+        return Response.ok(smsAdminService.getCallbackUrlInfo().toString()).build();
+    }
+
+    /** Enregistre l'URL et/ou le jeton secret du callback DR dans les paramètres. */
+    @POST
+    @Path("dr-callback-url")
+    public Response saveDrCallbackUrl(String body) {
+        String url = null;
+        String secret = null;
+        try {
+            org.json.JSONObject json = new org.json.JSONObject(body);
+            url = json.has("url") ? json.optString("url", "") : null;
+            secret = json.has("secret") ? json.optString("secret", "") : null;
+        } catch (Exception ignore) {
+            // corps vide ou invalide
+        }
+        return Response.ok(smsAdminService.saveCallbackConfig(url, secret).toString()).build();
+    }
+
     /** Supprime une souscription Delivery Receipt. */
     @DELETE
     @Path("dr-subscriptions/{id}")
@@ -86,7 +110,11 @@ public class SmsResource {
      */
     @POST
     @Path("dr-callback")
-    public Response deliveryReceiptCallback(String payload) {
+    public Response deliveryReceiptCallback(@QueryParam("key") String key, String payload) {
+        if (!smsAdminService.isCallbackKeyValid(key)) {
+            // Jeton absent/incorrect : on refuse sans traiter.
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
         try {
             smsService.handleDeliveryReceipt(payload);
         } catch (Exception ignore) {

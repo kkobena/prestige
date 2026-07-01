@@ -150,20 +150,94 @@ Ext.define('testextjs.controller.NotificationCtr', {
         const win = Ext.create('Ext.window.Window', {
             title: 'Accusés de réception SMS (Delivery Receipts)',
             modal: true,
-            width: 640,
-            height: 440,
-            layout: 'fit',
+            width: 680,
+            height: 480,
+            layout: 'anchor',
             bodyPadding: 10,
-            items: [{
+            items: [
+                {
+                    xtype: 'textfield',
+                    itemId: 'drUrl',
+                    fieldLabel: 'URL callback',
+                    labelWidth: 90,
+                    anchor: '100%',
+                    emptyText: 'https://votre-domaine/prestige/api/v1/sms/dr-callback'
+                },
+                {
+                    xtype: 'fieldcontainer',
+                    layout: 'hbox',
+                    anchor: '100%',
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            itemId: 'drSecret',
+                            fieldLabel: 'Clé secrète',
+                            labelWidth: 90,
+                            flex: 1,
+                            emptyText: 'laisser vide = protection désactivée'
+                        },
+                        {
+                            xtype: 'button',
+                            text: 'Enregistrer URL + clé',
+                            margin: '0 0 0 6',
+                            handler: function () {
+                                const url = win.down('#drUrl').getValue();
+                                const secret = win.down('#drSecret').getValue();
+                                win.setLoading('Enregistrement...');
+                                Ext.Ajax.request({
+                                    url: '../api/v1/sms/dr-callback-url',
+                                    method: 'POST',
+                                    jsonData: {url: url, secret: secret},
+                                    callback: function (o, s, response) {
+                                        win.setLoading(false);
+                                        let r = {};
+                                        try {
+                                            r = Ext.decode(response.responseText);
+                                        } catch (ex) {
+                                            r = {};
+                                        }
+                                        Ext.Msg.alert('Callback DR', r.msg || (r.success ? 'Enregistré.' : 'Echec.'));
+                                    }
+                                });
+                            }
+                        }
+                    ]
+                },
+                {
                     xtype: 'textarea',
                     itemId: 'drOutput',
+                    anchor: '100% -60',
                     readOnly: true,
-                    value: 'Utilisez les boutons ci-dessous.\n\n'
-                            + '- "Créer la souscription" active l\'envoi des accusés vers Prestige '
-                            + '(nécessite que l\'URL de callback publique soit configurée côté serveur : smsdrcallbackurl).\n'
+                    value: 'Renseignez l\'URL publique et (optionnel) une clé secrète, puis "Enregistrer URL + clé".\n\n'
+                            + '- Si une clé est définie, Orange appellera /dr-callback?key=... et tout appel sans la bonne clé sera refusé.\n'
+                            + '- "Créer la souscription" active l\'envoi des accusés Orange vers Prestige (avec la clé).\n'
                             + '- "Lister" affiche les souscriptions existantes.\n'
-                            + '- "Supprimer" retire une souscription via son identifiant.'
-                }],
+                            + '- "Supprimer" retire une souscription via son identifiant.\n\n'
+                            + 'Important : apres avoir change l\'URL ou la cle, recreez la souscription.'
+                }
+            ],
+            listeners: {
+                afterrender: function () {
+                    Ext.Ajax.request({
+                        url: '../api/v1/sms/dr-callback-url',
+                        method: 'GET',
+                        success: function (response) {
+                            let r = {};
+                            try {
+                                r = Ext.decode(response.responseText);
+                            } catch (ex) {
+                                r = {};
+                            }
+                            if (r.url) {
+                                win.down('#drUrl').setValue(r.url);
+                            }
+                            if (r.secret) {
+                                win.down('#drSecret').setValue(r.secret);
+                            }
+                        }
+                    });
+                }
+            },
             buttons: [
                 {
                     text: 'Créer la souscription',
