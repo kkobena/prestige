@@ -74,6 +74,9 @@ Ext.define('testextjs.controller.VenteCtr', {
     suspectInputThreshold: 200000, // confirmation au clic "Terminer" si montant élevé
 
     maxChangeAllowed: 9500, // monnaie à rendre max avant alerte (anti scan)
+
+    // === Modes de règlement mobile money (cf. typeReglementSelectEvent) ===
+    mobileModeIds: ['7', '8', '9', '10', '19', '80', '70'],
     models: [
         'testextjs.model.caisse.Nature',
         'testextjs.model.caisse.Reglement',
@@ -299,6 +302,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         {
             ref: 'montantExtra',
             selector: 'doventemanager #contenu #montantExtra'
+        },
+        {
+            ref: 'btnExtraMode',
+            selector: 'doventemanager #contenu #btnExtraMode'
         },
 
         {
@@ -534,6 +541,14 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     ],
     init: function () {
+        const me = this;
+        // Recalcul de la hauteur de la grille au redimensionnement de la
+        // fenêtre (portable <-> écran externe). Bufferisé, sans effet hors
+        // vente comptant plein écran.
+        me._onWinResizeFill = Ext.Function.createBuffered(function () {
+            me.refreshGridFill();
+        }, 150);
+        Ext.on('resize', me._onWinResizeFill);
         this.control(
                 {
 
@@ -575,13 +590,19 @@ Ext.define('testextjs.controller.VenteCtr', {
                         specialkey: this.onMontantRecuVnoKey,
                         focus: this.montantRecuFocus
                     },
+                    'doventemanager #contenu #btnExtraMode': {
+                        click: this.onBtnExtraModeClick
+                    },
+                    'doventemanager #contenu #montantExtra': {
+                        change: this.montantExtraChangeListener
+                    },
                     'doventemanager #contenu [xtype=gridpanel] [xtype=actioncolumn]': {
                         click: this.removeItemVno
                     }, 'doventemanager #contenu #typeReglement': {
                         select: this.typeReglementSelectEvent
                     },
                     'clientLambda #btnCancelLambda': {
-                        click: this.closeClientLambdaWindow
+                        click: this.onCancelClientLambda
                     },
                     'clientLambda #btnAddNewLambda': {
                         click: this.addClientForm
@@ -601,7 +622,8 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                     },
                     'doventemanager #contenu [xtype=gridpanel]': {
-                        edit: this.onGridEdit
+                        edit: this.onGridEdit,
+                        afterrender: this.onVenteGridAfterRender
                     },
                     'doventemanager #contenu [xtype=toolbar] #btnGoBack': {
                         click: this.goBack
@@ -704,8 +726,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                 });
     },
 
-    onReady: function () {
+    onReady: function (view) {
         const me = this;
+        me.markVenteContentPanel(true, view);
         me.goToVenteView();
         me.cheickCaisse();
         me.checkModificationPrixU();
@@ -714,6 +737,26 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.checkSansBon();
         me.checkParamImpressionTicketCaisse();
 
+    },
+    /*
+     * Marque le panneau central quand l'écran de vente est actif : la classe
+     * vp-vente-mode neutralise (en CSS) la photo de fond du thème UNIQUEMENT
+     * ici. Retirée au destroy de la vue pour que les autres écrans gardent
+     * leur fond décoratif (pas de régression globale).
+     */
+    markVenteContentPanel: function (active, view) {
+        const cp = Ext.getCmp('content-panel');
+        if (cp && cp.getEl()) {
+            cp.getEl()[active ? 'addCls' : 'removeCls']('vp-vente-mode');
+        }
+        if (active && view && view.on) {
+            view.on('destroy', function () {
+                const p = Ext.getCmp('content-panel');
+                if (p && p.getEl()) {
+                    p.getEl().removeCls('vp-vente-mode');
+                }
+            }, null, {single: true});
+        }
     },
     cheickCaisse: function () {
         const me = this;
@@ -746,13 +789,91 @@ Ext.define('testextjs.controller.VenteCtr', {
         sansBon.setValue(false);
         montantTp.hide();
         sansBon.hide();
+        me.setGridFillHeight(true);
+    },
+    /* Comptant : la grille s'étire jusqu'au bas du panneau (plein écran, pour
+     * occuper toute la hauteur quel que soit l'écran). En assurance/carnet le
+     * bandeau assuré occupe la place : la grille repasse à 250. */
+    setGridFillHeight: function (fill) {
+        const me = this, grid = me.getVnogrid && me.getVnogrid();
+        if (!grid) {
+            return;
+        }
+        me._gridFillMode = !!fill;
+        if (!fill) {
+            grid.minHeight = 250;
+            grid.updateLayout();
+            return;
+        }
+        me.fitGridToPanel(grid);
+    },
+    /* Ajuste la hauteur de la grille pour que le bas de l'écran de vente
+     * s'aligne juste au-dessus de la zone visible du panneau central : pas de
+     * barre de défilement (sinon elle rogne le bouton VENTES EN ATTENTE et les
+     * bords), et l'espace est occupé jusqu'en bas.
+     *
+     * spare = (bas de la zone visible) - (bas réel de l'écran vente). On ajoute
+     * spare - RESERVE à la hauteur courante de la grille : si l'écran est trop
+     * petit (spare < 0) la grille RÉTRÉCIT (plus de scrollbar) ; s'il reste de
+     * la place la grille GRANDIT. getViewRegion exclut la scrollbar → calcul
+     * stable. Plancher 250 (comme l'assurance). Idempotent (converge). */
+    fitGridToPanel: function (grid) {
+        const me = this, FLOOR = 250, RESERVE = 10;
+        try {
+            const cp = Ext.getCmp('content-panel');
+            const view = me.getDoventemanager && me.getDoventemanager();
+            if (!cp || !cp.body || !grid.rendered || !view || !view.getEl()) {
+                return;
+            }
+            // On aligne le bas de l'écran vente juste au-dessus de la zone
+            // visible : la grille GRANDIT s'il reste de la place (grand écran),
+            // RÉTRÉCIT vers 250 si l'écran est petit. getViewRegion exclut la
+            // scrollbar → calcul stable, idempotent.
+            const bviewBottom = cp.body.getViewRegion().bottom;
+            const shellBottom = view.getEl().getRegion().bottom;
+            const target = grid.getHeight() + (bviewBottom - shellBottom) - RESERVE;
+            const next = Math.max(FLOOR, Math.round(target));
+            if (Math.abs(next - grid.minHeight) > 1) {
+                grid.minHeight = next;
+                grid.updateLayout();
+            }
+        } catch (e) {
+        }
+    },
+    /* À l'affichage de la grille (vente comptant par défaut) : on l'étire pour
+     * remplir la hauteur. Différé pour laisser le layout se poser. */
+    onVenteGridAfterRender: function () {
+        const me = this;
+        // deux passes : la 1re peut faire (dis)paraître la scrollbar, la 2nde
+        // stabilise (le calcul est idempotent, il converge)
+        Ext.defer(function () {
+            if (me.getSafeComboValue('getTypeVenteCombo', '1') === '1') {
+                me.setGridFillHeight(true);
+                Ext.defer(function () {
+                    if (me._gridFillMode) {
+                        me.fitGridToPanel(me.getVnogrid());
+                    }
+                }, 80);
+            }
+        }, 60);
+    },
+    /* Recalcul de la hauteur de la grille au redimensionnement de la fenêtre
+     * (passage portable <-> écran externe, maximisation). Ne fait rien hors du
+     * mode plein écran comptant. */
+    refreshGridFill: function () {
+        const me = this, grid = me.getVnogrid && me.getVnogrid();
+        if (!me._gridFillMode || !grid || !grid.rendered) {
+            return;
+        }
+        me.fitGridToPanel(grid);
     },
     showAssureContainer: function (typevente) {
         const me = this;
         let assureContainer = me.getAssureContainer(), ayantDroyCmp = me.getAyantDroyCmp(),
-                montantTp = me.getMontantTp(), sansBon = me.getSansBon();
+                montantTp = me.getMontantTp();
         montantTp.show();
-        sansBon.show();
+        // "Vente sans bon" retiré de l'écran (le paramètre reste à false)
+        me.setGridFillHeight(false);
         me.updateAssurerResetCmp();
         me.updateAyantDroitResetCmp();
         if (typevente === "2") {
@@ -1562,6 +1683,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                     comboxProduit.focus(true, 100, function () {
                     });
                     me.refresh();
+                    // comptant : net à payer recalculé automatiquement à chaque ajout
+                    me.autoComputeNetVno();
                 } else {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
@@ -1617,6 +1740,106 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
         if (typeRegle !== '1' && typeRegle !== '4') {
             me.getMontantRecu().setValue(montantNet);
+        }
+    },
+    /*
+     * Calcul silencieux du net à payer (vente comptant uniquement) : même
+     * appel que le bouton AFFICHER NET mais sans popup d'attente ni vol de
+     * focus, pour ne pas ralentir la vente au scan. Réapplique ensuite le
+     * mode de règlement courant (montant forcé / complément du fractionné).
+     */
+    autoComputeNetVno: function (onDone) {
+        const me = this, vente = me.getCurrent();
+        const typeVente = me.getSafeComboValue('getTypeVenteCombo', '1');
+        if (typeVente !== '1' || !vente) {
+            return;
+        }
+        const data = {"remiseId": me.getVnoremise().getValue(), "venteId": vente.lgPREENREGISTREMENTID,
+            "checkUg": me.getCheckUg()};
+        Ext.Ajax.request({
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/vente/net/vno',
+            params: Ext.JSON.encode(data),
+            success: function (response) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result && result.success) {
+                    me.netAmountToPay = result.data;
+                    me.toRecalculate = false;
+                    const montantNet = me.getNetAmountToPay().montantNet;
+                    me.getMontantNet().setValue(montantNet);
+                    me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
+                    if (me.getExtraModeReglementId()) {
+                        // fractionné en cours : on recalcule le complément sans
+                        // écraser la part principale saisie
+                        me.handleExtraAmountInputValue();
+                    } else {
+                        me.handleMontantField(montantNet);
+                    }
+                    if (Ext.isFunction(onDone)) {
+                        onDone();
+                    }
+                }
+            },
+            failure: function () {
+                // silencieux : le bouton AFFICHER NET A PAYER reste disponible
+            }
+        });
+    },
+    /*
+     * Calcul silencieux du net à payer (vente assurance/carnet) : même appel
+     * que AFFICHER NET mais sans popup, sans message ni vol de focus. Les
+     * contrôles bloquants (n° de bon, tiers-payant) restent portés par le
+     * bouton et la clôture : ici on passe simplement si la vente n'est pas
+     * prête (pas de tiers-payant).
+     */
+    autoComputeNetAssurance: function (onDone) {
+        const me = this, vente = me.getCurrent();
+        const typeVente = me.getSafeComboValue('getTypeVenteCombo', '1');
+        if ((typeVente !== '2' && typeVente !== '3') || !vente) {
+            return;
+        }
+        const tierspayants = me.buildAssuranceData();
+        if (!tierspayants || tierspayants.length === 0) {
+            return;
+        }
+        Ext.Ajax.request({
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/vente/net/assurance',
+            params: Ext.JSON.encode({"remiseId": me.getVnoremise().getValue(),
+                "venteId": vente.lgPREENREGISTREMENTID, "tierspayants": tierspayants}),
+            success: function (response) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result && result.success) {
+                    me.netAmountToPay = result.data;
+                    me.toRecalculate = false;
+                    const montantNet = me.getNetAmountToPay().montantNet;
+                    me.getMontantNet().setValue(montantNet);
+                    me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
+                    me.getMontantTp().setValue(me.getNetAmountToPay().montantTp);
+                    me.handleMontantField(montantNet);
+                    if (Ext.isFunction(onDone)) {
+                        onDone();
+                    }
+                }
+            },
+            failure: function () {
+                // silencieux : le bouton AFFICHER NET A PAYER reste disponible
+            }
+        });
+    },
+    /*
+     * Recalcul du net après une modification de la vente dans la grille
+     * (prix, quantité, suppression) — dispatch selon le type de vente.
+     */
+    autoComputeNetAfterChange: function () {
+        const me = this;
+        const typeVente = me.getSafeComboValue('getTypeVenteCombo', '1');
+        if (typeVente === '1') {
+            me.autoComputeNetVno();
+        } else if (typeVente === '2' || typeVente === '3') {
+            me.autoComputeNetAssurance();
         }
     },
     showNetPaidVno: function () {
@@ -1708,9 +1931,59 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
             montantRecu += montantExtra;
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
+                if (me.getExtraModeReglementId()) {
+                    // un second mode est déjà choisi : le total saisi ne couvre pas le net
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 550,
+                        msg: 'Le total espèces + mode mobile est inférieur au net à payer de <span style="color: black; font-size: 1rem;font-weight: 900;">' + Ext.util.Format.number(netTopay, '0,000.') + '</span>',
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR,
+                        fn: function (buttonId) {
+                            if (buttonId === "ok") {
+                                me.getMontantRecu().focus(true, 50);
+                            }
+                        }
+                    });
+                    return false;
+                }
                 me.handleExtraModePayment(netTopay);
 
                 return false;
+            } else if (typeRegleId === '1' && me.getExtraModeReglementId()
+                    && montantExtra > parseInt(netTopay)) {
+                // défensif : jamais de monnaie sur la part mobile
+                Ext.MessageBox.show({
+                    title: 'Message d\'erreur',
+                    width: 550,
+                    msg: 'Le montant du mode mobile ne peut pas dépasser le net à payer',
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.ERROR
+                });
+                return false;
+            } else if (me.isMobileMode(typeRegleId) && me.getExtraModeReglementId()) {
+                // Fractionnement mobile + mobile : la somme des deux parts doit
+                // couvrir exactement le net à payer (pas de monnaie sur du mobile)
+                const partPrincipale = parseInt(me.getMontantRecu().getValue()) || 0;
+                if (montantExtra === 0 && partPrincipale === parseInt(netTopay)) {
+                    // Le mode principal couvre finalement tout : retour au mono-règlement
+                    me.resetExtraModeCmp();
+                } else if (partPrincipale <= 0 || montantExtra <= 0
+                        || (partPrincipale + montantExtra) !== parseInt(netTopay)) {
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 550,
+                        msg: 'La somme des deux modes de règlement doit être égale au net à payer de <span style="color: black; font-size: 1rem;font-weight: 900;">' + Ext.util.Format.number(netTopay, '0,000.') + '</span>',
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR,
+                        fn: function (buttonId) {
+                            if (buttonId === "ok") {
+                                me.getMontantRecu().focus(true, 50);
+                            }
+                        }
+                    });
+                    return false;
+                }
             } else if (typeRegleId === '6' || typeRegleId === '3' || typeRegleId === '2') {
                 montantRecu = netTopay;
             }
@@ -1808,9 +2081,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     } else if (codeError === 2) {
 
                         me.getInfosClientStandard().show();
-                        const win = Ext.create('testextjs.view.vente.user.ClientLambda');
-                        win.add(me.buildLambdaClientGrid());
-                        win.show();
+                        me.openClientLambdaSearchWindow();
 
 
                     } else {
@@ -1847,6 +2118,40 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.getMontantRecu().setValue(me.getNetAmountToPay().montantNet);
         }
         me.getMontantRecu().setReadOnly(true);
+        // Paiement fractionné mobile + mobile : uniquement pour la vente comptant
+        const typeVenteCmp = me.getTypeVenteCombo && me.getTypeVenteCombo();
+        if (typeVenteCmp && typeVenteCmp.getValue() === '1') {
+            me.getBtnExtraMode()?.show();
+        }
+    },
+
+    isMobileMode: function (typeRegleId) {
+        return this.mobileModeIds.indexOf(typeRegleId) !== -1;
+    },
+
+    onBtnExtraModeClick: function () {
+        const me = this;
+        if (!me.getNetAmountToPay()) {
+            Ext.MessageBox.show({
+                title: 'Message',
+                width: 550,
+                msg: 'Veuillez ajouter des produits à la vente avant de fractionner le règlement',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING,
+                fn: function (buttonId) {
+                    if (buttonId === "ok") {
+                        me.getVnoproduitCombo().focus(true, 100);
+                    }
+                }
+            });
+            return;
+        }
+        const typeRegle = me.getVnotypeReglement().getValue();
+        Ext.create('testextjs.view.vente.ReglementGrid', {
+            title: 'AJOUTEZ UN AUTRE MODE MOBILE',
+            excludeModeId: typeRegle,
+            onlyModeIds: me.mobileModeIds
+        }).show();
     },
     showAndHideCbInfos: function (v) {
         const me = this;
@@ -1869,10 +2174,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (showOrHide) {
             me.getInfosClientStandard().show();
             if (!me.getClient()) {
-                const win = Ext.create('testextjs.view.vente.user.ClientLambda');
-                win.add(me.buildLambdaClientGrid());
-                win.show();
-
+                me.openClientLambdaSearchWindow();
             }
 
         } else {
@@ -1914,8 +2216,52 @@ Ext.define('testextjs.controller.VenteCtr', {
     ,
     typeReglementSelectEvent: function (field) {
         const me = this;
-        me.resetExtraModeCmp();
         const value = field.getValue().trim();
+        // Garde-fou : aucun produit dans la vente → on refuse le choix du
+        // mode et on revient à la valeur précédente (évite tout plantage)
+        if (!me.getCurrent() && value !== '1') {
+            field.setValue(me._appliedTypeReglement || '1');
+            Ext.MessageBox.show({
+                title: 'Message',
+                width: 550,
+                msg: 'Veuillez ajouter des produits à la vente avant de choisir le mode de règlement',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING,
+                fn: function (buttonId) {
+                    if (buttonId === "ok") {
+                        me.getVnoproduitCombo().focus(true, 100);
+                    }
+                }
+            });
+            return;
+        }
+        me.resetExtraModeCmp();
+        // Si le net n'est pas encore calculé (produits ajoutés sans passer
+        // par AFFICHER NET), on le calcule automatiquement puis on réapplique
+        // le mode choisi — comptant ET assurance/carnet. _skipAutoNet évite
+        // de boucler à la ré-entrée si le calcul est impossible.
+        const typeVenteCourant = me.getSafeComboValue('getTypeVenteCombo', '1');
+        if (me.getCurrent() && (me.toRecalculate || !me.netAmountToPay) && !me._skipAutoNet) {
+            const reApply = function () {
+                me._skipAutoNet = true;
+                me.typeReglementSelectEvent(field);
+                me._skipAutoNet = false;
+            };
+            if (typeVenteCourant === '1') {
+                me.autoComputeNetVno(reApply);
+                return;
+            }
+            if (typeVenteCourant === '2' || typeVenteCourant === '3') {
+                me.autoComputeNetAssurance(reApply);
+                return;
+            }
+        }
+        // Mode en place avant cette sélection : point de retour du rollback
+        me._previousTypeReglement = me._appliedTypeReglement || '1';
+        // Cette sélection va-t-elle ouvrir la fenêtre « client lié » ? Si oui
+        // et que l'utilisateur clique Annuler, on défera tout (rollback).
+        me._pendingModeNeedsClient = Ext.isEmpty(me.getClient())
+                && (value === '4' || value === '2' || value === '3' || value === '6' || me.isMobileMode(value));
         if (value === '1') {
             me.getMontantRecu().enable();
             me.getMontantRecu().setReadOnly(false);
@@ -1926,7 +2272,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.showAndHideInfosStandardClient(true);
             me.getMontantRecu().setReadOnly(false);
             me.getCbContainer().hide();
-        } else if (value === '7' || value === '8' || value === '9' || value === '10' || value === '19' || value === '80' || value === '70') {
+        } else if (me.isMobileMode(value)) {
             me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
@@ -1944,6 +2290,9 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
 
         }
+        // Mode réellement appliqué : sert de point de retour au garde-fou
+        // « sans produit » et au rollback du bouton Annuler (fenêtre client)
+        me._appliedTypeReglement = value;
     }
     ,
     // Utilitaire: focus + sélection du texte sur Montant Reçu
@@ -2028,6 +2377,18 @@ Ext.define('testextjs.controller.VenteCtr', {
             field._confirmedMaxDigitsValue = null;
             field._blockedSecurityValue = null;
             return me.montantRecuChangeCore(field, value, options);
+        }
+
+        // Fractionnement mobile : plafond ABSOLU au net à payer, appliqué avant
+        // toute autre voie (anti-scan, confirmations...) — pas de monnaie sur
+        // mobile, seul un retour en espèces permet de dépasser
+        if (me.getExtraModeReglementId() && me.isMobileMode(me.getVnotypeReglement().getValue())) {
+            const dataSplit = me.getNetAmountToPay ? me.getNetAmountToPay() : null;
+            const netSplit = dataSplit && dataSplit.montantNet != null ? parseInt(dataSplit.montantNet, 10) : 0;
+            if (netSplit > 0 && (parseInt(raw, 10) || 0) > netSplit) {
+                field.setValue(netSplit); // re-déclenche le change avec la valeur plafonnée
+                return;
+            }
         }
 
         // Si l'utilisateur a cliqué "Annuler" sur une alerte de sécurité,
@@ -2118,6 +2479,15 @@ Ext.define('testextjs.controller.VenteCtr', {
         const me = this, typeRegle = me.getVnotypeReglement().getValue();
         const montantRecu = parseInt(field.getValue());
         const data = me.getNetAmountToPay();
+        // Fractionnement mobile : pas de monnaie possible, la saisie est
+        // plafonnée au net à payer (on répartit entre 2 modes, sans dépasser)
+        if (me.getExtraModeReglementId() && me.isMobileMode(typeRegle) && data) {
+            const netTopay = parseInt(data.montantNet);
+            if (montantRecu > netTopay) {
+                field.setValue(netTopay); // re-déclenche le change avec la valeur plafonnée
+                return;
+            }
+        }
         if (me.getExtraModeReglementId()) {
             me.handleExtraAmountInputValue();
             const montantExtra = me.getMontantExtra();
@@ -2302,8 +2672,94 @@ Ext.define('testextjs.controller.VenteCtr', {
         };
 
     },
+    /*
+     * Ouvre la fenêtre « client lié » en mode recherche avec le focus
+     * directement dans le champ de saisie : la caissière tape le nom
+     * sans avoir à cliquer dans le champ.
+     */
+    openClientLambdaSearchWindow: function () {
+        const me = this;
+        const win = Ext.create('testextjs.view.vente.user.ClientLambda');
+        win.add(me.buildLambdaClientGrid());
+        win.show();
+        const queryField = win.down('#queryClientLambda');
+        if (queryField) {
+            queryField.focus(false, 150);
+            // Ceinture et bretelles : certains enchaînements asynchrones
+            // (calcul du net, listeners du mode) peuvent reprendre le focus
+            // après coup — on le réaffirme une fois la poussière retombée.
+            Ext.defer(function () {
+                if (!queryField.destroyed && !queryField.hasFocus) {
+                    queryField.focus();
+                }
+            }, 450);
+        }
+    },
+    /*
+     * Focus sur la zone d'encaissement : le champ du second mode s'il est
+     * saisissable (flux espèces + mobile), sinon le montant reçu.
+     */
+    focusEncaissement: function () {
+        const me = this;
+        const extra = me.getMontantExtra();
+        if (extra && extra.isVisible() && !extra.readOnly) {
+            extra.focus(true, 100);
+            return;
+        }
+        me.getMontantRecu().focus(true, 100);
+    },
+    /*
+     * Après une action sur le client (sélection, création, annulation de la
+     * fenêtre) : si un second mode de règlement est engagé on revient à
+     * l'encaissement, sinon comportement historique (champ produit).
+     */
+    focusAfterClientAction: function () {
+        const me = this;
+        if (me.getExtraModeReglementId()) {
+            me.focusEncaissement();
+        } else {
+            me.getVnoproduitCombo().focus(true, 100);
+        }
+    },
+    onCancelClientLambda: function () {
+        const me = this;
+        me.closeClientLambdaWindow();
+        if (me._pendingModeNeedsClient && Ext.isEmpty(me.getClient())) {
+            // Annuler pendant un choix de mode nécessitant un client :
+            // on défait tout, comme si le mode n'avait jamais été choisi
+            me._pendingModeNeedsClient = false;
+            me.rollbackModeSelection();
+            return;
+        }
+        me.focusAfterClientAction();
+    },
+    /*
+     * Retour complet à l'état d'avant la sélection du mode de règlement :
+     * combo sur le mode précédent, champ complément mobile masqué et
+     * reverrouillé, bloc chèque/CB masqué, bloc client masqué si aucun
+     * client, montant reçu déverrouillé.
+     */
+    rollbackModeSelection: function () {
+        const me = this;
+        const previous = me._previousTypeReglement || '1';
+        const combo = me.getVnotypeReglement();
+        combo.suspendEvents(false);
+        combo.setValue(previous);
+        combo.resumeEvents();
+        me._appliedTypeReglement = previous;
+        me.resetExtraModeCmp();
+        me.getCbContainer().hide();
+        me.showAndHideInfosStandardClient(false);
+        const recu = me.getMontantRecu();
+        recu.enable();
+        if (previous === '1' || previous === '4' || previous === '6') {
+            recu.setReadOnly(false);
+        }
+        recu.focus(true, 100);
+    },
     updateClientStandard: function (record) {
         const me = this;
+        me._pendingModeNeedsClient = false; // un client est choisi : plus de rollback
         me.client = record;
         me.getNomClient().setValue(record.get('strFIRSTNAME'));
         me.getPrenomClient().setValue(record.get('strLASTNAME'));
@@ -2347,7 +2803,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                 progress.hide();
                 const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    me.getVnoproduitCombo().focus(true, 100);
+                    // Retour contextuel : encaissement si un second mode de
+                    // règlement est engagé, sinon champ produit (historique)
+                    me.focusAfterClientAction();
 
                 } else {
 
@@ -2356,7 +2814,12 @@ Ext.define('testextjs.controller.VenteCtr', {
                         width: 550,
                         msg: result.msg,
                         buttons: Ext.MessageBox.OK,
-                        icon: Ext.MessageBox.ERROR
+                        icon: Ext.MessageBox.ERROR,
+                        fn: function (buttonId) {
+                            if (buttonId === "ok") {
+                                me.focusAfterClientAction();
+                            }
+                        }
 
                     });
                 }
@@ -2382,6 +2845,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         let clientData = result.data;
+                        me._pendingModeNeedsClient = false; // client créé : plus de rollback
                         me.client = new testextjs.model.caisse.ClientLambda(clientData);
                         me.updateClientLambdInfos();
                         me.closeClientLambdaWindow();
@@ -2476,6 +2940,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                         }
                                                     }
                                                     me.refresh();
+                                                    me.autoComputeNetAfterChange();
                                                 }
                                             },
                                             failure: function (response, options) {
@@ -2566,6 +3031,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             }
                         }
                         me.refresh();
+                        me.autoComputeNetAfterChange();
 
                     }
                 },
@@ -2676,6 +3142,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                         return;
                     }
                     cmp.setValue(_typeReglementId);
+                    me._appliedTypeReglement = _typeReglementId;
+                    // setValue ne déclenche pas l'événement select : on
+                    // réapplique l'état d'écran du mode restauré (montant
+                    // forcé/verrouillé, bloc chèque/CB, bouton mobile...)
+                    if (_typeReglementId !== '1' && me.getCurrent()) {
+                        me.typeReglementSelectEvent(cmp);
+                    }
                 }
             });
         }
@@ -2827,7 +3300,14 @@ Ext.define('testextjs.controller.VenteCtr', {
                     };
                     me.netAmountToPay = null;
                     me.ayantDroit = ayantDroit;
-                    me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, me.getTypeReglementToDisplay(reglements), lgREMISEID);
+                    // Vente en attente : pas encore de règlements en base, on
+                    // restaure le mode mémorisé à la mise en attente
+                    let typeReglementARestaurer = me.getTypeReglementToDisplay(reglements);
+                    if ((!reglements || reglements.length === 0) && typeReglementARestaurer === '1') {
+                        typeReglementARestaurer = me.getRememberedPreventeMode(record.lgPREENREGISTREMENTID)
+                                || typeReglementARestaurer;
+                    }
+                    me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeReglementARestaurer, lgREMISEID);
                     me.updateAmountFields((parseInt(intPRICE) - parseInt(intPRICEREMISE)), intPRICEREMISE, intPRICE);
                     if (lgTYPEVENTEID === '2' || lgTYPEVENTEID === '3') {
                         me.loadClientAssurance(client, lgTYPEVENTEID, ayantDroit);
@@ -3033,6 +3513,8 @@ Ext.define('testextjs.controller.VenteCtr', {
     resetAll: function (montantRemis) {
         const me = this;
         me.current = null;
+        me._pendingModeNeedsClient = false;
+        me._appliedTypeReglement = '1';
         me.resetExtraModeCmp();
         if (montantRemis !== undefined) {
             me.getDernierMonnaie().setValue(montantRemis);
@@ -4085,7 +4567,8 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                 const btnAddTp = {
                     xtype: 'button',
-                    text: 'Autre tiers-payant',
+                    text: 'Ajouter une Assurance complémentaire',
+                    icon: 'resources/images/icons/fam/add.png',
                     margin: '35 5 5 5',
                     style: 'background-color:green !important;border-color:green !important; background:green !important;',
                     handler: function (btn) {
@@ -4273,7 +4756,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             fieldLabel: 'TP' + record.order,
                             flex: 1.5,
                             labelWidth: 30,
-                            fieldStyle: "color:blue;",
+                            fieldStyle: "color:blue;font-weight:bold;",
                             value: record.tpFullName,
                             margin: '0 10 0 0'
                         },
@@ -4284,7 +4767,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             labelWidth: 30,
                             name: 'taux' + record.order,
                             itemId: 'taux' + record.order,
-                            fieldStyle: "color:blue;",
+                            fieldStyle: "color:blue;font-weight:bold;",
                             value: record.taux + '%',
                             margin: '0 10 0 0'
                         }]
@@ -4295,9 +4778,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                     layout: {type: 'hbox', align: 'stretch'},
                     items: [{
                             xtype: 'textfield',
-                            fieldLabel: 'Ref.Bon:',
+                            fieldLabel: 'Numéro de bon:',
                             allowBlank: true,
-                            labelWidth: 50,
+                            labelWidth: 100,
                             name: 'refBon' + record.order,
                             itemId: 'refBon' + record.order,
                             flex: 1,
@@ -4313,6 +4796,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         {
                             xtype: 'button',
                             text: 'Retirer',
+                            icon: 'resources/images/icons/fam/delete.png',
                             margin: '0 10 0 0',
                             handler: function (btn) {
                                 const cp = btn.up('fieldcontainer');
@@ -5255,9 +5739,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             icon: Ext.MessageBox.INFO,
                             fn: function (buttonId) {
                                 if (buttonId === "ok") {
-                                    const win = Ext.create('testextjs.view.vente.user.ClientLambda');
-                                    win.add(me.buildLambdaClientGrid());
-                                    win.show();
+                                    me.openClientLambdaSearchWindow();
                                 }
                             }
                         });
@@ -5317,9 +5799,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                 icon: Ext.MessageBox.INFO,
                                 fn: function (buttonId) {
                                     if (buttonId === "ok") {
-                                        const win = Ext.create('testextjs.view.vente.user.ClientLambda');
-                                        win.add(me.buildLambdaClientGrid());
-                                        win.show();
+                                        me.openClientLambdaSearchWindow();
                                     }
                                 }
                             });
@@ -5377,9 +5857,44 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     putToStandBy: function () {
         const me = this;
+        me.rememberPreventeMode();
         me.resetAll();
         me.getVnoproduitCombo().focus(false, 100, function () {
         });
+    },
+    /*
+     * Le mode de règlement d'une vente mise en attente n'est stocké en base
+     * qu'à la clôture (vente_reglement) : on le mémorise donc côté poste
+     * (localStorage) pour le restaurer au rappel. Taille bornée à 30 entrées,
+     * espèces (défaut) non mémorisé.
+     */
+    rememberPreventeMode: function () {
+        const me = this, vente = me.getCurrent();
+        if (!vente) {
+            return;
+        }
+        const mode = me.getVnotypeReglement().getValue();
+        if (!mode || mode === '1') {
+            return;
+        }
+        try {
+            const map = Ext.JSON.decode(window.localStorage.getItem('prestigeModesAttente') || '{}', true) || {};
+            map[vente.lgPREENREGISTREMENTID] = mode;
+            const keys = Object.keys(map);
+            while (keys.length > 30) {
+                delete map[keys.shift()];
+            }
+            window.localStorage.setItem('prestigeModesAttente', Ext.JSON.encode(map));
+        } catch (e) {
+        }
+    },
+    getRememberedPreventeMode: function (venteId) {
+        try {
+            const map = Ext.JSON.decode(window.localStorage.getItem('prestigeModesAttente') || '{}', true) || {};
+            return map[venteId] || null;
+        } catch (e) {
+            return null;
+        }
     },
     oncheckUg: function () {
         const me = this;
@@ -5483,18 +5998,47 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.onBtnCancelModeReglement();
         montantExtra.labelWidth = modeRegelement.libelle.length + 2;
         montantExtra.setFieldLabel(modeRegelement.libelle.toUpperCase());
+        if (me.isMobileMode(me.getVnotypeReglement().getValue())) {
+            // Fractionnement mobile + mobile : on déverrouille la saisie de la part
+            // du mode principal, le complément se calcule dans montantExtra
+            const montantRecu = me.getMontantRecu();
+            montantRecu.setReadOnly(false);
+            montantRecu.setValue(0);
+        } else if (me.getVnotypeReglement().getValue() === '1'
+                && me.getSafeComboValue('getTypeVenteCombo', '1') === '1') {
+            // Espèces + mobile (comptant) : le montant mobile devient saisissable
+            // (pré-rempli avec le complément). Permet le cas « espèces tendues
+            // supérieures à la part due » : la monnaie se rend sur les espèces.
+            montantExtra.setReadOnly(false);
+        }
         me.handleExtraAmountInputValue();
-        me.getMontantRecu().focus(true, 50);
+        if (Ext.isEmpty(me.getClient())) {
+            // La fenêtre « client lié » vient de s'ouvrir : le focus est dans
+            // son champ de recherche ; il reviendra à l'encaissement après le
+            // choix du client (focusAfterClientAction). Ne pas voler le focus
+            // sous la fenêtre modale.
+            return;
+        }
+        me.focusEncaissement();
     },
 
     resetExtraModeCmp: function () {
         const me = this;
         const montantExtra = me.getMontantExtra();
         montantExtra.setFieldLabel('');
+        me._extraAutoSetting = true;
         montantExtra.setValue(null);
+        me._extraAutoSetting = false;
+        montantExtra.setReadOnly(true); // re-verrouille (saisissable seulement en espèces comptant)
         montantExtra.hide();
         me.extraModeReglementId = null;
-        me.getMontantRecu().focus(true, 50);
+        me.extraModeManualAmount = false;
+        me.getBtnExtraMode()?.hide();
+        // Ne pas voler le focus si la fenêtre « client lié » est ouverte
+        // (son champ de recherche doit garder la main)
+        if (!Ext.ComponentQuery.query('clientLambda').length) {
+            me.getMontantRecu().focus(true, 50);
+        }
     },
 
     handleExtraAmountInputValue: function () {
@@ -5503,8 +6047,17 @@ Ext.define('testextjs.controller.VenteCtr', {
             const data = me.getNetAmountToPay();
             const netTopay = data.montantNet;
             const montantRecu = me.getMontantRecu().getValue();
+            // Montant mobile fixé à la main (flux espèces comptant) : on ne
+            // l'écrase plus, on rafraîchit seulement la monnaie affichée
+            if (me.extraModeManualAmount) {
+                const totalSaisie = (parseInt(montantRecu, 10) || 0)
+                        + (parseInt(me.getMontantExtra().getValue(), 10) || 0);
+                me.montantRecuHandler(me, me.getVnotypeReglement().getValue(), totalSaisie, data);
+                return;
+            }
             const montantExtraValue = netTopay - montantRecu;
             const montantExtra = me.getMontantExtra();
+            me._extraAutoSetting = true;
             if (montantExtraValue <= 0) {
                 montantExtra.setValue(0);
                 montantExtra.hide();
@@ -5515,9 +6068,39 @@ Ext.define('testextjs.controller.VenteCtr', {
                 montantExtra.setValue(montantExtraValue);
 
             }
+            me._extraAutoSetting = false;
 
         }
 
+    },
+    /*
+     * Saisie manuelle du montant du second mode (espèces + mobile, comptant) :
+     * le client fixe sa part mobile ; les espèces tendues peuvent dépasser la
+     * part due, la monnaie (total - net) se rend en espèces. Le montant mobile
+     * est plafonné au net (pas de monnaie sur du mobile).
+     */
+    montantExtraChangeListener: function (field) {
+        const me = this;
+        if (me._extraAutoSetting) {
+            return; // écriture programmatique (complément automatique)
+        }
+        if (!me.getExtraModeReglementId() || me.getVnotypeReglement().getValue() !== '1') {
+            return; // saisissable uniquement dans le flux espèces
+        }
+        const data = me.getNetAmountToPay();
+        if (!data) {
+            return;
+        }
+        const netTopay = parseInt(data.montantNet, 10) || 0;
+        const saisie = parseInt(field.getValue(), 10) || 0;
+        if (netTopay > 0 && saisie > netTopay) {
+            field.setValue(netTopay); // re-déclenche le change avec la valeur plafonnée
+            return;
+        }
+        me.extraModeManualAmount = true;
+        // met à jour la monnaie affichée : total saisi (espèces + mobile) vs net
+        const totalSaisie = (parseInt(me.getMontantRecu().getValue(), 10) || 0) + saisie;
+        me.montantRecuHandler(me, '1', totalSaisie, data);
     },
     onBtnCancelModeReglement: function () {
         const me = this;
@@ -5538,17 +6121,26 @@ Ext.define('testextjs.controller.VenteCtr', {
             const montantRecu = me.getMontantRecu().getValue();
             const montantExtra = me.getMontantExtra()?.getValue();
             if (!Ext.isEmpty(extraModeId) && montantExtra) {
+                // Part espèces réellement due = net - part mobile : si les espèces
+                // tendues dépassent (monnaie à rendre), on n'enregistre que la part
+                // due — la monnaie est portée par montantRecu/montantRemis.
+                // Cas exact (total = net) : partEspeces = montantRecu, comme avant.
+                const partEspeces = Math.min(montantRecu, netToPay - montantExtra);
 
                 reglements.push(
                         {
                             "typeReglement": extraModeId,
                             "montant": montantExtra,
-                            "montantAttentu": montantExtra
+                            "montantAttentu": montantExtra,
+                            "montantVerse": montantExtra
                         },
                         {
                             "typeReglement": typeReglement,
-                            "montant": montantRecu,
-                            "montantAttentu": montantRecu
+                            "montant": partEspeces,
+                            "montantAttentu": partEspeces,
+                            // Montant réellement tendu par le client : c'est lui
+                            // qui s'imprime sur le ticket (la monnaie figure en bas).
+                            "montantVerse": montantRecu
                         }
                 );
             } else {
@@ -5561,6 +6153,27 @@ Ext.define('testextjs.controller.VenteCtr', {
                 );
 
             }
+        } else if (me.isMobileMode(typeReglement) && !Ext.isEmpty(me.getExtraModeReglementId())
+                && me.getMontantExtra()?.getValue() && me.getTypeVenteCombo().getValue() === '1') {
+            // Fractionnement mobile + mobile (vente comptant uniquement) :
+            // part du mode principal saisie + complément sur le mode extra
+            const extraModeId = me.getExtraModeReglementId();
+            const montantExtra = me.getMontantExtra().getValue();
+            const montantPrincipal = me.getMontantRecu().getValue();
+            reglements.push(
+                    {
+                        "typeReglement": extraModeId,
+                        "montant": montantExtra,
+                        "montantAttentu": montantExtra,
+                        "montantVerse": montantExtra
+                    },
+                    {
+                        "typeReglement": typeReglement,
+                        "montant": montantPrincipal,
+                        "montantAttentu": montantPrincipal,
+                        "montantVerse": montantPrincipal
+                    }
+            );
         } else {
             reglements.push(
                     {

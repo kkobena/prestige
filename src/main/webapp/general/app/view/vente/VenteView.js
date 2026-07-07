@@ -10,10 +10,12 @@ Ext.define('testextjs.view.vente.VenteView', {
         data: null
     },
     frame: true,
-    width: '97%',
+    /* 99% : évite le scroll horizontal quand l'ascenseur vertical apparaît ;
+     * le fond plat unifié rend l'écart invisible */
+    width: '99%',
     height: 'auto',
     minHeight: 570,
-    cls: 'custompanel',
+    cls: 'custompanel vp-shell vp-focus-zone',
     
     title: 'VENTE AU COMPTANT',
     
@@ -25,6 +27,22 @@ Ext.define('testextjs.view.vente.VenteView', {
             emptyText: 'N° ticket / scan',
             width: 220,
             enableKeyEvents: true,
+            /* contenu présélectionné quand on revient dans le champ
+             * (clic ou F3) : la nouvelle saisie écrase l'ancienne */
+            selectOnFocus: true,
+            listeners: {
+                afterrender: function (f) {
+                    f.inputEl.on('mouseup', function () {
+                        // différé : le mouseup natif replace le curseur et
+                        // annulerait une sélection immédiate
+                        Ext.defer(function () {
+                            if (!f.destroyed) {
+                                f.selectText();
+                            }
+                        }, 10);
+                    });
+                }
+            },
             margin: '0 5 0 0'
         }, /*{
             xtype: 'button',

@@ -1,0 +1,520 @@
+/*
+ * Thème "Direction A" de l'écran de vente (refonte visuelle).
+ * Chargé APRÈS bootstrap.css et header.css : ne fait que surcharger la
+ * présentation. Portée stricte : .vp-shell (enveloppe doventemanager) et
+ * .vp-vente (corps ventevno). Aucune règle ici ne modifie le comportement.
+ *
+ * Les !important répondent à ceux déjà posés par le thème KitchenSink
+ * (dégradés de boutons, x-grid-header-ct, focus .custompanel).
+ */
+
+/* ---------- Palette (alignée sur le header navy de l'application) ----
+ *  navy header  #1e3a5f -> #152d4e (dégradé du header.css)
+ *  fond écran   #ECF1F6   carte #FFFFFF   bord carte #C9D5E1
+ *  bord champ   #A9BACB
+ *  net = rouge, remise = vert, monnaie = bleu (styles inline conservés)
+ */
+
+/* ================= CHROME APPLICATIF ================= */
+
+/* Fond plat autour du contenu : plus d'image de fond visible sur les bords,
+ * ni en haut, ni à gauche, ni dans les coins */
+body,
+body.x-body,
+.x-border-layout-ct {
+    background-image: none !important;
+    background-color: #ECF1F6 !important;
+}
+
+#content-panel-body {
+    background: #ECF1F6 !important;
+}
+
+/* Le thème KitchenSink pose une photo (dd/background.png) sur le conteneur
+ * EXTERNE du panneau central (#content-panel-outerCt) — fond décoratif de
+ * TOUTE l'application. On ne la neutralise QUE sur l'écran de vente (classe
+ * vp-vente-mode posée par le contrôleur au render, retirée au destroy) : le
+ * fond plat #ECF1F6 y remplace la photo. Les autres écrans la conservent. */
+#content-panel.vp-vente-mode #content-panel-outerCt {
+    background-image: none !important;
+}
+
+/* ================= ENVELOPPE (doventemanager) ================= */
+
+/* Cadre du panel : plus de liseré vert, le panel se fond dans le conteneur.
+ * Petite marge pour que les coins arrondis se voient contre le fond, et coins
+ * arrondis sur les 4 angles. */
+.vp-shell.x-panel-default-framed,
+.vp-shell.x-panel-default {
+    background: #ECF1F6 !important;
+    border-color: #ECF1F6 !important;
+    padding: 0 !important;
+    margin: 6px 8px 0 8px !important;
+    border-radius: 12px !important;
+}
+
+/* Bandeau de titre : navy du header de l'application, coins HAUT arrondis */
+.vp-shell > .x-panel-header,
+.vp-shell > .x-panel-header-default,
+.vp-shell > .x-panel-header-default-framed {
+    background: linear-gradient(180deg, #1e3a5f 0%, #152d4e 100%) !important;
+    border-color: #152d4e !important;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-right: 14px;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+}
+
+/* Le bandeau navy peut masquer les coins arrondis du header (fond opaque) :
+ * on arrondit aussi son conteneur interne */
+.vp-shell > .x-panel-header .x-box-inner {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+/* Bouton VENTES EN ATTENTE : marge à droite pour ne jamais toucher le bord
+ * (dernier bouton du bandeau ; itemId ExtJS != id DOM, on cible le dernier
+ * bouton du header) */
+.vp-shell > .x-panel-header .x-toolbar-item:last-child,
+.vp-shell > .x-panel-header .x-box-item:last-child {
+    margin-right: 6px !important;
+}
+
+.vp-shell > .x-panel-header .x-panel-header-text,
+.vp-shell > .x-panel-header .x-header-text {
+    color: #FFFFFF;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+/* Fond général : uniforme du haut en bas, les cartes blanches ressortent */
+.vp-shell > .x-panel-body,
+.vp-shell > .x-panel-body-default,
+.vp-shell > .x-panel-body-default-framed {
+    background: #ECF1F6 !important;
+    border-color: #ECF1F6 !important;
+}
+
+/* Le corps ventevno et ses colonnes laissent voir le fond commun :
+ * plus de bande blanche derrière les sections */
+.vp-vente,
+.vp-vente > .x-panel-body,
+.vp-vente > .x-panel-body-default {
+    background: transparent !important;
+    border: 0 !important;
+}
+
+/* Bandeau type / nature / vendeur : carte à liseré navy */
+.vp-shell > .x-panel-body > .x-fieldset {
+    background: #FFFFFF;
+    border: 1px solid #C9D5E1;
+    border-left: 5px solid #1e3a5f;
+    border-radius: 8px;
+    padding: 6px 12px 8px;
+    margin-bottom: 12px;
+}
+
+/* L'écran de vente remplit toute la hauteur du panneau central : le fond
+ * du panel descend jusqu'en bas, quel que soit le mode (comptant/crédit) */
+#content-panel-body:has(> .vp-shell) {
+    display: flex !important;
+    flex-direction: column;
+}
+
+#content-panel-body:has(> .vp-shell) > .vp-shell {
+    flex: 1 0 auto;
+}
+
+/* ================= CARTES (fieldsets du corps) ================= */
+
+.vp-vente .x-fieldset {
+    background: #FFFFFF;
+    border: 1px solid #C9D5E1;
+    border-radius: 8px;
+    padding: 8px 12px 10px;
+    margin: 0 0 12px 0;
+    box-shadow: 0 1px 4px rgba(21, 45, 78, .10);
+}
+
+.vp-vente .x-fieldset-header,
+.vp-vente .x-fieldset legend {
+    padding: 0 6px;
+}
+
+/* Légendes : navy, petites capitales */
+.vp-shell .x-fieldset-header-text,
+.vp-shell .x-fieldset legend span,
+.vp-shell .x-fieldset legend span span {
+    font-size: 11px !important;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #1e3a5f !important;
+}
+
+/* Les fonds "historiques" deviennent neutres dans l'écran refondu */
+.vp-vente .x-fieldset.background_gray {
+    background: #FFFFFF;
+}
+
+/* Blocs assurance compacts : padding réduit pour gagner en hauteur */
+.vp-vente .x-fieldset.vp-assur-card {
+    padding: 2px 10px 4px;
+}
+
+/* Infos tiers payants : le fond bleuté couvre TOUTE la section */
+.vp-vente .x-fieldset.vp-tp-card,
+.vp-vente .x-fieldset.vp-tp-card .x-fieldset-body,
+.vp-vente .x-fieldset.vp-tp-card .x-panel-body,
+.vp-vente .x-fieldset.vp-tp-card .x-form-body {
+    background: #F0F8FF !important;
+}
+
+/* ================= RAIL DE PAIEMENT (colonne droite) ================= */
+
+.vp-vente .vp-col-right .x-fieldset.background_green,
+.vp-vente .x-fieldset.vp-paycard {
+    background: #F3F7FB;
+    border: 1px solid #B9CBDD;
+    border-top: 4px solid #1e3a5f;
+    box-shadow: 0 2px 10px rgba(21, 45, 78, .14);
+}
+
+/* Séparateurs internes du rail : remplace le liseré violet historique */
+.vp-vente .vp-paycard .x-container[style*="border-bottom"] {
+    border-bottom-color: #C9D5E1 !important;
+}
+
+/* ================= GRILLE DES ARTICLES ================= */
+
+/* En-tête navy assorti au bandeau (le thème pose un dégradé !important) */
+.vp-vente .x-grid-header-ct {
+    background: linear-gradient(180deg, #1e3a5f 0%, #152d4e 100%) !important;
+    border: 1px solid #152d4e !important;
+    border-radius: 8px 8px 0 0;
+}
+
+.vp-vente .x-column-header {
+    background: transparent !important;
+    background-image: none !important;
+    border-right-color: rgba(255, 255, 255, .14);
+}
+
+.vp-vente .x-column-header,
+.vp-vente .x-column-header-text {
+    color: #EDF3F9 !important;
+}
+
+.vp-vente .x-column-header-inner {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+/* Survol des entêtes : fond navy éclairci, texte toujours blanc (le thème
+ * KitchenSink passait le fond en blanc → texte illisible) */
+.vp-vente .x-column-header-over,
+.vp-vente .x-column-header-open {
+    background: #2C4D78 !important;
+    background-image: none !important;
+}
+
+.vp-vente .x-column-header-over .x-column-header-text,
+.vp-vente .x-column-header-open .x-column-header-text {
+    color: #FFFFFF !important;
+}
+
+.vp-vente .x-column-header-text {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.vp-vente .x-grid-cell {
+    padding: 7px 8px;
+    font-size: 12.5px;
+    border-bottom: 1px solid #E5EBF1;
+}
+
+.vp-vente .x-grid-row-alt .x-grid-cell {
+    background-color: #F5F8FB;
+}
+
+.vp-vente .x-grid-row-over .x-grid-cell {
+    background-color: #E3EEF9;
+}
+
+/* Bouton supprimer de la ligne : icône plus grande, bien visible */
+.vp-vente .x-action-col-cell img,
+.vp-vente .x-action-col-icon {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Montants alignés : chiffres tabulaires */
+.vp-vente .x-grid-cell-inner,
+.vp-vente .x-form-display-field,
+.vp-vente input.x-form-field {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ================= CHAMPS DE SAISIE ================= */
+
+/* Contours nets, sans déformation : rayon discret identique champ/trigger,
+ * focus par couleur seulement (pas de changement d'épaisseur) */
+.vp-vente input.x-form-text,
+.vp-vente input.x-form-field {
+    border: 1px solid #A9BACB;
+    border-radius: 3px;
+    background-image: none;
+}
+
+.vp-vente .x-form-trigger-wrap {
+    border-radius: 3px;
+}
+
+/* Champ actif : turquoise historique + battement de cœur ACCENTUÉ,
+ * visible de loin. Le halo extérieur est souvent rogné par les
+ * conteneurs ExtJS : c'est donc tout l'intérieur du champ qui flashe
+ * en clair à chaque pulsation (ombre interne, insensible au rognage),
+ * en plus du halo extérieur quand la place le permet. */
+/* ============================================================
+ * BATTEMENT DU CHAMP ACTIF — effet réutilisable « vp-focus-beat »
+ * Pour l'activer sur un écran : ajouter la classe  vp-focus-zone
+ * au composant racine de l'écran (config cls). Actuellement actif
+ * sur : écran de vente (VenteView/VenteVNO), fiche article
+ * (FamilleManager), saisie de commande (commandemanagement/order/
+ * action/add).
+ * ============================================================ */
+
+/* Le halo extérieur doit se voir sur les QUATRE bordures : on lève le
+ * rognage (overflow hidden) de toute la chaîne de conteneurs ExtJS
+ * autour des champs — box layouts, fieldsets, colonnes. L'en-tête et
+ * la vue de la grille sont exclus (leur rendu repose sur le rognage),
+ * le défilement du panneau central (x-panel-body auto) est préservé. */
+.vp-focus-zone .x-box-inner,
+.vp-focus-zone .x-form-item-body,
+.vp-focus-zone .x-fieldset-body,
+.vp-focus-zone fieldset.x-fieldset,
+.vp-focus-zone .x-box-layout-ct:not(.x-grid-header-ct) {
+    overflow: visible !important;
+}
+
+/* L'input lui-même est en overflow:clip chez Neptune : sans effet sur le
+ * box-shadow, mais on le garde tel quel (le texte doit rester rogné) */
+
+@keyframes vp-focus-beat {
+    0% {
+        box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0),
+                    0 0 0 0 rgba(13, 233, 202, .95);
+    }
+    18% {
+        box-shadow: inset 0 0 0 999px rgba(255, 255, 255, .60),
+                    0 0 0 9px rgba(13, 233, 202, .50);
+    }
+    32% {
+        box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0),
+                    0 0 0 3px rgba(13, 233, 202, .90);
+    }
+    52% {
+        box-shadow: inset 0 0 0 999px rgba(255, 255, 255, .60),
+                    0 0 0 14px rgba(13, 233, 202, 0);
+    }
+    100% {
+        box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0),
+                    0 0 0 0 rgba(13, 233, 202, 0);
+    }
+}
+
+.vp-focus-zone .x-form-field:not(.x-form-checkbox):focus {
+    background: #0de9ca !important;
+    border: 1px solid #7FC6BC !important;
+    font-weight: 700;
+    animation: vp-focus-beat 1.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vp-focus-zone .x-form-field:not(.x-form-checkbox):focus {
+        animation: none;
+        box-shadow: 0 0 0 4px rgba(13, 233, 202, .55);
+    }
+}
+
+/* Champ montant reçu : déjà 44px via styles inline ; contour renforcé
+ * (ciblage par cls composant, l'itemId ExtJS n'est pas l'id DOM) */
+.vp-vente .vp-field-recu input.x-form-field {
+    border: 2px solid #152d4e;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.25em;
+}
+
+.vp-vente .vp-field-recu input.x-form-field[readonly] {
+    border-style: dashed;
+    border-color: #A9BACB;
+    background: #F2F5F8;
+}
+
+/* Champ du second mode (mobile associé) : même cadre arrondi que MONTANT
+ * RECU, intérieur orange clair = part mobile saisissable */
+.vp-vente .vp-field-extra input.x-form-field {
+    border: 2px solid #152d4e;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.1em;
+    background: #FFE3B3;
+}
+
+/* Verrouillé (fractionné mobile + mobile) : aspect estompé, non saisissable */
+.vp-vente .vp-field-extra input.x-form-field[readonly] {
+    border-style: dashed;
+    border-color: #A9BACB;
+    background: #F2F5F8;
+    font-weight: 400;
+}
+
+/* Section produit fusionnée (recherche + stock/rayon) : teinte légère
+ * dans la gamme du thème */
+.vp-vente .vp-produit-card {
+    background: #EAF1F8 !important;
+}
+
+.vp-vente .vp-produit-card .x-fieldset-body {
+    background: transparent !important;
+    /* section compacte : la zone produit doit rester basse */
+    padding: 4px 10px 4px 10px !important;
+}
+
+/* Badge TOTAL dans la barre de la grille : montant sur fond navy,
+ * centré dans le badge, badge aligné verticalement sur son libellé */
+.vp-vente .vp-total-badge .x-form-display-field {
+    background: #152D4E;
+    color: #FFFFFF !important;
+    padding: 3px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.35em;
+    line-height: 1.25;
+    display: block;
+    text-align: center;
+}
+
+.vp-vente .vp-total-badge .x-form-item-label {
+    line-height: 27px;
+}
+
+/* Lignes de la grille des articles : texte gras, hauteur nettement
+ * réduite. Le thème impose font:13px/15px + padding 5/4 sur la cellule :
+ * on force line-height et padding (!important) pour compacter réellement.
+ * Pagination inchangée : 10 lignes par page. */
+.vp-vente .x-grid-cell {
+    font-weight: 700;
+    line-height: 16px !important;
+    /* le thème pose 7px de padding vertical sur le <td> : c'est lui qui
+     * gonflait la ligne (padding cellule + contenu ≈ 39px) */
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
+
+.vp-vente .x-grid-cell-inner {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    line-height: 16px !important;
+    font-size: 0.9em;
+}
+
+/* Icône de suppression : évite qu'elle réimpose une hauteur de ligne */
+.vp-vente .x-grid-cell-inner-action-col {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+}
+
+/* Colonne QD : bleu + gras pour sauter aux yeux */
+.vp-vente .x-grid-cell.vp-col-qd,
+.vp-vente .x-grid-cell.vp-col-qd .x-grid-cell-inner {
+    color: #0D47A1 !important;
+    font-weight: 800 !important;
+}
+
+/* Bouton "Associer un autre paiement mobile" : appel discret en pointillé
+ * navy ; à son apparition, trois pulsations douces signalent qu'il vient
+ * de s'activer, puis il se stabilise. Le survol garde l'invitation. */
+@keyframes vp-btn-intro {
+    0% {
+        background-color: #FFFFFF;
+        box-shadow: 0 0 0 0 rgba(13, 233, 202, .45);
+    }
+    45% {
+        background-color: #DDFAF4;
+        box-shadow: 0 0 0 5px rgba(13, 233, 202, 0);
+    }
+    100% {
+        background-color: #FFFFFF;
+        box-shadow: 0 0 0 0 rgba(13, 233, 202, 0);
+    }
+}
+
+.vp-vente .vp-btn-extra {
+    border: 1.5px dashed #1e3a5f !important;
+    border-radius: 7px !important;
+    /* pas de !important : les keyframes de l'intro doivent pouvoir animer le fond */
+    background: #FFFFFF;
+    box-shadow: none;
+    animation: vp-btn-intro 1.1s ease-out 3;
+}
+
+.vp-vente .vp-btn-extra:hover {
+    background: #E4FBF6;
+    border-color: #0F6B56 !important;
+}
+
+.vp-vente .vp-btn-extra .x-btn-inner {
+    color: #1e3a5f;
+    font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vp-vente .vp-btn-extra {
+        animation: none;
+    }
+}
+
+/* ================= PILE D'ACTIONS DU RAIL ================= */
+
+/* Les couleurs des boutons restent celles du thème de l'application
+ * (btn-primary / btn-primarya / btn-secondary) : seulement l'espacement */
+.vp-vente .vp-actions {
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+
+.vp-vente .vp-actions .x-btn {
+    margin: 0 0 7px 0;
+}
+
+.vp-vente .vp-actions .x-btn .x-btn-inner {
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+
+/* Icônes des boutons d'action agrandies (16 → 24 px) */
+.vp-vente .vp-actions .x-btn .x-btn-icon-el {
+    width: 24px !important;
+    height: 24px !important;
+    background-size: 24px 24px !important;
+}
+
+/* RETOUR : couleur propre (ambre), distincte des actions de validation */
+.vp-vente .vp-actions .x-btn.btn-secondary {
+    background: linear-gradient(145deg, #f5a623, #d97f06) !important;
+    border: 1px solid rgba(0, 0, 0, .15) !important;
+}
+
+.vp-vente .vp-actions .x-btn.btn-secondary .x-btn-inner {
+    color: #FFFFFF !important;
+    font-weight: 800;
+}
