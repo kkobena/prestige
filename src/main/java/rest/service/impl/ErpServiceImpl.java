@@ -14,6 +14,7 @@ import commonTasks.dto.ErpFournisseur;
 import commonTasks.dto.ErpReglementDTO;
 import commonTasks.dto.ErpTiersPayant;
 import commonTasks.dto.ErpTiersPayantDTO;
+import commonTasks.dto.ProduitExtraInfoDTO;
 import commonTasks.dto.StockDailyValueDTO;
 import commonTasks.ws.ClientTiersPayantDTO;
 import commonTasks.ws.CustomerDTO;
@@ -27,6 +28,7 @@ import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TDossierReglement;
 import dal.TFacture;
+import dal.TFamilleStock;
 import dal.TGroupeTierspayant;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TReglement;
@@ -49,6 +51,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -61,6 +64,7 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import rest.service.ErpService;
+import rest.service.ProduitExtraInfoService;
 import util.DateConverter;
 import util.DateUtil;
 import static util.DateUtil.convertStringToDate;
@@ -76,6 +80,8 @@ public class ErpServiceImpl implements ErpService {
     private static final Logger LOG = Logger.getLogger(ErpServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private ProduitExtraInfoService produitExtraInfoService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -379,13 +385,39 @@ public class ErpServiceImpl implements ErpService {
         } else {
             nom = nom.toUpperCase() + "%";
         }
-        System.err.println("checkproduit " + nom);
-        TypedQuery<ErProduitDTO> q = getEntityManager().createQuery(
-                "SELECT new commonTasks.dto.ErProduitDTO(o) FROM TFamilleStock o WHERE o.strSTATUT='enable' AND "
+        TypedQuery<TFamilleStock> q = getEntityManager().createQuery(
+                "SELECT o FROM TFamilleStock o WHERE o.strSTATUT='enable' AND "
                         + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND o.lgFAMILLEID.strSTATUT='enable'  ",
-                ErProduitDTO.class);
+                TFamilleStock.class);
         q.setParameter(1, nom);
-        return q.getResultList();
+        List<ErProduitDTO> datas = new ArrayList<>();
+        q.getResultList().forEach(fs -> {
+            ErProduitDTO dto = new ErProduitDTO(fs);
+            enrichirCheckProduit(dto, fs);
+            datas.add(dto);
+        });
+        return datas;
+    }
+
+    /**
+     * Complete les infos produit du checkproduit via le service partage (derniere vente, dernier achat, dernier
+     * inventaire, code geo, classe ABC et stock reserve avec ses seuils si le produit est en reserve).
+     */
+    private void enrichirCheckProduit(ErProduitDTO dto, TFamilleStock fs) {
+        String emplacementId = fs.getLgEMPLACEMENTID() != null ? fs.getLgEMPLACEMENTID().getLgEMPLACEMENTID() : null;
+        ProduitExtraInfoDTO extra = produitExtraInfoService.getExtraInfo(fs.getLgFAMILLEID().getLgFAMILLEID(),
+                emplacementId);
+        dto.setDateDerniereVente(extra.getDateDerniereVente());
+        dto.setQteDerniereVente(extra.getQteDerniereVente());
+        dto.setDateDernierAchat(extra.getDateDernierAchat());
+        dto.setQteDernierAchat(extra.getQteDernierAchat());
+        dto.setDateDernierInventaire(extra.getDateDernierInventaire());
+        dto.setQteDernierInventaire(extra.getQteDernierInventaire());
+        dto.setCodeGeoArticle(extra.getCodeGeoArticle());
+        dto.setClasse(extra.getClasse());
+        dto.setStockReserve(extra.getStockReserve());
+        dto.setSeuilReserve(extra.getSeuilReserve());
+        dto.setSeuilMiniRayon(extra.getSeuilMiniRayon());
     }
 
     @Override
