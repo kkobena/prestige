@@ -49,6 +49,10 @@ Ext.define('testextjs.controller.ArticleInvendusCtr', {
         {
             ref: 'stockFiltre',
             selector: 'stockmort #stockFiltre'
+        },
+        {
+            ref: 'nombreMois',
+            selector: 'stockmort #nombreMois'
         }
 
 
@@ -86,6 +90,8 @@ Ext.define('testextjs.controller.ArticleInvendusCtr', {
             'stockmort #query': {
                 specialkey: this.onQuery
             }, 'stockmort #stock': {
+                specialkey: this.onQuery
+            }, 'stockmort #nombreMois': {
                 specialkey: this.onQuery
             },
             'stockmort #stockFiltre': {
@@ -189,7 +195,8 @@ Ext.define('testextjs.controller.ArticleInvendusCtr', {
             codeRayon: null,
             codeFamile: null,
             stock: 0,
-            stockFiltre: null
+            stockFiltre: null,
+            nombreMois: 0
 
         };
         var codeRayon = me.getRayons().getValue();
@@ -206,6 +213,7 @@ Ext.define('testextjs.controller.ArticleInvendusCtr', {
         myProxy.setExtraParam('query', query);
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
+        myProxy.setExtraParam('nombreMois', me.getNombreMois().getValue() || 0);
     },
     doInitStore: function () {
         var me = this;
@@ -217,6 +225,15 @@ Ext.define('testextjs.controller.ArticleInvendusCtr', {
     },
     doSearch: function () {
         var me = this;
+        var nombreMois = me.getNombreMois().getValue() || 0;
+        // Si un nombre de mois est saisi, il pilote la periode : on veut les produits
+        // non vendus dont la derniere entree remonte a N mois (ou plus) jusqu'a aujourd'hui.
+        if (nombreMois > 0) {
+            var auj = new Date();
+            var debut = Ext.Date.add(auj, Ext.Date.MONTH, -nombreMois);
+            me.getDtStart().setValue(debut);
+            me.getDtEnd().setValue(auj);
+        }
         var codeRayon = me.getRayons().getValue();
         var codeGrossiste = me.getGrossiste().getValue();
         var query = me.getQuery().getValue(),
@@ -237,7 +254,8 @@ Ext.define('testextjs.controller.ArticleInvendusCtr', {
                 codeGrossiste: codeGrossiste,
                 stockFiltre: stockFiltre,
                 stock: stock,
-                codeFamile: codeFamile
+                codeFamile: codeFamile,
+                nombreMois: nombreMois
 
             }
         });

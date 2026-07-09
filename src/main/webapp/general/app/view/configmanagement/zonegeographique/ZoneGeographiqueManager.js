@@ -203,6 +203,12 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                     iconCls: 'pills',
                     scope: this,
                     handler: this.onbasculer
+                }, '-', {
+                    text: 'Imprimer',
+                    tooltip: 'Imprimer la feuille de comptage (portrait)',
+                    iconCls: 'printable',
+                    scope: this,
+                    handler: this.onPrintClick
                 }
 
 
@@ -393,6 +399,47 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
 
             parentview: this,
             titre: "Gestion des emplacements"
+        });
+    },
+    // Edition PDF (JasperReports rp_emplacements_comptage.jrxml) : feuille de comptage.
+    // Au clic, on demande le tri souhaite : par Code ou par Nom d'emplacement.
+    onPrintClick: function () {
+        var me = this;
+        Ext.Msg.show({
+            title: 'Impression - Choix du tri',
+            msg: 'Trier la liste des emplacements par :',
+            buttons: Ext.Msg.YESNOCANCEL,
+            buttonText: {yes: 'Code', no: 'Nom', cancel: 'Annuler'},
+            icon: Ext.Msg.QUESTION,
+            fn: function (btn) {
+                if (btn === 'yes') {
+                    me.genererPdfEmplacements('code');
+                } else if (btn === 'no') {
+                    me.genererPdfEmplacements('nom');
+                }
+            }
+        });
+    },
+    genererPdfEmplacements: function (tri) {
+        var progress = Ext.MessageBox.wait('Generation du PDF . . .', 'Veuillez patienter');
+        Ext.Ajax.request({
+            url: '../api/v1/emplacements/pdf',
+            method: 'GET',
+            params: {tri: tri},
+            timeout: 2400000,
+            success: function (resp) {
+                progress.hide();
+                var r = Ext.JSON.decode(resp.responseText, true);
+                if (r && r.success && r.url) {
+                    window.open(r.url);
+                } else {
+                    Ext.MessageBox.alert('Impression', "La generation du PDF n'a pas abouti.");
+                }
+            },
+            failure: function () {
+                progress.hide();
+                Ext.MessageBox.alert('Impression', "La generation du PDF a echoue.");
+            }
         });
     }
 });

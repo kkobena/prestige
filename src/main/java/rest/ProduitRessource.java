@@ -30,8 +30,15 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import commonTasks.dto.ArticleDTO;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import rest.service.MvtProduitService;
 import rest.service.ProduitService;
+import rest.service.ReserveService;
+import rest.service.SuggestionService;
 import rest.service.dto.CreationProduitDTO;
 import util.DateConverter;
 import util.Constant;
@@ -51,6 +58,10 @@ public class ProduitRessource {
     ProduitService produitService;
     @EJB
     MvtProduitService mvtProduitService;
+    @EJB
+    SuggestionService suggestionService;
+    @EJB
+    ReserveService reserveService;
 
     @GET
     @Path("produit-desactives")
@@ -344,6 +355,53 @@ public class ProduitRessource {
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
 
         return Response.ok().entity(jsono.toString()).build();
+    }
+
+    // Suivi UG : produits ayant du stock d'unites gratuites (intUG > 0)
+    @GET
+    @Path("suivi-ug")
+    public Response suiviUg(@QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok().entity(produitService.suiviUg(tu, query, start, limit).toString()).build();
+    }
+
+    // Suivi UG : generer une suggestion a partir des produits a UG
+    @GET
+    @Path("suivi-ug/suggestion")
+    public Response suiviUgSuggestion(@QueryParam(value = "query") String query) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject jsono = suggestionService
+                .makeSuggestionFromArticleInvendus(produitService.suiviUgArticles(tu, query), tu);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    // Suivi UG : creer un inventaire nomme "Inventaire unites gratuites du ..." a partir des produits a UG
+    @GET
+    @Path("suivi-ug/create-inventaire")
+    public Response suiviUgInventaire(@QueryParam(value = "query") String query) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        Set<String> ids = new LinkedHashSet<>();
+        for (ArticleDTO a : produitService.suiviUgArticles(tu, query)) {
+            if (a.getId() != null && !a.getId().isEmpty()) {
+                ids.add(a.getId());
+            }
+        }
+        String titre = "Inventaire unites gratuites du " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date());
+        JSONObject json = reserveService.createInventaireFromSelection(tu, ids, null, titre);
+        return Response.ok().entity(json.toString()).build();
     }
 
     @GET
