@@ -15,6 +15,15 @@ Ext.util.Format.thousandSeparator = '.';
 function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
 }
+/* reference alphanumerique de 4 caracteres par defaut (modifiable par l'utilisateur) */
+function generateMvtCaisseReference() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var ref = '';
+    for (var i = 0; i < 4; i++) {
+        ref += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return ref;
+}
 
 Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
     extend: 'Ext.window.Window',
@@ -110,7 +119,9 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
                                     fieldLabel: 'Reference',
 //                            flex: 1,
                                     emptyText: 'Reference',
-                                    allowBlank: false
+                                    allowBlank: false,
+                                    /* generee automatiquement, l'utilisateur peut la modifier */
+                                    value: generateMvtCaisseReference()
                                 }
 
                             ]
@@ -312,12 +323,12 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
                                 {
                                     xtype: 'textareafield',
                                     grow: true,
-                                    maxLength: 50,
+                                    maxLength: 200,
                                     name: 'str_COMMENTAIRE_MOUVEMENT',
                                     fieldLabel: 'Commentaire',
                                     id: 'str_COMMENTAIRE_MOUVEMENT',
                                     anchor: '100%',
-                                    emptyText: 'Saisir 50 lettres maximun'
+                                    emptyText: 'Saisir 200 lettres maximun'
                                 }
 
 

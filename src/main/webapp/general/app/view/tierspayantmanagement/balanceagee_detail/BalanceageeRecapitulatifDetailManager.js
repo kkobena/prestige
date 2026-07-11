@@ -52,8 +52,16 @@ Ext.define('testextjs.view.tierspayantmanagement.balanceagee_detail.BalanceageeR
             this.title = "Balance ag&eacute;e d&eacute;taill&eacute;e de la periode du " + this.getOdatasource().str_PERIOD;
             valdatedebut = this.getOdatasource().dt_DEBUT;
             valdatefin = this.getOdatasource().dt_FIN;
-           
 
+
+        } else {
+            /* ouverture directe par le menu : on repart de filtres vierges
+             * (les variables globales gardaient les valeurs de la
+             * navigation precedente) */
+            lg_TIERS_PAYANT_ID = "";
+            lg_COMPTE_CLIENT_ID = "";
+            valdatedebut = "";
+            valdatefin = "";
         }
 
 
@@ -358,6 +366,33 @@ Ext.define('testextjs.view.tierspayantmanagement.balanceagee_detail.BalanceageeR
                     },
                     {
                         xtype: 'button',
+                        text: 'Exporter CSV',
+                        tooltip: 'Exporter la balance ag&eacute;e d&eacute;taill&eacute;e en CSV',
+                        iconCls: 'export_csv_icon',
+                        scope: this,
+                        handler: this.onExportCsvClick
+                    },
+                    {
+                        xtype: 'button',
+                        text: 'Exporter EXCEL',
+                        tooltip: 'Exporter la balance ag&eacute;e d&eacute;taill&eacute;e en Excel',
+                        iconCls: 'export_excel_icon',
+                        scope: this,
+                        handler: this.onExportExcelClick
+                    },
+                    {
+                        xtype: 'button',
+                        text: 'Imprimer',
+                        tooltip: 'Imprimer la balance ag&eacute;e d&eacute;taill&eacute;e',
+                        iconCls: 'printable',
+                        scope: this,
+                        handler: this.onImprimerClick
+                    },
+                    {
+                        xtype: 'tbseparator'
+                    },
+                    {
+                        xtype: 'button',
                         text: 'Retour',
                         iconCls: 'icon-clear-group',
                         scope: this,
@@ -387,6 +422,22 @@ Ext.define('testextjs.view.tierspayantmanagement.balanceagee_detail.BalanceageeR
         });
     },
     onStoreLoad: function () {
+    },
+    buildExportParams: function () {
+        var searchValue = Ext.getCmp('rechecher') ? Ext.getCmp('rechecher').getValue() : '';
+        var tiersPayantId = Ext.getCmp('lg_TIERS_PAYANT_ID') ? Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() : '';
+        return 'search_value=' + encodeURIComponent(searchValue || '')
+                + '&lg_TIERS_PAYANT_ID=' + encodeURIComponent(tiersPayantId || '')
+                + '&datedebut=' + (valdatedebut || '') + '&datefin=' + (valdatefin || '');
+    },
+    onExportCsvClick: function () {
+        window.location = '../api/v1/balance-agee/detail/csv?' + this.buildExportParams();
+    },
+    onExportExcelClick: function () {
+        window.location = '../api/v1/balance-agee/detail/excel?' + this.buildExportParams();
+    },
+    onImprimerClick: function () {
+        window.open('../api/v1/balance-agee/detail/pdf?' + this.buildExportParams());
     },
     onbtnback: function () {
         var xtype = "";
