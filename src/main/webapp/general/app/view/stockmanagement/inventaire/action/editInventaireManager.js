@@ -857,15 +857,35 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                 store: store_inventaire_famille,
                                 displayInfo: true,
                                 plugins: new Ext.ux.ProgressBarPager(),
-                                items: ['-', {
-                                        /* si coche, le stock machine apparait a l'impression de la
-                                         * fiche ET de la liste des ecarts (meme comportement que le
-                                         * privilege 'Affiche colonne stock machine lors de l'inventaire') */
-                                        xtype: 'checkboxfield',
+                                prependButtons: true,
+                                items: [{
+                                        /* bouton a bascule (le rendu des cases a cocher n'est pas
+                                         * fiable dans cette barre) : si actif, le stock machine
+                                         * apparait a l'impression de la fiche ET de la liste des
+                                         * ecarts, comme le privilege 'Affiche colonne stock
+                                         * machine lors de l'inventaire' */
+                                        xtype: 'button',
                                         id: 'chk_show_stock_print',
-                                        boxLabel: '<span style="color:#0000CC;font-weight:bold;">Afficher stock</span>',
-                                        checked: false
-                                    }],
+                                        enableToggle: true,
+                                        pressed: false,
+                                        icon: 'resources/images/icons/fam/cross.gif',
+                                        text: '<span style="color:#0000CC;font-weight:bold;">Afficher stock : NON</span>',
+                                        toggleHandler: function (btn, pressed) {
+                                            btn.setIcon(pressed ? 'resources/images/icons/fam/accept.png'
+                                                    : 'resources/images/icons/fam/cross.gif');
+                                            btn.setText('<span style="color:#0000CC;font-weight:bold;">Afficher stock : '
+                                                    + (pressed ? 'OUI' : 'NON') + '</span>');
+                                        },
+                                        /* meme API que la case a cocher pour l'impression et
+                                         * l'initialisation selon le privilege */
+                                        getValue: function () {
+                                            return this.pressed === true;
+                                        },
+                                        setValue: function (val) {
+                                            this.toggle(val === true);
+                                            return this;
+                                        }
+                                    }, '-'],
                                 listeners: {
 
                                     change: function (item, layout) {
