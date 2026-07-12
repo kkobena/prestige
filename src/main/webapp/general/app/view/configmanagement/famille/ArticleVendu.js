@@ -714,7 +714,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVendu', {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    var msg = 'Nombre de produits en compte : ' + result.count;
+                    var msg = 'Nombre de produits suggérés : ' + result.count;
                     if (result.ignores && result.ignores > 0) {
                         msg += '<br/><b>Produits ignorés : ' + result.ignores + '</b>';
                         if (result.detailIgnores && result.detailIgnores.length > 0) {
