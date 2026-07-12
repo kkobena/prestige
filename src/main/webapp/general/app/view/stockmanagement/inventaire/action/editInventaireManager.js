@@ -869,7 +869,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                         enableToggle: true,
                                         pressed: false,
                                         icon: 'resources/images/icons/fam/cross.gif',
-                                        text: '<span style="color:#0000CC;font-weight:bold;">Afficher stock : NON</span>',
+                                        text: '<span style="color:#0000CC;font-weight:bold;">Afficher stock PDF: NON</span>',
                                         toggleHandler: function (btn, pressed) {
                                             btn.setIcon(pressed ? 'resources/images/icons/fam/accept.png'
                                                     : 'resources/images/icons/fam/cross.gif');
