@@ -672,11 +672,11 @@ public class InvoiceServlet extends HttpServlet {
 
             if (oTOfficine.getStrPHONE() != null) {
                 String finalphonestring = oTOfficine.getStrPHONE() != null
-                        ? "Tel: " + conversion.PhoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
+                        ? "Tel: " + util.DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
                 if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
                     String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
                     for (String va : phone) {
-                        finalphonestring += " / " + conversion.PhoneNumberFormat(va);
+                        finalphonestring += " / " + util.DateConverter.phoneNumberFormat(va);
                     }
                 }
 
@@ -693,9 +693,7 @@ public class InvoiceServlet extends HttpServlet {
 
             parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
             parameters.put("P_FOOTER_RC", P_FOOTER_RC);
-            parameters.put("P_CODE_POSTALE",
-                    (OTiersPayant.getStrADRESSE() != null && !"".equals(OTiersPayant.getStrADRESSE()))
-                            ? OTiersPayant.getStrADRESSE() : "");
+            parameters.put("P_CODE_POSTALE", util.StringUtils.normalizePhone(OTiersPayant.getStrADRESSE()));
             parameters.put("P_COMPTE_CONTRIBUABLE",
                     (OTiersPayant.getStrCOMPTECONTRIBUABLE() != null
                             && !"".equals(OTiersPayant.getStrCOMPTECONTRIBUABLE()))

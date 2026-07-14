@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +30,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -607,28 +607,42 @@ public class SuggestionImpl implements SuggestionService {
 
     private int verifierProduitDansSuggestion(TFamille famille) {
         try {
+            // Seules comptent les lignes dont la suggestion parente est encore en statut "auto" (non ouverte) :
+            // - produit dans une suggestion auto non traitée -> sa quantité est mise à jour dans cette suggestion ;
+            // - suggestion prise en main par un utilisateur (statut pending) -> ses produits redeviennent
+            // suggérables et une NOUVELLE suggestion auto est créée à la prochaine vente (comportement métier
+            // historique de l'écran Suggestion).
             TypedQuery<TSuggestionOrderDetails> q = getEmg().createQuery(
-                    "SELECT o FROM TSuggestionOrderDetails o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND ( o.strSTATUT=?2 OR o.strSTATUT=?3 OR o.strSTATUT=?4  ) ",
+                    "SELECT o FROM TSuggestionOrderDetails o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND ( o.strSTATUT=?2 OR o.strSTATUT=?3 ) AND o.lgSUGGESTIONORDERID.strSTATUT = ?4 ",
                     TSuggestionOrderDetails.class);
             q.setParameter(1, famille.getLgFAMILLEID());
             q.setParameter(2, STATUT_AUTO);
             q.setParameter(3, STATUT_IS_PROGRESS);
+            q.setParameter(4, STATUT_AUTO);
 
             q.setMaxResults(1);
             return q.getSingleResult() != null ? 1 : 0;
 
+        } catch (NoResultException e) {
+            return 0;
         } catch (Exception e) {
+            LOG.log(Level.WARNING, "verifierProduitDansSuggestion", e);
             return 0;
         }
     }
 
     private int verifierProduitCommande(TFamille famille) {
         try {
+            // seules les commandes réellement actives (is_Process, pharma) bloquent la
+            // suggestion : une vieille commande jamais reçue mais fermée/abandonnée ne
+            // doit plus empêcher le produit de remonter
             TypedQuery<TOrderDetail> q = getEmg().createQuery(
-                    "SELECT o FROM TOrderDetail o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgORDERID.recu=?2 ",
+                    "SELECT o FROM TOrderDetail o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgORDERID.recu=?2 AND o.lgORDERID.strSTATUT IN (?3, ?4) ",
                     TOrderDetail.class);
             q.setParameter(1, famille.getLgFAMILLEID());
             q.setParameter(2, Boolean.FALSE);
+            q.setParameter(3, STATUT_IS_PROGRESS);
+            q.setParameter(4, STATUT_PHARMA);
             q.setMaxResults(1);
             TOrderDetail detail = q.getSingleResult();
 
@@ -643,7 +657,10 @@ public class SuggestionImpl implements SuggestionService {
                 return 4;
             }
             return 0;
+        } catch (NoResultException e) {
+            return 0;
         } catch (Exception e) {
+            LOG.log(Level.WARNING, "verifierProduitCommande", e);
             return 0;
         }
     }
@@ -651,7 +668,20 @@ public class SuggestionImpl implements SuggestionService {
     @Override
     public JSONObject makeSuggestion(List<VenteDetailsDTO> datas) throws JSONException {
         try {
-            return creerSuggestionArticlesVendus(datas, false);
+            LongAdder count = new LongAdder();
+            Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
+                    .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
+            groupingByGrossisteId.forEach((k, v) -> {
+                TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
+                v.forEach(o -> {
+                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
+                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, o.getIntQUANTITY());
+                    count.increment();
+                });
+
+            });
+            return new JSONObject().put("success", true).put("count", count.intValue());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
@@ -662,131 +692,25 @@ public class SuggestionImpl implements SuggestionService {
     @Override
     public JSONObject makeSuggestion(Set<VenteDetailsDTO> datas) throws JSONException {
         try {
-            return creerSuggestionArticlesVendus(datas, false);
+            LongAdder count = new LongAdder();
+            Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
+                    .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
+            groupingByGrossisteId.forEach((k, v) -> {
+                TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
+                v.forEach(o -> {
+                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
+                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, o.getIntQUANTITY());
+                    count.increment();
+                });
+
+            });
+            return new JSONObject().put("success", true).put("count", count.intValue());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
         }
 
-    }
-
-    /**
-     * Creation des suggestions issues de la liste des articles vendus. La liste affichee garde les produits desactives,
-     * mais un produit desactive, sans grossiste, ou dont le couple t_famille_grossiste n'existe qu'en disable/delete ne
-     * doit pas etre suggere : il est ignore et remonte dans la reponse (ignores/detailIgnores). Un produit en erreur
-     * n'empeche plus la creation des autres lignes.
-     */
-    private JSONObject creerSuggestionArticlesVendus(Collection<VenteDetailsDTO> datas, boolean reappro)
-            throws JSONException {
-        LongAdder count = new LongAdder();
-        LongAdder ignores = new LongAdder();
-        JSONArray detailIgnores = new JSONArray();
-        datas.stream().filter(o -> StringUtils.isEmpty(o.getTypeVente()))
-                .forEach(o -> ajouterProduitIgnore(detailIgnores, ignores, o.getLgFAMILLEID(),
-                        "Grossiste principal non défini"));
-        Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
-                .filter(o -> StringUtils.isNotEmpty(o.getTypeVente()))
-                .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
-        groupingByGrossisteId.forEach((k, v) -> {
-            TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
-            if (oGrossiste == null) {
-                v.forEach(
-                        o -> ajouterProduitIgnore(detailIgnores, ignores, o.getLgFAMILLEID(), "Grossiste introuvable"));
-                return;
-            }
-            Map<TFamille, Integer> eligibles = new LinkedHashMap<>();
-            v.forEach(o -> {
-                try {
-                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    String motif = motifExclusionSuggestion(oFamille, oGrossiste);
-                    if (motif != null) {
-                        ajouterProduitIgnore(detailIgnores, ignores, o.getLgFAMILLEID(), motif);
-                        return;
-                    }
-                    int qte = reappro ? quantiteASuggererReappro(oFamille) : o.getIntQUANTITY();
-                    eligibles.merge(oFamille, qte, Integer::sum);
-                } catch (Exception e) {
-                    LOG.log(Level.SEVERE, null, e);
-                    ajouterProduitIgnore(detailIgnores, ignores, o.getLgFAMILLEID(), "Erreur technique");
-                }
-            });
-            if (eligibles.isEmpty()) {
-                return;
-            }
-            TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
-            LongAdder lignes = new LongAdder();
-            eligibles.forEach((oFamille, qte) -> {
-                try {
-                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, qte);
-                    count.increment();
-                    lignes.increment();
-                } catch (Exception e) {
-                    LOG.log(Level.SEVERE, null, e);
-                    ajouterProduitIgnore(detailIgnores, ignores, oFamille.getLgFAMILLEID(), "Erreur technique");
-                }
-            });
-            if (lignes.intValue() == 0) {
-                getEmg().remove(suggestionOrder);
-            }
-        });
-        return new JSONObject().put("success", true).put("count", count.intValue()).put("ignores", ignores.intValue())
-                .put("detailIgnores", detailIgnores);
-    }
-
-    private int quantiteASuggererReappro(TFamille oFamille) {
-        Integer qteReappro = oFamille.getIntQTEREAPPROVISIONNEMENT();
-        return (qteReappro != null && qteReappro > 0) ? qteReappro : 1;
-    }
-
-    private String motifExclusionSuggestion(TFamille famille, TGrossiste grossiste) {
-        if (famille == null) {
-            return "Produit introuvable";
-        }
-        if (!STATUT_ENABLE.equals(famille.getStrSTATUT())) {
-            return "Produit désactivé";
-        }
-        if (coupleFamilleGrossisteDesactive(famille, grossiste)) {
-            return "Couple produit-grossiste désactivé";
-        }
-        return null;
-    }
-
-    /**
-     * Verifie en lecture seule si le couple t_famille_grossiste existe uniquement en disable/delete. Un couple
-     * inexistant reste eligible (il sera cree a la volee comme aujourd'hui) ; un couple desactive n'est jamais reactive
-     * par la suggestion.
-     */
-    private boolean coupleFamilleGrossisteDesactive(TFamille famille, TGrossiste grossiste) {
-        try {
-            List<String> statuts = getEmg().createQuery(
-                    "SELECT t.strSTATUT FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2",
-                    String.class).setParameter(1, famille.getLgFAMILLEID())
-                    .setParameter(2, grossiste.getLgGROSSISTEID()).getResultList();
-            return !statuts.isEmpty() && statuts.stream().noneMatch(STATUT_ENABLE::equals);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return false;
-        }
-    }
-
-    private void ajouterProduitIgnore(JSONArray detailIgnores, LongAdder ignores, String familleId, String motif) {
-        ignores.increment();
-        String cip = familleId;
-        String nom = "";
-        try {
-            TFamille famille = getEmg().find(TFamille.class, familleId);
-            if (famille != null) {
-                cip = famille.getIntCIP();
-                nom = famille.getStrNAME();
-            }
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, null, e);
-        }
-        try {
-            detailIgnores.put(new JSONObject().put("cip", cip).put("nom", nom).put("motif", motif));
-        } catch (JSONException e) {
-            LOG.log(Level.WARNING, null, e);
-        }
     }
 
     @Override
@@ -992,6 +916,157 @@ public class SuggestionImpl implements SuggestionService {
         TSuggestionOrder order = this.getEmg().find(TSuggestionOrder.class, id);
         order.setStrSTATUT(STATUT_PENDING);
         this.getEmg().merge(order);
+    }
+
+    /**
+     * Diagnostic : pourquoi un produit n'est-il pas (ou plus) suggéré en suggestion auto ? Recherche tous statuts
+     * confondus (enable/disable) et rejoue, pour chaque produit trouvé, les mêmes contrôles que makeSuggestionAuto dans
+     * le même ordre, en expliquant la première cause bloquante rencontrée.
+     */
+    @Override
+    public JSONObject diagnosticProduit(String query, int start, int limit) throws JSONException {
+        String search = (query == null ? "" : query.trim()) + "%";
+        TypedQuery<TFamille> q = getEmg().createQuery(
+                "SELECT f FROM TFamille f WHERE (f.intCIP LIKE ?1 OR f.strNAME LIKE ?1 OR f.strDESCRIPTION LIKE ?1 OR f.intEAN13 LIKE ?1) ORDER BY f.strNAME",
+                TFamille.class);
+        q.setParameter(1, search);
+        q.setFirstResult(start);
+        q.setMaxResults(limit);
+        TypedQuery<Long> qCount = getEmg().createQuery(
+                "SELECT COUNT(f) FROM TFamille f WHERE (f.intCIP LIKE ?1 OR f.strNAME LIKE ?1 OR f.strDESCRIPTION LIKE ?1 OR f.intEAN13 LIKE ?1)",
+                Long.class);
+        qCount.setParameter(1, search);
+        TEmplacement emplacement = sessionHelperService.getCurrentUser().getLgEMPLACEMENTID();
+        JSONArray results = new JSONArray();
+        for (TFamille famille : q.getResultList()) {
+            results.put(buildDiagnosticProduit(famille, emplacement));
+        }
+        return new JSONObject().put("success", true).put("total", qCount.getSingleResult()).put("results", results);
+    }
+
+    /**
+     * Liste des produits « ayant raté la suggestion auto » : stock au seuil (ou en dessous) et absents de toute
+     * suggestion auto active, avec la cause pour chacun (bloqué par commande, grossiste manquant, produit inactif… ou
+     * aucun blocage : simplement en attente de la prochaine vente).
+     */
+    @Override
+    public JSONObject diagnosticManques(int start, int limit) throws JSONException {
+        TEmplacement emplacement = sessionHelperService.getCurrentUser().getLgEMPLACEMENTID();
+        // les produits disable/delete sont exclus de la LISTE (on sait exactement pourquoi ils ne sont pas
+        // suggérés) ; ils restent trouvables via la recherche manuelle (diagnosticProduit, tous statuts)
+        String base = " FROM TFamilleStock s JOIN s.lgFAMILLEID f WHERE s.strSTATUT = ?1"
+                + " AND s.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND f.intSEUILMIN IS NOT NULL"
+                + " AND s.intNUMBERAVAILABLE <= f.intSEUILMIN" + " AND f.strSTATUT NOT IN (?5, ?6)"
+                + " AND NOT EXISTS (SELECT d FROM TSuggestionOrderDetails d WHERE d.lgFAMILLEID = f"
+                + " AND (d.strSTATUT = ?3 OR d.strSTATUT = ?4) AND d.lgSUGGESTIONORDERID.strSTATUT = ?3)";
+        TypedQuery<TFamille> q = getEmg().createQuery("SELECT f" + base + " ORDER BY f.strNAME", TFamille.class);
+        TypedQuery<Long> qCount = getEmg().createQuery("SELECT COUNT(f)" + base, Long.class);
+        for (TypedQuery<?> query : new TypedQuery<?>[] { q, qCount }) {
+            query.setParameter(1, STATUT_ENABLE);
+            query.setParameter(2, emplacement.getLgEMPLACEMENTID());
+            query.setParameter(3, STATUT_AUTO);
+            query.setParameter(4, STATUT_IS_PROGRESS);
+            query.setParameter(5, STATUT_DISABLE);
+            query.setParameter(6, STATUT_DELETE);
+        }
+        q.setFirstResult(start);
+        q.setMaxResults(limit);
+        JSONArray results = new JSONArray();
+        for (TFamille famille : q.getResultList()) {
+            results.put(buildDiagnosticProduit(famille, emplacement));
+        }
+        return new JSONObject().put("success", true).put("total", qCount.getSingleResult()).put("results", results);
+    }
+
+    /**
+     * Crée/alimente la suggestion auto pour les produits donnés (ou, si la liste est vide, pour TOUS les produits au
+     * seuil absents de toute suggestion auto active). Chaque produit repasse par proccessSuggetion, donc par les mêmes
+     * contrôles que la suggestion déclenchée par une vente : seuls les produits sans blocage sont ajoutés.
+     */
+    @Override
+    public JSONObject creerSuggestionDepuisDiagnostic(List<String> famillesIds) throws JSONException {
+        TEmplacement emplacement = sessionHelperService.getCurrentUser().getLgEMPLACEMENTID();
+        List<TFamille> familles = new ArrayList<>();
+        if (famillesIds != null && !famillesIds.isEmpty()) {
+            for (String id : famillesIds) {
+                TFamille famille = getEmg().find(TFamille.class, id);
+                if (famille != null) {
+                    familles.add(famille);
+                }
+            }
+        } else {
+            TypedQuery<TFamille> q = getEmg().createQuery("SELECT f FROM TFamilleStock s JOIN s.lgFAMILLEID f"
+                    + " WHERE s.strSTATUT = ?1 AND s.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2"
+                    + " AND f.intSEUILMIN IS NOT NULL AND s.intNUMBERAVAILABLE <= f.intSEUILMIN"
+                    + " AND f.strSTATUT NOT IN (?5, ?6)"
+                    + " AND NOT EXISTS (SELECT d FROM TSuggestionOrderDetails d WHERE d.lgFAMILLEID = f"
+                    + " AND (d.strSTATUT = ?3 OR d.strSTATUT = ?4) AND d.lgSUGGESTIONORDERID.strSTATUT = ?3)"
+                    + " ORDER BY f.strNAME", TFamille.class);
+            q.setParameter(1, STATUT_ENABLE);
+            q.setParameter(2, emplacement.getLgEMPLACEMENTID());
+            q.setParameter(3, STATUT_AUTO);
+            q.setParameter(4, STATUT_IS_PROGRESS);
+            q.setParameter(5, STATUT_DISABLE);
+            q.setParameter(6, STATUT_DELETE);
+            familles = q.getResultList();
+        }
+        int ajoutes = 0;
+        for (TFamille famille : familles) {
+            try {
+                proccessSuggetion(famille, emplacement);
+                if (verifierProduitDansSuggestion(famille) == 1) {
+                    ajoutes++;
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "creerSuggestionDepuisDiagnostic " + famille.getLgFAMILLEID(), e);
+            }
+        }
+        return new JSONObject().put("success", true).put("count", ajoutes).put("traites", familles.size());
+    }
+
+    private JSONObject buildDiagnosticProduit(TFamille famille, TEmplacement emplacement) throws JSONException {
+        TFamilleStock stock = findStock(famille.getLgFAMILLEID(), emplacement);
+        Integer stockDispo = stock != null ? stock.getIntNUMBERAVAILABLE() : null;
+        String diagnostic;
+        boolean seraSuggere = false;
+        // mêmes contrôles et même ordre que makeSuggestionAuto
+        if (famille.getBoolDECONDITIONNE() != null && famille.getBoolDECONDITIONNE() == 1) {
+            diagnostic = "Produit déconditionné : exclu de la suggestion";
+        } else if (!STATUT_ENABLE.equals(famille.getStrSTATUT())) {
+            diagnostic = "Produit inactif (statut « " + famille.getStrSTATUT() + " ») : exclu de la suggestion";
+        } else if (famille.getBoolSUGGERABLE() != null && !famille.getBoolSUGGERABLE()) {
+            diagnostic = "Produit marqué « non suggérable » dans sa fiche";
+        } else if (famille.getIntSEUILMIN() == null) {
+            diagnostic = "Seuil de réapprovisionnement non défini sur la fiche produit";
+        } else if (stock == null) {
+            diagnostic = "Stock introuvable pour l'emplacement courant";
+        } else if (!checkQteSeuilCondition(stock, famille)) {
+            diagnostic = "Seuil non atteint (stock " + stockDispo + ", seuil " + famille.getIntSEUILMIN()
+                    + ", condition " + getOptionSuggestion() + ")";
+        } else {
+            int statutCommande = verifierProduitCommande(famille);
+            if (statutCommande == 2 || statutCommande == 4) {
+                diagnostic = "Bloqué : présent dans une commande active (en cours ou non réceptionnée)";
+            } else if (famille.getLgGROSSISTEID() == null) {
+                diagnostic = "Aucun grossiste par défaut sur la fiche produit : la suggestion ne peut pas être créée";
+            } else if (verifierProduitDansSuggestion(famille) == 1) {
+                diagnostic = "Déjà dans une suggestion auto : sa quantité sera mise à jour à la prochaine vente";
+            } else {
+                diagnostic = "Aucun blocage : sera suggéré à la prochaine vente";
+                seraSuggere = true;
+            }
+        }
+        JSONObject json = new JSONObject();
+        json.put("lg_FAMILLE_ID", famille.getLgFAMILLEID());
+        json.put("int_CIP", famille.getIntCIP());
+        json.put("str_NAME", famille.getStrNAME());
+        json.put("str_STATUT", famille.getStrSTATUT());
+        json.put("int_SEUIL_MIN", famille.getIntSEUILMIN() != null ? famille.getIntSEUILMIN() : JSONObject.NULL);
+        json.put("int_STOCK", stockDispo != null ? stockDispo : JSONObject.NULL);
+        json.put("str_GROSSISTE", famille.getLgGROSSISTEID() != null ? famille.getLgGROSSISTEID().getStrLIBELLE() : "");
+        json.put("str_DIAGNOSTIC", diagnostic);
+        json.put("bool_OK", seraSuggere);
+        return json;
     }
 
     private List<Tuple> getListSuggestion(String query, int start, int limit) {
@@ -1483,7 +1558,22 @@ public class SuggestionImpl implements SuggestionService {
     @Override
     public JSONObject suggererQteReappro(Set<VenteDetailsDTO> datas) {
         try {
-            return creerSuggestionArticlesVendus(datas, true);
+            LongAdder count = new LongAdder();
+            Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
+                    .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
+            groupingByGrossisteId.forEach((k, v) -> {
+                TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
+                v.forEach(o -> {
+                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
+                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste,
+                            oFamille.getIntQTEREAPPROVISIONNEMENT().compareTo(0) == 1
+                                    ? oFamille.getIntQTEREAPPROVISIONNEMENT() : 1);
+                    count.increment();
+                });
+
+            });
+            return new JSONObject().put("success", true).put("count", count.intValue());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
@@ -1495,7 +1585,7 @@ public class SuggestionImpl implements SuggestionService {
         try {
             Query q = em.createNativeQuery(
                     "SELECT f.int_CIP AS parentCip, f.int_EAN13 AS codeEan, g.str_CODE_ARTICLE AS grossisteCip, sd.int_NUMBER AS quantite FROM t_suggestion_order_details sd JOIN t_suggestion_order s "
-                            + " ON s.lg_SUGGESTION_ORDER_ID=sd.lg_SUGGESTION_ORDER_ID JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_grossiste g ON f.lg_FAMILLE_ID=g.lg_FAMILLE_ID WHERE s.lg_SUGGESTION_ORDER_ID= ?1  AND s.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID AND sd.lg_FAMILLE_ID=g.lg_FAMILLE_ID AND f.str_STATUT <> 'disable'",
+                            + " ON s.lg_SUGGESTION_ORDER_ID=sd.lg_SUGGESTION_ORDER_ID JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_grossiste g ON f.lg_FAMILLE_ID=g.lg_FAMILLE_ID WHERE s.lg_SUGGESTION_ORDER_ID= ?1  AND s.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID AND sd.lg_FAMILLE_ID=g.lg_FAMILLE_ID",
                     Tuple.class).setParameter(1, suggestionId);
 
             return q.getResultList();

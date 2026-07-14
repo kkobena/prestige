@@ -112,7 +112,7 @@
 
     parameters.put("P_H_CI_RI", ((oTOfficine.getStrCENTREIMPOSITION() != null && !oTOfficine.getStrCENTREIMPOSITION().equalsIgnoreCase("")) ? "CI:" + oTOfficine.getStrCENTREIMPOSITION() : "") + ((oTOfficine.getStrREGISTREIMPOSITION() != null && !oTOfficine.getStrREGISTREIMPOSITION().equalsIgnoreCase("")) ? " / RI: " + oTOfficine.getStrREGISTREIMPOSITION() : ""));
     parameters.put("P_AUTRE_DESC", oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
-    parameters.put("P_H_PHONE", (oTOfficine.getStrPHONE() != null ? "Tel: " + conversion.PhoneNumberFormat("+225", oTOfficine.getStrPHONE()) : ""));
+    parameters.put("P_H_PHONE", (oTOfficine.getStrPHONE() != null ? "Tel: " + util.DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : ""));
 
     parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS);
     parameters.put("P_H_LOGO", P_H_LOGO);
@@ -138,7 +138,7 @@
     }
 
     if (oTOfficine.getStrPHONE() != null) {
-        P_INSTITUTION_ADRESSE += " - Tel: " + conversion.PhoneNumberFormat("+225", oTOfficine.getStrPHONE());
+        P_INSTITUTION_ADRESSE += " - Tel: " + util.DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE());
     }
     if (oTOfficine.getStrCOMPTEBANCAIRE() != null) {
         P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();

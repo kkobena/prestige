@@ -10,6 +10,8 @@ import commonTasks.dto.ClientDTO;
 import commonTasks.dto.CodeFactureDTO;
 import commonTasks.dto.DelayedDTO;
 import commonTasks.dto.FileForma;
+import static commonTasks.dto.FileForma.EXCEL;
+import static commonTasks.dto.FileForma.WORD;
 import commonTasks.dto.LogDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
@@ -23,6 +25,8 @@ import dal.TPreenregistrement;
 import dal.TPrivilege;
 import dal.TTiersPayant;
 import dal.TUser;
+import static dal.enumeration.TypeAffichage.DETAIL_ARTICLE;
+import static dal.enumeration.TypeAffichage.LIGNE_VENTE;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -237,9 +241,7 @@ public class Facture {
                     "FACTURE N° " + OFacture.getStrCODEFACTURE() + " (" + OTiersPayant.getStrNAME() + ")");
             parameters.put("P_TIERS_PAYANT_NAME", OTiersPayant.getStrFULLNAME());
             parameters.put("P_CODE_COMPTABLE", "CODE COMPTABLE : " + OFacture.getStrCODECOMPTABLE());
-            parameters.put("P_CODE_POSTALE",
-                    (OTiersPayant.getStrADRESSE() != null && !"".equals(OTiersPayant.getStrADRESSE()))
-                            ? OTiersPayant.getStrADRESSE() : "");
+            parameters.put("P_CODE_POSTALE", util.StringUtils.normalizePhone(OTiersPayant.getStrADRESSE()));
             parameters.put("P_COMPTE_CONTRIBUABLE",
                     (OTiersPayant.getStrCOMPTECONTRIBUABLE() != null
                             && !"".equals(OTiersPayant.getStrCOMPTECONTRIBUABLE()))

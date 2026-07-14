@@ -1747,7 +1747,9 @@ public class SalesServiceImpl implements SalesService {
                     json.put("msg", "Désolé la vente a été facturée");
                     return json;
                 }
-                annulerVenteAnterieur(tUser, venteAsupprimer);
+                // l'annulation automatique de la vente originale est attribuée à l'utilisateur
+                // qui a lancé la modification (porté par la copie), pas au caissier qui clôture
+                annulerVenteAnterieur(tp.getLgUSERID(), venteAsupprimer);
             } else if (isAlreadyClosedVente(tp, json)) {
                 return json;
             }
@@ -1981,7 +1983,9 @@ public class SalesServiceImpl implements SalesService {
             tp = emg.find(TPreenregistrement.class, clotureVenteParams.getVenteId());
             if (tp.getCopy()) {
                 TPreenregistrement venteAsupprimer = getEm().find(TPreenregistrement.class, tp.getLgPARENTID());
-                annulerVenteAnterieur(tUser, venteAsupprimer);
+                // l'annulation automatique de la vente originale est attribuée à l'utilisateur
+                // qui a lancé la modification (porté par la copie), pas au caissier qui clôture
+                annulerVenteAnterieur(tp.getLgUSERID(), venteAsupprimer);
             } else if (isAlreadyClosedVente(tp, json)) {
                 return json;
             }
@@ -3286,6 +3290,39 @@ public class SalesServiceImpl implements SalesService {
         clonePrixReferenceVente(tp, newTd);
         getEm().persist(newTd);
         return newTd;
+    }
+
+    /**
+     * Supprime la copie de modification d'une vente clôturée (flux Ventes terminées > Modifier > Retour). La copie
+     * n'ayant généré aucun mouvement de stock (créée par simple duplication, le stock ne bouge qu'à la clôture), la
+     * suppression est une pure suppression de données : détails, liens tiers-payant, lien compte client, puis
+     * l'en-tête. La vente originale est libérée (completionDate remise à zéro) et redevient modifiable. Garde-fous :
+     * seule une vente copy=true, rattachée à un parent et encore en cours (is_Process) peut être supprimée.
+     */
+    @Override
+    public JSONObject supprimerCopieVente(String venteId) throws JSONException {
+        JSONObject json = new JSONObject();
+        try {
+            TPreenregistrement tp = getEm().find(TPreenregistrement.class, venteId);
+            if (tp == null || !Boolean.TRUE.equals(tp.getCopy()) || tp.getLgPARENTID() == null
+                    || !Constant.STATUT_IS_PROGRESS.equals(tp.getStrSTATUT())) {
+                return json.put("success", false).put("msg",
+                        "Cette vente n'est pas une copie de modification en cours");
+            }
+            getItems(tp).forEach(detail -> getEm().remove(detail));
+            getClientTiersPayents(venteId).forEach(lien -> getEm().remove(lien));
+            findOptionalCmt(tp).ifPresent(cmt -> getEm().remove(cmt));
+            TPreenregistrement original = getEm().find(TPreenregistrement.class, tp.getLgPARENTID());
+            if (original != null) {
+                original.setCompletionDate(null);
+                getEm().merge(original);
+            }
+            getEm().remove(tp);
+            return json.put("success", true).put("msg", "Copie de modification supprimée");
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "supprimerCopieVente " + venteId, e);
+            return json.put("success", false).put("msg", "L'opération a échoué");
+        }
     }
 
     private void copyPreenregistrementTp(TPreenregistrement preenregistrement, String oldPreenregistrement, TUser o) {

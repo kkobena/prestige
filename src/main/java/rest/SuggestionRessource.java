@@ -176,6 +176,33 @@ public class SuggestionRessource {
     }
 
     @GET
+    @Path("diagnostic")
+    public Response diagnostic(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "manques") String manques)
+            throws JSONException {
+
+        int pageSize = limit > 0 ? limit : 20;
+        // manques=1 : liste des produits au seuil absents de toute suggestion auto active, avec la cause
+        if ("1".equals(manques) || "true".equals(manques)) {
+            return Response.ok().entity(this.suggestionService.diagnosticManques(start, pageSize).toString()).build();
+        }
+        return Response.ok().entity(this.suggestionService.diagnosticProduit(query, start, pageSize).toString())
+                .build();
+    }
+
+    /**
+     * Crée/alimente la suggestion auto pour les produits donnés (liste d'identifiants), ou pour tous les produits au
+     * seuil non suggérés si la liste est vide. Les produits bloqués sont ignorés (mêmes contrôles que la vente).
+     */
+    @POST
+    @Path("diagnostic/creer")
+    public Response creerDepuisDiagnostic(List<String> famillesIds) throws JSONException {
+
+        return Response.ok().entity(this.suggestionService.creerSuggestionDepuisDiagnostic(famillesIds).toString())
+                .build();
+    }
+
+    @GET
     @Path("set-pending/{id}")
     public Response setToPending(@PathParam("id") String id) throws JSONException {
 

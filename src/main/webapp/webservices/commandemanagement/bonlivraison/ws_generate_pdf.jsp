@@ -139,11 +139,11 @@
     parameters.put("P_H_CI_RI", (oTOfficine.getStrCENTREIMPOSITION() != null ? "CI:" + oTOfficine.getStrCENTREIMPOSITION() : "") + (oTOfficine.getStrREGISTREIMPOSITION() != null ? " / RI: " + oTOfficine.getStrREGISTREIMPOSITION() : ""));
 parameters.put("P_AUTRE_DESC",  oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
    
-        String finalphonestring = oTOfficine.getStrPHONE() != null ? "Tel: " + conversion.PhoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
+        String finalphonestring = oTOfficine.getStrPHONE() != null ? "Tel: " + util.DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
             if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
                 String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
                 for (String va : phone) {
-                    finalphonestring += " / " + conversion.PhoneNumberFormat(va);
+                    finalphonestring += " / " + util.DateConverter.phoneNumberFormat(va);
                 }
             }
             parameters.put("P_H_PHONE", finalphonestring);
