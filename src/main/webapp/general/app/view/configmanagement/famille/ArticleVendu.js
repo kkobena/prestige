@@ -45,7 +45,10 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVendu', {
     cls: 'custompanel',
     initComponent: function () {
 
-        Me = this;
+        /* 'var' volontaire : masque la variable globale Me partagee par les
+         * autres ecrans (elle etait ecrasee par le dernier ecran ouvert, ce qui
+         * cassait les boutons de cette vue) */
+        var Me = this;
         var lg_EMPLACEMENT_ID = loadEmplacement();
 
         var itemsPerPage = 20;
@@ -714,7 +717,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVendu', {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    var msg = 'Nombre de produits suggérés : ' + result.count;
+                    var msg = 'Nombre de produits en compte : ' + result.count;
                     if (result.ignores && result.ignores > 0) {
                         msg += '<br/><b>Produits ignorés : ' + result.ignores + '</b>';
                         if (result.detailIgnores && result.detailIgnores.length > 0) {

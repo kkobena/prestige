@@ -38,7 +38,10 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
     minHeight: 570,
     cls: 'custompanel',
     initComponent: function () {
-        Me = this;
+        /* 'var' volontaire : masque la variable globale Me partagee par les
+         * autres ecrans (elle etait ecrasee par le dernier ecran ouvert, ce qui
+         * cassait les boutons Suggerer/Rechercher de cette vue) */
+        var Me = this;
         str_TYPE_TRANSACTION = "ALL";
         var itemsPerPage = 20;
         const storeUser = new Ext.data.Store({
@@ -827,7 +830,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                 progress.hide();
                 const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    let msg = 'Nombre de produits suggérés : ' + result.count;
+                    let msg = 'Nombre de produits en compte : ' + result.count;
                     if (result.ignores && result.ignores > 0) {
                         msg += '<br/><b>Produits ignorés : ' + result.ignores + '</b>';
                         if (result.detailIgnores && result.detailIgnores.length > 0) {
