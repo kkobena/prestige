@@ -67,7 +67,7 @@ public class InventaireRessource {
         JSONObject json = inventaireService.createInventaireFromEcarts(id, tu);
         return Response.ok().entity(json.toString()).build();
     }
-    
+
     @POST
     @Path("import-csv")
     public Response createInventaireFromCsv(String payload) {

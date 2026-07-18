@@ -460,7 +460,6 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                                                 }
 
                                                                 record.set("int_QTE_SORTIE", Number(int_NUMBER) - int_NUMBER_INIT);
-                                                                record.set("is_TOUCHED", "Oui");
                                                                 grid.getStore().commitChanges();
 
                                                                 var totalOnPage = grid.getStore().getCount();
@@ -634,19 +633,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                         return v;
                                     },
 
-                                    sortable: true},
-                                {
-                                    text: 'Check',
-                                    dataIndex: 'is_TOUCHED',
-                                    flex: 0.6,
-                                    align: 'center',
-                                    sortable: false,
-                                    renderer: function (v, m) {
-                                        /* case cochee quand la ligne est faite (touchee) */
-                                        m.tdCls = (v === 'Oui') ? 'inv-touche-oui' : 'inv-touche-non';
-                                        return (v === 'Oui') ? '\u2611' : '\u2610';
-                                    }
-                                }
+                                    sortable: true}
                             ],
                             tbar: [
                                 {
@@ -1070,22 +1057,31 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                             scope: this,
                             hidden: true,
                             handler: this.onbtnexportCsv
-                        },
-                        '->',
+                        }
+                    ]
+                },
+                {
+                    /* 2e ligne dediee au bouton 'Cloturer' : action finale isolee
+                     * et alignee a droite, pour qu'elle ne soit jamais tronquee
+                     * quand la premiere ligne de boutons est pleine */
+                    xtype: 'toolbar',
+                    ui: 'footer',
+                    dock: 'bottom',
+                    border: '0',
+                    /* un ressort de chaque cote pour centrer le bouton seul */
+                    items: ['->',
                         {
-                            /* action finale : isolee a droite, verte et plus
-                             * lisible ; soumise au privilege
-                             * P_CLOTURER_INVENTAIRE (masquee sinon), avec
-                             * confirmation et controle egalement cote serveur */
-                            text: 'Cloturer',
+                            /* soumise au privilege P_CLOTURER_INVENTAIRE (masquee
+                             * sinon), avec confirmation et controle cote serveur */
+                            text: 'Cloturer l\'inventaire',
                             id: 'btn_loturer',
                             cls: 'btn-cloturer',
                             scale: 'medium',
                             hidden: true,
                             scope: this,
                             handler: this.onbtncloturer
-                        }
-
+                        },
+                        '->'
                     ]
                 }]
         });
