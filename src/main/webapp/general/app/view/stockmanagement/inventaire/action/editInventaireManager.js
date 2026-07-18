@@ -227,6 +227,9 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
              flex: 1
              },*/
             id: 'panelID',
+            /* le corps peut defiler si l'ecran est petit : les barres de boutons
+             * du bas restent quant a elles toujours visibles (dockedItems) */
+            autoScroll: true,
             items: [
                 {
                     xtype: 'fieldset',
@@ -642,6 +645,8 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                     margins: '0 0 0 10',
                                     fieldLabel: 'Filtre:',
                                     id: 'str_TYPE',
+                                    /* bordure violette du filtre article */
+                                    cls: 'filtre-article-violet',
                                     store: store_type,
                                     valueField: 'str_TYPE',
                                     displayField: 'str_desc',
@@ -922,6 +927,9 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
 
                         }]
                 },
+                /* barres de boutons dans le flux, juste sous la grille (pas de
+                 * vide) ; le panneau defile (autoScroll) donc la ligne
+                 * "Cloturer" reste toujours atteignable sur petit ecran */
                 {
                     xtype: 'toolbar',
                     ui: 'footer',
@@ -959,6 +967,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                         }, {
                             text: 'Imprimer liste des &eacute;carts',
                             id: 'btn_print_ecart',
+                            cls: 'btn-orange',
                             iconCls: 'icon-clear-group',
                             scope: this,
                             hidden: isInventaireCloture,
@@ -973,6 +982,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                         }, {
                             text: 'Imprimer filtre courant',
                             id: 'btn_print_filtre',
+                            cls: 'btn-bleu-nuit',
                             icon: 'resources/images/icons/fam/printer.png',
                             tooltip: 'Impression PDF de toutes les lignes du filtre courant (touchés, non touchés, écarts...)',
                             scope: this,
@@ -1625,19 +1635,49 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
         };
         var win = new Ext.window.Window({
             title: 'Check emplacement — statut du comptage',
-            width: 680,
-            height: 480,
+            width: 820,
+            height: 560,
             layout: 'fit',
             modal: true,
             items: {
                 xtype: 'grid',
                 store: storeCheck,
+                /* barre de totaux globaux (articles, comptes, restants, taux) */
+                bbar: [
+                    {
+                        xtype: 'tbtext', itemId: 'totGlobal',
+                        text: '<b>Total articles : 0</b>'
+                    }, '-', {
+                        xtype: 'tbtext', itemId: 'totComptes',
+                        text: '<b style="color:#1E7E34;">Compt&eacute;s : 0</b>'
+                    }, '-', {
+                        xtype: 'tbtext', itemId: 'totRestants',
+                        text: '<b style="color:#B02A37;">Restants : 0</b>'
+                    }, '->', {
+                        xtype: 'tbtext', itemId: 'totTaux',
+                        text: '<b style="color:#0D6EFD;font-size:14px;">Avancement global : 0 %</b>'
+                    }
+                ],
                 columns: [
                     {text: 'Code', dataIndex: 'str_CODE', flex: 0.5},
                     {text: 'Emplacement', dataIndex: 'str_LIBELLEE', flex: 1.2},
                     {text: 'Articles', dataIndex: 'int_TOTAL', flex: 0.5, align: 'right'},
                     {text: 'Comptés', dataIndex: 'int_TOUCHES', flex: 0.5, align: 'right'},
                     {text: 'Restants', dataIndex: 'int_RESTANT', flex: 0.5, align: 'right'},
+                    {
+                        /* pourcentage d'avancement du comptage = comptes / articles */
+                        text: '% avancement',
+                        dataIndex: 'int_TOUCHES',
+                        flex: 0.6,
+                        align: 'right',
+                        renderer: function (v, m, rec) {
+                            var total = rec.get('int_TOTAL') || 0;
+                            var touches = rec.get('int_TOUCHES') || 0;
+                            var pct = total > 0 ? (touches / total) * 100 : 0;
+                            m.style = 'color:#0D6EFD;font-weight:800;';
+                            return Ext.util.Format.number(pct, '0.0') + ' %';
+                        }
+                    },
                     {text: 'Statut', dataIndex: 'str_STATUT', flex: 0.7, renderer: statutRenderer}
                 ]
             },
@@ -1653,6 +1693,24 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                         win.close();
                     }
                 }]
+        });
+        /* calcule et affiche les totaux globaux a chaque chargement du store */
+        storeCheck.on('load', function (store) {
+            var total = 0, touches = 0, restant = 0;
+            store.each(function (rec) {
+                total += rec.get('int_TOTAL') || 0;
+                touches += rec.get('int_TOUCHES') || 0;
+                restant += rec.get('int_RESTANT') || 0;
+            });
+            var taux = total > 0 ? (touches / total) * 100 : 0;
+            var fmt = function (n) {
+                return Ext.util.Format.number(n, '0,000.');
+            };
+            win.down('#totGlobal').setText('<b>Total articles : ' + fmt(total) + '</b>');
+            win.down('#totComptes').setText('<b style="color:#1E7E34;">Compt&eacute;s : ' + fmt(touches) + '</b>');
+            win.down('#totRestants').setText('<b style="color:#B02A37;">Restants : ' + fmt(restant) + '</b>');
+            win.down('#totTaux').setText('<b style="color:#0D6EFD;font-size:14px;">Avancement global : '
+                    + Ext.util.Format.number(taux, '0.0') + ' %</b>');
         });
         win.show();
     },
