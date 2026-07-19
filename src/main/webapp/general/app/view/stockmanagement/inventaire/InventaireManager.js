@@ -221,6 +221,38 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                                 }
                             }
                         }]
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            /* meme edition que le bouton 'Imprimer liste des
+                             * ecarts' de la fiche ; disponible sur TOUTE ligne,
+                             * y compris un inventaire cloture : on peut ainsi
+                             * toujours reimprimer les ecarts apres cloture */
+                            icon: 'resources/images/icons/fam/printer.png',
+                            tooltip: 'R&eacute;&eacute;diter la liste des &eacute;carts (m&ecirc;me apr&egrave;s cl&ocirc;ture)',
+                            scope: this,
+                            handler: this.onPrintEcartsClick
+                        }]
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            /* export Excel de tous les produits de l'inventaire
+                             * avec tous les champs (stock machine, saisi, ecart,
+                             * prix, valeur d'ecart...) ; disponible sur toute
+                             * ligne, y compris apres cloture */
+                            icon: 'resources/images/icons/fam/excel_icon.png',
+                            tooltip: 'Exporter les produits et &eacute;carts en Excel (tous les champs)',
+                            scope: this,
+                            handler: this.onExportExcelClick
+                        }]
                 }],
             selModel: {
                 selType: 'cellmodel'
@@ -284,6 +316,24 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         this.getStore().load({
             callback: this.onStoreLoad
         });
+    },
+    /* Reedition de la liste des ecarts depuis la liste des inventaires :
+     * strictement la meme edition que le bouton 'Imprimer liste des ecarts'
+     * de la fiche (str_NAME_FILE=ecart, sans filtre d'ecran ; le modele
+     * avec/sans stock machine reste choisi par le privilege cote serveur).
+     * Utilisable meme apres cloture de l'inventaire. */
+    onPrintEcartsClick: function(grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+        var linkUrl = url_services_pdf_fiche_inventaire + '?lg_INVENTAIRE_ID='
+                + rec.get('lg_INVENTAIRE_ID') + "&str_NAME_FILE=ecart";
+        window.open(linkUrl);
+    },
+    /* export Excel de tous les produits de l'inventaire (tous les champs :
+     * stocks, ecart, prix, valeur d'ecart, comptage) ; meme apres cloture */
+    onExportExcelClick: function(grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+        window.location = '../api/v1/inventaire/export-excel/'
+                + encodeURIComponent(rec.get('lg_INVENTAIRE_ID'));
     },
     onbtnprint: function(grid, rowIndex) {
 
