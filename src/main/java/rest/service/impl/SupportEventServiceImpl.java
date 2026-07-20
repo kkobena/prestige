@@ -29,6 +29,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.annotation.security.PermitAll;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -120,6 +122,31 @@ public class SupportEventServiceImpl implements SupportEventService {
                     .setParameter("niveau", niveau).getSingleResult();
         }
         return em.createQuery("SELECT COUNT(o) FROM ApplicationEvent o", Long.class).getSingleResult();
+    }
+
+    @Override
+    public String readLogContent(String eventId) {
+        ApplicationEvent event = em.find(ApplicationEvent.class, eventId);
+        if (event == null || StringUtils.isBlank(event.getLogRef())) {
+            return "Aucun fichier log associé à cet événement.";
+        }
+        try {
+            Path base = getStorageBase().resolve("logs").toRealPath();
+            Path file = Paths.get(event.getLogRef()).toRealPath();
+            // Securite : le fichier doit etre SOUS le dossier logs du support (pas de lecture arbitraire).
+            if (!file.startsWith(base)) {
+                return "Chemin de log non autorisé.";
+            }
+            long taille = Files.size(file);
+            if (taille > 1024L * 1024L) {
+                return "Fichier log trop volumineux (" + (taille / 1024)
+                        + " Ko) : ouvrez-le directement sur le poste :\n" + event.getLogRef();
+            }
+            return new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "readLogContent " + eventId, e);
+            return "Log introuvable sur le disque (peut-être purgé) :\n" + event.getLogRef();
+        }
     }
 
     @Override
@@ -387,41 +414,49 @@ public class SupportEventServiceImpl implements SupportEventService {
     }
 
     @Override
-    public void recordCoherence(String code, String libelle, String module, int nbCas, String payloadSample,
-            String listeComplete) {
-        try {
-            String signature = sha256Hex("COHERENCE|" + StringUtils.trimToEmpty(code));
-            ApplicationEvent event = findBySignature(signature);
-            if (nbCas <= 0) {
-                // Anomalie resolue : on retire l'evenement de coherence et son fichier log.
-                if (event != null) {
-                    deleteLogFile(event.getLogRef());
-                    em.remove(event);
-                }
-                return;
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void recordCoherence(String code, String libelle, String module, String requeteSql, int nbCas,
+            String payloadSample, String listeComplete) {
+        // Transaction DEDIEE (REQUIRES_NEW) : l'ecriture de l'evenement est isolee de la transaction du controle.
+        // Le fichier log (donnees concernees) est ecrit avant tout acces base : il reste disponible meme si l'insert
+        // echoue. En cas d'erreur, l'exception est propagee et traitee "best-effort" par le veilleur.
+        String signature = sha256Hex("COHERENCE|" + StringUtils.trimToEmpty(code));
+        ApplicationEvent event = findBySignature(signature);
+        if (nbCas <= 0) {
+            // Anomalie resolue : on retire l'evenement de coherence et son fichier log.
+            if (event != null) {
+                deleteLogFile(event.getLogRef());
+                em.remove(event);
             }
-            if (event == null) {
-                event = new ApplicationEvent();
-                event.setSignature(signature);
-                event.setType("COHERENCE");
-                event.setNiveau("WARN");
-                event.setUrlOuEcran("controle:" + StringUtils.abbreviate(code, 240));
-                em.persist(event);
-            }
-            // Rafraichit systematiquement l'etat courant : nombre de cas, echantillon, log.
-            event.setModule(StringUtils.abbreviate(StringUtils.defaultIfBlank(module, "COHERENCE"), 100));
-            event.setMessageCourt(StringUtils.abbreviate(libelle, 500));
-            event.setOccurrences(nbCas);
-            event.setLastSeenAt(LocalDateTime.now());
-            event.setPayloadJson(StringUtils.abbreviate(payloadSample, 4000));
-            event.setLogRef(
-                    writeCoherenceLog(event.getModule(), code, event.getId(), event.getLogRef(), listeComplete));
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "recordCoherence", e);
+            return;
         }
+        boolean nouveau = event == null;
+        if (nouveau) {
+            event = new ApplicationEvent();
+            event.setSignature(signature);
+            event.setType("COHERENCE");
+            event.setNiveau("WARN");
+            event.setUrlOuEcran("controle:" + StringUtils.abbreviate(code, 240));
+        }
+        // Rafraichit systematiquement l'etat courant : nombre de cas, echantillon, log.
+        event.setModule(StringUtils.abbreviate(StringUtils.defaultIfBlank(module, "COHERENCE"), 100));
+        event.setMessageCourt(StringUtils.abbreviate(StringUtils.defaultIfBlank(libelle, code), 500));
+        event.setOccurrences(nbCas);
+        event.setLastSeenAt(LocalDateTime.now());
+        event.setUtilisateur("VEILLE_COHERENCE");
+        event.setPayloadJson(StringUtils.abbreviate(payloadSample, 4000));
+        event.setLogRef(writeCoherenceLog(event.getModule(), code, requeteSql, event.getId(), event.getLogRef(),
+                listeComplete));
+        // Persist APRES avoir renseigne tous les champs obligatoires (evite tout insert incomplet).
+        if (nouveau) {
+            em.persist(event);
+        }
+        // Force l'ecriture dans CETTE transaction dediee : l'erreur eventuelle est ainsi confinee ici.
+        em.flush();
     }
 
-    private String writeCoherenceLog(String module, String code, String eventId, String existingPath, String content) {
+    private String writeCoherenceLog(String module, String code, String requeteSql, String eventId, String existingPath,
+            String content) {
         try {
             Path file;
             if (StringUtils.isNotBlank(existingPath)) {
@@ -440,8 +475,11 @@ public class SupportEventServiceImpl implements SupportEventService {
             StringBuilder sb = new StringBuilder();
             sb.append("Date : ").append(LocalDateTime.now().format(DATE_FORMAT)).append("\n");
             sb.append("Controle : ").append(StringUtils.defaultString(code)).append("\n");
-            sb.append("Module : ").append(StringUtils.defaultString(module)).append("\n\n");
-            sb.append(StringUtils.defaultString(content));
+            sb.append("Module : ").append(StringUtils.defaultString(module)).append("\n");
+            if (StringUtils.isNotBlank(requeteSql)) {
+                sb.append("Requete SQL du controle :\n").append(requeteSql).append("\n");
+            }
+            sb.append("\n").append(StringUtils.defaultString(content));
             Files.write(file, sb.toString().getBytes(StandardCharsets.UTF_8));
             return StringUtils.abbreviate(file.toString(), 500);
         } catch (IOException e) {

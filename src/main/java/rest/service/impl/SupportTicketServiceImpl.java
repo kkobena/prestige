@@ -15,12 +15,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import org.apache.commons.lang3.StringUtils;
 import rest.service.SupportBusinessException;
+import rest.service.SupportService;
 import rest.service.SupportTicketService;
 import util.Constant;
 
@@ -39,6 +41,8 @@ public class SupportTicketServiceImpl implements SupportTicketService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private SupportService supportService;
 
     @Override
     public SupportTicket createTicket(TUser user, String sujet, String description, String module, String type,
@@ -63,6 +67,8 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         ticket.setApplicationEventId(applicationEventId);
         em.persist(ticket);
         addSystemMessage(ticket.getId(), "Ticket créé automatiquement depuis un événement applicatif capturé");
+        // Notifie le support de l'incident (asynchrone, sans effet si desactive).
+        supportService.notifyAutoTicket(ticket.getNumero(), sujet, module, priorite, description);
         return ticket;
     }
 

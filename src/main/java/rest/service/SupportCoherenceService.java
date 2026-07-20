@@ -5,6 +5,7 @@
  */
 package rest.service;
 
+import dal.SupportControle;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.Local;
@@ -25,4 +26,12 @@ public interface SupportCoherenceService {
      * @return une synthese par controle : code, libelle, nbCas, dryRun, erreur.
      */
     List<Map<String, Object>> runActiveChecks();
+
+    /**
+     * Execute UN controle dans sa PROPRE transaction (REQUIRES_NEW). L'isolation garantit qu'un controle en erreur ne
+     * condamne pas la transaction des controles suivants.
+     *
+     * @return la synthese du controle : code, libelle, nbCas, dryRun, erreur.
+     */
+    Map<String, Object> runOneIsolated(SupportControle controle);
 }

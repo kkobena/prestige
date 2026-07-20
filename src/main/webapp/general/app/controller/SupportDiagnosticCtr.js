@@ -64,6 +64,18 @@ Ext.define('testextjs.controller.SupportDiagnosticCtr', {
         if (data.logRef) {
             html += '<br/><b>Fichier log :</b> ' + Ext.String.htmlEncode(data.logRef);
         }
+        const me = this;
+        const tbar = [];
+        if (data.logRef) {
+            tbar.push({
+                xtype: 'button',
+                text: 'Voir le log',
+                iconCls: 'icon-grid',
+                handler: function () {
+                    me.onVoirLog(data.id);
+                }
+            });
+        }
         Ext.create('Ext.window.Window', {
             title: 'Détail de l\'événement',
             modal: true,
@@ -72,6 +84,7 @@ Ext.define('testextjs.controller.SupportDiagnosticCtr', {
             resizable: true,
             maximizable: true,
             layout: 'fit',
+            tbar: tbar.length ? tbar : undefined,
             items: [
                 {
                     xtype: 'panel',
@@ -81,6 +94,40 @@ Ext.define('testextjs.controller.SupportDiagnosticCtr', {
                 }
             ]
         }).show();
+    },
+
+    onVoirLog: function (eventId) {
+        const progress = Ext.MessageBox.wait('Lecture du fichier log . . .', 'Veuillez patienter');
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/support/diagnostic/log',
+            params: {eventId: eventId},
+            success: function (response) {
+                progress.hide();
+                Ext.create('Ext.window.Window', {
+                    title: 'Contenu du fichier log',
+                    modal: true,
+                    width: 820,
+                    height: 560,
+                    resizable: true,
+                    maximizable: true,
+                    layout: 'fit',
+                    items: [
+                        {
+                            xtype: 'textarea',
+                            readOnly: true,
+                            selectOnFocus: false,
+                            fieldStyle: 'font-family:monospace;font-size:12px;',
+                            value: response.responseText
+                        }
+                    ]
+                }).show();
+            },
+            failure: function () {
+                progress.hide();
+                Ext.Msg.alert('Message', 'Impossible de lire le fichier log');
+            }
+        });
     },
 
     onCreerTicket: function (view, rowIndex, colIndex, item, e, record) {

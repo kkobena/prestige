@@ -20,8 +20,28 @@ Ext.define('testextjs.controller.SupportSanteCtr', {
             },
             'supportsante button#btnCoherence': {
                 click: this.onCoherence
+            },
+            'supportsante button#btnExportDiag': {
+                click: this.onExportDiagnostic
             }
         });
+    },
+
+    onExportDiagnostic: function () {
+        // Telechargement du zip via une iframe cachee (sans quitter l'application).
+        try {
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '/prestige/api/v1/support/diagnostic/export';
+            document.body.appendChild(iframe);
+            Ext.defer(function () {
+                if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+            }, 60000);
+        } catch (e) {
+            Ext.Msg.alert('Message', 'Impossible de lancer l\'export du diagnostic');
+        }
     },
 
     onCoherence: function () {

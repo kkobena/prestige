@@ -28,7 +28,7 @@ public interface SupportEventService {
      * (nombre de cas, echantillon, fichier log). Si {@code nbCas <= 0}, l'evenement et son log sont supprimes (anomalie
      * resolue).
      */
-    void recordCoherence(String code, String libelle, String module, int nbCas, String payloadSample,
+    void recordCoherence(String code, String libelle, String module, String requeteSql, int nbCas, String payloadSample,
             String listeComplete);
 
     List<ApplicationEvent> findAll(int start, int limit, String niveau);
@@ -36,6 +36,12 @@ public interface SupportEventService {
     long count(String niveau);
 
     String createTicketFromEvent(String eventId, TUser user);
+
+    /**
+     * Retourne le contenu du fichier log associe a un evenement (lecture seule, borne en taille). Le chemin est valide
+     * comme etant SOUS le dossier de stockage du support (aucune lecture de fichier arbitraire).
+     */
+    String readLogContent(String eventId);
 
     Map<String, Object> sante();
 

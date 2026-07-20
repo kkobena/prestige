@@ -52,6 +52,7 @@ public class SupportServiceImpl implements SupportService {
     private static final Logger LOG = Logger.getLogger(SupportServiceImpl.class.getName());
 
     private static final String KEY_SUPPORT_EMAIL = "SUPPORT_EMAIL";
+    private static final String KEY_NOTIFY_ENABLED = "SUPPORT_NOTIFY_ENABLED";
     private static final String KEY_SUPPORT_STORAGE_DIR = "SUPPORT_STORAGE_DIR";
 
     @PersistenceContext(unitName = "JTA_UNIT")
@@ -131,6 +132,49 @@ public class SupportServiceImpl implements SupportService {
     @Override
     public long count() {
         return em.createQuery("SELECT COUNT(o) FROM SupportDemande o", Long.class).getSingleResult();
+    }
+
+    @Asynchronous
+    @Override
+    public void notifyAutoTicket(String numero, String sujet, String module, String priorite, String description) {
+        try {
+            if (!"1".equals(StringUtils.trimToEmpty(getParameterValue(KEY_NOTIFY_ENABLED)))) {
+                return;
+            }
+            String supportEmail = getParameterValue(KEY_SUPPORT_EMAIL);
+            if (StringUtils.isBlank(supportEmail)) {
+                return;
+            }
+            AppParameters sp = AppParameters.getInstance();
+            Session session = Session.getInstance(rest.service.notification.template.Mail.getEmailProperties());
+            MimeMessage msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(sp.email));
+            msg.setRecipients(Message.RecipientType.TO, buildRecipients(supportEmail));
+            msg.setSubject("[Prestige][Incident " + StringUtils.defaultString(priorite) + "] "
+                    + StringUtils.abbreviate(sujet, 180), "UTF-8");
+            msg.setContent(buildIncidentHtml(numero, sujet, module, priorite, description), "text/html; charset=utf-8");
+            Transport.send(msg, sp.email, sp.password);
+        } catch (Exception e) {
+            // une notification qui echoue ne doit jamais perturber la creation du ticket
+            LOG.log(Level.SEVERE, "notifyAutoTicket", e);
+        }
+    }
+
+    private String buildIncidentHtml(String numero, String sujet, String module, String priorite, String description) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body>");
+        sb.append("<h3>Incident détecté automatiquement - Prestige</h3>");
+        sb.append("<table border='1' cellpadding='6' cellspacing='0'>");
+        sb.append("<tr><td><b>Ticket</b></td><td>").append(escapeHtml(numero)).append("</td></tr>");
+        sb.append("<tr><td><b>Priorité</b></td><td>").append(escapeHtml(priorite)).append("</td></tr>");
+        sb.append("<tr><td><b>Module</b></td><td>").append(escapeHtml(module)).append("</td></tr>");
+        sb.append("<tr><td><b>Sujet</b></td><td>").append(escapeHtml(sujet)).append("</td></tr>");
+        sb.append("</table>");
+        sb.append("<h4>Détail</h4><p>").append(escapeHtml(description).replace("\n", "<br/>")).append("</p>");
+        sb.append("<p style='color:#888;'>Notification automatique du Centre de Support "
+                + "(désactivable via le paramètre SUPPORT_NOTIFY_ENABLED).</p>");
+        sb.append("</body></html>");
+        return sb.toString();
     }
 
     private Address[] buildRecipients(String supportEmail) throws Exception {
