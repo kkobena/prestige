@@ -140,6 +140,25 @@
     flex-shrink: 0;
 }
 
+/* ---- Bouton "rafraichir le menu" : animation au survol ---- */
+.nav-profile-refresh {
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.nav-profile-refresh > i {
+    transition: transform 0.5s ease, color 0.2s ease;
+}
+.nav-profile-refresh:hover {
+    background: rgba(133, 193, 233, 0.25) !important;
+    box-shadow: 0 0 8px rgba(133, 193, 233, 0.45);
+}
+.nav-profile-refresh:hover > i {
+    transform: rotate(360deg);
+    color: #d6eaf8 !important;
+}
+.nav-profile-refresh:active {
+    transform: scale(0.9);
+}
+
 /* ---- Masquer icônes natives ExtJS ---- */
 .prestige-nav .x-tree-icon,
 .prestige-nav .x-tree-icon-leaf,

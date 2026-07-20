@@ -21,8 +21,11 @@ import util.Constant;
  * Detection des ecrans / requetes lents : mesure le temps de traitement des requetes de donnees et cree un evenement
  * PERFORMANCE pour celles qui depassent un seuil configurable. La configuration est mise en cache (rechargee au plus
  * une fois par minute) pour n'ajouter aucun surcout par requete ; l'enregistrement d'une lenteur est asynchrone.
+ *
+ * Limite volontairement a l'API REST (/api/*) : les web-services JSP herites (ex. chargement du menu via
+ * /webservices/menumanagement/ws_tree_menu.jsp) ne sont PAS interceptes, pour ne prendre aucun risque sur ces flux.
  */
-@WebFilter(filterName = "SlowRequestFilter", urlPatterns = { "/api/*", "/webservices/*", "*.jsp" })
+@WebFilter(filterName = "SlowRequestFilter", urlPatterns = { "/api/*" })
 public class SlowRequestFilter implements Filter {
 
     private static final long CONFIG_TTL_MS = 60_000L;
@@ -47,7 +50,7 @@ public class SlowRequestFilter implements Filter {
             chain.doFilter(request, response);
         } finally {
             try {
-                if (request instanceof HttpServletRequest) {
+                if (supportEventService != null && request instanceof HttpServletRequest) {
                     long duree = System.currentTimeMillis() - start;
                     rafraichirConfig();
                     if (enabled && duree >= thresholdMs) {

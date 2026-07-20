@@ -78,7 +78,29 @@ Ext.define('testextjs.view.Navigation', {
             store: new Ext.data.TreeStore({
                 proxy: {
                     type: 'ajax',
-                    url: '../webservices/menumanagement/ws_tree_menu.jsp'
+                    url: '../webservices/menumanagement/ws_tree_menu.jsp',
+                    timeout: 30000
+                },
+                listeners: {
+                    /*
+                     * Robustesse : le menu se charge en une seule requete. Si elle echoue (HTTP 0 / requete
+                     * interrompue / hoquet serveur au demarrage), le menu resterait vide jusqu'a un F5. On
+                     * reessaie automatiquement jusqu'a 3 fois avec un petit delai croissant.
+                     */
+                    load: function (store, node, records, successful) {
+                        if (successful === false) {
+                            store._menuRetries = (store._menuRetries || 0) + 1;
+                            if (store._menuRetries <= 3) {
+                                Ext.defer(function () {
+                                    store.load();
+                                }, 1500 * store._menuRetries);
+                            } else if (window.__prestigeSupport) {
+                                window.__prestigeSupport.push('MENU: echec de chargement apres 3 tentatives');
+                            }
+                        } else {
+                            store._menuRetries = 0;
+                        }
+                    }
                 }
             }),
             dockedItems: [{
@@ -111,6 +133,14 @@ Ext.define('testextjs.view.Navigation', {
             beforeitemexpand: function () { return false; },
             afterrender: function () {
                 me._loadRealUser();
+                /* Bouton "rafraichir le menu" (recharge le store sans recharger la page) */
+                var refreshEl = Ext.get('nav-refresh-btn');
+                if (refreshEl) {
+                    refreshEl.on('click', function (e) {
+                        if (e) { e.stopEvent(); }
+                        me._reloadMenu();
+                    });
+                }
                 me.getStore().on('load', function () {
                     Ext.defer(function () { me._applyIcons(); }, 300);
                 });
@@ -225,8 +255,30 @@ Ext.define('testextjs.view.Navigation', {
              + '<div class="nav-profile-name" id="nav-user-name">...</div>'
              + '<div class="nav-profile-role" id="nav-user-role">Profil</div>'
              + '</div>'
+             + '<span class="nav-profile-refresh" id="nav-refresh-btn" title="Rafraîchir le menu" '
+             + 'style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;'
+             + 'width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,0.08);margin-left:8px">'
+             + '<i class="fa-solid fa-arrows-rotate" style="color:#85c1e9;font-size:13px"></i></span>'
              + '<span class="nav-profile-status" title="En ligne"></span>'
              + '</div>';
+    },
+
+    _reloadMenu: function () {
+        var me = this;
+        var refreshEl = Ext.get('nav-refresh-btn');
+        var icon = refreshEl ? refreshEl.down('i') : null;
+        if (icon) {
+            icon.addCls('fa-spin');
+        }
+        var store = me.getStore();
+        store._menuRetries = 0;
+        store.load({
+            callback: function () {
+                if (icon) {
+                    icon.removeCls('fa-spin');
+                }
+            }
+        });
     },
 
     _loadRealUser: function () {
