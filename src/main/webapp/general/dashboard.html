@@ -163,18 +163,28 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      min-height: 58px;
+      min-height: 52px;
       border: 0!important;
-      border-bottom: 1px solid rgba(226, 232, 240, .88)!important;
-      color: var(--text)!important;
-      padding: 15px 18px!important;
-      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96))!important;
+      border-bottom: 2px solid var(--accent, var(--prestige-primary))!important;
+      color: #0f172a!important;
+      padding: 13px 18px!important;
+      background: linear-gradient(180deg, #f5f8fc 0%, #e8eef6 100%)!important;
       font-weight: 800;
     }
-    .panel-modern .panel-heading .title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .panel-modern .panel-heading i { color: var(--accent, var(--prestige-primary)); }
-    .panel-modern .panel-body { padding: 14px 14px 10px; background: #fff; }
-    .panel-modern.feature-card .panel-body { min-height: 332px; }
+    .panel-modern .panel-heading .title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 14.5px; font-weight: 800; color: #0f172a; letter-spacing: .1px; }
+    .panel-modern .panel-heading i { color: var(--accent, var(--prestige-primary)); font-size: 15px; }
+    .panel-modern .panel-body { padding: 14px 14px 12px; background: #ffffff; }
+    .panel-modern.feature-card .panel-body { min-height: 300px; }
+
+    /* Egalisation des hauteurs : colonne de gauche (NET TTC) = colonne de droite (valorisation + mouvements) */
+    .eqrow{ display:flex; flex-wrap:wrap; align-items:stretch; }
+    .eqrow > [class*="col-"]{ float:none; display:flex; flex-direction:column; }
+    .eqrow > [class*="col-"] > .panel-modern{ width:100%; }
+    .eqrow .col-lg-8 > .panel-modern{ flex:1 1 auto; display:flex; flex-direction:column; }
+    .eqrow .col-lg-8 > .panel-modern > .panel-body{ flex:1 1 auto; }
+    .eqrow .fill-panel{ flex:1 1 auto; display:flex; flex-direction:column; }
+    .eqrow .fill-panel > .panel-body{ flex:1 1 auto; }
+    @media (max-width: 991px){ .eqrow .col-lg-8 > .panel-modern > .panel-body{ min-height:0; } }
     .heading-purple { --accent: var(--prestige-purple); }
     .heading-green { --accent: #16a34a; }
     .heading-orange { --accent: var(--prestige-gold); }
@@ -200,8 +210,8 @@
     }
     .see-more:hover, .see-more:focus { transform: translateY(-1px); text-decoration:none; color: var(--accent, var(--prestige-primary)); background: rgba(15, 118, 110, 0.12); }
 
-    #idtopCount,#idtopCA,#idtypevente,#idachatgrossiste,#toclients{ min-height:270px; }
-    #idcachart { min-height: 326px; }
+    #idtopCount,#idtopCA,#idtypevente,#idachatgrossiste,#toclients{ min-height: 0; }
+    #idcachart { min-height: 0; }
     #listemvt { margin-bottom: 0; }
     #listemvt .list-group-item{
       display:flex;
@@ -209,13 +219,15 @@
       justify-content:space-between;
       gap: 10px;
       border:0;
-      border-bottom:1px dashed #e5e7eb;
-      padding:12px 4px;
-      color: var(--text);
-      font-weight: 650;
+      border-bottom:1px dashed #e2e8f0;
+      padding:11px 4px;
+      color:#1e293b;
+      font-size:12.5px;
+      font-weight:700;
     }
     #listemvt .list-group-item:last-child { border-bottom: 0; }
-    #listemvt .badge{ border-radius:999px; font-weight:800; padding: 7px 10px; }
+    #listemvt .list-group-item > span:first-child{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #listemvt .badge{ border-radius:999px; font-weight:800; padding: 6px 10px; font-size:12px; background:#0f172a; }
 
     .loading-host { position: relative; }
     .loading-mask {
@@ -255,8 +267,55 @@
       .prestige-hero h1 { font-size: 25px; }
       .kpi-value{ font-size:21px; }
       .kpi-icon{ width: 42px; height: 42px; flex-basis: 42px; font-size: 18px; }
-      #idcachart { min-height: 280px; }
+      #idcachart { min-height: 0; }
     }
+
+    /* ============ Graphes dashboard en HTML/CSS/SVG (pv-) ============ */
+    .pv-bars{display:flex;flex-direction:column;gap:10px;padding:8px 2px;}
+    .pv-brow{display:grid;align-items:center;gap:8px;border-radius:6px;padding:2px 5px;margin:0 -5px;transition:background .15s ease;}
+    .pv-legendrow{grid-template-columns:minmax(88px,128px) minmax(60px,1fr) auto;}
+    .pv-rankrow{grid-template-columns:16px minmax(88px,165px) minmax(56px,1fr) auto auto;}
+    .pv-brk{font-size:11.5px;color:#64748b;text-align:right;font-weight:800;}
+    .pv-bnm{font-size:12.5px;color:#1e293b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .pv-legendrow .pv-bnm{text-align:right;}
+    .pv-btr{display:block;background:#eef1f5;border-radius:5px;height:16px;overflow:hidden;width:100%;}
+    .pv-bfl{display:block;height:100%;min-width:2px;border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1), filter .15s ease;}
+    .pv-bmt{font-size:12.5px;font-weight:800;color:#0f172a;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+    .pv-bpc{font-size:12px;color:#475569;font-weight:700;text-align:right;min-width:38px;font-variant-numeric:tabular-nums;}
+    .pv-combo{display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+    .pv-combo .pv-bars{flex:1 1 300px;}
+    .pv-legend{flex:0 0 176px;display:flex;flex-direction:column;gap:9px;border-left:1px solid #e2e8f0;padding-left:16px;}
+    .pv-lgt{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:2px;}
+    .pv-lrow{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:8px;font-size:12.5px;}
+    .pv-ldot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+    .pv-lnm{color:#1e293b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .pv-lpc{font-weight:800;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums;}
+    .pv-lmt{font-size:12px;color:#334155;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;}
+    .pv-empty{text-align:center;color:#94a3b8;padding:26px 10px;font-size:13px;font-weight:600;}
+    /* Animations au survol : CSS pur (GPU), aucun JS, aucun risque de surcharge */
+    .pv-bmt,.pv-bnm,.pv-lnm,.pv-lpc,.pv-lmt{transition:color .15s ease;}
+    .pv-ldot{transition:transform .15s ease;}
+    .pv-brow:hover{background:#eef2f7;}
+    .pv-brow:hover .pv-bfl{filter:brightness(1.12) saturate(1.08);}
+    .pv-brow:hover .pv-bnm,.pv-brow:hover .pv-bmt{color:#000;}
+    .pv-lrow{border-radius:6px;padding:2px 5px;margin:0 -5px;transition:background .15s ease;}
+    .pv-lrow:hover{background:#eef2f7;}
+    .pv-lrow:hover .pv-ldot{transform:scale(1.28);}
+    .pv-lrow:hover .pv-lnm,.pv-lrow:hover .pv-lpc,.pv-lrow:hover .pv-lmt{color:#000;}
+    .pv-area{position:relative;}
+    .pv-pt{cursor:pointer;}
+    .pv-tip{position:absolute;z-index:20;pointer-events:none;background:#0f172a;color:#fff;font-size:12px;font-weight:700;padding:6px 10px;border-radius:7px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.22);transform:translateY(-100%);}
+    .pv-tip b{color:#93c5fd;font-weight:800;}
+    .pv-donutwrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center;padding:6px 2px;}
+    .pv-donut{position:relative;width:140px;height:140px;flex-shrink:0;}
+    .pv-donut svg{transform:rotate(-90deg);}
+    .pv-dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .pv-dc small{font-size:10px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.05em;}
+    .pv-dc b{font-size:15px;color:#222;font-variant-numeric:tabular-nums;}
+    .pv-dleg{flex:1;min-width:180px;display:flex;flex-direction:column;gap:9px;}
+    .pv-dleg .pv-lrow{grid-template-columns:12px 1fr auto auto;}
+    .pv-area{width:100%;overflow-x:auto;}
+    .pv-area svg{display:block;width:100%;height:auto;min-width:470px;}
   </style>
 
   <!-- ====== Scripts (avec fallback jQuery) ====== -->
@@ -362,7 +421,7 @@
     </div>
 
     <!-- Vue principale -->
-    <div class="row content-grid">
+    <div class="row content-grid eqrow">
       <div class="col-sm-12 col-lg-8">
         <div class="panel panel-modern feature-card">
           <div class="panel-heading heading-blue">
@@ -372,7 +431,7 @@
         </div>
       </div>
       <div class="col-sm-12 col-lg-4">
-        <div class="panel panel-modern feature-card">
+        <div class="panel panel-modern">
           <div class="panel-heading heading-teal">
             <span class="title-wrap"><i class="fa fa-cubes"></i> Valorisation du stock</span>
           </div>
@@ -387,6 +446,14 @@
                 <span class="valo-value" id="idVALOVENTE">—</span>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="panel panel-modern fill-panel">
+          <div class="panel-heading heading-coral">
+            <span class="title-wrap"><i class="fa fa-list"></i> Mouvements de caisse</span>
+          </div>
+          <div class="panel-body">
+            <ul class="list-group" id="listemvt"></ul>
           </div>
         </div>
       </div>
@@ -436,19 +503,6 @@
       </div>
 
       <div class="col-sm-12 col-md-6">
-        <div class="panel panel-modern">
-          <div class="panel-heading heading-coral">
-            <span class="title-wrap"><i class="fa fa-list"></i> Mouvements de caisse</span>
-          </div>
-          <div class="panel-body">
-            <ul class="list-group" id="listemvt"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row content-grid">
-      <div class="col-xs-12">
         <div class="panel panel-modern">
           <div class="panel-heading heading-dark">
             <span class="title-wrap"><i class="fa fa-users"></i> Top 10 Tiers payants</span>
@@ -568,6 +622,129 @@
       var n = parseLocaleNumber(value);
       if (n === null) return (value == null || value === '') ? '—' : String(value);
       try { return n.toLocaleString('fr-FR') + ' F CFA'; } catch(e) { return String(n) + ' F CFA'; }
+    }
+
+    /* ============ Rendu des graphes en HTML/CSS/SVG (pv-) ============ */
+    var PV_COLORS = ['#2a78d6','#008300','#e87ba4','#eda100','#1baf7a','#eb6834','#4a3aa7','#e34948'];
+    var PV_ACCENT = '#2a78d6';
+    function pvEl(id){ return document.getElementById(id); }
+    function pvEsc(s){ return $('<div>').text(s == null ? '' : String(s)).html(); }
+    function pvEmpty(id){ var e = pvEl(id); if (e) { e.innerHTML = '<div class="pv-empty">Aucune donn&eacute;e sur la p&eacute;riode</div>'; } }
+    function pvPctOf(v, total){ return total > 0 ? Math.round((v || 0) * 100 / total) : 0; }
+    function pvCompact(n){
+      n = n || 0;
+      var a = Math.abs(n);
+      if (a >= 1e6) { return (n / 1e6).toFixed(a % 1e6 === 0 ? 0 : 1).replace('.', ',') + ' M'; }
+      if (a >= 1e3) { return Math.round(n / 1e3) + ' k'; }
+      return String(Math.round(n));
+    }
+
+    /* Barres colorees + legende laterale avec % (achats grossiste) */
+    function pvBarsLegend(id, items){
+      var e = pvEl(id); if (!e) { return; }
+      var max = 0, total = 0;
+      items.forEach(function(it){ var v = it.value || 0; if (v > max) { max = v; } total += v; });
+      if (!items.length || max <= 0) { pvEmpty(id); return; }
+      var bars = '<div class="pv-bars">';
+      var leg = '<div class="pv-legend"><span class="pv-lgt">Part de chacun</span>';
+      items.forEach(function(it, i){
+        var v = it.value || 0, w = (v * 100 / max), c = PV_COLORS[i % PV_COLORS.length];
+        bars += '<div class="pv-brow pv-legendrow"><span class="pv-bnm" title="' + pvEsc(it.name) + '">' + pvEsc(it.name) + '</span>'
+              + '<span class="pv-btr"><span class="pv-bfl" style="width:' + w.toFixed(1) + '%;background:' + c + '"></span></span>'
+              + '<span class="pv-bmt">' + fmtNumber(v) + '</span></div>';
+        leg += '<div class="pv-lrow"><span class="pv-ldot" style="background:' + c + '"></span><span class="pv-lnm">' + pvEsc(it.name) + '</span><span class="pv-lpc">' + pvPctOf(v, total) + ' %</span></div>';
+      });
+      bars += '</div>'; leg += '</div>';
+      e.innerHTML = '<div class="pv-combo">' + bars + leg + '</div>';
+    }
+
+    /* Barres : rang + nom + barre + valeur + % (top 5 / top 10) */
+    function pvBarsRank(id, items, opts){
+      opts = opts || {};
+      var e = pvEl(id); if (!e) { return; }
+      var max = 0, total = 0;
+      items.forEach(function(it){ var v = it.value || 0; if (v > max) { max = v; } total += v; });
+      if (!items.length || max <= 0) { pvEmpty(id); return; }
+      var html = '<div class="pv-bars">';
+      items.forEach(function(it, i){
+        var v = it.value || 0, w = (v * 100 / max), c = opts.colored ? PV_COLORS[i % PV_COLORS.length] : PV_ACCENT;
+        html += '<div class="pv-brow pv-rankrow"><span class="pv-brk">' + (i + 1) + '</span>'
+              + '<span class="pv-bnm" title="' + pvEsc(it.name) + '">' + pvEsc(it.name) + '</span>'
+              + '<span class="pv-btr"><span class="pv-bfl" style="width:' + w.toFixed(1) + '%;background:' + c + '"></span></span>'
+              + '<span class="pv-bmt">' + fmtNumber(v) + '</span>'
+              + '<span class="pv-bpc">' + pvPctOf(v, total) + ' %</span></div>';
+      });
+      html += '</div>';
+      e.innerHTML = html;
+    }
+
+    /* Anneau + total au centre + legende (montant + %) (types de ventes) */
+    function pvDonut(id, items){
+      var e = pvEl(id); if (!e) { return; }
+      var total = 0;
+      items.forEach(function(it){ total += (it.value || 0); });
+      if (!items.length || total <= 0) { pvEmpty(id); return; }
+      var r = 58, C = 2 * Math.PI * r, off = 0, segs = '';
+      items.forEach(function(it, i){
+        var frac = (it.value || 0) / total, len = Math.max(0, frac * C - 2), c = PV_COLORS[i % PV_COLORS.length];
+        segs += '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="' + c + '" stroke-width="22" stroke-dasharray="'
+             + len.toFixed(1) + ' ' + (C - len).toFixed(1) + '" stroke-dashoffset="' + (-off).toFixed(1) + '"></circle>';
+        off += frac * C;
+      });
+      var leg = '<div class="pv-dleg">';
+      items.forEach(function(it, i){
+        var c = PV_COLORS[i % PV_COLORS.length];
+        leg += '<div class="pv-lrow"><span class="pv-ldot" style="background:' + c + '"></span><span class="pv-lnm">' + pvEsc(it.name) + '</span>'
+             + '<span class="pv-lmt">' + fmtNumber(it.value || 0) + '</span><span class="pv-lpc">' + pvPctOf(it.value, total) + ' %</span></div>';
+      });
+      leg += '</div>';
+      e.innerHTML = '<div class="pv-donutwrap"><div class="pv-donut"><svg width="140" height="140" viewBox="0 0 140 140">' + segs + '</svg>'
+                  + '<div class="pv-dc"><small>Total</small><b>' + fmtNumber(total) + '</b></div></div>' + leg + '</div>';
+    }
+
+    /* Courbe en aire (evolution NET TTC) */
+    function pvArea(id, labels, values){
+      var e = pvEl(id); if (!e) { return; }
+      var n = values.length;
+      if (!n || !values.some(function(v){ return (v || 0) > 0; })) { pvEmpty(id); return; }
+      var W = 660, H = 210, x0 = 40, x1 = 620, yTop = 20, yBot = 170;
+      var scale = Math.max.apply(null, values.map(function(v){ return v || 0; })) || 1;
+      var xAt = function(i){ return n === 1 ? (x0 + x1) / 2 : x0 + (x1 - x0) * i / (n - 1); };
+      var yAt = function(v){ return yBot - ((v || 0) / scale) * (yBot - yTop); };
+      var line = '', area = '';
+      for (var i = 0; i < n; i++) {
+        var pt = xAt(i).toFixed(1) + ',' + yAt(values[i]).toFixed(1);
+        line += (i === 0 ? 'M' : 'L') + pt;
+        area += (i === 0 ? 'M' : 'L') + pt;
+      }
+      area += 'L' + xAt(n - 1).toFixed(1) + ',' + yBot + ' L' + xAt(0).toFixed(1) + ',' + yBot + ' Z';
+      var dots = '', xlab = '', hits = '';
+      for (var k = 0; k < n; k++) {
+        dots += '<circle cx="' + xAt(k).toFixed(1) + '" cy="' + yAt(values[k]).toFixed(1) + '" r="3" fill="#fff" stroke="' + PV_ACCENT + '" stroke-width="2"></circle>';
+        xlab += '<text x="' + xAt(k).toFixed(1) + '" y="190" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">' + pvEsc(labels[k]) + '</text>';
+        hits += '<circle class="pv-pt" cx="' + xAt(k).toFixed(1) + '" cy="' + yAt(values[k]).toFixed(1) + '" r="13" fill="transparent" data-l="' + pvEsc(labels[k]) + '" data-v="' + fmtNumber(values[k]) + '"></circle>';
+      }
+      var lx = xAt(n - 1).toFixed(1), ly = yAt(values[n - 1]).toFixed(1);
+      var last = '<circle cx="' + lx + '" cy="' + ly + '" r="4.5" fill="' + PV_ACCENT + '" stroke="#fff" stroke-width="2"></circle>'
+               + '<text x="' + lx + '" y="' + (parseFloat(ly) - 9).toFixed(1) + '" text-anchor="end" font-size="10.5" font-weight="700" fill="#222">' + pvCompact(values[n - 1]) + '</text>';
+      var grid = '';
+      [0, 0.5, 1].forEach(function(f){
+        var y = (yBot - f * (yBot - yTop)).toFixed(1);
+        grid += '<line x1="' + x0 + '" y1="' + y + '" x2="' + x1 + '" y2="' + y + '" stroke="#eceae5" stroke-width="1"></line>'
+              + '<text x="35" y="' + (parseFloat(y) + 4).toFixed(1) + '" text-anchor="end" font-size="9" fill="#9a9a9a">' + pvCompact(scale * f) + '</text>';
+      });
+      e.innerHTML = '<div class="pv-area"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">'
+                  + '<defs><linearGradient id="pvNetGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + PV_ACCENT + '" stop-opacity="0.28"/><stop offset="100%" stop-color="' + PV_ACCENT + '" stop-opacity="0.02"/></linearGradient></defs>'
+                  + grid
+                  + '<path d="' + area + '" fill="url(#pvNetGrad)"></path>'
+                  + '<path d="' + line + '" fill="none" stroke="' + PV_ACCENT + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>'
+                  + dots + last + xlab + hits + '</svg><div class="pv-tip" style="display:none"></div></div>';
+      var $area = $(e).find('.pv-area'), $tip = $area.find('.pv-tip');
+      $area.find('.pv-pt').on('mouseenter mousemove', function(ev){
+        var off = $area.offset();
+        $tip.html('<b>' + this.getAttribute('data-l') + '</b> · ' + this.getAttribute('data-v') + ' F CFA').show();
+        $tip.css({ left: (ev.pageX - off.left) + 'px', top: (ev.pageY - off.top - 8) + 'px' });
+      }).on('mouseleave', function(){ $tip.hide(); });
     }
 
     function setTextSafe(sel, value, isCurrency){
@@ -848,56 +1025,32 @@
       return requestJson({
         url: dashboardEndpoints.caGraphe,
         success: function (data) {
-          var donne = [
-            ['Jan', parseLocaleNumber(data.jan) || 0], ['Fév', parseLocaleNumber(data.fev) || 0], ['Mars', parseLocaleNumber(data.mars) || 0], ['Avr', parseLocaleNumber(data.avril) || 0],
-            ['Mai', parseLocaleNumber(data.mai) || 0], ['Juin', parseLocaleNumber(data.juin) || 0], ['Jul', parseLocaleNumber(data.juillet) || 0], ['Août', parseLocaleNumber(data.aout) || 0],
-            ['Sept', parseLocaleNumber(data.sept) || 0], ['Oct', parseLocaleNumber(data.oct) || 0], ['Nov', parseLocaleNumber(data.nov) || 0], ['Dec', parseLocaleNumber(data.dec) || 0]
-          ];
-          $('#idcachart').empty();
-          if ($.jqplot) {
-            $.jqplot('idcachart', [donne], {
-              grid: { drawBorder: false, drawGridlines: true, background: '#ffffff', shadow: false },
-              rendererOptions: { smooth: true },
-              axes: { xaxis: { renderer: $.jqplot.CategoryAxisRenderer }, yaxis: { pad: 0 } }
-            });
-          }
+          var labels = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+          var keys = ['jan','fev','mars','avril','mai','juin','juillet','aout','sept','oct','nov','dec'];
+          var values = keys.map(function(k){ return parseLocaleNumber(data && data[k]) || 0; });
+          pvArea('idcachart', labels, values);
         }
       });
     }
 
     function drawPieTypeVenteChart(montantvo, montantvno, montantdepos){
-      var s1 = [['Comptant', montantvno], ['Crédit', montantvo], ['Dépôt', montantdepos]];
-      $('#idtypevente').empty();
-      if ($.jqplot) {
-        $.jqplot('idtypevente', [s1], {
-          grid: { drawBorder: false, drawGridlines: false, background: '#ffffff', shadow: false },
-          seriesDefaults: { renderer: $.jqplot.DonutRenderer, rendererOptions: { showDataLabels: true, sliceMargin: 4, startAngle: -90, dataLabels: 'value' } },
-          legend: { show: true, location: 'e' }
-        });
-      }
+      pvDonut('idtypevente', [
+        { name: 'Comptant', value: montantvno || 0 },
+        { name: 'Crédit', value: montantvo || 0 },
+        { name: 'Dépôt', value: montantdepos || 0 }
+      ]);
     }
 
     function drawTOP5Chart(){
       return requestJson({
         url: dashboardEndpoints.top5Qty,
         success: function (data) {
-          var s1 = [];
           if (data && data.data && data.data.length > 0) { $('#moretop5').show(); }
+          var items = [];
           $.each((data && data.data) || [], function (index, val) {
-            if (index <= 4) s1.push([val.str_NAME, parseLocaleNumber(val.int_QUANTITY_SERVED) || 0]);
+            if (index <= 4) { items.push({ name: val.str_NAME, value: parseLocaleNumber(val.int_QUANTITY_SERVED) || 0 }); }
           });
-          $('#idtopCount').empty();
-          if (s1.length === 0) {
-            $('#idtopCount').html('<p style="text-align:center;color:#888;padding:15px;">Aucune donn&eacute;e sur la p&eacute;riode</p>');
-            return;
-          }
-          if ($.jqplot) {
-            $.jqplot('idtopCount', [s1], {
-              grid: { drawBorder: false, drawGridlines: false, background: '#ffffff', shadow: false },
-              seriesDefaults: { renderer: $.jqplot.PieRenderer, rendererOptions: { showDataLabels: true, dataLabels: 'value' } },
-              legend: { show: true, location: 'e' }
-            });
-          }
+          pvBarsRank('idtopCount', items, { colored: true });
         }
       });
     }
@@ -907,22 +1060,14 @@
         url: dashboardEndpoints.achatGrossiste,
         success: function (data) {
           if (data && data.data && data.data.length > 0) { $('#moreAchat').show(); }
-          var grossistes = (data && data.data) || [];
-          var s1 = [
-            ['UBIPHARM', parseLocaleNumber(grossistes[0] && grossistes[0].LABOREX) || 0],
-            ['DPCI', parseLocaleNumber(grossistes[1] && grossistes[1].DPCI) || 0],
-            ['COPHARMED', parseLocaleNumber(grossistes[2] && grossistes[2].COPHARMED) || 0],
-            ['TEDIS PHARMA', parseLocaleNumber(grossistes[3] && grossistes[3].TEDISPHARMA) || 0],
-            ['AUTRES', parseLocaleNumber(grossistes[4] && grossistes[4].AUTRES) || 0]
-          ];
-          $('#idachatgrossiste').empty();
-          if ($.jqplot) {
-            $.jqplot('idachatgrossiste', [s1], {
-              grid: { drawBorder: false, drawGridlines: true, background: '#ffffff', shadow: false },
-              seriesDefaults: { renderer: $.jqplot.BarRenderer, pointLabels: { show: true }, rendererOptions: { varyBarColor: true } },
-              axes: { xaxis: { renderer: $.jqplot.CategoryAxisRenderer } }
-            });
-          }
+          var g = (data && data.data) || [];
+          pvBarsLegend('idachatgrossiste', [
+            { name: 'UBIPHARM', value: parseLocaleNumber(g[0] && g[0].LABOREX) || 0 },
+            { name: 'DPCI', value: parseLocaleNumber(g[1] && g[1].DPCI) || 0 },
+            { name: 'COPHARMED', value: parseLocaleNumber(g[2] && g[2].COPHARMED) || 0 },
+            { name: 'TEDIS PHARMA', value: parseLocaleNumber(g[3] && g[3].TEDISPHARMA) || 0 },
+            { name: 'AUTRES', value: parseLocaleNumber(g[4] && g[4].AUTRES) || 0 }
+          ]);
         }
       });
     }
@@ -931,23 +1076,12 @@
       return requestJson({
         url: dashboardEndpoints.top5Ca,
         success: function (data) {
-          var s1 = [];
           if (data && data.data && data.data.length > 0) { $('#moretop5CA').show(); }
+          var items = [];
           $.each((data && data.data) || [], function (index, val) {
-            if (index <= 4) s1.push([val.str_NAME, parseLocaleNumber(val.int_PRICE) || 0]);
+            if (index <= 4) { items.push({ name: val.str_NAME, value: parseLocaleNumber(val.int_PRICE) || 0 }); }
           });
-          $('#idtopCA').empty();
-          if (s1.length === 0) {
-            $('#idtopCA').html('<p style="text-align:center;color:#888;padding:15px;">Aucune donn&eacute;e sur la p&eacute;riode</p>');
-            return;
-          }
-          if ($.jqplot) {
-            $.jqplot('idtopCA', [s1], {
-              grid: { drawBorder: false, drawGridlines: false, background: '#ffffff', shadow: false },
-              seriesDefaults: { renderer: $.jqplot.PieRenderer, rendererOptions: { showDataLabels: true, dataLabels: 'value' } },
-              legend: { show: true, location: 'e' }
-            });
-          }
+          pvBarsRank('idtopCA', items, { colored: true });
         }
       });
     }
@@ -956,20 +1090,12 @@
       return requestJson({
         url: dashboardEndpoints.bestClients,
         success: function (data) {
-          var s1 = [];
           if (data && data.data && data.data.length > 0) { $('#moretopClient').show(); }
+          var items = [];
           $.each((data && data.data) || [], function (index, val) {
-            if (index <= 10) s1.push([val.str_FULLNAME, parseLocaleNumber(val.AMOUNT) || 0]);
+            if (index <= 9) { items.push({ name: val.str_FULLNAME, value: parseLocaleNumber(val.AMOUNT) || 0 }); }
           });
-          $('#toclients').empty();
-          if ($.jqplot) {
-            $.jqplot('toclients', [s1], {
-              animate: true, animateReplot: true,
-              grid: { drawBorder: false, drawGridlines: true, background: '#ffffff', shadow: false },
-              seriesDefaults: { renderer: $.jqplot.BarRenderer, pointLabels: { show: true }, rendererOptions: { varyBarColor: true } },
-              axes: { xaxis: { renderer: $.jqplot.CategoryAxisRenderer, tickRenderer: $.jqplot.CanvasAxisTickRenderer, tickOptions: { angle: -10, fontSize: '9pt' } } }
-            });
-          }
+          pvBarsRank('toclients', items, { colored: true });
         }
       });
     }
