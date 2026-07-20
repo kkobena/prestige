@@ -887,6 +887,10 @@
             if (index <= 4) s1.push([val.str_NAME, parseLocaleNumber(val.int_QUANTITY_SERVED) || 0]);
           });
           $('#idtopCount').empty();
+          if (s1.length === 0) {
+            $('#idtopCount').html('<p style="text-align:center;color:#888;padding:15px;">Aucune donn&eacute;e sur la p&eacute;riode</p>');
+            return;
+          }
           if ($.jqplot) {
             $.jqplot('idtopCount', [s1], {
               grid: { drawBorder: false, drawGridlines: false, background: '#ffffff', shadow: false },
@@ -933,6 +937,10 @@
             if (index <= 4) s1.push([val.str_NAME, parseLocaleNumber(val.int_PRICE) || 0]);
           });
           $('#idtopCA').empty();
+          if (s1.length === 0) {
+            $('#idtopCA').html('<p style="text-align:center;color:#888;padding:15px;">Aucune donn&eacute;e sur la p&eacute;riode</p>');
+            return;
+          }
           if ($.jqplot) {
             $.jqplot('idtopCA', [s1], {
               grid: { drawBorder: false, drawGridlines: false, background: '#ffffff', shadow: false },

@@ -927,7 +927,24 @@ Ext.application({
         }
     }
 
+    // Messages d'erreur JS benins / bruit de librairie : on ne les remonte pas (faux positifs).
+    var MESSAGES_BENINS = ['no data specified', 'script error', 'resizeobserver',
+        'null is not an object', 'result is not defined'];
+
+    function estBenin(message) {
+        var m = String(message || '').toLowerCase();
+        for (var i = 0; i < MESSAGES_BENINS.length; i++) {
+            if (m.indexOf(MESSAGES_BENINS[i]) !== -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     window.onerror = function (message, source, lineno, colno, error) {
+        if (estBenin(message)) {
+            return false;
+        }
         reportError({
             type: 'JS',
             niveau: 'ERROR',
@@ -963,9 +980,15 @@ Ext.application({
                     return;
                 }
                 var status = response ? response.status : 0;
+                // HTTP 0 = requete interrompue/avortee (navigation, rechargement, coupure reseau) : non
+                // actionnable et tres bruyant. On ne la remonte pas (si le serveur etait vraiment injoignable,
+                // l'envoi de l'evenement lui-meme echouerait de toute facon).
+                if (status === 0) {
+                    return;
+                }
                 reportError({
                     type: 'AJAX',
-                    niveau: status >= 500 || status === 0 ? 'ERROR' : 'WARN',
+                    niveau: status >= 500 ? 'ERROR' : 'WARN',
                     module: 'FRONTEND',
                     messageCourt: ('Échec Ajax HTTP ' + status + ' '
                             + (response && response.statusText ? response.statusText : '')).substring(0, 500),

@@ -43,6 +43,22 @@ public interface SupportEventService {
      */
     String readLogContent(String eventId);
 
+    /**
+     * Valeur d'un parametre applicatif (t_parameters), ou {@code null} si absent.
+     */
+    String getParameter(String key);
+
+    /**
+     * Enregistre le dernier passage d'un job planifie (t_support_job_run) pour la surveillance de fraicheur.
+     */
+    void recordJobRun(String code);
+
+    /**
+     * Enregistre un incident serveur distinct (ex. crash detecte par le watchdog). Cree un evenement avec le detail
+     * ecrit dans un fichier log, de facon synchrone et idempotente (par signature).
+     */
+    void recordServerIncident(String code, String niveau, String message, String detail);
+
     Map<String, Object> sante();
 
     int purgeOldEvents();

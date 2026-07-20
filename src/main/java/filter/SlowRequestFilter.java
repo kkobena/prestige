@@ -1,0 +1,128 @@
+package filter;
+
+import dal.TUser;
+import java.io.IOException;
+import javax.ejb.EJB;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
+import rest.service.SupportEventService;
+import rest.service.dto.SupportEventDTO;
+import util.Constant;
+
+/**
+ * Detection des ecrans / requetes lents : mesure le temps de traitement des requetes de donnees et cree un evenement
+ * PERFORMANCE pour celles qui depassent un seuil configurable. La configuration est mise en cache (rechargee au plus
+ * une fois par minute) pour n'ajouter aucun surcout par requete ; l'enregistrement d'une lenteur est asynchrone.
+ */
+@WebFilter(filterName = "SlowRequestFilter", urlPatterns = { "/api/*", "/webservices/*", "*.jsp" })
+public class SlowRequestFilter implements Filter {
+
+    private static final long CONFIG_TTL_MS = 60_000L;
+
+    @EJB
+    private SupportEventService supportEventService;
+
+    private volatile long lastConfigLoad = 0L;
+    private volatile boolean enabled = true;
+    private volatile long thresholdMs = 5000L;
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        // rien a initialiser
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        long start = System.currentTimeMillis();
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            try {
+                if (request instanceof HttpServletRequest) {
+                    long duree = System.currentTimeMillis() - start;
+                    rafraichirConfig();
+                    if (enabled && duree >= thresholdMs) {
+                        signalerLenteur((HttpServletRequest) request, duree);
+                    }
+                }
+            } catch (Exception ignore) {
+                // la mesure ne doit jamais perturber la requete
+            }
+        }
+    }
+
+    private void signalerLenteur(HttpServletRequest req, long dureeMs) {
+        String chemin = StringUtils.defaultString(req.getRequestURI());
+        // On ne mesure pas les appels du support lui-meme (evite toute boucle de retro-action).
+        if (chemin.contains("/api/v1/support/")) {
+            return;
+        }
+        String methode = StringUtils.defaultString(req.getMethod());
+        long seuilS = Math.max(1, thresholdMs / 1000);
+        String utilisateur = utilisateur(req);
+        SupportEventDTO dto = new SupportEventDTO();
+        dto.setType("PERF");
+        dto.setNiveau("WARN");
+        dto.setModule("PERFORMANCE");
+        dto.setMessageCourt(
+                StringUtils.abbreviate("Requete lente (> " + seuilS + "s) : " + methode + " " + chemin, 500));
+        dto.setUrlOuEcran(StringUtils.abbreviate(chemin, 255));
+        StringBuilder detail = new StringBuilder();
+        detail.append("Requete lente detectee.\n");
+        detail.append("Methode : ").append(methode).append("\n");
+        detail.append("URI     : ").append(chemin).append("\n");
+        detail.append("Query   : ").append(StringUtils.defaultString(req.getQueryString())).append("\n");
+        detail.append("Duree   : ").append(dureeMs).append(" ms\n");
+        detail.append("Seuil   : ").append(thresholdMs).append(" ms\n");
+        detail.append("Utilisateur : ").append(utilisateur).append("\n");
+        dto.setStack(detail.toString());
+        // Enregistrement asynchrone (record est @Asynchronous) : aucun surcout ajoute a la requete.
+        supportEventService.record(dto, utilisateur);
+    }
+
+    private String utilisateur(HttpServletRequest req) {
+        try {
+            HttpSession session = req.getSession(false);
+            if (session != null) {
+                Object u = session.getAttribute(Constant.AIRTIME_USER);
+                if (u instanceof TUser) {
+                    return StringUtils.abbreviate(((TUser) u).getStrLOGIN(), 255);
+                }
+            }
+        } catch (Exception ignore) {
+            // best-effort
+        }
+        return "";
+    }
+
+    private void rafraichirConfig() {
+        long now = System.currentTimeMillis();
+        if (now - lastConfigLoad < CONFIG_TTL_MS) {
+            return;
+        }
+        lastConfigLoad = now;
+        try {
+            enabled = !"0".equals(StringUtils.trimToEmpty(supportEventService.getParameter("SUPPORT_SLOWLOG_ENABLED")));
+            String v = StringUtils.trimToEmpty(supportEventService.getParameter("SUPPORT_SLOW_MS"));
+            if (StringUtils.isNotBlank(v)) {
+                thresholdMs = Long.parseLong(v);
+            }
+        } catch (Exception e) {
+            // en cas de souci de lecture, on garde les dernieres valeurs connues
+        }
+    }
+
+    @Override
+    public void destroy() {
+        // rien a liberer
+    }
+}

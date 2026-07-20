@@ -150,6 +150,58 @@ public class SupportEventServiceImpl implements SupportEventService {
     }
 
     @Override
+    public String getParameter(String key) {
+        return getParameterValue(key);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void recordJobRun(String code) {
+        try {
+            String hostname = StringUtils.abbreviate(StringUtils.defaultString(System.getProperty("user.name")) + "@"
+                    + StringUtils.defaultString(System.getProperty("os.name")), 255);
+            em.createNativeQuery("INSERT INTO t_support_job_run (code, last_run_at, hostname) VALUES (?1, NOW(), ?2) "
+                    + "ON DUPLICATE KEY UPDATE last_run_at = NOW(), hostname = ?2").setParameter(1, code)
+                    .setParameter(2, hostname).executeUpdate();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "recordJobRun " + code, e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void recordServerIncident(String code, String niveau, String message, String detail) {
+        try {
+            String signature = sha256Hex("SERVEUR|" + StringUtils.trimToEmpty(code));
+            if (findBySignature(signature) != null) {
+                // idempotent : incident deja enregistre (ex. double demarrage sur le meme crash)
+                return;
+            }
+            SupportEventDTO dto = new SupportEventDTO();
+            dto.setType("SERVEUR");
+            dto.setModule("SERVEUR");
+            dto.setUrlOuEcran("serveur:" + StringUtils.abbreviate(code, 240));
+            dto.setMessageCourt(message);
+            dto.setStack(detail);
+            ApplicationEvent event = new ApplicationEvent();
+            event.setSignature(signature);
+            event.setType("SERVEUR");
+            event.setNiveau(normalizeNiveau(niveau));
+            event.setModule("SERVEUR");
+            event.setMessageCourt(StringUtils.abbreviate(StringUtils.defaultIfBlank(message, "Incident serveur"), 500));
+            event.setUrlOuEcran(StringUtils.abbreviate(dto.getUrlOuEcran(), 255));
+            event.setUtilisateur("WATCHDOG");
+            event.setOccurrences(1);
+            event.setLastSeenAt(LocalDateTime.now());
+            event.setLogRef(writeLogFile(event.getId(), dto));
+            em.persist(event);
+            applyAutoTicket(event);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recordServerIncident " + code, e);
+        }
+    }
+
+    @Override
     public String createTicketFromEvent(String eventId, TUser user) {
         ApplicationEvent event = em.find(ApplicationEvent.class, eventId);
         if (event == null) {
