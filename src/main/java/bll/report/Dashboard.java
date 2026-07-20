@@ -287,13 +287,12 @@ public class Dashboard extends bll.bllBase {
 
         JSONArray array = new JSONArray();
         String query = "SELECT COUNT(b.`lg_BON_LIVRAISON_ID`),"
-                + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'UBI%' OR g.`str_LIBELLE` LIKE 'LABOR%' THEN b.`int_MHT` ELSE 0 END),"
+                + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'UBI%' THEN b.`int_MHT` ELSE 0 END),"
                 + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'DPCI%' THEN b.`int_MHT` ELSE 0 END),"
                 + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'COPHARMED%' THEN b.`int_MHT` ELSE 0 END),"
                 + "SUM(CASE WHEN g.`str_LIBELLE` LIKE 'TEDIS PHARMA%' THEN b.`int_MHT` ELSE 0 END),"
                 + "SUM(CASE WHEN g.`str_LIBELLE` NOT LIKE 'TEDIS PHARMA%' AND g.`str_LIBELLE` NOT LIKE 'COPHARMED%' "
-                + "AND g.`str_LIBELLE` NOT LIKE 'DPCI%' AND g.`str_LIBELLE` NOT LIKE 'UBI%' "
-                + "AND g.`str_LIBELLE` NOT LIKE 'LABOR%' THEN b.`int_MHT` ELSE 0 END) "
+                + "AND g.`str_LIBELLE` NOT LIKE 'DPCI%' AND g.`str_LIBELLE` NOT LIKE 'UBI%' THEN b.`int_MHT` ELSE 0 END) "
                 + "FROM t_bon_livraison b,t_order o,t_grossiste g WHERE o.`lg_ORDER_ID`=b.`lg_ORDER_ID` "
                 + "AND o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` AND b.`str_STATUT`='is_Closed' "
                 + "AND b.`dt_UPDATED` >= ?1 AND b.`dt_UPDATED` <= ?2";
@@ -400,11 +399,11 @@ public class Dashboard extends bll.bllBase {
 
     public JSONArray getListMVT() {
         JSONArray array = new JSONArray();
-        String query = "SELECT t.`str_NAME`,SUM(m.`int_AMOUNT`)  FROM t_mvt_caisse m,t_type_mvt_caisse t  WHERE "
+        String query = "SELECT t.`str_NAME`,SUM(m.`int_AMOUNT`),t.`categorie`  FROM t_mvt_caisse m,t_type_mvt_caisse t  WHERE "
                 + " t.`lg_TYPE_MVT_CAISSE_ID`=m.`lg_TYPE_MVT_CAISSE_ID` AND t.`lg_TYPE_MVT_CAISSE_ID` <> '"
                 + Parameter.TYPE_MV_CAISSE_VNO + "' AND " + " t.`lg_TYPE_MVT_CAISSE_ID` <> '"
                 + Parameter.TYPE_MV_CAISSE_VO
-                + "' AND m.`dt_CREATED` >= ?1 AND m.`dt_CREATED` < ?2 GROUP BY t.`str_NAME`";
+                + "' AND m.`dt_CREATED` >= ?1 AND m.`dt_CREATED` < ?2 GROUP BY t.`str_NAME`,t.`categorie`";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
                     .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
@@ -414,6 +413,15 @@ public class Dashboard extends bll.bllBase {
 
                 json.put("str_NAME", String.valueOf(objects[0]).trim());
                 json.put("AMOUNT", Double.valueOf(objects[1] + ""));
+                // categorie (ordinal de CategorieMvtCaisse) : 0=VENTE, 1=ENTREE_CAISSE, 2=SORTIE_CAISSE, 3=ACHAT.
+                int categorie = -1;
+                try {
+                    if (objects.length > 2 && objects[2] != null) {
+                        categorie = Integer.parseInt(String.valueOf(objects[2]).trim());
+                    }
+                } catch (NumberFormatException ignore) {
+                }
+                json.put("CATEGORIE", categorie);
 
                 array.put(json);
 

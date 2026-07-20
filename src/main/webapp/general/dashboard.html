@@ -1106,9 +1106,13 @@
         url: dashboardEndpoints.mouvements,
         success: function (data) {
           $.each((data && data.data) || [], function (index, val) {
+            // categorie : 0=VENTE, 1=ENTREE_CAISSE (entree -> vert) ; 2=SORTIE_CAISSE, 3=ACHAT (sortie -> rouge)
+            var cat = (val.CATEGORIE == null) ? -1 : parseInt(val.CATEGORIE, 10);
+            var couleur = (cat === 2 || cat === 3) ? '#dc2626'
+                        : (cat === 0 || cat === 1) ? '#16a34a' : '#0f172a';
             var li = $('<li class="list-group-item">' +
                 '<span>' + (val.str_NAME || '') + '</span>' +
-                '<span class="badge" style="background-color:#F89406;">' + fmtCurrencyValue(val.AMOUNT) + '</span>' +
+                '<span class="badge" style="background-color:' + couleur + ';">' + fmtCurrencyValue(val.AMOUNT) + '</span>' +
               '</li>');
             $('#listemvt').append(li);
           });
