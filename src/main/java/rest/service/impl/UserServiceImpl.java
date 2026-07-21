@@ -47,6 +47,13 @@ public class UserServiceImpl implements UserService {
         try {
 
             TUser user = connectUser(managedUser);
+            if (user == null) {
+                // Identifiants invalides (login/mot de passe/compte desactive) :
+                // echec d'authentification normal, on retourne null sans tracer
+                // d'erreur SEVERE (evite le bruit dans les logs et les faux
+                // incidents cote supervision).
+                return null;
+            }
             user.setStrLASTCONNECTIONDATE(new Date());
             user.setIntCONNEXION(user.getIntCONNEXION() + 1);
             user.setBIsConnected(true);
@@ -72,7 +79,10 @@ public class UserServiceImpl implements UserService {
                         TUser.class)
                 .setParameter(1, managedUser.getLogin()).setParameter(2, Md5.encode(managedUser.getPassword()))
                 .setParameter(3, Constant.STATUT_ENABLE).setMaxResults(1);
-        return q.getSingleResult();
+        // getResultList() plutot que getSingleResult() : un identifiant errone
+        // renvoie une liste vide (null) au lieu de lever une NoResultException.
+        List<TUser> res = q.getResultList();
+        return res.isEmpty() ? null : res.get(0);
     }
 
     public boolean afficheurActif() {

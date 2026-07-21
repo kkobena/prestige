@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -150,16 +151,38 @@ public class CommonRessource {
     @GET
     @Path("users")
     public Response getUsers(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query) {
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "excludeAdmin") @DefaultValue("false") boolean excludeAdmin) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
+        // On exclut les profils Administrateur / Super Administrateur uniquement si l'ecran le demande
+        // (excludeAdmin=true) ET que l'utilisateur connecte n'est pas lui-meme admin / super admin.
+        boolean effectiveExclude = excludeAdmin && !connectedIsAdmin(tu);
         TEmplacement emplacement = tu.getLgEMPLACEMENTID();
-        long total = commonService.findUsers(query, emplacement.getLgEMPLACEMENTID());
-        List<UserDTO> data = commonService.findUsers(start, limit, query, emplacement.getLgEMPLACEMENTID());
+        long total = commonService.findUsers(query, emplacement.getLgEMPLACEMENTID(), effectiveExclude);
+        List<UserDTO> data = commonService.findUsers(start, limit, query, emplacement.getLgEMPLACEMENTID(),
+                effectiveExclude);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, total)).build();
+    }
+
+    /** Vrai si l'utilisateur connecte a un profil Administrateur ou Super Administrateur (detection par prefixe). */
+    private boolean connectedIsAdmin(TUser tu) {
+        try {
+            for (dal.TRoleUser ru : tu.getTRoleUserCollection()) {
+                dal.TRole r = ru.getLgROLEID();
+                if (r != null && Constant.STATUT_ENABLE.equalsIgnoreCase(r.getStrSTATUT())) {
+                    String name = r.getStrNAME();
+                    if (bll.userManagement.user.isAdminRole(name) || bll.userManagement.user.isSuperAdminRole(name)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
     }
 
     @GET

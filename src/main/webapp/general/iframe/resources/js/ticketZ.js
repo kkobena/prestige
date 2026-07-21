@@ -3,7 +3,7 @@ $(document).ready(function () {
     $("#dtStart").val(today);
     $("#dtEnd").val(today);
     $("#spinner").hide();
-    $.get('../api/v1/common/users', function (data, status) {
+    $.get('../api/v1/common/users?excludeAdmin=true', function (data, status) {
         const container = $('#userId');
         for (let u of data.data) {
             container.append($('<option>')

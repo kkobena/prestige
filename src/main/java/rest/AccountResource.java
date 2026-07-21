@@ -76,9 +76,13 @@ public class AccountResource {
                         .orElse(null);
                 TRole role = oTRoleUser.getLgROLEID();
                 hs.setAttribute(Constant.USER_ROLE_ID, role.getLgROLEID());
-                xtypeuser = (role.getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN)
-                        || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
-                        || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_ADMIN) ? dashboard : "mainmenumanager");
+                // Detection admin/super-admin par prefixe (gere les noms suffixes "... du systeme")
+                // pour que ces profils arrivent bien sur le dashboard apres connexion.
+                String roleName = role.getStrNAME();
+                boolean goDashboard = (roleName != null && roleName.equalsIgnoreCase(Constant.ROLE_PHARMACIEN))
+                        || bll.userManagement.user.isSuperAdminRole(roleName)
+                        || bll.userManagement.user.isAdminRole(roleName);
+                xtypeuser = goDashboard ? dashboard : "mainmenumanager";
 
             }
 

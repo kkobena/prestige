@@ -254,6 +254,11 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     @Override
     public long findUsers(String query, String empl) {
+        return findUsers(query, empl, false);
+    }
+
+    @Override
+    public long findUsers(String query, String empl, boolean excludeAdmin) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -269,6 +274,9 @@ public class CommonServiceImpl implements Serializable, CommonService {
                         cb.like(cb.concat(cb.concat(root.get(TUser_.strFIRSTNAME), " "), root.get(TUser_.strLASTNAME)),
                                 query + "%")));
             }
+            if (excludeAdmin) {
+                predicates.add(notAdminRolePredicate(cb, cq, root));
+            }
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
 
@@ -281,6 +289,11 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     @Override
     public List<UserDTO> findUsers(int start, int limit, String query, String empl) {
+        return findUsers(start, limit, query, empl, false);
+    }
+
+    @Override
+    public List<UserDTO> findUsers(int start, int limit, String query, String empl, boolean excludeAdmin) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -297,6 +310,9 @@ public class CommonServiceImpl implements Serializable, CommonService {
                         cb.like(cb.concat(cb.concat(root.get(TUser_.strFIRSTNAME), " "), root.get(TUser_.strLASTNAME)),
                                 query + "%")));
             }
+            if (excludeAdmin) {
+                predicates.add(notAdminRolePredicate(cb, cq, root));
+            }
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (limit > 0) {
@@ -309,6 +325,22 @@ public class CommonServiceImpl implements Serializable, CommonService {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * Predicat excluant les utilisateurs dont le profil est Administrateur ou Super Administrateur. La detection se
+     * fait par prefixe de nom (str_NAME et str_DESIGNATION) afin de couvrir les variantes suffixees ("Administrateur du
+     * systeme", "Super Administrateur du systeme", ...).
+     */
+    private Predicate notAdminRolePredicate(CriteriaBuilder cb, CriteriaQuery<?> cq, Root<TUser> root) {
+        javax.persistence.criteria.Subquery<String> sub = cq.subquery(String.class);
+        Root<dal.TRoleUser> ru = sub.from(dal.TRoleUser.class);
+        sub.select(ru.get("lgUSERID").<String> get("lgUSERID"));
+        sub.where(cb.or(cb.like(ru.get("lgROLEID").<String> get("strNAME"), Constant.ROLE_ADMIN + "%"),
+                cb.like(ru.get("lgROLEID").<String> get("strNAME"), Constant.ROLE_SUPERADMIN + "%"),
+                cb.like(ru.get("lgROLEID").<String> get("strDESIGNATION"), Constant.ROLE_ADMIN + "%"),
+                cb.like(ru.get("lgROLEID").<String> get("strDESIGNATION"), Constant.ROLE_SUPERADMIN + "%")));
+        return cb.not(root.get(TUser_.lgUSERID).in(sub));
     }
 
     @Override

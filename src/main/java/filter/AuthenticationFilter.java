@@ -49,6 +49,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        // Remise a zero du contexte de la requete : les threads HTTP sont reutilises,
+        // on ne doit jamais heriter de l'utilisateur d'une requete precedente.
+        sessionHelperService.setCurrentUser(null);
+        sessionHelperService.setData(null);
         String path = requestContext.getUriInfo().getPath();
         TUser currentUser;
         String userS = requestContext.getHeaderString("X-User-Info");

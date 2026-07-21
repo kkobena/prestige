@@ -727,6 +727,24 @@
       var lx = xAt(n - 1).toFixed(1), ly = yAt(values[n - 1]).toFixed(1);
       var last = '<circle cx="' + lx + '" cy="' + ly + '" r="4.5" fill="' + PV_ACCENT + '" stroke="#fff" stroke-width="2"></circle>'
                + '<text x="' + lx + '" y="' + (parseFloat(ly) - 9).toFixed(1) + '" text-anchor="end" font-size="10.5" font-weight="700" fill="#222">' + pvCompact(values[n - 1]) + '</text>';
+      /* Pastilles d'evolution (%) sur les mois fermes uniquement (mois entierement ecoules).
+         Position : au-dessus du point si evolution positive, en dessous si negative.
+         Janvier n'a pas de reference (dec. annee precedente non chargee) : pas de pastille. */
+      var pills = '';
+      var closedUpTo = new Date().getMonth(); // index du mois en cours : les mois < closedUpTo sont fermes
+      for (var m = 1; m < n && m < closedUpTo; m++) {
+        var prevV = values[m - 1] || 0, curV = values[m] || 0;
+        if (prevV <= 0 || curV <= 0) { continue; } // pas de pastille sans donnees comparables
+        var pct = Math.round((curV / prevV - 1) * 100);
+        var ptxt = (pct > 0 ? '+' : '') + pct + '%';
+        var pcol = pct > 0 ? '#16a34a' : (pct < 0 ? '#dc2626' : '#64748b');
+        var pw = ptxt.length * 6 + 10;
+        var pcx = xAt(m);
+        var pcy = pct >= 0 ? yAt(curV) - 16 : yAt(curV) + 16;
+        pcy = Math.max(9, Math.min(174, pcy)); // reste dans la zone du graphe (au-dessus des libelles)
+        pills += '<g><rect x="' + (pcx - pw / 2).toFixed(1) + '" y="' + (pcy - 7).toFixed(1) + '" width="' + pw + '" height="14" rx="7" fill="' + pcol + '" opacity="0.92"></rect>'
+              + '<text x="' + pcx.toFixed(1) + '" y="' + (pcy + 3.5).toFixed(1) + '" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">' + ptxt + '</text></g>';
+      }
       var grid = '';
       [0, 0.5, 1].forEach(function(f){
         var y = (yBot - f * (yBot - yTop)).toFixed(1);
@@ -738,7 +756,7 @@
                   + grid
                   + '<path d="' + area + '" fill="url(#pvNetGrad)"></path>'
                   + '<path d="' + line + '" fill="none" stroke="' + PV_ACCENT + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>'
-                  + dots + last + xlab + hits + '</svg><div class="pv-tip" style="display:none"></div></div>';
+                  + dots + last + pills + xlab + hits + '</svg><div class="pv-tip" style="display:none"></div></div>';
       var $area = $(e).find('.pv-area'), $tip = $area.find('.pv-tip');
       $area.find('.pv-pt').on('mouseenter mousemove', function(ev){
         var off = $area.offset();

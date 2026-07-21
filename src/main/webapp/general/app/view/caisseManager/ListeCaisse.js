@@ -52,6 +52,7 @@ Ext.define('testextjs.view.caisseManager.ListeCaisse', {
             proxy: {
                 type: 'ajax',
                 url: '../api/v1/common/users',
+                extraParams: {excludeAdmin: true},
                 reader: {
                     type: 'json',
                     root: 'data',
