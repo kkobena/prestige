@@ -24,6 +24,9 @@ Ext.define('testextjs.controller.SupportTicketsCtr', {
             'supporttickets button#btnNouveauTicket': {
                 click: this.onNouveauTicket
             },
+            'supporttickets button#btnImprimer': {
+                click: this.onImprimer
+            },
             'supporttickets gridpanel actioncolumn': {
                 ouvrir: this.onOuvrirTicket
             }
@@ -36,6 +39,31 @@ Ext.define('testextjs.controller.SupportTicketsCtr', {
 
     doRefresh: function () {
         this.getTicketsGrid().getStore().reload();
+    },
+
+    /**
+     * Dictionnaire de suivi des pannes : PDF paysage de TOUS les tickets (une ligne par ticket), ouvert dans un nouvel
+     * onglet.
+     */
+    onImprimer: function () {
+        const progress = Ext.MessageBox.wait('Génération du PDF . . .', 'Veuillez patienter');
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/support/tickets/print',
+            success: function (response) {
+                progress.hide();
+                const result = Ext.JSON.decode(response.responseText, true) || {};
+                if (result.success && result.msg) {
+                    window.open('..' + result.msg, '_blank');
+                } else {
+                    Ext.Msg.alert('Message', result.msg || 'Impossible de générer le PDF');
+                }
+            },
+            failure: function () {
+                progress.hide();
+                Ext.Msg.alert('Message', 'Un problème avec le serveur');
+            }
+        });
     },
 
     onStatutFilterChange: function (combo, newValue) {

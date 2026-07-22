@@ -62,4 +62,42 @@ public interface SupportEventService {
     Map<String, Object> sante();
 
     int purgeOldEvents();
+
+    /**
+     * Occurrences individuelles d'un evenement : date/heure suivie de l'utilisateur + IP + poste qui l'a constatee
+     * (niveaux ERROR/FATAL uniquement, plafond 100, enregistrees a partir de la mise en place de la table). Triees de
+     * la plus recente a la plus ancienne.
+     */
+    List<String> findOccurrences(String eventId);
+
+    /**
+     * Nombre d'evenements qui seraient supprimes par une purge manuelle avec ces criteres (apercu avant confirmation).
+     *
+     * @param niveaux
+     *            liste CSV de niveaux (ex. "ERROR,WARN"), vide = tous
+     * @param avantLe
+     *            date ISO (yyyy-MM-dd) : ne purge que les evenements vus avant cette date ; vide = sans limite
+     * @param inclureTickets
+     *            false = les evenements lies a un ticket sont proteges
+     */
+    long countForPurge(String niveaux, String avantLe, boolean inclureTickets);
+
+    /**
+     * Purge manuelle des evenements selon les memes criteres que {@link #countForPurge}. Supprime aussi les fichiers
+     * logs et les occurrences associees, et trace l'action dans le journal (evenement MAINTENANCE).
+     */
+    int purgeSelective(String niveaux, String avantLe, boolean inclureTickets, String utilisateur);
+
+    /**
+     * Recapitulatif analytique des evenements : groupes par module + type + niveau avec nombre d'anomalies distinctes,
+     * total d'occurrences et derniere apparition, tries par total d'occurrences decroissant. Periode optionnelle sur la
+     * derniere apparition (dates ISO yyyy-MM-dd, vides = sans borne).
+     */
+    List<Map<String, Object>> recap(String dtStart, String dtEnd);
+
+    /**
+     * Trace une action de maintenance dans le journal des evenements (type MAINTENANCE, niveau INFO, un evenement
+     * distinct par action executee : qui, quoi, combien).
+     */
+    void recordMaintenance(String action, String message, String utilisateur);
 }

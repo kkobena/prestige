@@ -1364,7 +1364,12 @@ public class OrderServiceImpl implements OrderService {
         commande.setLibelleGrossiste(t.get("libelleGrossiste", String.class));
         commande.setUrlPharma(t.get("urlPharma", String.class));
         commande.setUrlExtranet(t.get("urlExtranet", String.class));
-        commande.setUserFullName(t.get("userName", String.class).charAt(0) + "." + t.get("userLastName", String.class));
+        // Prenom potentiellement vide ou null (ex. utilisateur cree par un import de BL) :
+        // charAt(0) sur une chaine vide levait StringIndexOutOfBounds et vidait tout l'ecran
+        // des commandes en cours (une seule ligne fautive faisait echouer la liste entiere).
+        String prenom = StringUtils.trimToEmpty(t.get("userName", String.class));
+        String nom = StringUtils.trimToEmpty(t.get("userLastName", String.class));
+        commande.setUserFullName((prenom.isEmpty() ? "" : prenom.charAt(0) + ".") + nom);
         commande.setDtCREATED(t.get("dateCreation", String.class));
         commande.setDtUPDATED(t.get("heureCreation", String.class));
         commande.setStrSTATUT(t.get("status", String.class));

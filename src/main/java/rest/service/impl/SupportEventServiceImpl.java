@@ -93,6 +93,7 @@ public class SupportEventServiceImpl implements SupportEventService {
                     return;
                 }
             }
+            addOccurrence(event);
             applyAutoTicket(event);
         } catch (Exception e) {
             // la capture d'un evenement ne doit jamais perturber l'application
@@ -193,8 +194,9 @@ public class SupportEventServiceImpl implements SupportEventService {
             event.setUtilisateur("WATCHDOG");
             event.setOccurrences(1);
             event.setLastSeenAt(LocalDateTime.now());
-            event.setLogRef(writeLogFile(event.getId(), dto));
+            event.setLogRef(writeLogFile(event.getId(), dto, "WATCHDOG"));
             em.persist(event);
+            addOccurrence(event);
             applyAutoTicket(event);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "recordServerIncident " + code, e);
@@ -273,6 +275,8 @@ public class SupportEventServiceImpl implements SupportEventService {
                         .setParameter("cutoff", cutoff).getResultList();
                 for (ApplicationEvent event : events) {
                     deleteLogFile(event.getLogRef());
+                    em.createNativeQuery("DELETE FROM t_application_event_occurrence WHERE event_id = ?1")
+                            .setParameter(1, event.getId()).executeUpdate();
                     em.remove(event);
                     purged++;
                 }
@@ -284,6 +288,178 @@ public class SupportEventServiceImpl implements SupportEventService {
             LOG.log(Level.INFO, "Purge Centre de Support : {0} événement(s) supprimé(s)", purged);
         }
         return purged;
+    }
+
+    /**
+     * Enregistre la date/heure de cette occurrence (niveaux ERROR/FATAL uniquement) avec l'utilisateur + IP + poste qui
+     * l'a constatee, plafonnee a 100 lignes par evenement (les plus anciennes sont supprimees). Best-effort : ne
+     * perturbe jamais la capture.
+     */
+    private void addOccurrence(ApplicationEvent event) {
+        try {
+            if (event == null || !(ApplicationEvent.NIVEAU_ERROR.equals(event.getNiveau())
+                    || ApplicationEvent.NIVEAU_FATAL.equals(event.getNiveau()))) {
+                return;
+            }
+            em.createNativeQuery(
+                    "INSERT INTO t_application_event_occurrence (id, event_id, seen_at, constate_par) VALUES (LEFT(UUID(), 50), ?1, NOW(), ?2)")
+                    .setParameter(1, event.getId()).setParameter(2, StringUtils.abbreviate(event.getUtilisateur(), 255))
+                    .executeUpdate();
+            em.createNativeQuery("DELETE FROM t_application_event_occurrence WHERE event_id = ?1 AND id NOT IN ("
+                    + "SELECT id FROM (SELECT id FROM t_application_event_occurrence WHERE event_id = ?1 "
+                    + "ORDER BY seen_at DESC LIMIT 100) conserve)").setParameter(1, event.getId()).executeUpdate();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "addOccurrence", e);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> findOccurrences(String eventId) {
+        List<String> dates = new ArrayList<>();
+        try {
+            List<Object> rows = em
+                    .createNativeQuery("SELECT CONCAT(DATE_FORMAT(seen_at, '%d/%m/%Y %H:%i:%s'), "
+                            + "IF(constate_par IS NULL OR constate_par = '', '', CONCAT('  —  ', constate_par))) "
+                            + "FROM t_application_event_occurrence WHERE event_id = ?1 ORDER BY seen_at DESC")
+                    .setParameter(1, eventId).getResultList();
+            for (Object row : rows) {
+                dates.add(String.valueOf(row));
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "findOccurrences " + eventId, e);
+        }
+        return dates;
+    }
+
+    @Override
+    public long countForPurge(String niveaux, String avantLe, boolean inclureTickets) {
+        try {
+            StringBuilder jpql = new StringBuilder("SELECT COUNT(o) FROM ApplicationEvent o WHERE 1=1");
+            Map<String, Object> params = buildPurgeCriteria(jpql, niveaux, avantLe, inclureTickets);
+            TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+            params.forEach(query::setParameter);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "countForPurge", e);
+            return 0;
+        }
+    }
+
+    @Override
+    public int purgeSelective(String niveaux, String avantLe, boolean inclureTickets, String utilisateur) {
+        int purged = 0;
+        try {
+            StringBuilder jpql = new StringBuilder("SELECT o FROM ApplicationEvent o WHERE 1=1");
+            Map<String, Object> params = buildPurgeCriteria(jpql, niveaux, avantLe, inclureTickets);
+            TypedQuery<ApplicationEvent> query = em.createQuery(jpql.toString(), ApplicationEvent.class);
+            params.forEach(query::setParameter);
+            for (ApplicationEvent event : query.getResultList()) {
+                deleteLogFile(event.getLogRef());
+                em.createNativeQuery("DELETE FROM t_application_event_occurrence WHERE event_id = ?1")
+                        .setParameter(1, event.getId()).executeUpdate();
+                em.remove(event);
+                purged++;
+            }
+            if (purged > 0) {
+                recordMaintenance("PURGE_EVENEMENTS",
+                        "Purge manuelle du journal : " + purged + " événement(s) supprimé(s)"
+                                + (StringUtils.isNotBlank(niveaux) ? " (niveaux " + niveaux + ")" : " (tous niveaux)")
+                                + (StringUtils.isNotBlank(avantLe) ? " avant le " + avantLe : "")
+                                + (inclureTickets ? ", y compris les événements liés à un ticket" : ""),
+                        utilisateur);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "purgeSelective", e);
+        }
+        return purged;
+    }
+
+    private Map<String, Object> buildPurgeCriteria(StringBuilder jpql, String niveaux, String avantLe,
+            boolean inclureTickets) {
+        Map<String, Object> params = new HashMap<>();
+        if (StringUtils.isNotBlank(niveaux)) {
+            List<String> liste = new ArrayList<>();
+            for (String niveau : niveaux.split(",")) {
+                String normalise = StringUtils.upperCase(StringUtils.trimToEmpty(niveau));
+                if (StringUtils.isNotBlank(normalise)) {
+                    liste.add(normalise);
+                }
+            }
+            if (!liste.isEmpty()) {
+                jpql.append(" AND o.niveau IN :niveaux");
+                params.put("niveaux", liste);
+            }
+        }
+        if (StringUtils.isNotBlank(avantLe)) {
+            jpql.append(" AND o.lastSeenAt < :avantLe");
+            params.put("avantLe", LocalDate.parse(avantLe.trim()).atStartOfDay());
+        }
+        if (!inclureTickets) {
+            jpql.append(" AND o.ticketId IS NULL");
+        }
+        return params;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> recap(String dtStart, String dtEnd) {
+        List<Map<String, Object>> recap = new ArrayList<>();
+        try {
+            StringBuilder sql = new StringBuilder(
+                    "SELECT o.module, o.type, o.niveau, COUNT(*) AS nb_anomalies, SUM(o.occurrences) AS total_occurrences, "
+                            + "DATE_FORMAT(MAX(o.last_seen_at), '%d/%m/%Y %H:%i') AS derniere_apparition "
+                            + "FROM t_application_event o WHERE 1=1");
+            List<Object> params = new ArrayList<>();
+            if (StringUtils.isNotBlank(dtStart)) {
+                sql.append(" AND o.last_seen_at >= ?").append(params.size() + 1);
+                params.add(dtStart.trim() + " 00:00:00");
+            }
+            if (StringUtils.isNotBlank(dtEnd)) {
+                sql.append(" AND o.last_seen_at <= ?").append(params.size() + 1);
+                params.add(dtEnd.trim() + " 23:59:59");
+            }
+            sql.append(" GROUP BY o.module, o.type, o.niveau ORDER BY total_occurrences DESC, nb_anomalies DESC");
+            javax.persistence.Query query = em.createNativeQuery(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                query.setParameter(i + 1, params.get(i));
+            }
+            for (Object[] row : (List<Object[]>) query.getResultList()) {
+                Map<String, Object> ligne = new LinkedHashMap<>();
+                ligne.put("module", row[0]);
+                ligne.put("type", row[1]);
+                ligne.put("niveau", row[2]);
+                ligne.put("nbAnomalies", ((Number) row[3]).longValue());
+                ligne.put("totalOccurrences", ((Number) row[4]).longValue());
+                ligne.put("derniereApparition", row[5]);
+                recap.add(ligne);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recap", e);
+        }
+        return recap;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void recordMaintenance(String action, String message, String utilisateur) {
+        try {
+            ApplicationEvent event = new ApplicationEvent();
+            // Signature unique par execution : chaque action de maintenance reste un evenement distinct
+            // (pas de deduplication), pour garder l'historique complet de qui a fait quoi et quand.
+            event.setSignature(sha256Hex("MAINTENANCE|" + StringUtils.trimToEmpty(action) + "|" + event.getId()));
+            event.setType("MAINTENANCE");
+            event.setNiveau(ApplicationEvent.NIVEAU_INFO);
+            event.setModule("SUPPORT");
+            event.setMessageCourt(StringUtils.abbreviate(StringUtils.defaultIfBlank(message, action), 500));
+            event.setUrlOuEcran("maintenance:" + StringUtils.abbreviate(action, 240));
+            event.setUtilisateur(StringUtils.abbreviate(StringUtils.defaultIfBlank(utilisateur, "SYSTEME"), 255));
+            event.setOccurrences(1);
+            event.setLastSeenAt(LocalDateTime.now());
+            em.persist(event);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recordMaintenance " + action, e);
+        }
     }
 
     private ApplicationEvent findBySignature(String signature) {
@@ -303,7 +479,7 @@ public class SupportEventServiceImpl implements SupportEventService {
         event.setPayloadJson(StringUtils.abbreviate(dto.getPayloadJson(), 4000));
         event.setUtilisateur(StringUtils.abbreviate(utilisateur, 255));
         event.setLastSeenAt(LocalDateTime.now());
-        event.setLogRef(writeLogFile(event.getId(), dto));
+        event.setLogRef(writeLogFile(event.getId(), dto, utilisateur));
         return event;
     }
 
@@ -340,6 +516,7 @@ public class SupportEventServiceImpl implements SupportEventService {
         sb.append("Événement applicatif capturé automatiquement.\n");
         sb.append("Module : ").append(StringUtils.defaultString(event.getModule())).append("\n");
         sb.append("Niveau : ").append(event.getNiveau()).append("\n");
+        sb.append("Constaté par : ").append(StringUtils.defaultString(event.getUtilisateur())).append("\n");
         sb.append("Écran/URL : ").append(StringUtils.defaultString(event.getUrlOuEcran())).append("\n");
         sb.append("Occurrences : ").append(event.getOccurrences()).append("\n");
         sb.append("Première apparition : ")
@@ -388,6 +565,7 @@ public class SupportEventServiceImpl implements SupportEventService {
                 incident.put("module", event.getModule());
                 incident.put("message", event.getMessageCourt());
                 incident.put("occurrences", event.getOccurrences());
+                incident.put("utilisateur", event.getUtilisateur());
                 incidents.add(incident);
             }
         } catch (Exception e) {
@@ -430,6 +608,10 @@ public class SupportEventServiceImpl implements SupportEventService {
     }
 
     private String writeLogFile(String eventId, SupportEventDTO dto) {
+        return writeLogFile(eventId, dto, null);
+    }
+
+    private String writeLogFile(String eventId, SupportEventDTO dto, String utilisateur) {
         if (StringUtils.isBlank(dto.getStack())) {
             return null;
         }
@@ -443,6 +625,9 @@ public class SupportEventServiceImpl implements SupportEventService {
             content.append("Date : ").append(LocalDateTime.now().format(DATE_FORMAT)).append("\n");
             content.append("Type : ").append(StringUtils.defaultString(dto.getType())).append("\n");
             content.append("Module : ").append(StringUtils.defaultString(dto.getModule())).append("\n");
+            if (StringUtils.isNotBlank(utilisateur)) {
+                content.append("Constaté par : ").append(utilisateur).append("\n");
+            }
             content.append("Écran/URL : ").append(StringUtils.defaultString(dto.getUrlOuEcran())).append("\n");
             content.append("Message : ").append(StringUtils.defaultString(dto.getMessageCourt())).append("\n\n");
             content.append(dto.getStack());

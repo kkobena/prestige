@@ -758,7 +758,8 @@ Ext.application({
         'testextjs.view.support.SupportTickets',
         'testextjs.view.support.SupportDiagnostic',
         'testextjs.view.support.SupportSante',
-        'testextjs.view.support.SupportHistorique'
+        'testextjs.view.support.SupportHistorique',
+        'testextjs.view.support.SupportMaintenance'
 
 
         
