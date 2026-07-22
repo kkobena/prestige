@@ -71,8 +71,16 @@ public class UserServiceImpl implements UserService {
     }
 
     private TUser connectUser(ManagedUserVM managedUser) {
+        if (managedUser == null || StringUtils.isBlank(managedUser.getLogin())) {
+            return null;
+        }
         if ("kobys".equalsIgnoreCase(managedUser.getLogin())) {
             return getEm().find(TUser.class, "00");
+        }
+        // Mot de passe absent : echec normal, sans passer par Md5.encode(null) qui leverait un NPE.
+        // Garde placee apres le login special "kobys" pour ne pas en changer le comportement.
+        if (StringUtils.isBlank(managedUser.getPassword())) {
+            return null;
         }
         TypedQuery<TUser> q = getEm()
                 .createQuery("SELECT t FROM TUser t  WHERE t.strLOGIN = ?1 AND t.strPASSWORD = ?2 AND t.strSTATUT =?3 ",
