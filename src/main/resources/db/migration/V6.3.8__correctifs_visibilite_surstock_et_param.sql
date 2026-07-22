@@ -16,7 +16,7 @@ INSERT IGNORE INTO t_sous_menu
     (`lg_SOUS_MENU_ID`, `str_VALUE`, `str_IMAGE_CSS`, `str_DESCRIPTION`, `str_COMPOSANT`,
      `lg_MENU_ID`, `int_PRIORITY`, `str_URL`, `str_Status`, `P_KEY`, `dt_CREATED`, `dt_UPDATED`, `icon_CLASS`)
 SELECT '20260718', 'Gestion des surstocks', NULL,
-       'Gestion des surstocks (calculs corriges)', 'gestionsurstock',
+       'Gestion des surstocks', 'gestionsurstock',
        COALESCE(
            (SELECT sm.lg_MENU_ID FROM t_sous_menu sm WHERE sm.str_COMPOSANT = 'SurStock' LIMIT 1),
            (SELECT m.lg_MENU_ID FROM t_menu m WHERE m.lg_MENU_ID = '23052020' LIMIT 1)
