@@ -290,7 +290,14 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
                                     id: 'int_MONTANT_Add_MvtCaisse',
                                     fieldLabel: 'Montant',
                                     flex: 1,
-                                    emptyText: 'Montant'
+                                    emptyText: 'Montant',
+                                    // Montant strictement numerique : on bloque la saisie de tout caractere non chiffre
+                                    // (maskRe filtre la frappe, stripCharsRe nettoie un collage), + regex de validation.
+                                    maskRe: /[0-9]/,
+                                    stripCharsRe: /[^0-9]/,
+                                    regex: /^[0-9]+$/,
+                                    regexText: 'Le montant doit être strictement numérique',
+                                    invalidText: 'Le montant doit être strictement numérique'
 
                                 },
                                 {

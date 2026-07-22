@@ -61,16 +61,22 @@ public class SupportExceptionMapper implements ExceptionMapper<Throwable> {
     private SupportEventDTO buildEvent(Throwable exception) {
         SupportEventDTO dto = new SupportEventDTO();
         dto.setType("JAVA");
-        dto.setNiveau(exception instanceof Error ? "FATAL" : "ERROR");
+        // Cause racine : une EJBException (ou autre enveloppe) masque presque toujours la vraie erreur.
+        // Le message et l'explication portent sur la cause d'origine, pas sur l'enveloppe technique.
+        Throwable racine = util.ErreurExplication.causeRacine(exception);
+        dto.setNiveau(exception instanceof Error || racine instanceof Error ? "FATAL" : "ERROR");
         String uri = request != null ? request.getRequestURI() : "";
         dto.setModule(moduleFromUri(uri));
         dto.setMessageCourt(StringUtils.abbreviate(
-                exception.getClass().getSimpleName() + " : " + StringUtils.defaultString(exception.getMessage()), 500));
+                racine.getClass().getSimpleName() + " : " + StringUtils.defaultString(racine.getMessage()), 500));
+        // Explication "terre a terre" en francais : affichee dans le detail de l'evenement (bloc Contexte).
+        String explication = util.ErreurExplication.expliquer(racine);
+        dto.setPayloadJson(StringUtils.abbreviate("Explication : " + explication, 4000));
         dto.setUrlOuEcran(StringUtils
                 .abbreviate((request != null ? request.getMethod() + " " : "") + StringUtils.defaultString(uri), 255));
         StringWriter stack = new StringWriter();
         exception.printStackTrace(new PrintWriter(stack));
-        dto.setStack(StringUtils.abbreviate(stack.toString(), 20000));
+        dto.setStack(StringUtils.abbreviate("EXPLICATION : " + explication + "\n\n" + stack, 20000));
         return dto;
     }
 
@@ -90,19 +96,17 @@ public class SupportExceptionMapper implements ExceptionMapper<Throwable> {
 
     private String currentUser() {
         try {
-            if (request == null) {
-                return null;
+            String label = null;
+            if (request != null) {
+                HttpSession session = request.getSession(false);
+                TUser user = session != null ? (TUser) session.getAttribute(Constant.AIRTIME_USER) : null;
+                if (user != null) {
+                    label = StringUtils.trimToEmpty(user.getStrFIRSTNAME()) + " "
+                            + StringUtils.trimToEmpty(user.getStrLASTNAME()) + " (" + user.getStrLOGIN() + ")";
+                }
             }
-            HttpSession session = request.getSession(false);
-            if (session == null) {
-                return null;
-            }
-            TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
-            if (user == null) {
-                return null;
-            }
-            return StringUtils.trimToEmpty(user.getStrFIRSTNAME()) + " "
-                    + StringUtils.trimToEmpty(user.getStrLASTNAME()) + " (" + user.getStrLOGIN() + ")";
+            // IP + nom du poste qui constate l'erreur, ajoutes au libelle utilisateur.
+            return util.PosteClient.utilisateurAvecPoste(label, request);
         } catch (Exception e) {
             return null;
         }

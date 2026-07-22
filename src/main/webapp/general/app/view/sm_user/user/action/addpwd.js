@@ -131,8 +131,12 @@ Ext.define('testextjs.view.sm_user.user.action.addpwd', {
                     } else {
                         Ext.MessageBox.alert('Confirmation', object.errors);
                         // Oview.getStore().reload();
+                        // La fenetre est deja fermee juste apres l'envoi (this.up('window').close()) :
+                        // le bouton est alors detruit et button.up('window') renvoie undefined.
                         var bouton = button.up('window');
-                        bouton.close();
+                        if (bouton) {
+                            bouton.close();
+                        }
                         testextjs.app.getController('App').onLoadNewComponent("usermanager", "Utilisateur", "");
                     }
 

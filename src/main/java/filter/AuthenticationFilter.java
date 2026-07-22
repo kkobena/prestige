@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +27,7 @@ import util.Constant;
  * @author koben
  */
 @Provider
-public class AuthenticationFilter implements ContainerRequestFilter {
+public class AuthenticationFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final Set<String> SKIP_PATHS = Set.of("v1/sms/dr-callback", "v1/user/auth", "v1/user/logout",
             "v1/ws/", "v1/valorisation", "v1/valorisation/all", "v1/ca-comptant", "v1/ca-credit", "v1/reglements",
@@ -49,6 +51,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        // Remise a zero du contexte de la requete : les threads HTTP sont reutilises,
+        // on ne doit jamais heriter de l'utilisateur d'une requete precedente.
+        sessionHelperService.setCurrentUser(null);
+        sessionHelperService.setData(null);
         String path = requestContext.getUriInfo().getPath();
         TUser currentUser;
         String userS = requestContext.getHeaderString("X-User-Info");
@@ -94,6 +100,18 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
         }
 
+    }
+
+    /**
+     * Fin de requete : libere le contexte utilisateur pose en ThreadLocal par le filtre d'entree. Les threads HTTP
+     * etant reutilises, ce nettoyage evite qu'une valeur survive a la requete (et le signalement "failed to remove
+     * ThreadLocal" de Payara a l'arret/redeploiement de l'application).
+     */
+    @Override
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
+            throws IOException {
+        sessionHelperService.setCurrentUser(null);
+        sessionHelperService.setData(null);
     }
 
     private boolean shouldSkipPath(String path) {

@@ -49,6 +49,25 @@ Ext.define('testextjs.view.support.SupportHistorique', {
             }
         });
 
+        // Recapitulatif analytique : anomalies groupees par module + type + niveau,
+        // triees par total d'occurrences decroissant (tri effectue cote serveur).
+        const storeRecap = Ext.create('Ext.data.Store', {
+            fields: ['module', 'type', 'niveau',
+                {name: 'nbAnomalies', type: 'number'},
+                {name: 'totalOccurrences', type: 'number'},
+                'derniereApparition'],
+            autoLoad: true,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/support/events/recap',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
+        });
+
         const storeTickets = Ext.create('Ext.data.Store', {
             idProperty: 'id',
             fields: ['id', 'numero', 'createdAt', 'modifiedAt', 'sujet', 'module', 'priorite',
@@ -149,6 +168,83 @@ Ext.define('testextjs.view.support.SupportHistorique', {
                                 displayInfo: true,
                                 pageSize: 20
                             }
+                        },
+                        {
+                            xtype: 'gridpanel',
+                            title: 'Récap',
+                            store: storeRecap,
+                            tbar: [
+                                {
+                                    xtype: 'datefield',
+                                    itemId: 'recapDtStart',
+                                    fieldLabel: 'Du',
+                                    labelWidth: 25,
+                                    width: 165,
+                                    format: 'd/m/Y'
+                                },
+                                {
+                                    xtype: 'datefield',
+                                    itemId: 'recapDtEnd',
+                                    fieldLabel: 'Au',
+                                    labelWidth: 25,
+                                    width: 165,
+                                    format: 'd/m/Y'
+                                },
+                                {
+                                    xtype: 'button',
+                                    text: 'Actualiser',
+                                    handler: function (btn) {
+                                        const tab = btn.up('gridpanel');
+                                        const dtStart = tab.down('#recapDtStart').getValue();
+                                        const dtEnd = tab.down('#recapDtEnd').getValue();
+                                        storeRecap.getProxy().extraParams.dtStart = dtStart ? Ext.Date.format(dtStart, 'Y-m-d') : '';
+                                        storeRecap.getProxy().extraParams.dtEnd = dtEnd ? Ext.Date.format(dtEnd, 'Y-m-d') : '';
+                                        storeRecap.load();
+                                    }
+                                }
+                            ],
+                            viewConfig: {
+                                forceFit: true,
+                                columnLines: true,
+                                emptyText: '<h1 style="margin:10px 10px 10px 30%;">Pas de donn&eacute;es</h1>'
+                            },
+                            columns: [
+                                {xtype: 'rownumberer', width: 40},
+                                {header: 'Module', dataIndex: 'module', flex: 1.2, sortable: true, menuDisabled: true},
+                                {header: 'Type', dataIndex: 'type', flex: 0.8, sortable: true, menuDisabled: true},
+                                {
+                                    header: 'Niveau',
+                                    dataIndex: 'niveau',
+                                    width: 80,
+                                    sortable: true,
+                                    menuDisabled: true,
+                                    renderer: function (value) {
+                                        const colors = {INFO: 'gray', WARN: 'orange', ERROR: 'red', FATAL: 'darkred'};
+                                        return '<span style="color:' + (colors[value] || 'black')
+                                                + ';font-weight:bold;">' + value + '</span>';
+                                    }
+                                },
+                                {
+                                    header: 'Anomalies distinctes',
+                                    dataIndex: 'nbAnomalies',
+                                    width: 130,
+                                    align: 'center',
+                                    sortable: true,
+                                    menuDisabled: true
+                                },
+                                {
+                                    header: 'Total occurrences',
+                                    dataIndex: 'totalOccurrences',
+                                    width: 125,
+                                    align: 'center',
+                                    sortable: true,
+                                    menuDisabled: true,
+                                    renderer: function (value) {
+                                        return '<b>' + value + '</b>';
+                                    }
+                                },
+                                {header: 'Dernière apparition', dataIndex: 'derniereApparition', width: 135, sortable: true, menuDisabled: true}
+                            ]
                         }
                     ]
                 }

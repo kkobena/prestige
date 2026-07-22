@@ -30,6 +30,7 @@ public class SupportPurgeScheduler {
     public void purge() {
         try {
             supportEventService.purgeOldEvents();
+            supportEventService.recordJobRun("PURGE_SUPPORT");
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "purge", e);
         }

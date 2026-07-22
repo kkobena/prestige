@@ -75,6 +75,13 @@ Ext.define('testextjs.view.support.SupportDiagnostic', {
                             xtype: 'button',
                             itemId: 'btnActualiser',
                             text: 'Actualiser'
+                        },
+                        '->',
+                        {
+                            xtype: 'button',
+                            itemId: 'btnPurger',
+                            text: 'Purger...',
+                            iconCls: 'icon-delete'
                         }
                     ],
                     viewConfig: {

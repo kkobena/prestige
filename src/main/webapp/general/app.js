@@ -758,7 +758,8 @@ Ext.application({
         'testextjs.view.support.SupportTickets',
         'testextjs.view.support.SupportDiagnostic',
         'testextjs.view.support.SupportSante',
-        'testextjs.view.support.SupportHistorique'
+        'testextjs.view.support.SupportHistorique',
+        'testextjs.view.support.SupportMaintenance'
 
 
         
@@ -864,6 +865,45 @@ Ext.application({
     var reportCount = 0;
     var MAX_REPORTS = 20;
 
+    // Fil d'Ariane : tampon circulaire des dernieres actions de l'utilisateur
+    // (ecrans ouverts, appels API) pour reconstituer le contexte d'une erreur
+    // que l'utilisateur n'arrive pas a reproduire ou a expliquer.
+    var breadcrumb = [];
+    var MAX_BREADCRUMB = 15;
+
+    function heure() {
+        try {
+            return Ext.Date.format(new Date(), 'H:i:s');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function pushBreadcrumb(action) {
+        try {
+            if (!action) {
+                return;
+            }
+            breadcrumb.push(heure() + '  ' + String(action).substring(0, 200));
+            if (breadcrumb.length > MAX_BREADCRUMB) {
+                breadcrumb.shift();
+            }
+        } catch (ignore) {
+            // fil d'Ariane silencieux
+        }
+    }
+
+    function breadcrumbJson() {
+        try {
+            return Ext.JSON.encode({fil_ariane: breadcrumb.slice()});
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Expose au reste de l'application (ex. ouverture d'ecran depuis le controleur App).
+    window.__prestigeSupport = {push: pushBreadcrumb};
+
     function reportError(payload) {
         try {
             if (reportCount >= MAX_REPORTS) {
@@ -875,6 +915,7 @@ Ext.application({
             }
             reported[key] = true;
             reportCount++;
+            payload.payloadJson = breadcrumbJson();
             Ext.Ajax.request({
                 method: 'POST',
                 url: '/prestige/api/v1/support/events',
@@ -887,7 +928,24 @@ Ext.application({
         }
     }
 
+    // Messages d'erreur JS benins / bruit de librairie : on ne les remonte pas (faux positifs).
+    var MESSAGES_BENINS = ['no data specified', 'script error', 'resizeobserver',
+        'null is not an object', 'result is not defined'];
+
+    function estBenin(message) {
+        var m = String(message || '').toLowerCase();
+        for (var i = 0; i < MESSAGES_BENINS.length; i++) {
+            if (m.indexOf(MESSAGES_BENINS[i]) !== -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     window.onerror = function (message, source, lineno, colno, error) {
+        if (estBenin(message)) {
+            return false;
+        }
         reportError({
             type: 'JS',
             niveau: 'ERROR',
@@ -900,6 +958,19 @@ Ext.application({
     };
 
     Ext.onReady(function () {
+        // Alimente le fil d'Ariane a chaque appel API (hors envois du support lui-meme).
+        Ext.Ajax.on('beforerequest', function (conn, options) {
+            try {
+                var url = (options && options.url) ? String(options.url) : '';
+                if (url.indexOf('/support/events') !== -1) {
+                    return;
+                }
+                pushBreadcrumb('API ' + ((options && options.method) || 'GET') + ' ' + url);
+            } catch (ignore) {
+                // silencieux
+            }
+        });
+
         Ext.Ajax.on('requestexception', function (conn, response, options) {
             try {
                 var url = (options && options.url) ? String(options.url) : '';
@@ -910,9 +981,15 @@ Ext.application({
                     return;
                 }
                 var status = response ? response.status : 0;
+                // HTTP 0 = requete interrompue/avortee (navigation, rechargement, coupure reseau) : non
+                // actionnable et tres bruyant. On ne la remonte pas (si le serveur etait vraiment injoignable,
+                // l'envoi de l'evenement lui-meme echouerait de toute facon).
+                if (status === 0) {
+                    return;
+                }
                 reportError({
                     type: 'AJAX',
-                    niveau: status >= 500 || status === 0 ? 'ERROR' : 'WARN',
+                    niveau: status >= 500 ? 'ERROR' : 'WARN',
                     module: 'FRONTEND',
                     messageCourt: ('Échec Ajax HTTP ' + status + ' '
                             + (response && response.statusText ? response.statusText : '')).substring(0, 500),

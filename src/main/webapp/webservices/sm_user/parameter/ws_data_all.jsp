@@ -91,12 +91,14 @@
     user Ouser = new user(OdataManager);
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OTRole = Ouser.getTRoleUser(OTUser.getLgUSERID()).getLgROLEID();
-    if (OTRole != null && OTRole.getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)) {
+    // Les profils Administrateur et Super Administrateur voient tous les
+    // parametres (y compris SYSTEME). Detection par prefixe de nom (gere les
+    // variantes "Administrateur du systeme" / "Super Administrateur du systeme")
+    // ou par type de role 'ADMIN'.
+    if (OTRole != null && (user.isSuperAdminRole(OTRole.getStrNAME())
+            || user.isAdminRole(OTRole.getStrNAME())
+            || commonparameter.PARAMETER_ADMIN.equalsIgnoreCase(OTRole.getStrTYPE()))) {
         str_TYPE = "%%";
-    } else {
-        if (OTRole != null && OTRole.getStrTYPE().equalsIgnoreCase(commonparameter.PARAMETER_ADMIN)) {
-            str_TYPE = commonparameter.PARAMETER_ADMIN;
-        }
     }
     new logger().OCategory.info("str_TYPE:" + str_TYPE);
     TparameterManager OTparameterManager = new TparameterManager(OdataManager, OTUser);

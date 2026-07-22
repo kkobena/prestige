@@ -399,11 +399,11 @@ public class Dashboard extends bll.bllBase {
 
     public JSONArray getListMVT() {
         JSONArray array = new JSONArray();
-        String query = "SELECT t.`str_NAME`,SUM(m.`int_AMOUNT`)  FROM t_mvt_caisse m,t_type_mvt_caisse t  WHERE "
+        String query = "SELECT t.`str_NAME`,SUM(m.`int_AMOUNT`),t.`categorie`  FROM t_mvt_caisse m,t_type_mvt_caisse t  WHERE "
                 + " t.`lg_TYPE_MVT_CAISSE_ID`=m.`lg_TYPE_MVT_CAISSE_ID` AND t.`lg_TYPE_MVT_CAISSE_ID` <> '"
                 + Parameter.TYPE_MV_CAISSE_VNO + "' AND " + " t.`lg_TYPE_MVT_CAISSE_ID` <> '"
                 + Parameter.TYPE_MV_CAISSE_VO
-                + "' AND m.`dt_CREATED` >= ?1 AND m.`dt_CREATED` < ?2 GROUP BY t.`str_NAME`";
+                + "' AND m.`dt_CREATED` >= ?1 AND m.`dt_CREATED` < ?2 GROUP BY t.`str_NAME`,t.`categorie`";
         try {
             List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(query)
                     .setParameter(1, startOfToday(), TemporalType.TIMESTAMP)
@@ -413,6 +413,15 @@ public class Dashboard extends bll.bllBase {
 
                 json.put("str_NAME", String.valueOf(objects[0]).trim());
                 json.put("AMOUNT", Double.valueOf(objects[1] + ""));
+                // categorie (ordinal de CategorieMvtCaisse) : 0=VENTE, 1=ENTREE_CAISSE, 2=SORTIE_CAISSE, 3=ACHAT.
+                int categorie = -1;
+                try {
+                    if (objects.length > 2 && objects[2] != null) {
+                        categorie = Integer.parseInt(String.valueOf(objects[2]).trim());
+                    }
+                } catch (NumberFormatException ignore) {
+                }
+                json.put("CATEGORIE", categorie);
 
                 array.put(json);
 

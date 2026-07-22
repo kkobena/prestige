@@ -43,6 +43,10 @@ public interface CommonService {
 
     long findUsers(String query, String empl);
 
+    List<UserDTO> findUsers(int start, int limit, String query, String empl, boolean excludeAdmin);
+
+    long findUsers(String query, String empl, boolean excludeAdmin);
+
     List<TTypeVente> findAllTypeVente();
 
     List<TTypeVente> findTypeVente();

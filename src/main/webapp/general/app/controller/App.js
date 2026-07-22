@@ -191,6 +191,11 @@ Ext.define('testextjs.controller.App', {
     onLoadNewComponent: function (ComponentXtype, ComponentLabel, name_ressource) {
         // alert(ComponentXtype);
 
+        // Fil d'Ariane du Centre de Support : trace l'ecran ouvert.
+        if (window.__prestigeSupport) {
+            window.__prestigeSupport.push('ECRAN ' + (ComponentLabel || ComponentXtype));
+        }
+
         var text = ComponentLabel,
                 xtype = ComponentXtype,
                 alias = 'widget.' + xtype,

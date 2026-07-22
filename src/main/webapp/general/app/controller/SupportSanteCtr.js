@@ -20,8 +20,28 @@ Ext.define('testextjs.controller.SupportSanteCtr', {
             },
             'supportsante button#btnCoherence': {
                 click: this.onCoherence
+            },
+            'supportsante button#btnExportDiag': {
+                click: this.onExportDiagnostic
             }
         });
+    },
+
+    onExportDiagnostic: function () {
+        // Telechargement du zip via une iframe cachee (sans quitter l'application).
+        try {
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '/prestige/api/v1/support/diagnostic/export';
+            document.body.appendChild(iframe);
+            Ext.defer(function () {
+                if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+            }, 60000);
+        } catch (e) {
+            Ext.Msg.alert('Message', 'Impossible de lancer l\'export du diagnostic');
+        }
     },
 
     onCoherence: function () {
@@ -148,7 +168,8 @@ Ext.define('testextjs.controller.SupportSanteCtr', {
                     + '<th style="padding:6px;border:1px solid #ccc;">Niveau</th>'
                     + '<th style="padding:6px;border:1px solid #ccc;">Module</th>'
                     + '<th style="padding:6px;border:1px solid #ccc;">Message</th>'
-                    + '<th style="padding:6px;border:1px solid #ccc;">Occ.</th></tr>';
+                    + '<th style="padding:6px;border:1px solid #ccc;">Occ.</th>'
+                    + '<th style="padding:6px;border:1px solid #ccc;">Constaté par (poste)</th></tr>';
             Ext.Array.each(incidents, function (incident) {
                 const color = incident.niveau === 'FATAL' ? 'darkred' : 'red';
                 html += '<tr><td style="padding:6px;border:1px solid #ccc;">'
@@ -160,7 +181,9 @@ Ext.define('testextjs.controller.SupportSanteCtr', {
                         + '<td style="padding:6px;border:1px solid #ccc;">'
                         + Ext.String.htmlEncode(incident.message || '') + '</td>'
                         + '<td style="padding:6px;border:1px solid #ccc;text-align:center;">'
-                        + incident.occurrences + '</td></tr>';
+                        + incident.occurrences + '</td>'
+                        + '<td style="padding:6px;border:1px solid #ccc;">'
+                        + Ext.String.htmlEncode(incident.utilisateur || '') + '</td></tr>';
             });
             html += '</table>';
         }

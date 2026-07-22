@@ -24,6 +24,12 @@ public interface SupportService {
 
     void sendDemandeEmail(String demandeId);
 
+    /**
+     * Notifie le support par e-mail lors de la creation d'un ticket automatique (incident critique). Asynchrone et sans
+     * effet si le parametre SUPPORT_NOTIFY_ENABLED est a 0 ou SUPPORT_EMAIL non renseigne.
+     */
+    void notifyAutoTicket(String numero, String sujet, String module, String priorite, String description);
+
     List<SupportDemande> findAll(int start, int limit);
 
     long count();

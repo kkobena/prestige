@@ -11,6 +11,7 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import rest.service.SupportCoherenceService;
+import rest.service.SupportEventService;
 
 /**
  * Passe quotidienne du veilleur de coherence du Centre de Support. Execute les controles SQL actifs et journalise les
@@ -25,11 +26,14 @@ public class SupportCoherenceScheduler {
 
     @EJB
     private SupportCoherenceService supportCoherenceService;
+    @EJB
+    private SupportEventService supportEventService;
 
     @Schedule(hour = "4", minute = "15", second = "0", persistent = false)
     public void run() {
         try {
             supportCoherenceService.runActiveChecks();
+            supportEventService.recordJobRun("COHERENCE_SUPPORT");
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "run", e);
         }

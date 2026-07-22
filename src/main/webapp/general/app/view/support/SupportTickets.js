@@ -83,6 +83,13 @@ Ext.define('testextjs.view.support.SupportTickets', {
                             xtype: 'button',
                             itemId: 'btnActualiser',
                             text: 'Actualiser'
+                        },
+                        '->',
+                        {
+                            xtype: 'button',
+                            itemId: 'btnImprimer',
+                            text: 'Imprimer',
+                            iconCls: 'icon-print'
                         }
                     ],
                     viewConfig: {

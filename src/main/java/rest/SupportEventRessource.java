@@ -58,9 +58,49 @@ public class SupportEventRessource {
         if (dto == null || StringUtils.isBlank(dto.getMessageCourt())) {
             return Response.ok().entity(ResultFactory.getFailResult("Message obligatoire")).build();
         }
-        supportEventService.record(dto, StringUtils.trimToEmpty(user.getStrFIRSTNAME()) + " "
-                + StringUtils.trimToEmpty(user.getStrLASTNAME()) + " (" + user.getStrLOGIN() + ")");
+        // Libelle utilisateur complete par l'IP et le nom du poste qui constate l'evenement.
+        supportEventService.record(dto,
+                util.PosteClient.utilisateurAvecPoste(
+                        StringUtils.trimToEmpty(user.getStrFIRSTNAME()) + " "
+                                + StringUtils.trimToEmpty(user.getStrLASTNAME()) + " (" + user.getStrLOGIN() + ")",
+                        servletRequest));
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+    }
+
+    @GET
+    @Path("{id}/occurrences")
+    public Response occurrences(@PathParam("id") String id) {
+        List<String> dates = supportEventService.findOccurrences(id);
+        return Response.ok().entity(ResultFactory.getSuccessResult(dates, dates.size())).build();
+    }
+
+    @GET
+    @Path("recap")
+    public Response recap(@QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd) {
+        List<java.util.Map<String, Object>> data = supportEventService.recap(dtStart, dtEnd);
+        return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+
+    @GET
+    @Path("purge/count")
+    public Response purgeCount(@QueryParam("niveaux") String niveaux, @QueryParam("avantLe") String avantLe,
+            @DefaultValue("false") @QueryParam("inclureTickets") boolean inclureTickets) {
+        long count = supportEventService.countForPurge(niveaux, avantLe, inclureTickets);
+        return Response.ok().entity(ResultFactory.getSuccessResult(count, 1)).build();
+    }
+
+    @POST
+    @Path("purge")
+    public Response purge(@QueryParam("niveaux") String niveaux, @QueryParam("avantLe") String avantLe,
+            @DefaultValue("false") @QueryParam("inclureTickets") boolean inclureTickets) {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        int purged = supportEventService.purgeSelective(niveaux, avantLe, inclureTickets,
+                StringUtils.trimToEmpty(user.getStrFIRSTNAME()) + " " + StringUtils.trimToEmpty(user.getStrLASTNAME())
+                        + " (" + user.getStrLOGIN() + ")");
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg(purged + " événement(s) supprimé(s)")).build();
     }
 
     @POST

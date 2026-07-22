@@ -23,6 +23,12 @@ Ext.define('testextjs.view.support.SupportSante', {
             xtype: 'button',
             itemId: 'btnCoherence',
             text: 'Lancer les contrôles de cohérence'
+        },
+        '-',
+        {
+            xtype: 'button',
+            itemId: 'btnExportDiag',
+            text: 'Exporter le diagnostic'
         }
     ],
     items: [

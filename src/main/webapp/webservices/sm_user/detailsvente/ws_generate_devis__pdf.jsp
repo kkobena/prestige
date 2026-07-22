@@ -61,7 +61,7 @@
     Ojconnexion.OpenConnexion();
 
     reportManager OreportManager = new reportManager();
-    String scr_report_file = "rp_facture_vente";
+    String scr_report_file = "rp_bon_livraison_proforma";
 
     String report_generate_file = key.GetNumberRandom();
 

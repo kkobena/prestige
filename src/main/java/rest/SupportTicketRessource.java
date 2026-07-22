@@ -23,8 +23,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import rest.report.ReportUtil;
 import rest.service.SupportBusinessException;
 import rest.service.SupportTicketService;
+import rest.service.dto.TicketPrintDTO;
 import util.Constant;
 
 /**
@@ -41,12 +43,36 @@ public class SupportTicketRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private SupportTicketService supportTicketService;
+    @EJB
+    private ReportUtil reportUtil;
 
     @GET
     public Response findAll(@DefaultValue("0") @QueryParam("start") int start,
             @DefaultValue("20") @QueryParam("limit") int limit, @QueryParam("statut") String statut) {
         List<SupportTicket> data = supportTicketService.findAll(start, limit, statut);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, supportTicketService.count(statut))).build();
+    }
+
+    /**
+     * Impression du dictionnaire de suivi des pannes : TOUS les tickets, une ligne par ticket, PDF paysage (modele
+     * ticket_support.jrxml). Retourne l'URL du PDF genere.
+     */
+    @GET
+    @Path("print")
+    public Response print() {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        List<SupportTicket> tickets = supportTicketService.findAll(0, Integer.MAX_VALUE, null);
+        List<TicketPrintDTO> datas = new java.util.ArrayList<>();
+        for (SupportTicket ticket : tickets) {
+            datas.add(new TicketPrintDTO(ticket));
+        }
+        Map<String, Object> parameters = reportUtil.officineData(user);
+        parameters.put("P_H_CLT_INFOS", "DICTIONNAIRE DE SUIVI DES PANNES - TICKETS SUPPORT (" + datas.size() + ")");
+        String url = reportUtil.buildReport(parameters, "ticket_support", datas);
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg(url)).build();
     }
 
     @POST

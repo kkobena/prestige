@@ -31,7 +31,7 @@ INSERT IGNORE INTO t_privilege
     (`lg_PRIVELEGE_ID`, `str_NAME`, `str_TYPE`, `str_DESCRIPTION`, `lg_PRIVELEGE_ID_DEP`,
      `dt_CREATED`, `lg_CREATED_BY`, `dt_UPDATED`, `lg_UPDATED_BY`, `str_STATUT`)
 VALUES
-    ('20260717', 'P_SM_SUPPRESSIONS_VENTE', 'CUSTOMER', 'Suppressions de vente',
+    ('20260717', 'P_SM_SUPPRESSIONS_VENTE', 'CUSTOMER', 'Suppressions à la vente',
      NULL, NOW(), NULL, NULL, NULL, 'enable');
 
 -- 3) Sous-menu, rattache au meme menu que la liste des ventes annulees
@@ -39,7 +39,7 @@ VALUES
 INSERT IGNORE INTO t_sous_menu
     (`lg_SOUS_MENU_ID`, `str_VALUE`, `str_IMAGE_CSS`, `str_DESCRIPTION`, `str_COMPOSANT`,
      `lg_MENU_ID`, `int_PRIORITY`, `str_URL`, `str_Status`, `P_KEY`, `dt_CREATED`, `dt_UPDATED`, `icon_CLASS`)
-SELECT '20260717', 'Suppressions de vente', NULL,
+SELECT '20260717', 'Suppressions à la vente', NULL,
        'Produits retires des ventes et ventes abandonnees', 'suppressionsvente',
        m.lg_MENU_ID, 99, NULL, 'enable', 'P_SM_SUPPRESSIONS_VENTE', NOW(), NULL, ''
 FROM (
