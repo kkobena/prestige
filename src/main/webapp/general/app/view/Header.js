@@ -669,6 +669,9 @@ PrestigeNotif.register({
     icon: 'fa-exchange',
     color: '#48c9b0',
     url: '../api/v1/reserve/suggestions',
+    // Badge (rafraichissement periodique) : compteur ultra-leger. La liste
+    // complete ci-dessus n'est chargee qu'a l'ouverture du panneau.
+    countUrl: '../api/v1/reserve/suggestions/count',
     limit: 50,
     renderItem: function (n) {
         return '<div style="font-weight:bold; color:#eaf4fc;">'
@@ -693,6 +696,9 @@ PrestigeNotif.register({
     icon: 'fa-flask',
     color: '#ff6b6b',
     url: '../api/v1/fichearticle/perimes?nbreMois=6&codeFamile=&codeRayon=&codeGrossiste=&query=&dtStart=&dtEnd=',
+    // Badge (toutes les 60 s) : compteur ultra-leger (1 requete COUNT). La liste complete
+    // ci-dessus (3 requetes valorisees) n'est chargee qu'a l'ouverture du panneau.
+    countUrl: '../api/v1/fichearticle/perimes/count?nbreMois=6&codeFamile=&codeRayon=&codeGrossiste=&query=&dtStart=&dtEnd=',
     limit: 50,
     renderItem: function (p) {
         return '<div style="font-weight:bold; color:#eaf4fc;">'

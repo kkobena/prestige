@@ -6,6 +6,9 @@ var OFFICINE;
 var str_PHONE_REF = 0;
 var url_services_data_officine = '../webservices/sm_user/info_officine/ws_data.jsp';
 var url_services_transaction_officine = '../webservices/sm_user/info_officine/ws_transaction.jsp?mode=';
+// REST dedie a cet ecran (memes formats JSON que les JSP, memes regles metier)
+var url_rest_data_officine = '../api/v1/officine/infos';
+var url_rest_update_officine = '../api/v1/officine/infos/update';
 var Me;
 
 
@@ -103,7 +106,7 @@ Ext.define('testextjs.view.sm_user.info_officine.OfficineManager', {
             model: 'testextjs.model.Officine',
             proxy: {
                 type: 'ajax',
-                url: url_services_data_officine
+                url: url_rest_data_officine
             }
         });
 
@@ -111,6 +114,10 @@ Ext.define('testextjs.view.sm_user.info_officine.OfficineManager', {
         store.load({
             callback: function () {
                 OFFICINE = store.getAt(0);
+                // Chargement interrompu (timeout, abandon, deconnexion) : ne pas planter l'ecran
+                if (!OFFICINE || Me.isDestroyed) {
+                    return;
+                }
                 str_NOM_ABREGE.setValue(OFFICINE.get('str_NOM_ABREGE'));
                 str_NOM_COMPLET.setValue(OFFICINE.get('str_NOM_COMPLET'));
                 str_FIRST_NAME.setValue(OFFICINE.get('str_FIRST_NAME'));
@@ -275,7 +282,11 @@ Ext.define('testextjs.view.sm_user.info_officine.OfficineManager', {
         }],
     onbtnsave: function () {
 
-
+        if (!OFFICINE) {
+            Ext.MessageBox.alert('Information',
+                    "Les informations de l'officine ne sont pas encore chargées. Veuillez rouvrir l'écran.");
+            return;
+        }
         var lg_OFFICINE_ID = OFFICINE.get('lg_OFFICINE_ID');
         var str_FIRST_NAME = Ext.getCmp('str_first_name').getValue();
         var str_LAST_NAME = Ext.getCmp('str_last_name').getValue();
@@ -297,10 +308,11 @@ Ext.define('testextjs.view.sm_user.info_officine.OfficineManager', {
 
         var str_COMMENTAIREOFFICINE = Ext.getCmp('str_COMMENTAIREOFFICINE').getValue();
         var str_NUM_COMPTABLE = Ext.getCmp('str_NUM_COMPTABLE').getValue();
-        internal_url = url_services_transaction_officine + 'update';
+        internal_url = url_rest_update_officine;
 
         Ext.Ajax.request({
             url: internal_url,
+            method: 'POST',
             params: {
                 str_LAST_NAME: str_LAST_NAME,
                 str_COMMENTAIREOFFICINE: str_COMMENTAIREOFFICINE,

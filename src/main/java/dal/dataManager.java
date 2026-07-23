@@ -7,6 +7,7 @@ package dal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -47,6 +48,13 @@ public class dataManager {
                 if (factory == null || !factory.isOpen()) {
                     Map<String, Object> props = new HashMap<>();
                     props.put("eclipselink.session-name", ECLIPSELINK_SESSION_NAME);
+                    // NE PAS desactiver le cache partage (eclipselink.cache.shared.default=false) :
+                    // avec des entites isolees, EclipseLink sert les lectures via la connexion
+                    // propre de la ClientSession, connexion qui n'est rendue au pool qu'a la
+                    // fermeture de l'EntityManager. Or de nombreux flux historiques (JSP,
+                    // tableau de bord) ne ferment jamais leur EntityManager : chaque lecture
+                    // confisquerait alors une connexion du pool jdbc/__laborex_pool jusqu'a
+                    // l'epuisement complet (plus aucune donnee dans toute l'application).
                     factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, props);
                     SHARED_EMF = factory;
                 }
@@ -143,8 +151,77 @@ public class dataManager {
 
     public void closeEntityManager() {
         // Ne ferme que l'EntityManager : la factory est partagee par toute l'application.
-        getEm().close();
+        // Une transaction RESOURCE_LOCAL encore active ici signifie qu'une exception est
+        // survenue entre begin et commit dans le code metier (les catch historiques ne font
+        // pas de rollback) : fermer l'EntityManager dans cet etat garderait la connexion
+        // JDBC hors du pool pour toujours (pool jdbc/__laborex_pool partage par toute
+        // l'application, qui finirait par se bloquer entierement). On rollback donc avant
+        // de fermer, et la fermeture ne doit jamais faire echouer la requete appelante.
+        EntityManager manager = getEm();
         isConected = false;
+        if (manager == null) {
+            return;
+        }
+        try {
+            if (manager.isOpen()) {
+                try {
+                    EntityTransaction transaction = manager.getTransaction();
+                    if (transaction != null && transaction.isActive()) {
+                        signalerTransactionAbandonnee();
+                        transaction.rollback();
+                    }
+                } catch (RuntimeException e) {
+                    // au pire, la fermeture ci-dessous libere les ressources restantes
+                }
+                manager.close();
+            }
+        } catch (RuntimeException e) {
+            // ne jamais propager une erreur de fermeture a la requete appelante
+        }
+    }
+
+    /**
+     * Journalise une transaction laissee active par le code metier (exception avalee entre begin et commit) : trace
+     * serveur + evenement dans le Centre de Support avec l'origine exacte (classe.methode:ligne du flux fautif), pour
+     * pouvoir corriger a la source. Best-effort : ne perturbe jamais la requete appelante.
+     */
+    private static void signalerTransactionAbandonnee() {
+        String origine = "";
+        StringBuilder texte = new StringBuilder();
+        for (StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+            String classe = frame.getClassName();
+            if (classe.startsWith("java.") || classe.startsWith("javax.") || classe.startsWith("jdk.")
+                    || classe.startsWith("sun.") || classe.equals(dataManager.class.getName())) {
+                continue;
+            }
+            if (origine.isEmpty()) {
+                origine = classe + "." + frame.getMethodName() + ":" + frame.getLineNumber();
+            }
+            texte.append(frame).append('\n');
+        }
+        Logger.getLogger(dataManager.class.getName()).warning(
+                "Transaction encore active a la fermeture de l'EntityManager (rollback automatique). Origine : "
+                        + origine);
+        try {
+            rest.service.SupportEventService support = javax.enterprise.inject.spi.CDI.current()
+                    .select(rest.service.SupportEventService.class).get();
+            rest.service.dto.SupportEventDTO dto = new rest.service.dto.SupportEventDTO();
+            dto.setType("JAVA");
+            dto.setNiveau("ERROR");
+            dto.setModule("BASE DE DONNEES");
+            dto.setMessageCourt(
+                    "Transaction non clôturée détectée (rollback automatique avant fermeture) : " + origine);
+            dto.setUrlOuEcran(origine.length() > 255 ? origine.substring(0, 255) : origine);
+            dto.setPayloadJson("Explication : une écriture en base a échoué sans que la transaction soit refermée par "
+                    + "le code métier appelant. Sans le rollback automatique, la connexion JDBC associée resterait "
+                    + "définitivement hors du pool partagé jdbc/__laborex_pool ; à force, le pool se vide et plus "
+                    + "aucune donnée ne s'affiche dans l'application (REST et JSP) jusqu'au redémarrage du serveur. "
+                    + "La pile ci-dessous identifie le flux à corriger à la source.");
+            dto.setStack(texte.length() > 20000 ? texte.substring(0, 20000) : texte.toString());
+            support.record(dto, "");
+        } catch (RuntimeException e) {
+            // centre de support indisponible (demarrage/arret) : la trace serveur ci-dessus reste
+        }
     }
 
     /**
