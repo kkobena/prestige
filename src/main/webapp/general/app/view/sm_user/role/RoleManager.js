@@ -125,10 +125,12 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
                     sortable: false,
                     menuDisabled: true,
                     items: [{
-                            icon: 'resources/images/icons/fam/delete.gif',
-                            tooltip: 'Supprimer des privileges a dans ce role',
+                            // La suppression definitive est remplacee par la desactivation
+                            // (reversible via le bouton 'Desactives' de la barre d'outils)
+                            icon: 'resources/images/icons/fam/disable.png',
+                            tooltip: 'D&eacute;sactiver / R&eacute;activer ce profil',
                             scope: this,
-                            handler: this.onRemoveClick
+                            handler: this.onToggleStatutClick
                         }]
                 }],
             selModel: {
@@ -162,6 +164,19 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
                     iconCls: 'searchicon',
                     scope: this,
                     handler: this.onRechClick
+                }, '->', {
+                    text: 'D&eacute;sactiv&eacute;s',
+                    id: 'BT_ROLE_VOIR_DESACTIVES',
+                    enableToggle: true,
+                    hidden: true, // visible uniquement pour les profils administrateurs (voir est-admin)
+                    icon: 'resources/images/icons/fam/disable.png',
+                    tooltip: 'Afficher les profils d&eacute;sactiv&eacute;s (pour les r&eacute;activer)',
+                    scope: this,
+                    toggleHandler: function(btn, pressed) {
+                        var store = this.getStore();
+                        store.getProxy().setExtraParam('actifs', !pressed);
+                        store.loadPage(1);
+                    }
                 }],
             bbar: {
                 xtype: 'pagingtoolbar',
@@ -178,6 +193,19 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
             delay: 1,
             single: true
         })
+
+        // Le bouton 'Desactives' n'est propose qu'aux profils administrateurs
+        Ext.Ajax.request({
+            url: url_services_rest_role + 'est-admin',
+            method: 'GET',
+            success: function (response) {
+                var object = Ext.JSON.decode(response.responseText, true);
+                var bouton = Ext.getCmp('BT_ROLE_VOIR_DESACTIVES');
+                if (object && object.authorize === true && bouton) {
+                    bouton.show();
+                }
+            }
+        });
 
 
         this.on('edit', function (editor, e) {
@@ -271,16 +299,23 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
             titre: "Attribution des privilege pour le role [" + rec.get('str_DESIGNATION') + "]"
         });
     },
-    onRemoveClick: function (grid, rowIndex) {
+    onToggleStatutClick: function (grid, rowIndex) {
+        // En vue normale on desactive ; en vue 'Desactives' on reactive
+        var enDesactives = Ext.getCmp('BT_ROLE_VOIR_DESACTIVES')
+                && Ext.getCmp('BT_ROLE_VOIR_DESACTIVES').pressed;
+        var actif = enDesactives ? true : false;
         Ext.MessageBox.confirm('Message',
-                'Confirmer la suppresssion',
+                (actif ? 'R&eacute;activer ce profil ?'
+                        : 'D&eacute;sactiver ce profil ? Il n\'appara&icirc;tra plus dans les listes.'),
                 function (btn) {
                     if (btn == 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
                         Ext.Ajax.request({
-                            url: url_services_transaction_role + 'delete',
+                            url: url_services_rest_role + 'toggle-statut',
+                            method: 'POST',
                             params: {
-                                lg_ROLE_ID: rec.get('lg_ROLE_ID')
+                                lg_ROLE_ID: rec.get('lg_ROLE_ID'),
+                                actif: actif
                             },
                             success: function (response)
                             {

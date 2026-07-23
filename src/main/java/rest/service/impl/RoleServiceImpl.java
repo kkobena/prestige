@@ -56,14 +56,24 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public JSONObject listRoles(TUser user, String search, int start, int limit) {
+    public JSONObject isAdmin(TUser user) {
+        return new JSONObject().put("authorize", isAdminOrSuperAdmin(user));
+    }
+
+    @Override
+    public JSONObject listRoles(TUser user, String search, boolean actifs, int start, int limit) {
         JSONObject json = new JSONObject();
         JSONArray results = new JSONArray();
         try {
-            String like = (StringUtils.isBlank(search) ? "" : search.trim()) + "%";
-            StringBuilder where = new StringBuilder(
-                    " FROM TRole t WHERE t.strSTATUT = 'enable' AND (t.strNAME LIKE ?1 OR t.strDESIGNATION LIKE ?1)");
             boolean admin = isAdminOrSuperAdmin(user);
+            if (!actifs && !admin) {
+                // La vue des profils desactives est reservee aux administrateurs
+                return json.put("total", 0).put("results", results);
+            }
+            String like = (StringUtils.isBlank(search) ? "" : search.trim()) + "%";
+            String statut = actifs ? commonparameter.statut_enable : commonparameter.statut_disable;
+            StringBuilder where = new StringBuilder(" FROM TRole t WHERE t.strSTATUT = '" + statut
+                    + "' AND (t.strNAME LIKE ?1 OR t.strDESIGNATION LIKE ?1)");
             if (!admin) {
                 // Les autres profils ne voient ni administrateur ni super administrateur
                 where.append(" AND t.strNAME NOT LIKE ?2 AND t.strNAME NOT LIKE ?3")
@@ -178,6 +188,101 @@ public class RoleServiceImpl implements RoleService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "duplicateRole", e);
             return json.put("success", FAILED).put("errors", "Duplication du profil impossible");
+        }
+    }
+
+    /** Tables et colonnes referencant la table donnee par cle etrangere (schema courant). */
+    @SuppressWarnings("unchecked")
+    private List<Object[]> referencesVers(String tableReferencee) {
+        return em
+                .createNativeQuery("SELECT kcu.TABLE_NAME, kcu.COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE kcu"
+                        + " WHERE kcu.REFERENCED_TABLE_SCHEMA = DATABASE() AND kcu.REFERENCED_TABLE_NAME = ?1")
+                .setParameter(1, tableReferencee).getResultList();
+    }
+
+    @Override
+    public JSONObject toggleRoleStatus(TUser user, String roleId, boolean actif) {
+        JSONObject json = new JSONObject();
+        try {
+            TRole role = em.find(TRole.class, roleId);
+            if (role == null) {
+                return json.put("success", FAILED).put("errors", "Profil introuvable");
+            }
+            String nom = StringUtils.defaultString(role.getStrNAME());
+            String designation = StringUtils.defaultString(role.getStrDESIGNATION());
+            if (bll.userManagement.user.isAdminRole(nom) || bll.userManagement.user.isSuperAdminRole(nom)
+                    || bll.userManagement.user.isAdminRole(designation)
+                    || bll.userManagement.user.isSuperAdminRole(designation)
+                    || commonparameter.ROLE_PHARMACIEN.equalsIgnoreCase(nom)) {
+                return json.put("success", FAILED).put("errors", "Ce profil système ne peut pas être désactivé");
+            }
+            if (!actif) {
+                long nbUtilisateurs = ((Number) em
+                        .createNativeQuery("SELECT COUNT(*) FROM t_role_user WHERE lg_ROLE_ID = ?1")
+                        .setParameter(1, roleId).getSingleResult()).longValue();
+                if (nbUtilisateurs > 0) {
+                    return json.put("success", FAILED).put("errors", "Ce profil est attribué à " + nbUtilisateurs
+                            + " utilisateur(s) : retirez-le d'abord de ces utilisateurs");
+                }
+            }
+            role.setStrSTATUT(actif ? commonparameter.statut_enable : commonparameter.statut_disable);
+            role.setDtUPDATED(new Date());
+            em.merge(role);
+            return json.put("success", SUCCESS).put("errors",
+                    actif ? "Profil réactivé avec succès" : "Profil désactivé avec succès");
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "toggleRoleStatus", e);
+            return json.put("success", FAILED).put("errors", "Impossible de changer le statut de ce profil");
+        }
+    }
+
+    @Override
+    public JSONObject deleteRole(TUser user, String roleId) {
+        JSONObject json = new JSONObject();
+        try {
+            TRole role = em.find(TRole.class, roleId);
+            if (role == null) {
+                return json.put("success", FAILED).put("errors", "Profil introuvable");
+            }
+            String nom = StringUtils.defaultString(role.getStrNAME());
+            String designation = StringUtils.defaultString(role.getStrDESIGNATION());
+            if (bll.userManagement.user.isAdminRole(nom) || bll.userManagement.user.isSuperAdminRole(nom)
+                    || bll.userManagement.user.isAdminRole(designation)
+                    || bll.userManagement.user.isSuperAdminRole(designation)
+                    || commonparameter.ROLE_PHARMACIEN.equalsIgnoreCase(nom)) {
+                return json.put("success", FAILED).put("errors", "Ce profil système ne peut pas être supprimé");
+            }
+            long nbUtilisateurs = ((Number) em
+                    .createNativeQuery("SELECT COUNT(*) FROM t_role_user WHERE lg_ROLE_ID = ?1").setParameter(1, roleId)
+                    .getSingleResult()).longValue();
+            if (nbUtilisateurs > 0) {
+                return json.put("success", FAILED).put("errors", "Ce profil est attribué à " + nbUtilisateurs
+                        + " utilisateur(s) : retirez-le d'abord de ces utilisateurs");
+            }
+            // Verification generique des autres references (evite l'erreur de cle etrangere du flux historique)
+            for (Object[] ref : referencesVers("t_role")) {
+                String table = String.valueOf(ref[0]);
+                String colonne = String.valueOf(ref[1]);
+                if ("t_role_privelege".equalsIgnoreCase(table) || "t_role_user".equalsIgnoreCase(table)) {
+                    continue;
+                }
+                long nb = ((Number) em
+                        .createNativeQuery("SELECT COUNT(*) FROM " + table + " WHERE " + colonne + " = ?1")
+                        .setParameter(1, roleId).getSingleResult()).longValue();
+                if (nb > 0) {
+                    return json.put("success", FAILED).put("errors",
+                            "Ce profil est encore utilisé (données liées : " + table + ") : suppression impossible");
+                }
+            }
+            // Purge des liens privileges du profil puis du profil lui-meme
+            em.createNativeQuery("DELETE FROM t_role_privelege WHERE lg_ROLE_ID = ?1").setParameter(1, roleId)
+                    .executeUpdate();
+            em.remove(role);
+            em.flush();
+            return json.put("success", SUCCESS).put("errors", "Profil supprimé avec succès");
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "deleteRole", e);
+            return json.put("success", FAILED).put("errors", "Echec de suppression de ce profil");
         }
     }
 

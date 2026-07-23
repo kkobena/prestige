@@ -184,10 +184,12 @@ Ext.define('testextjs.view.sm_user.user.UserManager', {
                     sortable: false,
                     menuDisabled: true,
                     items: [{
-                            icon: 'resources/images/icons/fam/delete.png',
-                            tooltip: 'Supprimer',
+                            // La suppression definitive est remplacee par la desactivation
+                            // (reversible via le bouton 'Desactives' de la barre d'outils)
+                            icon: 'resources/images/icons/fam/disable.png',
+                            tooltip: 'D&eacute;sactiver / R&eacute;activer cet utilisateur',
                             scope: this,
-                            handler: this.onRemoveClick
+                            handler: this.onToggleStatutClick
                         }]
                 }],
             selModel: {
@@ -232,6 +234,19 @@ Ext.define('testextjs.view.sm_user.user.UserManager', {
                     iconCls: 'printable',
                     // disabled: true,
                     handler: this.onPrintClick
+                }, '->', {
+                    text: 'D&eacute;sactiv&eacute;s',
+                    id: 'BT_USER_VOIR_DESACTIVES',
+                    enableToggle: true,
+                    hidden: true, // visible uniquement pour les profils administrateurs (voir est-admin)
+                    icon: 'resources/images/icons/fam/disable.png',
+                    tooltip: 'Afficher les utilisateurs d&eacute;sactiv&eacute;s (pour les r&eacute;activer)',
+                    scope: this,
+                    toggleHandler: function(btn, pressed) {
+                        var store = this.getStore();
+                        store.getProxy().setExtraParam('actifs', !pressed);
+                        store.loadPage(1);
+                    }
                 }],
             bbar: {
                 xtype: 'pagingtoolbar',
@@ -252,6 +267,19 @@ Ext.define('testextjs.view.sm_user.user.UserManager', {
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
             single: true
+        });
+
+        // Le bouton 'Desactives' n'est propose qu'aux profils administrateurs
+        Ext.Ajax.request({
+            url: '../api/v1/roles/est-admin',
+            method: 'GET',
+            success: function(response) {
+                var object = Ext.JSON.decode(response.responseText, true);
+                var bouton = Ext.getCmp('BT_USER_VOIR_DESACTIVES');
+                if (object && object.authorize === true && bouton) {
+                    bouton.show();
+                }
+            }
         });
 
 
@@ -327,17 +355,24 @@ Ext.define('testextjs.view.sm_user.user.UserManager', {
 
 
     },
-    onRemoveClick: function(grid, rowIndex) {
+    onToggleStatutClick: function(grid, rowIndex) {
+        // En vue normale on desactive ; en vue 'Desactives' on reactive
+        var enDesactives = Ext.getCmp('BT_USER_VOIR_DESACTIVES')
+                && Ext.getCmp('BT_USER_VOIR_DESACTIVES').pressed;
+        var actif = enDesactives ? true : false;
         Ext.MessageBox.confirm('Message',
-                'Confirmer la suppresssion',
+                (actif ? 'R&eacute;activer cet utilisateur ? Il pourra de nouveau se connecter.'
+                        : 'D&eacute;sactiver cet utilisateur ? Il ne pourra plus se connecter.'),
                 function(btn) {
                     if (btn === 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_utilisateur + 'delete',
+                            url: url_services_rest_utilisateur + 'toggle-statut',
+                            method: 'POST',
                             params: {
-                                lg_USER_ID: rec.get('lg_USER_ID')
+                                lg_USER_ID: rec.get('lg_USER_ID'),
+                                actif: actif
                             },
                             success: function(response)
                             {

@@ -44,15 +44,27 @@ public class UtilisateurRessource {
 
     @GET
     public Response list(@QueryParam("search_value") String searchValue, @QueryParam("query") String query,
-            @DefaultValue("true") @QueryParam("etat") boolean etat, @DefaultValue("0") @QueryParam("start") int start,
-            @DefaultValue("20") @QueryParam("limit") int limit) {
+            @DefaultValue("true") @QueryParam("etat") boolean etat,
+            @DefaultValue("true") @QueryParam("actifs") boolean actifs,
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("20") @QueryParam("limit") int limit) {
         TUser user = currentUser();
         if (user == null) {
             return deconnecte();
         }
         String search = (searchValue != null && !searchValue.isEmpty()) ? searchValue : query;
-        return Response.ok().entity(utilisateurAdminService.listUsers(user, search, etat, start, limit).toString())
-                .build();
+        return Response.ok()
+                .entity(utilisateurAdminService.listUsers(user, search, etat, actifs, start, limit).toString()).build();
+    }
+
+    @POST
+    @Path("toggle-statut")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response toggleStatut(@FormParam("lg_USER_ID") String userId, @FormParam("actif") boolean actif) {
+        TUser user = currentUser();
+        if (user == null) {
+            return deconnecte();
+        }
+        return Response.ok().entity(utilisateurAdminService.toggleUserStatus(user, userId, actif).toString()).build();
     }
 
     @POST
@@ -86,6 +98,17 @@ public class UtilisateurRessource {
         return Response.ok().entity(utilisateurAdminService
                 .updateUser(userId, login, ids, firstName, lastName, languageId, emplacementId, roleId).toString())
                 .build();
+    }
+
+    @POST
+    @Path("delete")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response delete(@FormParam("lg_USER_ID") String userId) {
+        TUser user = currentUser();
+        if (user == null) {
+            return deconnecte();
+        }
+        return Response.ok().entity(utilisateurAdminService.deleteUser(user, userId).toString()).build();
     }
 
     @POST
