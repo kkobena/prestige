@@ -353,7 +353,10 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                             layout: 'hbox',
                                             height: 38,
                                             defaultType: 'textfield',
-                                            fieldLabel: 'PRODUIT',
+                                            /* icone gelule a la place du libelle PRODUIT (gain de place) :
+                                             * grande taille pour occuper la zone du libelle, sans separateur ':' */
+                                            fieldLabel: '<span style="font-size:30px;line-height:34px;" title="Produit">&#128138;</span>',
+                                            labelSeparator: '',
                                             items: [
                                                 {
                                                     xtype: 'combobox',

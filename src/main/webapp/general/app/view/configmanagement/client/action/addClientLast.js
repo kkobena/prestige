@@ -2,13 +2,17 @@
 
 var url_services_data_client = '../webservices/configmanagement/client/ws_data.jsp';
 var url_services_transaction_client = '../webservices/configmanagement/client/ws_transaction.jsp?mode=';
-var url_services_data_ville_client = '../webservices/configmanagement/ville/ws_data.jsp';
+var url_services_rest_clients = '../api/v1/client/gestion/'; // create / update en REST (memes regles metier)
+// Referentiels en REST (memes cles JSON que les JSP historiques correspondantes)
+var url_services_data_ville_client = '../api/v1/common/referentiel/villes';
 var url_services_data_medecin_client = '../webservices/configmanagement/medecin/ws_data.jsp';
-var url_services_data_typeclient_client = '../webservices/configmanagement/typeclient/ws_data.jsp';
-var url_services_data_categorie_ayant_droit = '../webservices/configmanagement/categorieayantdroit/ws_data.jsp';
-var url_services_data_risque = '../webservices/configmanagement/risque/ws_data.jsp';
+var url_services_data_typeclient_client = '../api/v1/common/types-client';
+var url_services_data_categorie_ayant_droit = '../api/v1/common/categories-ayant-droit';
+var url_services_data_risque = '../api/v1/common/referentiel/risques';
 var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
-var url_services_data_type_tierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
+// Variable dediee (le nom url_services_data_type_tierspayant est un global partage par
+// plusieurs ecrans encore en JSP : on ne change que l'ecran client)
+var url_rest_data_type_tierspayant = '../api/v1/common/types-tiers-payant';
 var Oview;
 var Omode;
 var Me;
@@ -150,7 +154,7 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_type_tierspayant,
+                url: url_rest_data_type_tierspayant,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -693,7 +697,7 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
                 formulaire = fenetre.down('form');
         if (formulaire.isValid()) {
             if (Omode === "create") {
-                internal_url = url_services_transaction_client + 'create';
+                internal_url = url_services_rest_clients + 'create';
                 testextjs.app.getController('App').ShowWaitingProcess();
                 Ext.Ajax.request({
                     url: internal_url,
@@ -764,12 +768,12 @@ Ext.define('testextjs.view.configmanagement.client.action.addClientLast', {
                     }
                 });
             } else {
-                internal_url = url_services_transaction_client + 'update&lg_CLIENT_ID=' + ref;
+                internal_url = url_services_rest_clients + 'update';
                 testextjs.app.getController('App').ShowWaitingProcess();
                 Ext.Ajax.request({
                     url: internal_url,
                     params: {
-                        // lg_CLIENT_ID : Ext.getCmp('lg_CLIENT_ID').getValue(),
+                        lg_CLIENT_ID: ref,
                         str_CODE_INTERNE: Ext.getCmp('str_CODE_INTERNE').getValue(),
                         str_FIRST_NAME: Ext.getCmp('str_FIRST_NAME').getValue(),
                         str_LAST_NAME: Ext.getCmp('str_LAST_NAME').getValue(),

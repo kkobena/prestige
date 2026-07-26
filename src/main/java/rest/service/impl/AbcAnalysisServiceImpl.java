@@ -75,6 +75,9 @@ public class AbcAnalysisServiceImpl implements AbcAnalysisService {
     @EJB
     private AbcReclassWriter abcReclassWriter;
 
+    @EJB
+    private rest.report.ReportUtil reportUtil;
+
     private String procedureName(String type) {
         if (type == null) {
             return "analyse_abc_par_ca";
@@ -1101,6 +1104,333 @@ public class AbcAnalysisServiceImpl implements AbcAnalysisService {
 
         return new JSONObject().put("success", true).put("statut", statut).put("total", total).put("count", applied)
                 .put("A", nbA).put("B", nbB).put("C", nbC).put("dtStart", dtStart).put("dtEnd", dtEnd);
+    }
+
+    // ----------------------- Feuille de match -------------------------------
+
+    private static final int FM_CHUNK = 900;
+
+    private static List<List<String>> fmChunks(List<String> ids) {
+        List<List<String>> chunks = new ArrayList<>();
+        for (int i = 0; i < ids.size(); i += FM_CHUNK) {
+            chunks.add(ids.subList(i, Math.min(ids.size(), i + FM_CHUNK)));
+        }
+        return chunks;
+    }
+
+    /** Prix d'achat (int_PAF) et de vente (int_PRICE) par produit : id -> [paf, prix]. */
+    private Map<String, long[]> fmPrix(List<String> ids) {
+        Map<String, long[]> map = new HashMap<>();
+        for (List<String> chunk : fmChunks(ids)) {
+            List<Object[]> rows = em.createNativeQuery(
+                    "SELECT f.lg_FAMILLE_ID, COALESCE(f.int_PAF,0), COALESCE(f.int_PRICE,0) FROM t_famille f"
+                            + " WHERE f.lg_FAMILLE_ID IN (:ids)")
+                    .setParameter("ids", chunk).getResultList();
+            for (Object[] r : rows) {
+                map.put(asStr(r[0]), new long[] { Math.round(asDouble(r[1])), Math.round(asDouble(r[2])) });
+            }
+        }
+        return map;
+    }
+
+    /**
+     * Entrees en stock (receptions de bons de livraison clotures) du mois courant et des 3 mois precedents : id ->
+     * [4][2] avec [m][0] = frequence d'achat (nombre de receptions) et [m][1] = quantite totale entree, m = 0 (mois en
+     * cours) a 3 (mois -3).
+     */
+    private Map<String, long[][]> fmEntrees(List<String> ids) {
+        Map<String, long[][]> map = new HashMap<>();
+        for (List<String> chunk : fmChunks(ids)) {
+            List<Object[]> rows = em.createNativeQuery("SELECT bld.lg_FAMILLE_ID,"
+                    + " ((YEAR(CURDATE())*12+MONTH(CURDATE())) - (YEAR(bld.dt_UPDATED)*12+MONTH(bld.dt_UPDATED))) AS m_index,"
+                    + " COUNT(bld.lg_BON_LIVRAISON_DETAIL), SUM(COALESCE(bld.int_QTE_RECUE,0))"
+                    + " FROM t_bon_livraison_detail bld"
+                    + " INNER JOIN t_bon_livraison bl ON bl.lg_BON_LIVRAISON_ID = bld.lg_BON_LIVRAISON_ID"
+                    + " WHERE bl.str_STATUT = 'is_Closed'"
+                    + " AND bld.dt_UPDATED >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 3 MONTH),'%Y-%m-01')"
+                    + " AND bld.lg_FAMILLE_ID IN (:ids) GROUP BY bld.lg_FAMILLE_ID, m_index").setParameter("ids", chunk)
+                    .getResultList();
+            for (Object[] r : rows) {
+                int idx = asInt(r[1]);
+                if (idx < 0 || idx > 3) {
+                    continue;
+                }
+                long[][] arr = map.computeIfAbsent(asStr(r[0]), k -> new long[4][2]);
+                arr[idx][0] = Math.round(asDouble(r[2]));
+                arr[idx][1] = Math.round(asDouble(r[3]));
+            }
+        }
+        return map;
+    }
+
+    /** Derniere entree en stock par produit : id -> [date de reception (java.util.Date), quantite recue]. */
+    private Map<String, Object[]> fmDerniereEntree(List<String> ids) {
+        Map<String, Object[]> map = new HashMap<>();
+        for (List<String> chunk : fmChunks(ids)) {
+            List<Object[]> rows = em
+                    .createNativeQuery("SELECT bld.lg_FAMILLE_ID, bld.dt_UPDATED, COALESCE(bld.int_QTE_RECUE,0)"
+                            + " FROM t_bon_livraison_detail bld"
+                            + " INNER JOIN t_bon_livraison bl ON bl.lg_BON_LIVRAISON_ID = bld.lg_BON_LIVRAISON_ID"
+                            + " INNER JOIN (SELECT bld2.lg_FAMILLE_ID AS fid, MAX(bld2.dt_UPDATED) AS maxdt"
+                            + "   FROM t_bon_livraison_detail bld2"
+                            + "   INNER JOIN t_bon_livraison bl2 ON bl2.lg_BON_LIVRAISON_ID = bld2.lg_BON_LIVRAISON_ID"
+                            + "   WHERE bl2.str_STATUT = 'is_Closed' AND bld2.lg_FAMILLE_ID IN (:ids)"
+                            + "   GROUP BY bld2.lg_FAMILLE_ID) last"
+                            + " ON last.fid = bld.lg_FAMILLE_ID AND bld.dt_UPDATED = last.maxdt"
+                            + " WHERE bl.str_STATUT = 'is_Closed' AND bld.lg_FAMILLE_ID IN (:ids)")
+                    .setParameter("ids", chunk).getResultList();
+            for (Object[] r : rows) {
+                map.putIfAbsent(asStr(r[0]), new Object[] { r[1], Math.round(asDouble(r[2])) });
+            }
+        }
+        return map;
+    }
+
+    /** Stock reserve par produit (t_type_stock_famille type '2') pour l'emplacement courant. */
+    private Map<String, Long> fmStockReserve(List<String> ids, String emplacement) {
+        Map<String, Long> map = new HashMap<>();
+        for (List<String> chunk : fmChunks(ids)) {
+            List<Object[]> rows = em
+                    .createNativeQuery("SELECT t.lg_FAMILLE_ID, COALESCE(t.int_NUMBER,0) FROM t_type_stock_famille t"
+                            + " WHERE t.lg_TYPE_STOCK_ID = '2' AND t.str_STATUT = 'enable'"
+                            + " AND t.lg_EMPLACEMENT_ID = :empl AND t.lg_FAMILLE_ID IN (:ids)")
+                    .setParameter("empl", emplacement).setParameter("ids", chunk).getResultList();
+            for (Object[] r : rows) {
+                map.put(asStr(r[0]), Math.round(asDouble(r[1])));
+            }
+        }
+        return map;
+    }
+
+    /**
+     * Vente hebdomadaire moyenne (MOY/4) par produit : quantites vendues (equivalent boite, consolidation deconditionne
+     * -> parent) des 28 derniers jours divisees par 4.
+     */
+    private Map<String, Double> fmVenteHebdo(List<String> ids, String emplacement) {
+        Map<String, Double> map = new HashMap<>();
+        for (List<String> chunk : fmChunks(ids)) {
+            List<Object[]> rows = em.createNativeQuery("SELECT t.eff_id, SUM(t.qty_equiv) FROM ("
+                    + "SELECT CASE WHEN f.bool_DECONDITIONNE=1 AND f.lg_FAMILLE_PARENT_ID IS NOT NULL AND f.lg_FAMILLE_PARENT_ID<>'' "
+                    + "THEN f.lg_FAMILLE_PARENT_ID ELSE f.lg_FAMILLE_ID END AS eff_id, "
+                    + "CASE WHEN f.bool_DECONDITIONNE=1 AND f.lg_FAMILLE_PARENT_ID IS NOT NULL AND f.lg_FAMILLE_PARENT_ID<>'' "
+                    + "THEN pd.int_QUANTITY/COALESCE(NULLIF(parent.int_NUMBERDETAIL,0),1) ELSE pd.int_QUANTITY END AS qty_equiv "
+                    + "FROM t_preenregistrement p JOIN t_user u ON p.lg_USER_ID=u.lg_USER_ID "
+                    + "JOIN t_preenregistrement_detail pd ON pd.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID "
+                    + "JOIN t_famille f ON pd.lg_FAMILLE_ID=f.lg_FAMILLE_ID "
+                    + "LEFT JOIN t_famille parent ON parent.lg_FAMILLE_ID=f.lg_FAMILLE_PARENT_ID "
+                    + "WHERE p.str_STATUT='is_Closed' AND p.b_IS_CANCEL=0 AND p.int_PRICE>0 AND p.lg_TYPE_VENTE_ID<>'5' "
+                    + "AND u.lg_EMPLACEMENT_ID=:empl AND p.dt_UPDATED >= DATE_SUB(CURDATE(), INTERVAL 28 DAY) "
+                    + "AND pd.lg_FAMILLE_ID IN (SELECT cf.lg_FAMILLE_ID FROM t_famille cf "
+                    + "WHERE cf.lg_FAMILLE_ID IN (:ids) OR cf.lg_FAMILLE_PARENT_ID IN (:ids))"
+                    + ") t GROUP BY t.eff_id").setParameter("empl", emplacement).setParameter("ids", chunk)
+                    .getResultList();
+            for (Object[] r : rows) {
+                map.put(asStr(r[0]), asDouble(r[1]) / 4.0);
+            }
+        }
+        return map;
+    }
+
+    /** Nom francais du mois courant decale de {@code minus} mois (0 = mois en cours). */
+    private static String fmNomMois(int minus) {
+        return java.time.LocalDate.now().minusMonths(minus).getMonth().getDisplayName(java.time.format.TextStyle.FULL,
+                java.util.Locale.FRENCH);
+    }
+
+    /** Statut de l'objectif d'achat mensuel : respecte si chaque mois observe a une frequence <= objectif. */
+    private static String fmObjectifStatut(long[][] entrees, int objectif) {
+        StringBuilder depassements = new StringBuilder();
+        for (int m = 0; m <= 3; m++) {
+            if (entrees[m][0] > objectif) {
+                if (depassements.length() > 0) {
+                    depassements.append(", ");
+                }
+                depassements.append(fmNomMois(m)).append(" (").append(entrees[m][0]).append(")");
+            }
+        }
+        return depassements.length() == 0 ? "Respecté" : ("Dépassé : " + depassements);
+    }
+
+    /** Construit les lignes de la feuille de match (donnees d'achat) pour la liste de produits classee. */
+    private List<commonTasks.dto.FeuilleDeMatchLigneDTO> buildFeuilleDeMatchRows(List<AbcProduitDTO> rows,
+            int objectif) {
+        String emplacement = sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        List<String> ids = rows.stream().map(AbcProduitDTO::getProduitId).filter(StringUtils::isNotBlank).distinct()
+                .collect(Collectors.toList());
+        Map<String, long[]> prix = fmPrix(ids);
+        Map<String, long[][]> entrees = fmEntrees(ids);
+        Map<String, Object[]> dernieres = fmDerniereEntree(ids);
+        Map<String, Long> reserves = fmStockReserve(ids, emplacement);
+        Map<String, Double> hebdos = fmVenteHebdo(ids, emplacement);
+
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        DecimalFormat df = new DecimalFormat("0.00", new DecimalFormatSymbols(java.util.Locale.US));
+
+        List<commonTasks.dto.FeuilleDeMatchLigneDTO> lignes = new ArrayList<>();
+        for (AbcProduitDTO d : rows) {
+            String id = nz(d.getProduitId());
+            long[] p = prix.getOrDefault(id, new long[] { 0, 0 });
+            long[][] e = entrees.getOrDefault(id, new long[4][2]);
+            Object[] derniere = dernieres.get(id);
+
+            commonTasks.dto.FeuilleDeMatchLigneDTO ligne = new commonTasks.dto.FeuilleDeMatchLigneDTO();
+            ligne.setCip(nz(d.getCip()));
+            ligne.setLibelle(nz(d.getLibelle()));
+            ligne.setPrixAchat(p[0]);
+            ligne.setPrixVente(p[1]);
+            ligne.setDerniereEntree((derniere != null && derniere[0] != null)
+                    ? (sdf.format((Date) derniere[0]) + " (qté " + derniere[1] + ")") : "aucune");
+            ligne.setFreqM0(e[0][0]);
+            ligne.setQteM0(e[0][1]);
+            ligne.setFreqM1(e[1][0]);
+            ligne.setQteM1(e[1][1]);
+            ligne.setFreqM2(e[2][0]);
+            ligne.setQteM2(e[2][1]);
+            ligne.setFreqM3(e[3][0]);
+            ligne.setQteM3(e[3][1]);
+            ligne.setStockReserve(reserves.getOrDefault(id, 0L));
+            ligne.setVenteHebdo(df.format(hebdos.getOrDefault(id, 0d)));
+            ligne.setMoyenneAchat3Mois(df.format((e[1][1] + e[2][1] + e[3][1]) / 3.0));
+            ligne.setObjectifStatut(fmObjectifStatut(e, objectif));
+            lignes.add(ligne);
+        }
+        return lignes;
+    }
+
+    /** Ids distincts non vides d'une liste de produits classes. */
+    private static List<String> fmIds(List<AbcProduitDTO> rows) {
+        return rows.stream().map(AbcProduitDTO::getProduitId).filter(StringUtils::isNotBlank).distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Filtre optionnel sur le statut de l'objectif d'achat : ATTEINT (frequence <= objectif sur chaque mois observe) ou
+     * DEPASSE. Toute autre valeur = pas de filtre.
+     */
+    private List<AbcProduitDTO> applyObjectifFilter(List<AbcProduitDTO> rows, Map<String, long[][]> entrees,
+            int objectif, String objectifFilter) {
+        if (StringUtils.isBlank(objectifFilter) || "ALL".equalsIgnoreCase(objectifFilter)) {
+            return rows;
+        }
+        boolean atteint = "ATTEINT".equalsIgnoreCase(objectifFilter);
+        return rows.stream().filter(d -> {
+            long[][] e = entrees.getOrDefault(nz(d.getProduitId()), new long[4][2]);
+            boolean respecte = "Respecté".equals(fmObjectifStatut(e, objectif));
+            return atteint == respecte;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public JSONObject feuilleDeMatchGrid(String dtStart, String dtEnd, String type, String classe, String search,
+            String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,
+            Integer stockMax, int start, int limit, Integer topN, Integer objectifAchat, String objectifFilter) {
+        List<AbcProduitDTO> rows = filteredList(dtStart, dtEnd, type, classe, search, codeFamille, codeRayon,
+                codeGrossiste, stockFilter, stockMin, stockMax, topN);
+        int objectif = (objectifAchat != null && objectifAchat > 0) ? objectifAchat : 3;
+        boolean avecFiltreObjectif = StringUtils.isNotBlank(objectifFilter) && !"ALL".equalsIgnoreCase(objectifFilter);
+
+        // Avec filtre objectif : les entrees de tous les produits sont necessaires
+        // pour filtrer avant pagination ; sinon seules celles de la page suffisent.
+        Map<String, long[][]> entrees = avecFiltreObjectif ? fmEntrees(fmIds(rows)) : null;
+        if (avecFiltreObjectif) {
+            rows = applyObjectifFilter(rows, entrees, objectif, objectifFilter);
+        }
+
+        int total = rows.size();
+        List<AbcProduitDTO> page = rows;
+        if (limit > 0) {
+            int from = Math.max(0, start);
+            int to = Math.min(total, from + limit);
+            page = (from <= to) ? rows.subList(from, to) : Collections.emptyList();
+        }
+        if (entrees == null) {
+            entrees = fmEntrees(fmIds(page));
+        }
+
+        JSONArray data = new JSONArray();
+        for (AbcProduitDTO d : page) {
+            long[][] e = entrees.getOrDefault(nz(d.getProduitId()), new long[4][2]);
+            data.put(new JSONObject(d).put("freqM0", e[0][0]).put("qteM0", e[0][1]).put("objectifStatut",
+                    fmObjectifStatut(e, objectif)));
+        }
+        return new JSONObject().put("success", true).put("total", total).put("data", data).put("moisCourant",
+                fmNomMois(0));
+    }
+
+    @Override
+    public byte[] buildFeuilleDeMatchPdf(String dtStart, String dtEnd, String type, String classe, String search,
+            String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,
+            Integer stockMax, Integer topN, Integer objectifAchat, String objectifFilter) {
+        List<AbcProduitDTO> rows = filteredList(dtStart, dtEnd, type, classe, search, codeFamille, codeRayon,
+                codeGrossiste, stockFilter, stockMin, stockMax, topN);
+        int objectifFiltre = (objectifAchat != null && objectifAchat > 0) ? objectifAchat : 3;
+        if (StringUtils.isNotBlank(objectifFilter) && !"ALL".equalsIgnoreCase(objectifFilter) && !rows.isEmpty()) {
+            rows = applyObjectifFilter(rows, fmEntrees(fmIds(rows)), objectifFiltre, objectifFilter);
+        }
+        if (rows.isEmpty()) {
+            return new byte[0];
+        }
+        try {
+            int objectif = objectifFiltre;
+            List<commonTasks.dto.FeuilleDeMatchLigneDTO> lignes = buildFeuilleDeMatchRows(rows, objectif);
+
+            String typeLabel = "MARGE".equalsIgnoreCase(type) ? "marge"
+                    : ("CA".equalsIgnoreCase(type) ? "chiffre d'affaires" : "quantité");
+            Map<String, Object> parameters = reportUtil.officineData(sessionHelperService.getCurrentUser());
+            parameters.put("P_H_CLT_INFOS", "FEUILLE DE MATCH (TOP " + rows.size() + " - "
+                    + typeLabel.toUpperCase(java.util.Locale.FRENCH) + ") DU " + nz(dtStart) + " AU " + nz(dtEnd));
+            parameters.put("P_MOIS_COURANT", fmNomMois(0));
+            parameters.put("P_MOIS_1", fmNomMois(1));
+            parameters.put("P_MOIS_2", fmNomMois(2));
+            parameters.put("P_MOIS_3", fmNomMois(3));
+            parameters.put("P_OBJECTIF_ACHAT", objectif);
+
+            // Modele .jrxml : version du repertoire de rapports du serveur si presente,
+            // sinon le modele embarque dans le war (src/main/resources/reports).
+            net.sf.jasperreports.engine.JasperReport report = reportUtil.getReport("rp_feuille_de_match",
+                    toolkits.utils.jdom.scr_report_file);
+            net.sf.jasperreports.engine.JasperPrint print = net.sf.jasperreports.engine.JasperFillManager.fillReport(
+                    report, parameters, new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(lignes));
+            byte[] pdf = net.sf.jasperreports.engine.JasperExportManager.exportReportToPdf(print);
+            // Copie dans le repertoire commun des PDF generes (data/reports/pdf),
+            // comme les autres impressions de l'application.
+            try {
+                String fileName = "feuille_de_match_" + new java.text.SimpleDateFormat("mmss").format(new Date())
+                        + ".pdf";
+                java.nio.file.Files.write(java.nio.file.Paths.get(reportUtil.getReportDirectory(fileName)), pdf);
+            } catch (Exception archiveEx) {
+                LOG.log(Level.WARNING, "Archivage du PDF feuille de match impossible", archiveEx);
+            }
+            return pdf;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Impression PDF Feuille de match impossible", e);
+            return new byte[0];
+        }
+    }
+
+    @Override
+    public JSONObject feuilleDeMatchProduitDetail(String produitId, Integer objectifAchat) {
+        JSONObject json = new JSONObject();
+        try {
+            TFamille famille = em.find(TFamille.class, produitId);
+            if (famille == null) {
+                return json.put("success", false);
+            }
+            int objectif = (objectifAchat != null && objectifAchat > 0) ? objectifAchat : 3;
+            AbcProduitDTO dto = new AbcProduitDTO();
+            dto.setProduitId(famille.getLgFAMILLEID());
+            dto.setCip(famille.getIntCIP());
+            dto.setLibelle(famille.getStrNAME());
+            commonTasks.dto.FeuilleDeMatchLigneDTO ligne = buildFeuilleDeMatchRows(Collections.singletonList(dto),
+                    objectif).get(0);
+            json.put("success", true).put("data", new JSONObject(ligne)).put("objectif", objectif)
+                    .put("moisCourant", fmNomMois(0)).put("mois1", fmNomMois(1)).put("mois2", fmNomMois(2))
+                    .put("mois3", fmNomMois(3));
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "feuilleDeMatchProduitDetail", e);
+            json.put("success", false);
+        }
+        return json;
     }
 
 }

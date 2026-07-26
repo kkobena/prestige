@@ -33,6 +33,13 @@ public interface FicheArticleService {
             String dtStart, String dtEnd, String codeFamile, String codeRayon, String codeGrossiste, int start,
             int limit, boolean all);
 
+    /**
+     * Nombre de lots concernes uniquement (une seule requete COUNT) : utilise par le badge de la cloche de
+     * notifications, qui n'a pas besoin de la liste ni du resume valorise.
+     */
+    long produitPerimesCount(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste);
+
     /* Visualisation des perimes (peremptionquery) : exports et creation d'inventaire sur la liste filtree */
     byte[] exportPerimesCsv(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
             String codeRayon, String codeGrossiste) throws java.io.IOException;
@@ -98,12 +105,13 @@ public interface FicheArticleService {
 
     void updateProduitLiteInfo(UpdateProduit updateProduit);
 
-    /** Liste paginee des produits pour l'ecran MAJ SEUIL (filtre famille OU emplacement + recherche). */
-    JSONObject majSeuilList(String codeFamille, String zoneGeoId, String search, int start, int limit);
+    /** Liste paginee des produits pour l'ecran MAJ SEUIL (filtres famille, emplacement, classe ABC + recherche). */
+    JSONObject majSeuilList(String codeFamille, String zoneGeoId, String search, String classeAbcId, int start,
+            int limit);
 
     /** MAJ groupee de Q1/Q2 par produit : mode SELECTED (ids) ou ALL (filtre moins uncheckedIds). */
-    JSONObject majSeuilApply(String mode, String codeFamille, String zoneGeoId, String search, List<String> ids,
-            List<String> uncheckedIds, Integer q1, Integer q2);
+    JSONObject majSeuilApply(String mode, String codeFamille, String zoneGeoId, String search, String classeAbcId,
+            List<String> ids, List<String> uncheckedIds, Integer q1, Integer q2);
 
     byte[] buildComparaisonExcel(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil, String codeFamile,
             String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException;

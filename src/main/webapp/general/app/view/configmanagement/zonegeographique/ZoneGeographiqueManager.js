@@ -2,6 +2,9 @@
 
 var url_services_data_zonegeographique = '../webservices/configmanagement/zonegeographique/ws_data.jsp';
 var url_services_transaction_zonegeographique = '../webservices/configmanagement/zonegeographique/ws_transaction.jsp?mode=';
+// REST dedie a cet ecran (memes formats JSON que les JSP) : liste + create/update/update-count/toggle-statut
+var url_rest_data_zone_geo = '../api/v1/zones-geographiques';
+var url_services_rest_zone_geo = '../api/v1/zones-geographiques/';
 var Me_Workflow;
 Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueManager', {
     extend: 'Ext.grid.Panel',
@@ -9,6 +12,7 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
     id: 'zonegeographiquemanagerID',
     requires: [
         'Ext.selection.CellModel',
+        'Ext.selection.CheckboxModel',
         'Ext.grid.*',
         'Ext.window.Window',
         'Ext.data.*',
@@ -30,14 +34,15 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
     initComponent: function () {
 
         Me_Workflow = this;
-        var itemsPerPage = 20;
+        // Pas de pagination sur cet ecran : tous les emplacements sont affiches
+        var itemsPerPage = 100000;
         var store = new Ext.data.Store({
             model: 'testextjs.model.ZoneGeographique',
             pageSize: itemsPerPage,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_zonegeographique,
+                url: url_rest_data_zone_geo,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -55,7 +60,9 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
             plugins: [
                 {
                     ptype: "rowediting",
-                    clicksToEdit: 2
+                    clicksToEdit: 2,
+                    saveBtnText: 'Enregistrer',
+                    cancelBtnText: 'Annuler'
 
                 }],
             store: store,
@@ -101,7 +108,8 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                             var rec = Ext.getCmp('zonegeographiquegridID').getStore().getAt(rowIndex);
 
                             Ext.Ajax.request({
-                                url: '../webservices/configmanagement/zonegeographique/ws_transaction.jsp?mode=updateCount',
+                                url: url_services_rest_zone_geo + 'update-count',
+                                method: 'POST',
                                 params: {
                                     lg_ZONE_GEO_ID: rec.get("lg_ZONE_GEO_ID"),
                                     bool_ACCOUNT: checked
@@ -140,6 +148,20 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                     sortable: false,
                     menuDisabled: true,
                     items: [{
+                            // La suppression definitive est remplacee par la desactivation
+                            // (reversible via le bouton 'Desactives' de la barre d'outils)
+                            icon: 'resources/images/icons/fam/disable.png',
+                            tooltip: 'D&eacute;sactiver / R&eacute;activer cet emplacement',
+                            scope: this,
+                            handler: this.onToggleStatutClick
+                        }]
+                }, {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    hidden: true, // bouton 'Supprimer' masque a la demande (fonction conservee)
+                    items: [{
                             icon: 'resources/images/icons/fam/delete.gif',
                             tooltip: 'Supprimer',
                             scope: this,
@@ -147,7 +169,13 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                         }]
                 }],
             selModel: {
-                selType: 'cellmodel'
+                // Cases a cocher a gauche du code pour la desactivation en masse.
+                // checkOnly : la selection ne se fait que par la case, la modification
+                // en ligne (double clic) reste inchangee.
+                selType: 'checkboxmodel',
+                mode: 'SIMPLE',
+                checkOnly: true,
+                injectCheckbox: 0
             },
             tbar: [
                 {
@@ -209,15 +237,53 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                     iconCls: 'printable',
                     scope: this,
                     handler: this.onPrintClick
+                }, '-', {
+                    text: 'D&eacute;sactiver la s&eacute;lection',
+                    id: 'BT_ZONE_GEO_TOGGLE_MASSE',
+                    icon: 'resources/images/icons/fam/disable.png',
+                    tooltip: 'D&eacute;sactiver (ou r&eacute;activer) tous les emplacements coch&eacute;s',
+                    scope: this,
+                    handler: this.onToggleMasseClick
+                }, '->', {
+                    text: 'D&eacute;sactiv&eacute;s',
+                    id: 'BT_ZONE_GEO_VOIR_DESACTIVES',
+                    enableToggle: true,
+                    hidden: true, // visible uniquement pour les profils administrateurs (voir est-admin)
+                    icon: 'resources/images/icons/fam/disable.png',
+                    tooltip: 'Afficher les emplacements d&eacute;sactiv&eacute;s (pour les r&eacute;activer)',
+                    scope: this,
+                    toggleHandler: function (btn, pressed) {
+                        var store = this.getStore();
+                        store.getProxy().setExtraParam('actifs', !pressed);
+                        store.loadPage(1);
+                        // Le bouton de masse suit la vue : desactiver ou reactiver
+                        var masse = Ext.getCmp('BT_ZONE_GEO_TOGGLE_MASSE');
+                        if (masse) {
+                            masse.setText(pressed ? 'R&eacute;activer la s&eacute;lection'
+                                    : 'D&eacute;sactiver la s&eacute;lection');
+                        }
+                    }
                 }
-
 
             ],
             listeners: {
+                canceledit: function (src, e) {
+                    // L'edition en ligne coche la ligne au passage : on la decoche a l'annulation
+                    var grid = Ext.getCmp('zonegeographiquegridID');
+                    if (grid && e.record) {
+                        grid.getSelectionModel().deselect(e.record);
+                    }
+                },
                 edit: function (src, e) {
                     var record = e.record;
+                    // L'edition en ligne coche la ligne au passage : on la decoche aussitot
+                    var gridZone = Ext.getCmp('zonegeographiquegridID');
+                    if (gridZone) {
+                        gridZone.getSelectionModel().deselect(record);
+                    }
                     Ext.Ajax.request({
-                        url: url_services_transaction_zonegeographique + 'update',
+                        url: url_services_rest_zone_geo + 'update',
+                        method: 'POST',
                         params: {
                             lg_ZONE_GEO_ID: record.get("lg_ZONE_GEO_ID"),
                             str_LIBELLEE: record.get("str_LIBELLEE"),
@@ -245,12 +311,22 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
 
                 }
             },
+            // Pas de barre de pagination : tous les emplacements sont affiches d'un bloc
             bbar: {
-                xtype: 'pagingtoolbar',
-                pageSize: itemsPerPage,
-                store: store,
-                displayInfo: true,
-                plugins: new Ext.ux.ProgressBarPager()
+                xtype: 'toolbar',
+                items: [{
+                        xtype: 'tbtext',
+                        id: 'zone-geo-total-text',
+                        text: ''
+                    }]
+            }
+        });
+
+        // Affiche le nombre total d'emplacements en pied de grille
+        store.on('load', function (s) {
+            var texte = Ext.getCmp('zone-geo-total-text');
+            if (texte) {
+                texte.setText(s.getTotalCount() + ' emplacement(s)');
             }
         });
 
@@ -261,7 +337,18 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
             single: true
         });
 
-
+        // Le bouton 'Desactives' n'est propose qu'aux profils administrateurs
+        Ext.Ajax.request({
+            url: '../api/v1/roles/est-admin',
+            method: 'GET',
+            success: function (response) {
+                var object = Ext.JSON.decode(response.responseText, true);
+                var bouton = Ext.getCmp('BT_ZONE_GEO_VOIR_DESACTIVES');
+                if (object && object.authorize === true && bouton) {
+                    bouton.show();
+                }
+            }
+        });
 
     },
     loadStore: function () {
@@ -270,17 +357,22 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
         });
     },
     onStoreLoad: function () {
-     var grid =   Ext.getCmp('zonegeographiquegridID');
+        var grid = Ext.getCmp('zonegeographiquegridID');
         if (grid.getStore().getCount() > 0) {
             var firstRec = grid.getStore().getAt(0);
-            console.log(firstRec.get('KEYINTOACCOUNT'),grid.columns[3]);
-            if(firstRec.get('KEYINTOACCOUNT'))
-                 grid.columns[3].setVisible(true);
-             else
-                 grid.columns[3].setVisible(false);
+            // Recherche par dataIndex : la colonne de cochage injectee a gauche
+            // decale les index, on ne peut plus utiliser grid.columns[3]
+            var colonneComptage = null;
+            Ext.Array.each(grid.columns, function (col) {
+                if (col.dataIndex === 'bool_ACCOUNT') {
+                    colonneComptage = col;
+                    return false;
+                }
+            });
+            if (colonneComptage) {
+                colonneComptage.setVisible(firstRec.get('KEYINTOACCOUNT') === true);
+            }
         }
-       // enableColumnHide
-       
     },
     onbtnexportCsv: function () {
         var extension = "csv";
@@ -377,12 +469,93 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
 
     },
     onRechClick: function () {
+        // extraParam persistant : la recherche est conservee quand on change de page
         var val = Ext.getCmp('rechecher');
-        this.getStore().load({
-            params: {
-                search_value: val.getValue()
-            }
-        }, url_services_data_zonegeographique);
+        var store = this.getStore();
+        store.getProxy().setExtraParam('search_value', val.getValue());
+        store.loadPage(1);
+    },
+    onToggleStatutClick: function (grid, rowIndex) {
+        // En vue normale on desactive ; en vue 'Desactives' on reactive
+        var enDesactives = Ext.getCmp('BT_ZONE_GEO_VOIR_DESACTIVES')
+                && Ext.getCmp('BT_ZONE_GEO_VOIR_DESACTIVES').pressed;
+        var actif = enDesactives ? true : false;
+        Ext.MessageBox.confirm('Message',
+                (actif ? 'R&eacute;activer cet emplacement ?'
+                        : 'D&eacute;sactiver cet emplacement ? Il n\'appara&icirc;tra plus dans les listes.'),
+                function (btn) {
+                    if (btn === 'yes') {
+                        var rec = grid.getStore().getAt(rowIndex);
+                        testextjs.app.getController('App').ShowWaitingProcess();
+                        Ext.Ajax.request({
+                            url: url_services_rest_zone_geo + 'toggle-statut',
+                            method: 'POST',
+                            params: {
+                                lg_ZONE_GEO_ID: rec.get('lg_ZONE_GEO_ID'),
+                                actif: actif
+                            },
+                            success: function (response) {
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                var object = Ext.JSON.decode(response.responseText, false);
+                                if (object.success == "0") {
+                                    Ext.MessageBox.alert('Error Message', object.errors);
+                                    return;
+                                }
+                                Ext.MessageBox.alert('Confirmation', object.errors);
+                                grid.getStore().reload();
+                            },
+                            failure: function (response) {
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                console.log("Bug " + response.responseText);
+                                Ext.MessageBox.alert('Error Message', response.responseText);
+                            }
+                        });
+                    }
+                });
+    },
+    onToggleMasseClick: function () {
+        var me = this;
+        var enDesactives = Ext.getCmp('BT_ZONE_GEO_VOIR_DESACTIVES')
+                && Ext.getCmp('BT_ZONE_GEO_VOIR_DESACTIVES').pressed;
+        var actif = enDesactives ? true : false;
+        var selection = this.getSelectionModel().getSelection();
+        if (!selection || selection.length === 0) {
+            Ext.MessageBox.alert('Information', 'Cochez au moins un emplacement dans la premi&egrave;re colonne.');
+            return;
+        }
+        var ids = [];
+        Ext.Array.each(selection, function (rec) {
+            ids.push(rec.get('lg_ZONE_GEO_ID'));
+        });
+        Ext.MessageBox.confirm('Message',
+                (actif ? 'R&eacute;activer' : 'D&eacute;sactiver') + ' les ' + ids.length
+                + ' emplacement(s) coch&eacute;(s) ?',
+                function (btn) {
+                    if (btn === 'yes') {
+                        testextjs.app.getController('App').ShowWaitingProcess();
+                        Ext.Ajax.request({
+                            url: url_services_rest_zone_geo + 'toggle-statut-masse',
+                            method: 'POST',
+                            params: {
+                                lg_ZONE_GEO_IDS: ids.join(','),
+                                actif: actif
+                            },
+                            success: function (response) {
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                var object = Ext.JSON.decode(response.responseText, false);
+                                Ext.MessageBox.alert(object.success == "0" ? 'Error Message' : 'Confirmation',
+                                        object.errors);
+                                me.getSelectionModel().deselectAll();
+                                me.getStore().reload();
+                            },
+                            failure: function (response) {
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                console.log("Bug " + response.responseText);
+                                Ext.MessageBox.alert('Error Message', response.responseText);
+                            }
+                        });
+                    }
+                });
     },
     onbasculer: function () {
         new testextjs.view.configmanagement.zonegeographique.action.basculement({
@@ -421,25 +594,8 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
         });
     },
     genererPdfEmplacements: function (tri) {
-        var progress = Ext.MessageBox.wait('Generation du PDF . . .', 'Veuillez patienter');
-        Ext.Ajax.request({
-            url: '../api/v1/emplacements/pdf',
-            method: 'GET',
-            params: {tri: tri},
-            timeout: 2400000,
-            success: function (resp) {
-                progress.hide();
-                var r = Ext.JSON.decode(resp.responseText, true);
-                if (r && r.success && r.url) {
-                    window.open(r.url);
-                } else {
-                    Ext.MessageBox.alert('Impression', "La generation du PDF n'a pas abouti.");
-                }
-            },
-            failure: function () {
-                progress.hide();
-                Ext.MessageBox.alert('Impression', "La generation du PDF a echoue.");
-            }
-        });
+        // Ouverture directe dans le clic utilisateur (comme les autres impressions PDF) :
+        // l'onglet s'ouvre sans blocage de popup et affiche le PDF des qu'il est genere.
+        testextjs.app.getController('App').onGeneratePdfFile('../api/v1/emplacements/pdf-direct?tri=' + tri);
     }
 });

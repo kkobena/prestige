@@ -35,6 +35,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommonService;
@@ -312,6 +313,45 @@ public class CommonRessource {
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
+    /**
+     * Codes TVA actifs, format historique {total, results} (remplacant rapide de ws_data_codetva.jsp : memes noms de
+     * champs, les combos existants basculent en changeant seulement l'URL).
+     */
+    @GET
+    @Path("tvas")
+    public Response loadTvas(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue) throws JSONException {
+        JSONObject json = commonService.loadTvas(StringUtils.isNotEmpty(query) ? query : searchValue);
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(3600);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(json.toString()).build();
+    }
+
+    /** DCI actifs pagines, format historique {total, results} (remplacant rapide des ws_data.jsp DCI). */
+    @GET
+    @Path("dcis")
+    public Response loadDcis(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        JSONObject json = commonService.loadDcis(StringUtils.isNotEmpty(query) ? query : searchValue, start, limit);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    /**
+     * Familles d'articles actives, memes cles JSON que la JSP historique ({total, results:[{lg_FAMILLEARTICLE_ID,
+     * str_LIBELLE...}]}) : utilisable en remplacement direct dans les combos des ecrans (etat de stock...).
+     */
+    @GET
+    @Path("famille-articles")
+    public Response loadFamillesArticles(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        JSONObject json = commonService.loadFamillesArticles(StringUtils.isNotEmpty(query) ? query : searchValue, start,
+                limit);
+        return Response.ok().entity(json.toString()).build();
+    }
+
     @GET
     @Path("famillearticles")
     public Response familleArticles(@QueryParam(value = "query") String query) throws JSONException {
@@ -441,5 +481,61 @@ public class CommonRessource {
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(allowed)).build();
 
+    }
+
+    /**
+     * Villes actives (memes cles JSON que la JSP historique ville/ws_data.jsp). Chemin "referentiel/..." car un
+     * endpoint "villes" au format ComboDTO existe deja plus haut.
+     */
+    @GET
+    @Path("referentiel/villes")
+    public Response villes(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        String q = StringUtils.isNotEmpty(query) ? query : searchValue;
+        return Response.ok().entity(commonService.loadVilles(q, start, limit).toString()).build();
+    }
+
+    /** Types de client actifs, filtrables par str_TYPE (memes cles que typeclient/ws_data.jsp). */
+    @GET
+    @Path("types-client")
+    public Response typesClient(@QueryParam(value = "str_TYPE") String type, @QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        String q = StringUtils.isNotEmpty(query) ? query : searchValue;
+        return Response.ok().entity(commonService.loadTypesClient(type, q, start, limit).toString()).build();
+    }
+
+    /** Categories d'ayant droit actives (memes cles que categorieayantdroit/ws_data.jsp). */
+    @GET
+    @Path("categories-ayant-droit")
+    public Response categoriesAyantDroit(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        String q = StringUtils.isNotEmpty(query) ? query : searchValue;
+        return Response.ok().entity(commonService.loadCategoriesAyantDroit(q, start, limit).toString()).build();
+    }
+
+    /** Types de tiers payant actifs (memes cles que typetierspayant/ws_data.jsp). */
+    @GET
+    @Path("types-tiers-payant")
+    public Response typesTiersPayant(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        String q = StringUtils.isNotEmpty(query) ? query : searchValue;
+        return Response.ok().entity(commonService.loadTypesTiersPayant(q, start, limit).toString()).build();
+    }
+
+    /**
+     * Risques actifs (memes cles que risque/ws_data.jsp). Chemin "referentiel/..." car un endpoint "risques" au format
+     * ComboDTO existe deja plus haut.
+     */
+    @GET
+    @Path("referentiel/risques")
+    public Response risques(@QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String searchValue, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        String q = StringUtils.isNotEmpty(query) ? query : searchValue;
+        return Response.ok().entity(commonService.loadRisques(q, start, limit).toString()).build();
     }
 }

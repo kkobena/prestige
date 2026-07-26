@@ -66,6 +66,28 @@ public interface AbcAnalysisService {
             String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin, Integer stockMax,
             Integer topN);
 
+    /**
+     * Impression PDF "Feuille de match" (modele rp_feuille_de_match.jrxml) du resultat filtre courant : pour chaque
+     * produit, prix achat/vente, date de derniere entree (+ quantite), frequence d'achat et quantite totale entree du
+     * mois en cours et des 3 derniers mois (mois nommes), stock reserve, vente hebdomadaire moyenne (MOY/4), moyenne
+     * d'achat sur 3 mois et statut de l'objectif d'achat mensuel (frequence <= objectifAchat, defaut 3).
+     */
+    byte[] buildFeuilleDeMatchPdf(String dtStart, String dtEnd, String type, String classe, String search,
+            String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,
+            Integer stockMax, Integer topN, Integer objectifAchat, String objectifFilter);
+
+    /**
+     * Grille paginee de la feuille de match : resultat filtre (memes filtres que la classification + Top N), enrichi de
+     * la frequence et de la quantite achetees du mois en cours et du statut de l'objectif d'achat, avec filtre
+     * optionnel objectif ATTEINT / DEPASSE.
+     */
+    JSONObject feuilleDeMatchGrid(String dtStart, String dtEnd, String type, String classe, String search,
+            String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,
+            Integer stockMax, int start, int limit, Integer topN, Integer objectifAchat, String objectifFilter);
+
+    /** Detail achats d'un produit pour la vue feuille de match (memes donnees que l'impression). */
+    JSONObject feuilleDeMatchProduitDetail(String produitId, Integer objectifAchat);
+
     /** Cree un inventaire a partir de TOUT le resultat filtre courant. */
     JSONObject createInventaire(String dtStart, String dtEnd, String type, String classe, String search,
             String codeFamille, String codeRayon, String codeGrossiste, String stockFilter, Integer stockMin,

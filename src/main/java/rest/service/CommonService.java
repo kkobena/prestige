@@ -117,4 +117,37 @@ public interface CommonService {
 
     boolean isNormalUse();
 
+    /**
+     * Liste des codes TVA actifs, au format historique {total, results:[{lg_CODE_TVA_ID, str_NAME, int_VALUE,
+     * str_STATUT}]} pour remplacer ws_data_codetva.jsp sans toucher aux combos existants.
+     */
+    org.json.JSONObject loadTvas(String query);
+
+    /**
+     * Liste paginee des DCI actifs, au format historique {total, results:[{lg_DCI_ID, str_CODE, str_NAME, str_STATUT}]}
+     * pour remplacer les ws_data.jsp DCI sans toucher aux combos existants.
+     */
+    org.json.JSONObject loadDcis(String query, int start, int limit);
+
+    /**
+     * Familles d'articles actives pour les filtres d'ecrans (memes cles JSON que la JSP historique
+     * webservices/configmanagement/famillearticle/ws_data.jsp), paginees et filtrables par libelle/code.
+     */
+    org.json.JSONObject loadFamillesArticles(String query, int start, int limit);
+
+    /** Villes actives (memes cles JSON que la JSP historique ville/ws_data.jsp). */
+    org.json.JSONObject loadVilles(String query, int start, int limit);
+
+    /** Types de client actifs, filtrables par str_TYPE (memes cles que typeclient/ws_data.jsp). */
+    org.json.JSONObject loadTypesClient(String type, String query, int start, int limit);
+
+    /** Categories d'ayant droit actives (memes cles que categorieayantdroit/ws_data.jsp). */
+    org.json.JSONObject loadCategoriesAyantDroit(String query, int start, int limit);
+
+    /** Risques actifs (memes cles que risque/ws_data.jsp). */
+    org.json.JSONObject loadRisques(String query, int start, int limit);
+
+    /** Types de tiers payant actifs (memes cles que typetierspayant/ws_data.jsp). */
+    org.json.JSONObject loadTypesTiersPayant(String query, int start, int limit);
+
 }

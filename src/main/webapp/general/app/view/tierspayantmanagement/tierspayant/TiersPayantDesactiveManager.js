@@ -1,5 +1,7 @@
 var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 var url_services_transaction_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_transaction.jsp?mode=';
+// REST dedie (memes methodes metier et memes messages que la JSP ci-dessus)
+var url_rest_tierspayant = '../api/v1/tierspayant/gestion/';
 var url_services_data_typetierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
 var url_services_pdf_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_generate_pdf.jsp';
 
@@ -273,7 +275,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantDesactiv
         this.on('edit', function(editor, e) {
 
             Ext.Ajax.request({
-                url: url_services_transaction_tierspayant + 'update',
+                url: url_rest_tierspayant + 'update',
+                method: 'POST',
                 params: {
                     lg_TIERS_PAYANT_ID: e.record.data.lg_TIERS_PAYANT_ID,
                     str_CODE_ORGANISME: e.record.data.str_CODE_ORGANISME,
@@ -391,7 +394,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantDesactiv
                         var rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_tierspayant + 'delete',
+                            url: url_rest_tierspayant + 'delete',
+                            method: 'POST',
                             params: {
                                 lg_TIERS_PAYANT_ID: rec.get('lg_TIERS_PAYANT_ID')
                             },
@@ -457,16 +461,24 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantDesactiv
   
     onEnableClick: function(grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-        Ext.MessageBox.confirm('Message',
-                'Activer le tiers payant ' + "<br><b>" + rec.get('str_FULLNAME')+"</b>",
-                function(btn) {
+        // Boite large : les libelles longs debordaient et la derniere ligne etait coupee
+        Ext.MessageBox.show({
+            title: 'Message',
+            msg: 'Activer le tiers payant ' + "<br><b>" + rec.get('str_FULLNAME') + "</b>",
+            buttons: Ext.MessageBox.YESNO,
+            icon: Ext.MessageBox.QUESTION,
+            minWidth: 460,
+            maxWidth: 640,
+            fn: function(btn) {
                     if (btn === 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_tierspayant + 'enable',
+                            url: url_rest_tierspayant + 'toggle-statut',
+                            method: 'POST',
                             params: {
-                                lg_TIERS_PAYANT_ID: rec.get('lg_TIERS_PAYANT_ID')
+                                lg_TIERS_PAYANT_ID: rec.get('lg_TIERS_PAYANT_ID'),
+                                actif: true
                             },
                             success: function(response)
                             {
@@ -498,7 +510,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantDesactiv
                         });
                         return;
                     }
-                });
+                }
+        });
 
 
     }

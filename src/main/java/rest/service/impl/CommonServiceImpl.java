@@ -801,4 +801,286 @@ public class CommonServiceImpl implements Serializable, CommonService {
         return tq.getResultList();
     }
 
+    @Override
+    public JSONObject loadTvas(String query) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        try {
+            StringBuilder sql = new StringBuilder(
+                    "SELECT t.lg_CODE_TVA_ID, t.str_NAME, t.int_VALUE, t.str_STATUT FROM t_code_tva t"
+                            + " WHERE t.str_STATUT = 'enable'");
+            if (!StringUtils.isEmpty(query)) {
+                sql.append(" AND t.str_NAME LIKE :query");
+            }
+            sql.append(" ORDER BY t.int_VALUE ASC");
+            Query q = getEntityManager().createNativeQuery(sql.toString());
+            if (!StringUtils.isEmpty(query)) {
+                q.setParameter("query", query + "%");
+            }
+            List<Object[]> rows = q.getResultList();
+            for (Object[] r : rows) {
+                results.put(new JSONObject().put("lg_CODE_TVA_ID", String.valueOf(r[0]))
+                        .put("str_NAME", r[1] != null ? r[1] : "").put("int_VALUE", r[2] != null ? r[2] : 0)
+                        .put("str_STATUT", r[3] != null ? r[3] : ""));
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadTvas", e);
+        }
+        return json.put("total", results.length()).put("results", results);
+    }
+
+    @Override
+    public JSONObject loadDcis(String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        int lim = (limit > 0) ? limit : 20;
+        try {
+            String where = " FROM t_dci d WHERE d.str_STATUT = 'enable'";
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND (d.str_NAME LIKE :query OR d.str_CODE LIKE :query)";
+            }
+            Query qc = getEntityManager().createNativeQuery("SELECT COUNT(*)" + where);
+            Query q = getEntityManager().createNativeQuery(
+                    "SELECT d.lg_DCI_ID, d.str_CODE, d.str_NAME, d.str_STATUT" + where + " ORDER BY d.str_NAME ASC");
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = ((Number) qc.getSingleResult()).longValue();
+            q.setFirstResult(Math.max(0, start));
+            q.setMaxResults(lim);
+            List<Object[]> rows = q.getResultList();
+            for (Object[] r : rows) {
+                results.put(new JSONObject().put("lg_DCI_ID", String.valueOf(r[0]))
+                        .put("str_CODE", r[1] != null ? r[1] : "").put("str_NAME", r[2] != null ? r[2] : "")
+                        .put("str_STATUT", r[3] != null ? r[3] : ""));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadDcis", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
+    @Override
+    public JSONObject loadFamillesArticles(String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        int lim = (limit > 0) ? limit : 20;
+        try {
+            String where = " FROM t_famillearticle f WHERE f.str_STATUT = 'enable'";
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND (f.str_LIBELLE LIKE :query OR f.str_CODE_FAMILLE LIKE :query)";
+            }
+            Query qc = getEntityManager().createNativeQuery("SELECT COUNT(*)" + where);
+            Query q = getEntityManager()
+                    .createNativeQuery("SELECT f.lg_FAMILLEARTICLE_ID, f.str_LIBELLE, f.str_CODE_FAMILLE, f.str_STATUT"
+                            + where + " ORDER BY f.str_LIBELLE ASC");
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = ((Number) qc.getSingleResult()).longValue();
+            q.setFirstResult(Math.max(0, start));
+            q.setMaxResults(lim);
+            List<Object[]> rows = q.getResultList();
+            for (Object[] r : rows) {
+                results.put(new JSONObject().put("lg_FAMILLEARTICLE_ID", String.valueOf(r[0]))
+                        .put("str_LIBELLE", r[1] != null ? r[1] : "").put("str_CODE_FAMILLE", r[2] != null ? r[2] : "")
+                        .put("str_STATUT", r[3] != null ? r[3] : ""));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadFamillesArticles", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
+    @Override
+    public JSONObject loadVilles(String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        try {
+            String where = " FROM TVille t WHERE t.strStatut = 'enable'";
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND t.strName LIKE :query";
+            }
+            javax.persistence.TypedQuery<Long> qc = getEntityManager().createQuery("SELECT COUNT(t)" + where,
+                    Long.class);
+            javax.persistence.TypedQuery<dal.TVille> q = getEntityManager()
+                    .createQuery("SELECT t" + where + " ORDER BY t.strName ASC", dal.TVille.class);
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = qc.getSingleResult();
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start)).setMaxResults(limit);
+            }
+            for (dal.TVille t : q.getResultList()) {
+                results.put(new JSONObject().put("lg_VILLE_ID", t.getLgVILLEID())
+                        .put("STR_NAME", t.getStrName() != null ? t.getStrName() : "")
+                        .put("str_CODE", t.getStrCODE() != null ? t.getStrCODE() : "")
+                        .put("STR_CODE_POSTAL", t.getStrCodePostal() != null ? t.getStrCodePostal() : "")
+                        .put("STR_BUREAU_DISTRIBUTEUR",
+                                t.getStrBureauDistributeur() != null ? t.getStrBureauDistributeur() : "")
+                        .put("str_STATUT", t.getStrStatut()));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadVilles", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
+    @Override
+    public JSONObject loadTypesClient(String type, String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        try {
+            String where = " FROM TTypeClient t WHERE t.strSTATUT = 'enable'";
+            if (!StringUtils.isEmpty(type)) {
+                where += " AND t.strTYPE = :type";
+            }
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND t.strNAME LIKE :query";
+            }
+            javax.persistence.TypedQuery<Long> qc = getEntityManager().createQuery("SELECT COUNT(t)" + where,
+                    Long.class);
+            javax.persistence.TypedQuery<dal.TTypeClient> q = getEntityManager()
+                    .createQuery("SELECT t" + where + " ORDER BY t.strNAME ASC", dal.TTypeClient.class);
+            if (!StringUtils.isEmpty(type)) {
+                qc.setParameter("type", type);
+                q.setParameter("type", type);
+            }
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = qc.getSingleResult();
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start)).setMaxResults(limit);
+            }
+            for (dal.TTypeClient t : q.getResultList()) {
+                results.put(new JSONObject().put("lg_TYPE_CLIENT_ID", t.getLgTYPECLIENTID())
+                        .put("str_NAME", t.getStrNAME() != null ? t.getStrNAME() : "")
+                        .put("str_DESCRIPTION", t.getStrDESCRIPTION() != null ? t.getStrDESCRIPTION() : "")
+                        .put("str_STATUT", t.getStrSTATUT()));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadTypesClient", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
+    @Override
+    public JSONObject loadCategoriesAyantDroit(String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        try {
+            String where = " FROM TCategorieAyantdroit t WHERE t.strSTATUT = 'enable'";
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND t.strLIBELLECATEGORIEAYANTDROIT LIKE :query";
+            }
+            javax.persistence.TypedQuery<Long> qc = getEntityManager().createQuery("SELECT COUNT(t)" + where,
+                    Long.class);
+            javax.persistence.TypedQuery<dal.TCategorieAyantdroit> q = getEntityManager().createQuery(
+                    "SELECT t" + where + " ORDER BY t.strLIBELLECATEGORIEAYANTDROIT ASC",
+                    dal.TCategorieAyantdroit.class);
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = qc.getSingleResult();
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start)).setMaxResults(limit);
+            }
+            for (dal.TCategorieAyantdroit t : q.getResultList()) {
+                results.put(
+                        new JSONObject().put("lg_CATEGORIE_AYANTDROIT_ID", t.getLgCATEGORIEAYANTDROITID())
+                                .put("str_CODE", t.getStrCODE() != null ? t.getStrCODE() : "")
+                                .put("str_LIBELLE_CATEGORIE_AYANTDROIT",
+                                        t.getStrLIBELLECATEGORIEAYANTDROIT() != null
+                                                ? t.getStrLIBELLECATEGORIEAYANTDROIT() : "")
+                                .put("str_STATUT", t.getStrSTATUT()));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadCategoriesAyantDroit", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
+    @Override
+    public JSONObject loadRisques(String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        try {
+            String where = " FROM TRisque t WHERE t.strSTATUT = 'enable'";
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND (t.strLIBELLERISQUE LIKE :query OR t.strCODERISQUE LIKE :query)";
+            }
+            javax.persistence.TypedQuery<Long> qc = getEntityManager().createQuery("SELECT COUNT(t)" + where,
+                    Long.class);
+            javax.persistence.TypedQuery<dal.TRisque> q = getEntityManager()
+                    .createQuery("SELECT t" + where + " ORDER BY t.strLIBELLERISQUE ASC", dal.TRisque.class);
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = qc.getSingleResult();
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start)).setMaxResults(limit);
+            }
+            for (dal.TRisque t : q.getResultList()) {
+                results.put(new JSONObject().put("lg_RISQUE_ID", t.getLgRISQUEID())
+                        .put("str_CODE_RISQUE", t.getStrCODERISQUE() != null ? t.getStrCODERISQUE() : "")
+                        .put("str_LIBELLE_RISQUE", t.getStrLIBELLERISQUE() != null ? t.getStrLIBELLERISQUE() : "")
+                        .put("str_RISQUE_OFFICIEL", t.getStrRISQUEOFFICIEL() != null ? t.getStrRISQUEOFFICIEL() : "")
+                        .put("str_STATUT", t.getStrSTATUT()));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadRisques", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
+    @Override
+    public JSONObject loadTypesTiersPayant(String query, int start, int limit) {
+        JSONObject json = new JSONObject();
+        org.json.JSONArray results = new org.json.JSONArray();
+        try {
+            String where = " FROM TTypeTiersPayant t WHERE t.strSTATUT = 'enable'";
+            if (!StringUtils.isEmpty(query)) {
+                where += " AND (t.strLIBELLETYPETIERSPAYANT LIKE :query OR t.strCODETYPETIERSPAYANT LIKE :query)";
+            }
+            javax.persistence.TypedQuery<Long> qc = getEntityManager().createQuery("SELECT COUNT(t)" + where,
+                    Long.class);
+            javax.persistence.TypedQuery<dal.TTypeTiersPayant> q = getEntityManager().createQuery(
+                    "SELECT t" + where + " ORDER BY t.strLIBELLETYPETIERSPAYANT ASC", dal.TTypeTiersPayant.class);
+            if (!StringUtils.isEmpty(query)) {
+                qc.setParameter("query", query + "%");
+                q.setParameter("query", query + "%");
+            }
+            long total = qc.getSingleResult();
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start)).setMaxResults(limit);
+            }
+            for (dal.TTypeTiersPayant t : q.getResultList()) {
+                results.put(new JSONObject().put("lg_TYPE_TIERS_PAYANT_ID", t.getLgTYPETIERSPAYANTID())
+                        .put("str_CODE_TYPE_TIERS_PAYANT",
+                                t.getStrCODETYPETIERSPAYANT() != null ? t.getStrCODETYPETIERSPAYANT() : "")
+                        .put("str_LIBELLE_TYPE_TIERS_PAYANT",
+                                t.getStrLIBELLETYPETIERSPAYANT() != null ? t.getStrLIBELLETYPETIERSPAYANT() : "")
+                        .put("str_STATUT", t.getStrSTATUT()));
+            }
+            return json.put("total", total).put("results", results);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "loadTypesTiersPayant", e);
+            return json.put("total", 0).put("results", results);
+        }
+    }
+
 }

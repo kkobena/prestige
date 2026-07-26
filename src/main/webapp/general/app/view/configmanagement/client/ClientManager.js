@@ -4,6 +4,9 @@ var url_services_data_client = '../webservices/configmanagement/client/ws_data.j
 var url_services_transaction_client = '../webservices/configmanagement/client/ws_transaction.jsp?mode=';
 var url_services_pdf_client = '../webservices/configmanagement/client/ws_generate_pdf.jsp';
 var url_services_data_typetierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
+// REST dedie a cet ecran (memes formats JSON que les JSP) : liste optimisee + toggle-statut
+var url_rest_data_clients = '../api/v1/client/gestion';
+var url_services_rest_clients = '../api/v1/client/gestion/';
 
 var Me_Workflow;
 var lg_TYPE_CLIENT_ID = "";
@@ -37,6 +40,13 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
     frame: true,
     initComponent: function () {
 
+        // Info-bulles de la grille (apercu des organismes du client au survol)
+        try {
+            if (Ext.tip && Ext.tip.QuickTipManager && !Ext.tip.QuickTipManager.tip) {
+                Ext.tip.QuickTipManager.init();
+            }
+        } catch (e) {
+        }
         Me_Workflow = this;
         lg_TYPE_CLIENT_ID = "";
         var itemsPerPage = 20;
@@ -49,7 +59,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_client,
+                url: url_rest_data_clients,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -98,6 +108,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 }, {
                     header: 'Code Interne',
                     dataIndex: 'str_CODE_INTERNE',
+                    hidden: true, // colonne retiree a la demande
                     flex: 0.6
                 }, {
                     header: 'Nom',
@@ -107,11 +118,53 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 }, {
                     header: 'Prenoms',
                     dataIndex: 'str_LAST_NAME',
-                    flex: 1
+                    flex: 1.3
                 }, {
                     header: 'Type.Client',
                     dataIndex: 'lg_TYPE_CLIENT_ID',
-                    flex: 0.7
+                    flex: 0.45
+                }, {
+                    header: 'Securite Sociale',
+                    dataIndex: 'str_NUMERO_SECURITE_SOCIAL',
+                    flex: 0.8
+                }, {
+                    header: 'Organisme',
+                    dataIndex: 'lg_TIERS_PAYANT_ID',
+                    flex: 1.6,
+                    renderer: function (val, metadata, record) {
+                        // Tiers payant principal du client : en gras et en bleu. Quand le client a
+                        // plusieurs assurances actives, le nombre de complementaires est indique en
+                        // vert gras ("ASCOMA +3") et le survol liste les organismes concernes.
+                        if (!val) {
+                            return '';
+                        }
+                        var total = record ? (record.get('int_NOMBRE_TIERS_PAYANT') || 0) : 0;
+                        var complement = '';
+                        if (total > 1) {
+                            complement = " <span style='font-weight: bold; color: #1B9E3E;'>+"
+                                    + (total - 1) + "</span>";
+                            if (metadata) {
+                                // Apercu des organismes du client (liste deja fournie par le serveur,
+                                // aucun appel supplementaire)
+                                var noms = (record.get('str_LISTE_TIERS_PAYANT') || val).split('|');
+                                var plusLong = 0;
+                                var lignes = Ext.Array.map(noms, function (nom, i) {
+                                    var ligne = (i + 1) + '. ' + nom;
+                                    if (ligne.length > plusLong) {
+                                        plusLong = ligne.length;
+                                    }
+                                    return (i + 1) + '. ' + Ext.String.htmlEncode(nom);
+                                }).join('<br>');
+                                // Largeur explicite : sans elle, l'info-bulle est bridee a 300 px et
+                                // les noms longs sont coupes. Calculee sur la ligne la plus longue.
+                                var largeur = Math.min(620, Math.max(320, (plusLong * 8) + 40));
+                                metadata.tdAttr = 'data-qwidth="' + largeur + '" '
+                                        + 'data-qtitle="' + total + ' organismes actifs" '
+                                        + 'data-qtip="' + lignes + '"';
+                            }
+                        }
+                        return "<span style='font-weight: bold; color: #1565C0;'>" + val + "</span>" + complement;
+                    }
                 }, {
                     header: 'Encours',
                     dataIndex: 'dbl_total_differe',
@@ -119,7 +172,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
 //                    hidden: true,
                     flex: 0.6,
                     renderer: function (val) {
-                        var result = "<div style='text-align: right; font-weight: bold;'>" + amountformat(val) + "</div>";
+                        var result = "<div style='text-align: right; font-weight: bold; color: #C62828;'>" + amountformat(val) + "</div>";
                         return result;
                     }
                 },
@@ -138,11 +191,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     header: 'Genre',
                     dataIndex: 'str_SEXE',
                     align: 'center',
+                    hidden: true, // colonne retiree pour elargir l'organisme
                     flex: 0.4
-                }, {
-                    header: 'Securite Sociale',
-                    dataIndex: 'str_NUMERO_SECURITE_SOCIAL',
-                    flex: 0.8
                 }, {
                     header: 'Adresse',
                     dataIndex: 'str_ADRESSE',
@@ -166,6 +216,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 {
                     header: 'Société',
                     dataIndex: 'lg_COMPANY_ID',
+                    hidden: true, // colonne retiree a la demande
                     flex: 1
 
 
@@ -247,6 +298,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
+                    hidden: true, // bouton 'Attribution medecin' retire a la demande (fonction conservee)
                     items: [{
                             icon: 'resources/images/icons/fam/folder_wrench.png',
                             tooltip: 'Attribution.Medecin',
@@ -261,7 +313,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     menuDisabled: true,
                     items: [{
                             icon: 'resources/images/icons/fam/disable.png',
-                            tooltip: 'Desactiver le client',
+                            tooltip: 'D&eacute;sactiver / R&eacute;activer le client',
                             scope: this, getClass: function (value, metadata, record) {
                                 if (record.get('P_BTN_DESACTIVER_CLIENT')) {
                                     return 'x-display-hide';
@@ -386,6 +438,19 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     scope: this,
                     iconCls: 'export_excel_icon',
                     handler: this.onbtnexportExcel
+                }, '->', {
+                    text: 'D&eacute;sactiv&eacute;s',
+                    id: 'BT_CLIENT_VOIR_DESACTIVES',
+                    enableToggle: true,
+                    hidden: true, // visible uniquement pour les profils administrateurs (voir est-admin)
+                    icon: 'resources/images/icons/fam/disable.png',
+                    tooltip: 'Afficher les clients d&eacute;sactiv&eacute;s (pour les r&eacute;activer)',
+                    scope: this,
+                    toggleHandler: function (btn, pressed) {
+                        var store = this.getStore();
+                        store.getProxy().setExtraParam('actifs', !pressed);
+                        store.loadPage(1);
+                    }
                 }],
             bbar: {
                 xtype: 'pagingtoolbar',
@@ -415,6 +480,19 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
             single: true
+        });
+
+        // Le bouton 'Desactives' n'est propose qu'aux profils administrateurs
+        Ext.Ajax.request({
+            url: '../api/v1/roles/est-admin',
+            method: 'GET',
+            success: function (response) {
+                var object = Ext.JSON.decode(response.responseText, true);
+                var bouton = Ext.getCmp('BT_CLIENT_VOIR_DESACTIVES');
+                if (object && object.authorize === true && bouton) {
+                    bouton.show();
+                }
+            }
         });
     },
      loadStore: function () {
@@ -474,7 +552,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                         var rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_client + 'delete',
+                            url: url_services_rest_clients + 'delete',
+                            method: 'POST',
                             params: {
                                 lg_CLIENT_ID: rec.get('lg_CLIENT_ID')
                             },
@@ -554,15 +633,29 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
     onDesableClick: function (grid, rowIndex) {
 
         var rec = grid.getStore().getAt(rowIndex);
-        Ext.MessageBox.confirm('Message',
-                "Voulez-vous d&eacute;sactiver le client " + "<br><b>" + rec.get('str_FIRST_LAST_NAME') + "</b>",
-                function (btn) {
+        // En vue normale on desactive ; en vue 'Desactives' on reactive
+        var enDesactives = Ext.getCmp('BT_CLIENT_VOIR_DESACTIVES')
+                && Ext.getCmp('BT_CLIENT_VOIR_DESACTIVES').pressed;
+        var actif = enDesactives ? true : false;
+        // Boite large : avec la largeur par defaut, les noms longs debordaient et la derniere
+        // ligne du message etait coupee
+        Ext.MessageBox.show({
+            title: 'Message',
+            msg: "Voulez-vous " + (actif ? "r&eacute;activer" : "d&eacute;sactiver") + " le client "
+                    + "<br><b>" + rec.get('str_FIRST_LAST_NAME') + "</b>",
+            buttons: Ext.MessageBox.YESNO,
+            icon: Ext.MessageBox.QUESTION,
+            minWidth: 460,
+            maxWidth: 640,
+            fn: function (btn) {
                     if (btn === 'yes') {
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_client + 'disable',
+                            url: url_services_rest_clients + 'toggle-statut',
+                            method: 'POST',
                             params: {
-                                lg_COMPTE_CLIENT_ID: rec.get('lg_COMPTE_CLIENT_ID')
+                                lg_COMPTE_CLIENT_ID: rec.get('lg_COMPTE_CLIENT_ID'),
+                                actif: actif
                             },
                             success: function (response)
                             {
@@ -595,7 +688,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                         });
                         return;
                     }
-                });
+                }
+        });
 
 
     },

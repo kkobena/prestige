@@ -1,5 +1,8 @@
 var url_services_data_role = '../webservices/sm_user/role/ws_data.jsp';
 var url_services_transaction_role = '../webservices/sm_user/role/ws_transaction.jsp?mode=';
+// REST dedie a cet ecran (memes formats JSON que les JSP) : liste + create/update/duplicate
+var url_rest_data_role = '../api/v1/roles';
+var url_services_rest_role = '../api/v1/roles/';
 var Me_Workflow;
 Ext.define('testextjs.view.sm_user.role.RoleManager', {
     extend: 'Ext.grid.Panel',
@@ -31,7 +34,7 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_role,
+                url: url_rest_data_role,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -111,10 +114,23 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
                     sortable: false,
                     menuDisabled: true,
                     items: [{
-                            icon: 'resources/images/icons/fam/delete.gif',
-                            tooltip: 'Supprimer des privileges a dans ce role',
+                            icon: 'resources/images/icons/fam/page_copy.png',
+                            tooltip: 'Dupliquer ce profil (libelle, description et privileges)',
                             scope: this,
-                            handler: this.onRemoveClick
+                            handler: this.onDuplicateClick
+                        }]
+                }, {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            // La suppression definitive est remplacee par la desactivation
+                            // (reversible via le bouton 'Desactives' de la barre d'outils)
+                            icon: 'resources/images/icons/fam/disable.png',
+                            tooltip: 'D&eacute;sactiver / R&eacute;activer ce profil',
+                            scope: this,
+                            handler: this.onToggleStatutClick
                         }]
                 }],
             selModel: {
@@ -148,6 +164,19 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
                     iconCls: 'searchicon',
                     scope: this,
                     handler: this.onRechClick
+                }, '->', {
+                    text: 'D&eacute;sactiv&eacute;s',
+                    id: 'BT_ROLE_VOIR_DESACTIVES',
+                    enableToggle: true,
+                    hidden: true, // visible uniquement pour les profils administrateurs (voir est-admin)
+                    icon: 'resources/images/icons/fam/disable.png',
+                    tooltip: 'Afficher les profils d&eacute;sactiv&eacute;s (pour les r&eacute;activer)',
+                    scope: this,
+                    toggleHandler: function(btn, pressed) {
+                        var store = this.getStore();
+                        store.getProxy().setExtraParam('actifs', !pressed);
+                        store.loadPage(1);
+                    }
                 }],
             bbar: {
                 xtype: 'pagingtoolbar',
@@ -165,11 +194,24 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
             single: true
         })
 
+        // Le bouton 'Desactives' n'est propose qu'aux profils administrateurs
+        Ext.Ajax.request({
+            url: url_services_rest_role + 'est-admin',
+            method: 'GET',
+            success: function (response) {
+                var object = Ext.JSON.decode(response.responseText, true);
+                var bouton = Ext.getCmp('BT_ROLE_VOIR_DESACTIVES');
+                if (object && object.authorize === true && bouton) {
+                    bouton.show();
+                }
+            }
+        });
+
 
         this.on('edit', function (editor, e) {
 
             Ext.Ajax.request({
-                url: url_services_transaction_role + 'update',
+                url: url_services_rest_role + 'update',
                 params: {
                     lg_ROLE_ID: e.record.data.lg_ROLE_ID,
                     str_NAME: e.record.data.str_NAME,
@@ -257,16 +299,23 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
             titre: "Attribution des privilege pour le role [" + rec.get('str_DESIGNATION') + "]"
         });
     },
-    onRemoveClick: function (grid, rowIndex) {
+    onToggleStatutClick: function (grid, rowIndex) {
+        // En vue normale on desactive ; en vue 'Desactives' on reactive
+        var enDesactives = Ext.getCmp('BT_ROLE_VOIR_DESACTIVES')
+                && Ext.getCmp('BT_ROLE_VOIR_DESACTIVES').pressed;
+        var actif = enDesactives ? true : false;
         Ext.MessageBox.confirm('Message',
-                'Confirmer la suppresssion',
+                (actif ? 'R&eacute;activer ce profil ?'
+                        : 'D&eacute;sactiver ce profil ? Il n\'appara&icirc;tra plus dans les listes.'),
                 function (btn) {
                     if (btn == 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
                         Ext.Ajax.request({
-                            url: url_services_transaction_role + 'delete',
+                            url: url_services_rest_role + 'toggle-statut',
+                            method: 'POST',
                             params: {
-                                lg_ROLE_ID: rec.get('lg_ROLE_ID')
+                                lg_ROLE_ID: rec.get('lg_ROLE_ID'),
+                                actif: actif
                             },
                             success: function (response)
                             {
@@ -295,13 +344,86 @@ Ext.define('testextjs.view.sm_user.role.RoleManager', {
 
 
     },
+    onDuplicateClick: function (grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+        var win = Ext.create('Ext.window.Window', {
+            title: 'Dupliquer le profil [' + rec.get('str_DESIGNATION') + ']',
+            modal: true,
+            width: 420,
+            layout: 'fit',
+            items: [{
+                    xtype: 'form',
+                    bodyPadding: 12,
+                    defaults: {anchor: '100%', labelWidth: 90},
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            itemId: 'dupNom',
+                            fieldLabel: 'Libell&eacute;',
+                            allowBlank: false,
+                            value: rec.get('str_NAME') + ' (copie)'
+                        },
+                        {
+                            xtype: 'textfield',
+                            itemId: 'dupDesc',
+                            fieldLabel: 'Description',
+                            value: rec.get('str_DESIGNATION') + ' (copie)'
+                        }
+                    ]
+                }],
+            buttons: [
+                {
+                    text: 'Valider',
+                    handler: function () {
+                        var nom = win.down('#dupNom').getValue();
+                        var desc = win.down('#dupDesc').getValue();
+                        if (!nom) {
+                            Ext.MessageBox.alert('Message', 'Veuillez saisir le libell&eacute; du nouveau profil.');
+                            return;
+                        }
+                        var progress = Ext.MessageBox.wait('Duplication en cours . . .', 'Veuillez patienter');
+                        Ext.Ajax.request({
+                            url: url_services_rest_role + 'duplicate',
+                            method: 'POST',
+                            params: {
+                                lg_ROLE_ID: rec.get('lg_ROLE_ID'),
+                                str_NAME: nom,
+                                str_DESIGNATION: desc
+                            },
+                            success: function (response) {
+                                progress.hide();
+                                var o = Ext.JSON.decode(response.responseText, true) || {};
+                                if (o.success == "0") {
+                                    Ext.MessageBox.alert('Message', o.errors || 'Duplication impossible');
+                                    return;
+                                }
+                                win.close();
+                                Ext.MessageBox.alert('Message', 'Profil dupliqu&eacute; avec <b>'
+                                        + (o.privileges || 0) + '</b> privil&egrave;ge(s).');
+                                grid.getStore().reload();
+                            },
+                            failure: function () {
+                                progress.hide();
+                                Ext.MessageBox.alert('Message', 'Un probl&egrave;me avec le serveur');
+                            }
+                        });
+                    }
+                },
+                {
+                    text: 'Annuler',
+                    handler: function () {
+                        win.close();
+                    }
+                }
+            ]
+        });
+        win.show();
+    },
     onRechClick: function () {
         var val = Ext.getCmp('rechecher');
-        this.getStore().load({
-            params: {
-                search_value: val.value
-            }
-        }, url_services_data_role);
+        // parametre persistant : la pagination conserve la recherche (fix 2/13)
+        this.getStore().getProxy().setExtraParam('search_value', val.value || '');
+        this.getStore().loadPage(1);
     }
     , checkPrivilegeToUI: function () {
 
