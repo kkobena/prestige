@@ -5,8 +5,8 @@ var url_services_transaction_client = '../webservices/configmanagement/client/ws
 var url_services_pdf_client = '../webservices/configmanagement/client/ws_generate_pdf.jsp';
 var url_services_data_typetierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
 // REST dedie a cet ecran (memes formats JSON que les JSP) : liste optimisee + toggle-statut
-var url_rest_data_clients = '../api/v1/clients';
-var url_services_rest_clients = '../api/v1/clients/';
+var url_rest_data_clients = '../api/v1/client/gestion';
+var url_services_rest_clients = '../api/v1/client/gestion/';
 
 var Me_Workflow;
 var lg_TYPE_CLIENT_ID = "";
@@ -40,6 +40,13 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
     frame: true,
     initComponent: function () {
 
+        // Info-bulles de la grille (apercu des organismes du client au survol)
+        try {
+            if (Ext.tip && Ext.tip.QuickTipManager && !Ext.tip.QuickTipManager.tip) {
+                Ext.tip.QuickTipManager.init();
+            }
+        } catch (e) {
+        }
         Me_Workflow = this;
         lg_TYPE_CLIENT_ID = "";
         var itemsPerPage = 20;
@@ -111,21 +118,52 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 }, {
                     header: 'Prenoms',
                     dataIndex: 'str_LAST_NAME',
-                    flex: 1
+                    flex: 1.3
                 }, {
                     header: 'Type.Client',
                     dataIndex: 'lg_TYPE_CLIENT_ID',
-                    flex: 0.7
+                    flex: 0.45
+                }, {
+                    header: 'Securite Sociale',
+                    dataIndex: 'str_NUMERO_SECURITE_SOCIAL',
+                    flex: 0.8
                 }, {
                     header: 'Organisme',
                     dataIndex: 'lg_TIERS_PAYANT_ID',
-                    flex: 1,
-                    renderer: function (val) {
-                        // Tiers payant principal du client : en gras et en bleu
+                    flex: 1.6,
+                    renderer: function (val, metadata, record) {
+                        // Tiers payant principal du client : en gras et en bleu. Quand le client a
+                        // plusieurs assurances actives, le nombre de complementaires est indique en
+                        // vert gras ("ASCOMA +3") et le survol liste les organismes concernes.
                         if (!val) {
                             return '';
                         }
-                        return "<span style='font-weight: bold; color: #1565C0;'>" + val + "</span>";
+                        var total = record ? (record.get('int_NOMBRE_TIERS_PAYANT') || 0) : 0;
+                        var complement = '';
+                        if (total > 1) {
+                            complement = " <span style='font-weight: bold; color: #1B9E3E;'>+"
+                                    + (total - 1) + "</span>";
+                            if (metadata) {
+                                // Apercu des organismes du client (liste deja fournie par le serveur,
+                                // aucun appel supplementaire)
+                                var noms = (record.get('str_LISTE_TIERS_PAYANT') || val).split('|');
+                                var plusLong = 0;
+                                var lignes = Ext.Array.map(noms, function (nom, i) {
+                                    var ligne = (i + 1) + '. ' + nom;
+                                    if (ligne.length > plusLong) {
+                                        plusLong = ligne.length;
+                                    }
+                                    return (i + 1) + '. ' + Ext.String.htmlEncode(nom);
+                                }).join('<br>');
+                                // Largeur explicite : sans elle, l'info-bulle est bridee a 300 px et
+                                // les noms longs sont coupes. Calculee sur la ligne la plus longue.
+                                var largeur = Math.min(620, Math.max(320, (plusLong * 8) + 40));
+                                metadata.tdAttr = 'data-qwidth="' + largeur + '" '
+                                        + 'data-qtitle="' + total + ' organismes actifs" '
+                                        + 'data-qtip="' + lignes + '"';
+                            }
+                        }
+                        return "<span style='font-weight: bold; color: #1565C0;'>" + val + "</span>" + complement;
                     }
                 }, {
                     header: 'Encours',
@@ -153,11 +191,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     header: 'Genre',
                     dataIndex: 'str_SEXE',
                     align: 'center',
+                    hidden: true, // colonne retiree pour elargir l'organisme
                     flex: 0.4
-                }, {
-                    header: 'Securite Sociale',
-                    dataIndex: 'str_NUMERO_SECURITE_SOCIAL',
-                    flex: 0.8
                 }, {
                     header: 'Adresse',
                     dataIndex: 'str_ADRESSE',
@@ -517,7 +552,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                         var rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_client + 'delete',
+                            url: url_services_rest_clients + 'delete',
+                            method: 'POST',
                             params: {
                                 lg_CLIENT_ID: rec.get('lg_CLIENT_ID')
                             },
@@ -601,10 +637,17 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
         var enDesactives = Ext.getCmp('BT_CLIENT_VOIR_DESACTIVES')
                 && Ext.getCmp('BT_CLIENT_VOIR_DESACTIVES').pressed;
         var actif = enDesactives ? true : false;
-        Ext.MessageBox.confirm('Message',
-                "Voulez-vous " + (actif ? "r&eacute;activer" : "d&eacute;sactiver") + " le client "
-                + "<br><b>" + rec.get('str_FIRST_LAST_NAME') + "</b>",
-                function (btn) {
+        // Boite large : avec la largeur par defaut, les noms longs debordaient et la derniere
+        // ligne du message etait coupee
+        Ext.MessageBox.show({
+            title: 'Message',
+            msg: "Voulez-vous " + (actif ? "r&eacute;activer" : "d&eacute;sactiver") + " le client "
+                    + "<br><b>" + rec.get('str_FIRST_LAST_NAME') + "</b>",
+            buttons: Ext.MessageBox.YESNO,
+            icon: Ext.MessageBox.QUESTION,
+            minWidth: 460,
+            maxWidth: 640,
+            fn: function (btn) {
                     if (btn === 'yes') {
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
@@ -645,7 +688,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                         });
                         return;
                     }
-                });
+                }
+        });
 
 
     },
