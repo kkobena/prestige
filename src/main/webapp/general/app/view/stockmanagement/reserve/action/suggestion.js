@@ -20,13 +20,24 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.suggestion', {
         var url = (mode === 'reappro')
                 ? '../api/v1/reserve/suggestions-reappro'
                 : '../api/v1/reserve/suggestions';
-        var batchUrl = (mode === 'reappro')
-                ? '../api/v1/reserve/assort-batch'
-                : '../api/v1/reserve/reassort-batch';
+        // Sens du mouvement, au vocabulaire des suggestions : on nomme la ZONE DE DESTINATION.
+        //   reappro  = le trop-plein du rayon part EN RESERVE
+        //   reassort = la reserve remonte AU RAYON
+        var categorie = (mode === 'reappro') ? 'RESERVE' : 'RAYON';
 
         var store = new Ext.data.Store({
             model: 'testextjs.model.FamilleStock',
             autoLoad: true,
+            listeners: {
+                // Le nombre d'articles proposes est affiche en clair : on sait tout de suite
+                // sur combien de produits porte la suggestion qu'on s'apprete a creer.
+                load: function (st, recs) {
+                    var lbl = win && win.down('#lblNbProduits');
+                    if (lbl) {
+                        lbl.setText((recs ? recs.length : 0) + ' article(s) propose(s)');
+                    }
+                }
+            },
             proxy: {
                 type: 'ajax',
                 url: url,
@@ -81,19 +92,56 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.suggestion', {
             }
         });
 
+        // Motifs du referentiel, restreints au sens courant.
+        var storeMotifs = new Ext.data.Store({
+            fields: ['id', 'libelle'],
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/suggestion-reserve/motifs',
+                extraParams: {categorie: categorie},
+                reader: {type: 'json'}
+            }
+        });
+        storeMotifs.load();
+
+        var barreCreation = {
+            xtype: 'toolbar', dock: 'bottom',
+            items: [
+                {
+                    xtype: 'combo', itemId: 'cboMotif', fieldLabel: 'Motif *', labelWidth: 50, width: 260,
+                    editable: false, allowBlank: false, forceSelection: true, queryMode: 'local',
+                    displayField: 'libelle', valueField: 'id',
+                    emptyText: 'Motif (obligatoire)', store: storeMotifs
+                },
+                {
+                    xtype: 'textfield', itemId: 'txtCommentaire', flex: 1,
+                    emptyText: 'Commentaire (facultatif)'
+                },
+                '->',
+                {xtype: 'tbtext', itemId: 'lblNbProduits', text: '',
+                    style: 'font-weight:bold;color:#0b57d0;'}
+            ]
+        };
+
         var win = new Ext.window.Window({
             autoShow: true,
             title: me.getTitre(),
-            width: 620,
-            height: 460,
-            minWidth: 480,
-            minHeight: 320,
+            width: 900,
+            height: 560,
+            minWidth: 640,
+            minHeight: 380,
             layout: 'fit',
             modal: true,
+            maximizable: true,
+            constrainHeader: true,
             items: [grid],
+            dockedItems: [barreCreation],
             buttons: [
                 {
-                    text: 'Valider',
+                    // On ne deplace plus le stock ici : on enregistre une suggestion, qui sera
+                    // relue puis traitee depuis l'onglet SUGGESTIONS.
+                    text: 'Creer la suggestion',
+                    cls: 'btn-suggestions-violet',
                     handler: function () {
                         var items = [];
                         store.each(function (r) {
@@ -103,40 +151,46 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.suggestion', {
                             }
                         });
                         if (items.length === 0) {
-                            Ext.MessageBox.alert('Message', 'Aucune quantite a traiter.');
+                            Ext.MessageBox.alert('Message', 'Aucun article a proposer.');
                             return;
                         }
-                        Ext.MessageBox.confirm('Confirmation',
-                                'Valider ' + items.length + ' operation(s) ?',
-                                function (btn) {
-                                    if (btn !== 'yes') {
-                                        return;
-                                    }
-                                    var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Traitement en cours');
-                                    Ext.Ajax.request({
-                                        method: 'POST',
-                                        url: batchUrl,
-                                        jsonData: {items: items},
-                                        success: function (response) {
-                                            progress.hide();
-                                            var res = Ext.JSON.decode(response.responseText, true);
-                                            Ext.MessageBox.alert('Resultat',
-                                                    (res.traites || 0) + ' / ' + (res.total || 0) + ' operation(s) effectuee(s).');
-                                            var pv = me.getParentview();
-                                            if (pv && pv.reloadGrid) {
-                                                pv.reloadGrid();
-                                            }
-                                            if (typeof refreshNotificationBadge === 'function') {
-                                                refreshNotificationBadge();
-                                            }
-                                            win.close();
-                                        },
-                                        failure: function () {
-                                            progress.hide();
-                                            Ext.MessageBox.alert('Erreur', 'Echec du traitement.');
-                                        }
-                                    });
-                                });
+                        var cboMotif = win.down('#cboMotif');
+                        // Motif obligatoire : chaque mouvement de reserve doit pouvoir etre justifie.
+                        if (!cboMotif || !cboMotif.getValue()) {
+                            Ext.MessageBox.alert('Motif obligatoire',
+                                    'Indiquez le motif de cette suggestion avant de la creer.');
+                            if (cboMotif) {
+                                cboMotif.markInvalid('Motif obligatoire');
+                                cboMotif.focus();
+                            }
+                            return;
+                        }
+                        var txtCom = win.down('#txtCommentaire');
+                        var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Creation en cours');
+                        Ext.Ajax.request({
+                            method: 'POST',
+                            url: '../api/v1/suggestion-reserve/creer',
+                            jsonData: {
+                                categorie: categorie,
+                                motifId: cboMotif.getValue(),
+                                commentaire: (txtCom && txtCom.getValue()) ? txtCom.getValue() : null,
+                                items: items
+                            },
+                            success: function (response) {
+                                progress.hide();
+                                var res = Ext.JSON.decode(response.responseText, true) || {};
+                                if (res.success === false) {
+                                    Ext.MessageBox.alert('Message', res.message || 'Creation impossible.');
+                                    return;
+                                }
+                                win.close();
+                                allerAuxSuggestions(res);
+                            },
+                            failure: function () {
+                                progress.hide();
+                                Ext.MessageBox.alert('Erreur', 'La creation a echoue.');
+                            }
+                        });
                     }
                 },
                 {text: 'Annuler', handler: function () {
@@ -144,6 +198,25 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.suggestion', {
                     }}
             ]
         });
+
+        // Bascule sur l'onglet SUGGESTIONS et ouvre directement la suggestion creee.
+        var allerAuxSuggestions = function (res) {
+            var manager = Ext.getCmp('reservemanagerID');
+            var onglet = manager ? manager.down('#ongletSuggestions') : null;
+            if (!manager || !onglet) {
+                Ext.MessageBox.alert('Suggestion creee',
+                        (res.lignes || 0) + ' article(s). Retrouvez-la dans l\'onglet SUGGESTIONS.');
+                return;
+            }
+            manager.setActiveTab(onglet);
+            onglet.reloadGrid();
+            if (res.lg_SUGGESTION_RESERVE_ID) {
+                Ext.create('testextjs.view.stockmanagement.reserve.action.traitementSuggestion', {
+                    suggestionid: res.lg_SUGGESTION_RESERVE_ID,
+                    parentview: onglet
+                });
+            }
+        };
 
         me.callParent();
     }

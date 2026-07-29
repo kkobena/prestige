@@ -55,6 +55,134 @@ public class ReserveRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    /**
+     * Export Excel de l'onglet courant. Les parametres sont ceux de {@code articles} : l'export respecte donc le
+     * filtre de recherche actif et contient les memes lignes que la grille.
+     */
+    @GET
+    @Path("export/excel")
+    @Produces("application/vnd.ms-excel")
+    public Response exportExcel(@QueryParam("search_value") String search,
+            @QueryParam("str_TYPE_TRANSACTION") String type) throws Exception {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        byte[] data = reserveService.exportExcel(user, search, type);
+        String fichier = "reserves_" + (type == null || type.trim().isEmpty() ? "ALL" : type.trim()) + ".xls";
+        return Response.ok(data).header("Content-Disposition", "attachment; filename=\"" + fichier + "\"").build();
+    }
+
+    /**
+     * Stock reserve d'un produit, pour les ecrans qui doivent l'afficher sans reconstruire une proposition
+     * (l'ajustement, notamment, quand la zone Reserve est choisie).
+     */
+    @GET
+    @Path("stock-reserve/{familleId}")
+    public Response stockReserve(@PathParam("familleId") String familleId) {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok()
+                .entity(new JSONObject().put("int_STOCK_RESERVE", reserveService.stockReserve(user, familleId))
+                        .toString())
+                .build();
+    }
+
+    /**
+     * Recherche de produits pour un ajustement de la RESERVE : le stock renvoye est celui de la reserve.
+     */
+    @GET
+    @Path("recherche-produits")
+    public Response rechercheProduits(@QueryParam("query") String query, @QueryParam("start") int start,
+            @QueryParam("limit") int limit) {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok()
+                .entity(reserveService.rechercheProduitsReserve(user, query, start, limit > 0 ? limit : 10).toString())
+                .build();
+    }
+
+    /** Indique si l'utilisateur peut annuler un mouvement : l'ecran masque l'action dans le cas contraire. */
+    @GET
+    @Path("peut-annuler")
+    public Response peutAnnuler() {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok().entity(new JSONObject().put("autorise", reserveService.peutAnnuler(user)).toString())
+                .build();
+    }
+
+    /** Historique complet, avec recherche produit, type, periode, plage horaire et utilisateur. */
+    @GET
+    @Path("historique")
+    public Response historique(@QueryParam("search_value") String search, @QueryParam("type") String type,
+            @QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
+            @QueryParam("heureDebut") Integer heureDebut, @QueryParam("heureFin") Integer heureFin,
+            @QueryParam("userId") String userId, @QueryParam("annulation") String annulation,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = reserveService.historique(user, search, type, dtStart, dtEnd, heureDebut, heureFin, userId,
+                annulation, start, limit > 0 ? limit : 25);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    /** Export Excel de l'historique, respectant les filtres actifs. */
+    @GET
+    @Path("historique/excel")
+    @Produces("application/vnd.ms-excel")
+    public Response historiqueExcel(@QueryParam("search_value") String search, @QueryParam("type") String type,
+            @QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
+            @QueryParam("heureDebut") Integer heureDebut, @QueryParam("heureFin") Integer heureFin,
+            @QueryParam("userId") String userId, @QueryParam("annulation") String annulation) throws Exception {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        byte[] data = reserveService.exportHistoriqueExcel(user, search, type, dtStart, dtEnd, heureDebut, heureFin,
+                userId, annulation);
+        return Response.ok(data)
+                .header("Content-Disposition", "attachment; filename=\"historique_reserve.xls\"").build();
+    }
+
+    /**
+     * Produits distincts de l'historique filtre, pour creer un inventaire sur ce que l'ecran affiche reellement.
+     */
+    @GET
+    @Path("historique/produits")
+    public Response historiqueProduits(@QueryParam("search_value") String search, @QueryParam("type") String type,
+            @QueryParam("dtStart") String dtStart, @QueryParam("dtEnd") String dtEnd,
+            @QueryParam("heureDebut") Integer heureDebut, @QueryParam("heureFin") Integer heureFin,
+            @QueryParam("userId") String userId, @QueryParam("annulation") String annulation,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = reserveService.produitsHistorique(user, search, type, dtStart, dtEnd, heureDebut, heureFin,
+                userId, annulation, start, limit);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    /** Utilisateurs ayant effectue au moins un mouvement, pour le filtre correspondant. */
+    @GET
+    @Path("historique/utilisateurs")
+    public Response historiqueUtilisateurs() {
+        TUser user = currentUser();
+        if (user == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok().entity(reserveService.utilisateursMouvements(user).toString()).build();
+    }
+
     @GET
     @Path("suggestions")
     public Response suggestions(@QueryParam("search_value") String search, @QueryParam("start") int start,
@@ -159,13 +287,13 @@ public class ReserveRessource {
     @GET
     @Path("mouvements")
     public Response allMouvements(@QueryParam("type") String type, @QueryParam("dtStart") String dtStart,
-            @QueryParam("dtEnd") String dtEnd, @QueryParam("start") int start, @QueryParam("limit") int limit)
-            throws JSONException {
+            @QueryParam("dtEnd") String dtEnd, @QueryParam("search_value") String search,
+            @QueryParam("start") int start, @QueryParam("limit") int limit) throws JSONException {
         TUser user = currentUser();
         if (user == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = reserveService.allMouvements(type, dtStart, dtEnd, start, limit > 0 ? limit : 500);
+        JSONObject json = reserveService.allMouvements(type, dtStart, dtEnd, search, start, limit > 0 ? limit : 500);
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -190,6 +318,14 @@ public class ReserveRessource {
         }
         JSONObject in = new JSONObject(body);
         String commentaire = in.optString("description", null);
+        // Le commentaire porte le motif de l'inventaire : c'est la seule trace du POURQUOI une
+        // fois l'inventaire cloture. L'ecran le rend obligatoire, le serveur le verifie aussi.
+        if (commentaire == null || commentaire.trim().isEmpty()) {
+            return Response.ok()
+                    .entity(new JSONObject().put("success", false)
+                            .put("message", "Indiquez le motif de cet inventaire avant de le creer.").toString())
+                    .build();
+        }
         JSONArray arr = in.optJSONArray("ids");
         java.util.Set<String> ids = new java.util.LinkedHashSet<>();
         if (arr != null) {

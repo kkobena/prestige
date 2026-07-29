@@ -662,28 +662,53 @@ function prestigeNotifItemClick(key, idx) {
 
 // ------------------------------------------- Enregistrement des categories
 
-// Categorie RESERVE : articles a reassortir
+// Categorie RESERVE : suggestions restant a traiter.
+//
+// La cloche annonçait des PRODUITS a reassortir, c'est-a-dire un calcul refait a chaque
+// passage. Elle annonce desormais des SUGGESTIONS en attente : un chiffre y correspond a un
+// dossier a ouvrir, et non plus a une estimation qui pouvait deja avoir ete traitee.
 PrestigeNotif.register({
     key: 'reserve',
-    label: 'Articles a reassortir',
+    label: 'Suggestions de reserve a traiter',
     icon: 'fa-exchange',
     color: '#48c9b0',
-    url: '../api/v1/reserve/suggestions',
+    url: '../api/v1/suggestion-reserve/en-attente',
     // Badge (rafraichissement periodique) : compteur ultra-leger. La liste
     // complete ci-dessus n'est chargee qu'a l'ouverture du panneau.
-    countUrl: '../api/v1/reserve/suggestions/count',
+    countUrl: '../api/v1/suggestion-reserve/en-attente/count',
     limit: 50,
     renderItem: function (n) {
+        var sens = (n.str_CATEGORIE === 'RESERVE')
+                ? 'Envoi en reserve' : 'Envoi en rayon';
+        var statut = (n.str_STATUT === 'EN_COURS') ? 'En cours' : 'A traiter';
         return '<div style="font-weight:bold; color:#eaf4fc;">'
                 + '<i class="fa fa-exclamation-circle" style="color:#e74c3c; margin-right:6px;"></i>'
-                + (n.str_NAME || n.str_DESCRIPTION || '') + '</div>'
-                + '<div style="font-size:12px; color:#85c1e9; margin-top:3px;">A reassortir : <b>' + (n.int_QTE_SUGGEREE || 0) + '</b>'
-                + ' &nbsp;|&nbsp; Rayon : ' + (n.int_STOCK_RAYON || 0)
-                + ' &nbsp;|&nbsp; Reserve : ' + (n.int_STOCK_RESERVE || 0) + '</div>';
+                + (n.str_REF || '') + '</div>'
+                + '<div style="font-size:12px; color:#85c1e9; margin-top:3px;">' + sens
+                + ' &nbsp;|&nbsp; <b>' + (n.nb_produits || 0) + '</b> produit(s)'
+                + ' &nbsp;|&nbsp; ' + statut
+                + ' &nbsp;|&nbsp; ' + (n.dt_CREATED || '') + '</div>';
     },
-    onItemClick: function () {
+    onItemClick: function (item) {
         try {
             testextjs.app.getController('App').onLoadNewComponent("reservemanager", "Gestion des reserves", "");
+            // On vient de cliquer une SUGGESTION : c'est l'onglet SUGGESTIONS qu'on veut voir,
+            // pas la liste generale des articles. Le differe laisse la vue finir son rendu.
+            Ext.defer(function () {
+                var manager = Ext.getCmp('reservemanagerID');
+                var onglet = manager ? manager.down('#ongletSuggestions') : null;
+                if (!manager || !onglet) {
+                    return;
+                }
+                manager.setActiveTab(onglet);
+                // La suggestion cliquee est ouverte directement, prete a etre traitee.
+                if (item && item.lg_SUGGESTION_RESERVE_ID) {
+                    Ext.create('testextjs.view.stockmanagement.reserve.action.traitementSuggestion', {
+                        suggestionid: item.lg_SUGGESTION_RESERVE_ID,
+                        parentview: onglet
+                    });
+                }
+            }, 400);
         } catch (e) {
         }
     }

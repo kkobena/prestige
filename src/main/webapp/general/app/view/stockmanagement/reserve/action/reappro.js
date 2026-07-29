@@ -35,6 +35,54 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
         });
 
         var stockLabel = (mode === 'assort') ? 'Stock rayon' : 'Stock reserve';
+        // assort  = le trop-plein du rayon part EN RESERVE
+        // reassort = la reserve remonte AU RAYON
+        var categorie = (mode === 'assort') ? 'RESERVE' : 'RAYON';
+
+        // Motifs du referentiel, restreints au sens courant. Le motif est obligatoire.
+        var storeMotifs = new Ext.data.Store({
+            fields: ['id', 'libelle'],
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/suggestion-reserve/motifs',
+                extraParams: {categorie: categorie},
+                reader: {type: 'json'}
+            }
+        });
+        storeMotifs.load();
+
+        var barreMotif = {
+            xtype: 'toolbar', dock: 'bottom',
+            items: [
+                {
+                    xtype: 'combo', itemId: 'cboMotifReappro', fieldLabel: 'Motif *', labelWidth: 50, width: 260,
+                    editable: false, allowBlank: false, forceSelection: true, queryMode: 'local',
+                    displayField: 'libelle', valueField: 'id',
+                    emptyText: 'Motif (obligatoire)', store: storeMotifs
+                },
+                {xtype: 'textfield', itemId: 'txtCommentaireReappro', flex: 1,
+                    emptyText: 'Commentaire (facultatif)'}
+            ]
+        };
+
+        // Bascule sur l'onglet SUGGESTIONS et ouvre la suggestion creee.
+        var allerAuxSuggestions = function (res) {
+            var manager = Ext.getCmp('reservemanagerID');
+            var onglet = manager ? manager.down('#ongletSuggestions') : null;
+            if (!manager || !onglet) {
+                Ext.MessageBox.alert('Suggestion creee',
+                        (res.lignes || 0) + ' article(s). Retrouvez-la dans l\'onglet SUGGESTIONS.');
+                return;
+            }
+            manager.setActiveTab(onglet);
+            onglet.reloadGrid();
+            if (res.lg_SUGGESTION_RESERVE_ID) {
+                Ext.create('testextjs.view.stockmanagement.reserve.action.traitementSuggestion', {
+                    suggestionid: res.lg_SUGGESTION_RESERVE_ID,
+                    parentview: onglet
+                });
+            }
+        };
 
         var combo = Ext.create('Ext.form.field.ComboBox', {
             fieldLabel: 'Produit',
@@ -83,7 +131,8 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
             if (records && records.length) {
                 var r = records[0];
                 var dispo = (mode === 'assort') ? r.get('int_STOCK_RAYON') : r.get('int_STOCK_RESERVE');
-                infoLabel.setValue(stockLabel + ' disponible : <b>' + dispo + '</b>');
+                infoLabel.setValue('<span style="color:#256b2a;font-weight:bold;">' + stockLabel
+                        + ' disponible : ' + dispo + '</span>');
                 // Curseur vers quantite avec contenu preselectionne
                 qteField.focus(true, 100);
             }
@@ -102,8 +151,11 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
             }
             var dispo = (mode === 'assort') ? rec.get('int_STOCK_RAYON') : rec.get('int_STOCK_RESERVE');
             if (qte > dispo) {
-                Ext.MessageBox.alert('Message', 'La quantite (' + qte + ') depasse le ' +
-                        stockLabel.toLowerCase() + ' disponible (' + dispo + ').');
+                Ext.MessageBox.alert('Message', 'La quantite (' + qte + ') depasse le '
+                        + stockLabel.toLowerCase() + ' disponible (' + dispo + ').',
+                        function () {
+                            qteField.focus(true, 50);
+                        });
                 return;
             }
             var id = rec.get('lg_FAMILLE_ID');
@@ -179,43 +231,56 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
                 {xtype: 'component', html: '<b>Panier</b>', margin: '6 0 4 0'},
                 cartGrid
             ],
+            dockedItems: [barreMotif],
             buttons: [
                 {
-                    text: 'Valider',
+                    // Le stock n'est plus deplace ici : on enregistre une suggestion, tracee, qui sera
+                    // relue puis traitee depuis l'onglet SUGGESTIONS.
+                    text: 'Creer la suggestion',
+                    cls: 'btn-suggestions-violet',
                     handler: function () {
                         if (cartStore.getCount() === 0) {
                             Ext.MessageBox.alert('Message', 'Le panier est vide.');
                             return;
                         }
+                        var cboMotif = win.down('#cboMotifReappro');
+                        if (!cboMotif || !cboMotif.getValue()) {
+                            Ext.MessageBox.alert('Motif obligatoire',
+                                    'Indiquez le motif de cette suggestion avant de la creer.');
+                            if (cboMotif) {
+                                cboMotif.markInvalid('Motif obligatoire');
+                                cboMotif.focus();
+                            }
+                            return;
+                        }
+                        var txtCom = win.down('#txtCommentaireReappro');
                         var items = [];
                         cartStore.each(function (r) {
                             items.push({lg_FAMILLE_ID: r.get('lg_FAMILLE_ID'), int_QTE: r.get('int_QTE')});
                         });
-                        var url = (mode === 'assort')
-                                ? '../api/v1/reserve/assort-batch'
-                                : '../api/v1/reserve/reassort-batch';
-                        var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Traitement en cours');
+                        var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Creation en cours');
                         Ext.Ajax.request({
                             method: 'POST',
-                            url: url,
-                            jsonData: {items: items},
+                            url: '../api/v1/suggestion-reserve/creer',
+                            jsonData: {
+                                categorie: categorie,
+                                motifId: cboMotif.getValue(),
+                                commentaire: (txtCom && txtCom.getValue()) ? txtCom.getValue() : null,
+                                items: items
+                            },
                             success: function (response) {
                                 progress.hide();
-                                var res = Ext.JSON.decode(response.responseText, true);
-                                Ext.MessageBox.alert('Resultat',
-                                        (res.traites || 0) + ' / ' + (res.total || 0) + ' operation(s) effectuee(s).');
-                                var pv = me.getParentview();
-                                if (pv && pv.reloadGrid) {
-                                    pv.reloadGrid();
-                                }
-                                if (typeof refreshNotificationBadge === 'function') {
-                                    refreshNotificationBadge();
+                                var res = Ext.JSON.decode(response.responseText, true) || {};
+                                if (res.success === false) {
+                                    Ext.MessageBox.alert('Message', res.message || 'Creation impossible.');
+                                    return;
                                 }
                                 win.close();
+                                allerAuxSuggestions(res);
                             },
                             failure: function () {
                                 progress.hide();
-                                Ext.MessageBox.alert('Erreur', 'Echec du traitement.');
+                                Ext.MessageBox.alert('Erreur', 'La creation a echoue.');
                             }
                         });
                     }

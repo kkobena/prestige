@@ -62,6 +62,7 @@ import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -127,6 +128,8 @@ public class CommandeServiceImpl implements CommandeService {
     private LogService logService;
     @EJB
     private OrderService orderService;
+    @EJB
+    private rest.service.SuggestionReserveService suggestionReserveService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
@@ -195,8 +198,12 @@ public class CommandeServiceImpl implements CommandeService {
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id);
             userTransaction.begin();
             JSONArray ugArray = new JSONArray();
+            // Produits dont le stock rayon augmente : ils seront evalues APRES le commit, pour voir
+            // s'ils passent au-dessus du seuil reserve et appellent un rangement en reserve.
+            Set<String> famillesEntreesEnStock = new java.util.LinkedHashSet<>();
             for (TBonLivraisonDetail bn : lstTBonLivraisonDetail) {
                 TFamille oFamille = bn.getLgFAMILLEID();
+                famillesEntreesEnStock.add(oFamille.getLgFAMILLEID());
                 List<TLot> lots = getLot(oFamille.getLgFAMILLEID(), bonLivraison.getStrREFLIVRAISON());
                 if (peremptionDateIsEnabled && oFamille.getBoolCHECKEXPIRATIONDATE()
                         && (lots.isEmpty() || lots.stream().anyMatch(l -> Objects.isNull(l.getDtPEREMPTION())))) {
@@ -368,6 +375,15 @@ public class CommandeServiceImpl implements CommandeService {
 
             });
             userTransaction.commit();
+
+            // Suggestions de reserve : evaluation APRES le commit, sinon le stock lu serait celui
+            // d'avant l'entree. Rien n'est propage : un incident de suggestion ne doit pas remettre
+            // en cause une entree en stock deja validee.
+            try {
+                suggestionReserveService.evaluerApresMouvementLot(user, famillesEntreesEnStock);
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Suggestions de reserve non evaluees apres cloture du BL " + id, e);
+            }
 
             // Envoi immédiat des SMS d'avoir (après commit pour que la notification
             // soit persistée). Asynchrone : n'impacte pas la réponse de l'entrée en
@@ -721,19 +737,31 @@ public class CommandeServiceImpl implements CommandeService {
      * stock rayon (t_famille_stock).
      */
     private void updateStockReserve(EntityManager emg, String familleId, String emplacementId, int qte) {
+        TTypeStockFamille typeStock;
         try {
-            TTypeStockFamille typeStock = (TTypeStockFamille) emg
+            // Verrou exclusif sur la ligne reserve : un mouvement rayon<->reserve concurrent sur ce produit ne peut
+            // plus etre ecrase silencieusement par la valeur comptee de l'inventaire.
+            typeStock = (TTypeStockFamille) emg
                     .createQuery("SELECT t FROM TTypeStockFamille t WHERE t.lgTYPESTOCKID.lgTYPESTOCKID = '2' "
                             + "AND t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 "
                             + "AND t.strSTATUT = 'enable'")
-                    .setParameter(1, familleId).setParameter(2, emplacementId).setMaxResults(1).getSingleResult();
-            typeStock.setIntNUMBER(qte);
-            typeStock.setDtUPDATED(new Date());
-            emg.merge(typeStock);
+                    .setParameter(1, familleId).setParameter(2, emplacementId).setMaxResults(1)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
+        } catch (javax.persistence.PessimisticLockException | javax.persistence.LockTimeoutException e) {
+            // Conflit de verrou : on NE POURSUIT PAS en silence (cela laisserait l'inventaire partiellement applique).
+            // IllegalStateException est traitee par le catch de cloturerInvetaire -> rollback complet et message clair.
+            LOG.log(Level.SEVERE, "updateStockReserve: conflit de verrou famille=" + familleId, e);
+            throw new IllegalStateException("Article " + familleId
+                    + " en cours de modification par un autre traitement : cloture interrompue.", e);
         } catch (Exception e) {
+            // Absence de ligne de stock reserve : comportement historique conserve (on trace et on continue).
             LOG.log(Level.WARNING, "updateStockReserve: pas de stock reserve pour famille={0} empl={1} : {2}",
                     new Object[] { familleId, emplacementId, e.getMessage() });
+            return;
         }
+        typeStock.setIntNUMBER(qte);
+        typeStock.setDtUPDATED(new Date());
+        emg.merge(typeStock);
     }
 
     @Override

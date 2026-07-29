@@ -29,6 +29,8 @@ public class TMouvementReserve implements Serializable {
     public static final String TYPE_ASSORT = "ASSORT";
     public static final String TYPE_REASSORT = "REASSORT";
     public static final String TYPE_DESTOCKAGE = "DESTOCKAGE";
+    /** Ajustement direct du stock reserve, sans contrepartie en rayon. */
+    public static final String TYPE_AJUSTEMENT = "AJUSTEMENT";
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -57,6 +59,16 @@ public class TMouvementReserve implements Serializable {
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtCREATED = new Date();
+
+    /**
+     * Mouvement que celui-ci annule. Renseigne uniquement sur un mouvement d'annulation : les deux restent en base
+     * cote a cote, l'historique n'est jamais retouche.
+     */
+    @Column(name = "lg_MOUVEMENT_SOURCE_ID", length = 40)
+    private String lgMOUVEMENTSOURCEID;
+
+    @Column(name = "str_MOTIF_ANNULATION", length = 255)
+    private String strMOTIFANNULATION;
 
     @JoinColumn(name = "lg_FAMILLE_ID", referencedColumnName = "lg_FAMILLE_ID")
     @ManyToOne
@@ -163,6 +175,22 @@ public class TMouvementReserve implements Serializable {
 
     public void setLgEMPLACEMENTID(TEmplacement lgEMPLACEMENTID) {
         this.lgEMPLACEMENTID = lgEMPLACEMENTID;
+    }
+
+    public String getLgMOUVEMENTSOURCEID() {
+        return lgMOUVEMENTSOURCEID;
+    }
+
+    public void setLgMOUVEMENTSOURCEID(String lgMOUVEMENTSOURCEID) {
+        this.lgMOUVEMENTSOURCEID = lgMOUVEMENTSOURCEID;
+    }
+
+    public String getStrMOTIFANNULATION() {
+        return strMOTIFANNULATION;
+    }
+
+    public void setStrMOTIFANNULATION(String strMOTIFANNULATION) {
+        this.strMOTIFANNULATION = strMOTIFANNULATION;
     }
 
     @Override

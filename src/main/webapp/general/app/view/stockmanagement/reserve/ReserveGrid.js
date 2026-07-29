@@ -22,7 +22,8 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveGrid', {
         'testextjs.view.stockmanagement.reserve.action.historique',
         'testextjs.view.stockmanagement.reserve.action.reappro',
         'testextjs.view.stockmanagement.reserve.action.suggestion',
-        'testextjs.view.stockmanagement.reserve.action.historiqueGlobal'
+        'testextjs.view.stockmanagement.reserve.action.historiqueGlobal',
+        'testextjs.view.stockmanagement.reserve.action.inventaireSelection'
     ],
     config: {
         gridmode: 'ALL'
@@ -125,7 +126,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveGrid', {
             xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
             items: [{
                     icon: 'resources/images/icons/fam/fleche_orange_droite.svg',
-                    tooltip: 'Faire un reappro (rayon -> reserve)',
+                    tooltip: '<div style=\'white-space:normal;width:230px;line-height:1.5\'><b>Creer une suggestion de reappro</b><br>Le stock part <b>du rayon</b> et arrive <b>en reserve</b>.<br>Rien ne bouge tant que la suggestion n\'est pas traitee.</div>',
                     scope: me,
                     handler: me.onAssortClick,
                     getClass: function (value, metadata, record) {
@@ -137,7 +138,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveGrid', {
             xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
             items: [{
                     icon: 'resources/images/icons/fam/fleche_verte_gauche.svg',
-                    tooltip: 'Faire un reassort (reserve -> rayon)',
+                    tooltip: '<div style=\'white-space:normal;width:230px;line-height:1.5\'><b>Creer une suggestion de reappro</b><br>Le stock part <b>de la reserve</b> et arrive <b>au rayon</b>.<br>Rien ne bouge tant que la suggestion n\'est pas traitee.</div>',
                     scope: me,
                     handler: me.onReassortClick,
                     getClass: function (value, metadata, record) {
@@ -163,40 +164,170 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveGrid', {
             columns.push(colAssort, colReassort, colHisto);
         }
 
+        // Conserve pour l'export : c'est le meme parametre que celui envoye par la grille.
+        me.typeParam = typeParam;
+
+        // ---- Cases a cocher : selection conservee d'une page a l'autre.
+        // La grille est paginee : si l'on se contentait de la selection ExtJS, tout cochage
+        // serait perdu au changement de page. On memorise donc les identifiants coches, et
+        // on re-coche les lignes correspondantes a chaque chargement.
+        me.selectedIds = {};
+        var selModel = Ext.create('Ext.selection.CheckboxModel', {
+            checkOnly: true,
+            mode: 'MULTI'
+        });
+        selModel.on('select', function (sm, rec) {
+            me.selectedIds[rec.get('lg_FAMILLE_ID')] = rec.get('int_QTE_SUGGEREE') || 0;
+            me.majCompteurSelection();
+        });
+        selModel.on('deselect', function (sm, rec) {
+            delete me.selectedIds[rec.get('lg_FAMILLE_ID')];
+            me.majCompteurSelection();
+        });
+        store.on('load', function () {
+            selModel.suspendEvents();
+            store.each(function (rec) {
+                if (me.selectedIds.hasOwnProperty(rec.get('lg_FAMILLE_ID'))) {
+                    // La quantite suggeree a pu changer depuis le cochage : on reprend la valeur du serveur.
+                    me.selectedIds[rec.get('lg_FAMILLE_ID')] = rec.get('int_QTE_SUGGEREE') || 0;
+                    selModel.select(rec, true, true);
+                }
+            });
+            selModel.resumeEvents();
+            me.majCompteurSelection();
+        });
+
+        // Explication au survol, en bleu et en gras. Style en ligne pour rester prioritaire sur l'infobulle.
+        var tip = function (texte) {
+            return '<span style="color:#0b57d0;font-weight:bold;">' + texte + '</span>';
+        };
+
         // ---- Barre d'outils : recherche + boutons communs + boutons specifiques
         var tbar = [{
-                xtype: 'textfield', itemId: 'rechFld', emptyText: 'Rech (code ou nom)', width: 180
+                xtype: 'textfield', itemId: 'rechFld', emptyText: 'Rech (code ou nom)', width: 180,
+                listeners: {
+                    // Entree : recherche immediate, quel que soit le nombre de caracteres.
+                    specialkey: function (f, e) {
+                        if (e.getKey() === e.ENTER) {
+                            f.dernierTerme = (f.getValue() || '').trim();
+                            me.onRechClick();
+                        }
+                    },
+                    // Recherche automatique a partir de 3 caracteres. Le buffer attend une pause
+                    // de frappe : taper un nom complet ne declenche qu'une requete, pas une par
+                    // lettre. En dessous de 3 caracteres le terme est trop large pour cibler quoi
+                    // que ce soit, on attend donc la touche Entree. Le champ vide relance la
+                    // liste complete, sinon on resterait bloque sur le dernier resultat.
+                    change: {
+                        buffer: 400,
+                        fn: function (f, v) {
+                            var terme = (v || '').trim();
+                            if (terme.length > 0 && terme.length < 3) {
+                                return;
+                            }
+                            if (terme === f.dernierTerme) {
+                                return;
+                            }
+                            f.dernierTerme = terme;
+                            me.onRechClick();
+                        }
+                    }
+                }
             }, {
                 text: 'rechercher', scope: me, handler: me.onRechClick
             }, '-'];
 
         if (mode === 'REAPPRO') {
-            tbar.push({text: 'Faire un reappro', iconCls: '', scope: me, handler: me.onFaireReappro});
-            tbar.push({text: 'Suggerer un reappro', cls: 'btn-reappro-orange', scope: me, handler: me.onSuggererReappro});
+            tbar.push({
+                text: 'Faire un reappro de la reserve (manuel)', iconCls: '', scope: me, handler: me.onFaireReappro,
+                tooltip: tip('Vous choisissez vous-meme l\'article et la quantite.<br>'
+                        + 'Le stock est retire DU RAYON &rarr; et ajoute EN RESERVE.')
+            });
+            tbar.push({
+                text: 'Voir les suggestions de reappro de la reserve', cls: 'btn-reappro-orange',
+                scope: me, handler: me.onSuggererReappro,
+                tooltip: tip('Le systeme liste les articles dont le rayon depasse le seuil reserve<br>'
+                        + 'et propose pour chacun la quantite a ranger EN RESERVE.<br>'
+                        + 'Vous pouvez corriger chaque quantite avant de valider.')
+            });
             tbar.push('-');
         } else if (mode === 'REASSORT') {
-            tbar.push({text: 'Faire un reassort rayon', scope: me, handler: me.onFaireReassort});
-            tbar.push({text: 'Suggerer un reassort rayon', cls: 'btn-reassort-green', scope: me, handler: me.onSuggererReassort});
+            tbar.push({
+                text: 'Faire un reappro manuel du rayon', scope: me, handler: me.onFaireReassort,
+                tooltip: tip('Vous choisissez vous-meme l\'article et la quantite.<br>'
+                        + 'Le stock est retire DE LA RESERVE &rarr; et ajoute AU RAYON.')
+            });
+            tbar.push({
+                text: 'Voir les suggestions de reappro du rayon', cls: 'btn-reassort-green',
+                scope: me, handler: me.onSuggererReassort,
+                tooltip: tip('Le systeme liste les articles dont le rayon est tombe au seuil mini<br>'
+                        + 'et propose pour chacun la quantite a sortir DE LA RESERVE.<br>'
+                        + 'La quantite proposee ne depasse jamais le stock reserve disponible.')
+            });
+            tbar.push('-');
+        } else {
+            // Onglet TOUT : les deux sens sont concernes, on propose donc les deux listes de
+            // suggestions. Elles manquaient ici alors que l'onglet affiche les deux flèches.
+            tbar.push({
+                text: 'Suggestions de reappro de la reserve', cls: 'btn-reappro-orange',
+                scope: me, handler: me.onSuggererReappro,
+                tooltip: tip('Articles dont le rayon depasse le seuil reserve :<br>'
+                        + 'le systeme propose la quantite a ranger EN RESERVE.')
+            });
+            tbar.push({
+                text: 'Suggestions de reappro du rayon', cls: 'btn-reassort-green',
+                scope: me, handler: me.onSuggererReassort,
+                tooltip: tip('Articles dont le rayon est tombe au seuil mini :<br>'
+                        + 'le systeme propose la quantite a sortir DE LA RESERVE.')
+            });
             tbar.push('-');
         }
 
         // Boutons communs aux 3 onglets
-        tbar.push({text: 'Creer un inventaire', scope: me, handler: me.onCreateInventaire});
-        tbar.push({text: 'Imprimer', scope: me, handler: me.onPrint});
-        tbar.push({text: 'Historiques', scope: me, handler: me.onHistoriquesGlobal});
-        tbar.push({text: 'Exporter (CSV)', scope: me, handler: me.onExportCsv});
+        tbar.push({
+            text: 'Suggestion sur tout le resultat', cls: 'btn-suggestions-violet',
+            scope: me, handler: me.onSuggestionRecherche,
+            tooltip: tip('Cree une suggestion portant sur TOUS les articles<br>'
+                    + 'du resultat de recherche, et pas seulement sur la page affichee.')
+        });
+        tbar.push({
+            text: 'Suggestion sur la selection', cls: 'btn-suggestions-violet',
+            scope: me, handler: me.onSuggestionSelection,
+            tooltip: tip('Cree une suggestion portant UNIQUEMENT sur les lignes cochees.<br>'
+                    + 'Les lignes cochees sur les autres pages sont conservees.')
+        });
+        tbar.push({text: 'Tout decocher', scope: me, handler: me.onToutDecocher});
+        tbar.push({xtype: 'tbtext', itemId: 'lblSelection', text: 'Coches : 0',
+            style: 'font-weight:bold;color:#6a1b9a;'});
+
+        // Seconde ligne : les actions sur la liste entiere. Sur un ecran etroit, une barre unique
+        // repoussait ces boutons hors du champ visible et ils devenaient introuvables.
+        var tbarActions = [
+            {text: 'Creer un inventaire', scope: me, handler: me.onCreateInventaire},
+            {text: 'Imprimer', scope: me, handler: me.onPrint},
+            {text: 'Historiques', scope: me, handler: me.onHistoriquesGlobal},
+            '-',
+            {text: 'Exporter (CSV)', scope: me, handler: me.onExportCsv},
+            {
+                text: 'Exporter (Excel)', scope: me, handler: me.onExportExcel,
+                tooltip: tip('Telecharge TOUTES les lignes de cet onglet au format Excel,<br>'
+                        + 'en respectant la recherche en cours (et non la seule page affichee).')
+            }
+        ];
 
         Ext.apply(me, {
             store: store,
             columns: columns,
-            selModel: {selType: 'cellmodel'},
-            tbar: tbar,
-            bbar: {xtype: 'pagingtoolbar', store: store, dock: 'bottom', displayInfo: true}
+            selModel: selModel,
+            dockedItems: [
+                {xtype: 'toolbar', dock: 'top', items: tbar},
+                {xtype: 'toolbar', dock: 'top', items: tbarActions},
+                {xtype: 'pagingtoolbar', store: store, dock: 'bottom', displayInfo: true}
+            ]
         });
 
         me.callParent();
 
-        me.on('afterlayout', me.loadStore, me, {delay: 1, single: true});
     },
 
     loadStore: function () {
@@ -321,222 +452,241 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveGrid', {
     },
 
     // ---- Bouton commun : creer un inventaire (selection des produits) ----
+    // La fenetre de selection est partagee avec les autres onglets : elle vit dans sa propre
+    // vue, et la recherche en cours dans l'onglet lui sert de point de depart.
     onCreateInventaire: function () {
         var me = this;
-        var mode = me.getGridmode();
-        var typeParam = (mode === 'REAPPRO') ? 'REAPPRO'
-                : (mode === 'REASSORT') ? 'REASSORT_RAYON' : 'ALL';
-        var search = me.down('#rechFld').getValue() || '';
-
-        // Map des ids coches, conserve a travers les pages : { lg_FAMILLE_ID: true }
-        var selectedIds = {};
-        var totalAll = 0; // total d'articles (toutes pages) pour "tout selectionner"
-
-        var selStore = new Ext.data.Store({
-            model: 'testextjs.model.FamilleStock',
-            pageSize: 20,
-            autoLoad: false,
-            proxy: {
-                type: 'ajax',
-                url: '../api/v1/reserve/articles',
-                extraParams: {str_TYPE_TRANSACTION: typeParam, search_value: search},
-                reader: {type: 'json', root: 'results', totalProperty: 'total'}
-            }
+        var rech = me.down('#rechFld');
+        Ext.create('testextjs.view.stockmanagement.reserve.action.inventaireSelection', {
+            typetransaction: me.typeParam,
+            recherche: (rech && rech.getValue()) ? rech.getValue() : ''
         });
-
-        var selModel = Ext.create('Ext.selection.CheckboxModel', {checkOnly: true});
-
-        var prixRenderer = function (v) {
-            return (v === null || v === undefined || v === '') ? '' : Ext.util.Format.number(v, '0,000');
-        };
-
-        var win;
-        var updateCounter = function () {
-            var n = 0, k;
-            for (k in selectedIds) {
-                if (selectedIds.hasOwnProperty(k)) {
-                    n++;
-                }
-            }
-            // selCount est docke sur la grille (disponible des la creation de grid)
-            var cmp = grid && grid.down('#selCount');
-            if (cmp) {
-                cmp.setText('Selectionnes : ' + n);
-            }
-        };
-
-        // Re-coche les lignes de la page courante presentes dans selectedIds
-        var reapplySelection = function () {
-            selModel.suspendEvents();
-            selStore.each(function (rec) {
-                if (selectedIds[rec.get('lg_FAMILLE_ID')]) {
-                    selModel.select(rec, true, true);
-                }
-            });
-            selModel.resumeEvents();
-            updateCounter();
-        };
-
-        selModel.on('select', function (sm, rec) {
-            selectedIds[rec.get('lg_FAMILLE_ID')] = true;
-            updateCounter();
-        });
-        selModel.on('deselect', function (sm, rec) {
-            delete selectedIds[rec.get('lg_FAMILLE_ID')];
-            updateCounter();
-        });
-        selStore.on('load', function (store, records, success, op, eOpts) {
-            if (totalAll === 0) {
-                totalAll = store.getTotalCount();
-            }
-            reapplySelection();
-        });
-
-        var pager = Ext.create('Ext.toolbar.Paging', {
-            store: selStore,
-            dock: 'bottom',
-            displayInfo: true
-        });
-
-        var grid = Ext.create('Ext.grid.Panel', {
-            border: false,
-            flex: 1,
-            store: selStore,
-            selModel: selModel,
-            columns: [
-                {header: 'CIP', dataIndex: 'int_CIP', flex: 1},
-                {header: 'Designation', dataIndex: 'str_NAME', flex: 2},
-                {header: 'Stock Reserve', dataIndex: 'int_STOCK_RESERVE', align: 'center', flex: 1},
-                {header: 'Prix achat', dataIndex: 'int_PAF', align: 'right', flex: 1, renderer: prixRenderer},
-                {header: 'Prix vente', dataIndex: 'int_PRICE', align: 'right', flex: 1, renderer: prixRenderer}
-            ],
-            dockedItems: [
-                {
-                    xtype: 'toolbar', dock: 'top',
-                    items: [{
-                            text: 'Tout selectionner (toutes les pages)',
-                            handler: function () {
-                                var prog = Ext.MessageBox.wait('Chargement...', 'Selection de tous les articles');
-                                Ext.Ajax.request({
-                                    url: '../api/v1/reserve/articles',
-                                    method: 'GET',
-                                    params: {str_TYPE_TRANSACTION: typeParam, search_value: search, start: 0, limit: 0},
-                                    timeout: 600000,
-                                    success: function (response) {
-                                        prog.hide();
-                                        var res = Ext.JSON.decode(response.responseText, true);
-                                        var list = (res && res.results) ? res.results : [];
-                                        Ext.each(list, function (a) {
-                                            if (a.lg_FAMILLE_ID) {
-                                                selectedIds[a.lg_FAMILLE_ID] = true;
-                                            }
-                                        });
-                                        reapplySelection();
-                                    },
-                                    failure: function () {
-                                        prog.hide();
-                                        Ext.MessageBox.alert('Erreur', 'Echec du chargement de la liste complete.');
-                                    }
-                                });
-                            }
-                        }, {
-                            text: 'Tout deselectionner',
-                            handler: function () {
-                                selectedIds = {};
-                                selModel.deselectAll();
-                                updateCounter();
-                            }
-                        }, '->', {
-                            xtype: 'tbtext', itemId: 'selCount', text: 'Selectionnes : 0'
-                        }]
-                },
-                pager
-            ]
-        });
-
-        win = Ext.create('Ext.window.Window', {
-            title: 'Creer un inventaire reserve',
-            modal: true,
-            width: 860,
-            height: 580,
-            layout: {type: 'vbox', align: 'stretch'},
-            constrainHeader: true,
-            bodyPadding: '8 8 0 8',
-            items: [{
-                    xtype: 'textarea',
-                    itemId: 'commentFld',
-                    fieldLabel: 'Commentaire',
-                    labelAlign: 'top',
-                    height: 70,
-                    emptyText: 'Commentaire optionnel (enregistre dans la description de l\'inventaire)'
-                }, grid],
-            buttons: [{
-                    text: 'Creer l\'inventaire',
-                    handler: function () {
-                        var ids = [], k;
-                        for (k in selectedIds) {
-                            if (selectedIds.hasOwnProperty(k)) {
-                                ids.push(k);
-                            }
-                        }
-                        if (ids.length === 0) {
-                            Ext.MessageBox.alert('Message', 'Veuillez selectionner au moins un produit.');
-                            return;
-                        }
-                        var comment = win.down('#commentFld').getValue() || '';
-                        // Recapitulatif : controle du nombre de produits avant confirmation
-                        Ext.MessageBox.confirm('Confirmation',
-                                'Vous allez creer un inventaire contenant <b>' + ids.length
-                                + '</b> produit(s) (toutes pages confondues).<br/>Confirmez-vous ?',
-                                function (btn) {
-                                    if (btn !== 'yes') {
-                                        return;
-                                    }
-                                    var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Creation de l\'inventaire');
-                                    Ext.Ajax.request({
-                                        url: '../api/v1/reserve/create-inventaire-selection',
-                                        method: 'POST',
-                                        jsonData: {ids: ids, description: comment},
-                                        timeout: 600000,
-                                        success: function (response) {
-                                            progress.hide();
-                                            var res = Ext.JSON.decode(response.responseText, true);
-                                            win.close();
-                                            Ext.MessageBox.alert('Inventaire',
-                                                    'Inventaire cree.<br/>Produits en compte : <b>' + (res.count || 0) + '</b>');
-                                        },
-                                        failure: function () {
-                                            progress.hide();
-                                            Ext.MessageBox.alert('Erreur', "La creation de l'inventaire a echoue. Aucun inventaire partiel n'a ete cree.");
-                                        }
-                                    });
-                                });
-                    }
-                }, {
-                    text: 'Annuler',
-                    handler: function () {
-                        win.close();
-                    }
-                }]
-        });
-
-        win.show();
-        selStore.loadPage(1);
     },
 
-    // ---- Bouton commun : imprimer via reserveprint.html -------------------
+    // ---- Cases a cocher : compteur et remise a zero -------------------------
+    majCompteurSelection: function () {
+        var me = this, n = 0, k;
+        for (k in me.selectedIds) {
+            if (me.selectedIds.hasOwnProperty(k)) {
+                n++;
+            }
+        }
+        var lbl = me.down('#lblSelection');
+        if (lbl) {
+            lbl.setText('Coches : ' + n);
+        }
+    },
+
+    onToutDecocher: function () {
+        var me = this;
+        me.selectedIds = {};
+        me.getSelectionModel().deselectAll();
+        me.majCompteurSelection();
+    },
+
+    // Fenetre de saisie du motif, commune aux deux boutons de creation de suggestion.
+    // Le motif est obligatoire : tout mouvement de reserve doit pouvoir etre justifie.
+    demanderMotif: function (titre, htmlInfo, onValider) {
+        var me = this;
+        // Sur l'onglet TOUT les deux sens coexistent : on demande lequel avant tout le reste,
+        // car il conditionne la liste des motifs proposes.
+        var choixSens = (me.typeParam === 'ALL');
+        var categorie = (me.typeParam === 'REAPPRO') ? 'RESERVE' : 'RAYON';
+        var storeMotifs = new Ext.data.Store({
+            fields: ['id', 'libelle'],
+            proxy: {
+                type: 'ajax', url: '../api/v1/suggestion-reserve/motifs',
+                extraParams: {categorie: categorie}, reader: {type: 'json'}
+            }
+        });
+        storeMotifs.load();
+
+        var win = Ext.create('Ext.window.Window', {
+            title: titre,
+            width: 520, modal: true, bodyPadding: 10, layout: 'anchor',
+            defaults: {anchor: '100%', labelWidth: 90},
+            items: [
+                {xtype: 'component', html: htmlInfo},
+                {
+                    xtype: 'combo', itemId: 'cboSens', fieldLabel: 'Sens *', hidden: !choixSens,
+                    editable: false, allowBlank: false, forceSelection: true, queryMode: 'local',
+                    displayField: 'libelle', valueField: 'id',
+                    value: categorie,
+                    store: Ext.create('Ext.data.Store', {
+                        fields: ['id', 'libelle'],
+                        data: [
+                            {id: 'RAYON', libelle: 'Reappro du rayon (la reserve remonte au rayon)'},
+                            {id: 'RESERVE', libelle: 'Reappro de la reserve (le rayon descend en reserve)'}
+                        ]
+                    }),
+                    listeners: {
+                        change: function (cbo, v) {
+                            // Les motifs sont propres a chaque sens : on recharge a chaque bascule.
+                            categorie = v;
+                            if (!win) {
+                                return; // valeur initiale posee avant la creation de la fenetre
+                            }
+                            var cboMotif = win.down('#cboMotifRech');
+                            if (cboMotif) {
+                                cboMotif.clearValue();
+                            }
+                            storeMotifs.getProxy().setExtraParam('categorie', v);
+                            storeMotifs.load();
+                        }
+                    }
+                },
+                {
+                    xtype: 'combo', itemId: 'cboMotifRech', fieldLabel: 'Motif *',
+                    editable: false, allowBlank: false, forceSelection: true, queryMode: 'local',
+                    displayField: 'libelle', valueField: 'id',
+                    emptyText: 'Motif (obligatoire)', store: storeMotifs
+                },
+                {xtype: 'textfield', itemId: 'txtComRech', fieldLabel: 'Commentaire',
+                    emptyText: 'Facultatif'}
+            ],
+            buttons: [
+                {
+                    text: 'Creer la suggestion', cls: 'btn-suggestions-violet',
+                    handler: function () {
+                        var cbo = win.down('#cboMotifRech');
+                        if (!cbo || !cbo.getValue()) {
+                            cbo.markInvalid('Motif obligatoire');
+                            Ext.MessageBox.alert('Motif obligatoire',
+                                    'Indiquez le motif de cette suggestion avant de la creer.');
+                            return;
+                        }
+                        var com = win.down('#txtComRech');
+                        onValider(win, categorie, cbo.getValue(), com ? com.getValue() : null);
+                    }
+                },
+                {text: 'Annuler', handler: function () {
+                        win.close();
+                    }}
+            ]
+        });
+        win.show();
+        return win;
+    },
+
+    // Bascule sur l'onglet SUGGESTIONS apres une creation reussie.
+    allerAuxSuggestions: function (res) {
+        var manager = Ext.getCmp('reservemanagerID');
+        var onglet = manager ? manager.down('#ongletSuggestions') : null;
+        if (manager && onglet) {
+            manager.setActiveTab(onglet);
+            onglet.reloadGrid();
+        } else {
+            Ext.MessageBox.alert('Suggestion creee', (res.lignes || 0) + ' article(s).');
+        }
+    },
+
+    // ---- Bouton commun : suggestion sur les seules lignes cochees -----------
+    onSuggestionSelection: function () {
+        var me = this;
+        var items = [], k, qte;
+        for (k in me.selectedIds) {
+            if (me.selectedIds.hasOwnProperty(k)) {
+                qte = parseInt(me.selectedIds[k], 10);
+                items.push({lg_FAMILLE_ID: k, int_QTE: (isNaN(qte) || qte < 0) ? 0 : qte});
+            }
+        }
+        if (items.length === 0) {
+            Ext.MessageBox.alert('Message',
+                    'Cochez au moins une ligne pour creer une suggestion sur la selection.');
+            return;
+        }
+        var info = '<div style="margin-bottom:8px;color:#0b57d0;font-weight:bold;">'
+                + 'La suggestion portera sur les <b>' + items.length + '</b> ligne(s) cochee(s) '
+                + 'uniquement, toutes pages confondues.</div>';
+        me.demanderMotif('Creer une suggestion sur la selection', info,
+                function (win, categorie, motifId, commentaire) {
+                    var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Creation en cours');
+                    Ext.Ajax.request({
+                        method: 'POST',
+                        url: '../api/v1/suggestion-reserve/creer',
+                        jsonData: {
+                            categorie: categorie,
+                            motifId: motifId,
+                            commentaire: commentaire,
+                            items: items
+                        },
+                        success: function (response) {
+                            progress.hide();
+                            var res = Ext.JSON.decode(response.responseText, true) || {};
+                            if (res.success === false) {
+                                Ext.MessageBox.alert('Message', res.message || 'Creation impossible.');
+                                return;
+                            }
+                            win.close();
+                            me.onToutDecocher();
+                            me.allerAuxSuggestions(res);
+                        },
+                        failure: function () {
+                            progress.hide();
+                            Ext.MessageBox.alert('Erreur', 'La creation a echoue.');
+                        }
+                    });
+                });
+    },
+
+    // ---- Bouton commun : suggestion sur TOUT le resultat de recherche ------
+    // Le serveur rejoue la recherche lui-meme : la suggestion couvre toutes les lignes
+    // trouvees, et non la seule page affichee.
+    onSuggestionRecherche: function () {
+        var me = this;
+        var rech = me.down('#rechFld');
+        var search = (rech && rech.getValue()) ? rech.getValue() : '';
+        var info = '<div style="margin-bottom:8px;color:#0b57d0;font-weight:bold;">'
+                + 'La suggestion portera sur TOUS les articles du resultat de recherche'
+                + (search ? ' correspondant a &laquo; ' + Ext.String.htmlEncode(search) + ' &raquo;' : '')
+                + ', et non sur la seule page affichee.</div>';
+        me.demanderMotif('Creer une suggestion sur tout le resultat', info,
+                function (win, categorie, motifId, commentaire) {
+                    var progress = Ext.MessageBox.wait('Veuillez patienter...', 'Creation en cours');
+                    Ext.Ajax.request({
+                        method: 'POST',
+                        url: '../api/v1/suggestion-reserve/creer-depuis-recherche',
+                        jsonData: {
+                            // Onglet TOUT : le sens choisi determine la liste a reprendre, sinon
+                            // le serveur retomberait par defaut sur le reappro du rayon.
+                            type: (me.typeParam === 'ALL')
+                                    ? (categorie === 'RESERVE' ? 'REAPPRO' : 'REASSORT_RAYON')
+                                    : me.typeParam,
+                            search: search,
+                            motifId: motifId,
+                            commentaire: commentaire
+                        },
+                        success: function (response) {
+                            progress.hide();
+                            var res = Ext.JSON.decode(response.responseText, true) || {};
+                            if (res.success === false) {
+                                Ext.MessageBox.alert('Message', res.message || 'Creation impossible.');
+                                return;
+                            }
+                            win.close();
+                            me.allerAuxSuggestions(res);
+                        },
+                        failure: function () {
+                            progress.hide();
+                            Ext.MessageBox.alert('Erreur', 'La creation a echoue.');
+                        }
+                    });
+                });
+    },
+
+    // ---- Bouton commun : impression PDF (modele JasperReports) -------------
+    // Un modele .jrxml dedie par onglet, avec un en-tete qui nomme sans ambiguite
+    // le sens du mouvement. La recherche en cours est transmise au rapport.
     onPrint: function () {
         var me = this;
         var mode = me.getGridmode();
-        var search = me.down('#rechFld').getValue() || '';
-        var qs = 'mode=articles&tabMode=' + encodeURIComponent(mode)
-                + '&titre=' + encodeURIComponent('Gestion des reserves - ' + mode)
-                + '&autoload=1';
-        if (search) {
-            qs += '&search=' + encodeURIComponent(search);
-        }
-        window.open('reserveprint.html?' + qs, '_blank',
-                'width=1100,height=750,scrollbars=yes,resizable=yes');
+        var pdfMode = (mode === 'REAPPRO') ? 'liste_reappro_reserve'
+                : (mode === 'REASSORT') ? 'liste_reappro_rayon'
+                : 'liste_tout';
+        var rech = me.down('#rechFld');
+        var search = (rech && rech.getValue()) ? rech.getValue() : '';
+        var qs = 'mode=' + encodeURIComponent(pdfMode) + '&search=' + encodeURIComponent(search);
+        window.open('../webservices/stockmanagement/reserve/ws_generate_pdf_reserve.jsp?' + qs, '_blank');
     },
 
     // ---- Bouton commun : historiques globaux ----------------------------
@@ -592,5 +742,27 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveGrid', {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         }
+    },
+
+    // ---- Bouton commun : export Excel (genere par le serveur) --------------
+    // Contrairement a l'export CSV qui ne prend que la page affichee, celui-ci exporte TOUTES les lignes de
+    // l'onglet : le serveur rejoue la meme requete que la grille, avec la recherche en cours.
+    onExportExcel: function () {
+        var me = this;
+        var rech = me.down('#rechFld');
+        var search = (rech && rech.getValue()) ? rech.getValue() : '';
+        var url = '../api/v1/reserve/export/excel'
+                + '?str_TYPE_TRANSACTION=' + encodeURIComponent(me.typeParam)
+                + '&search_value=' + encodeURIComponent(search)
+                + '&_dc=' + new Date().getTime();
+        // Iframe cachee : le telechargement demarre sans quitter ni recharger l'ecran courant.
+        var frame = document.getElementById('reserve-export-frame');
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.id = 'reserve-export-frame';
+            frame.style.display = 'none';
+            document.body.appendChild(frame);
+        }
+        frame.src = url;
     }
 });

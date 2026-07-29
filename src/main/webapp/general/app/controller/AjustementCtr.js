@@ -135,12 +135,45 @@ Ext.define('testextjs.controller.AjustementCtr', {
             var me = this;
              me.getVnoqtyField().focus(true, 100);
      },
+    /**
+     * Renseigne le champ Qte Stock avec le stock de la ZONE choisie.
+     *
+     * Afficher le stock rayon pendant qu'on ajuste la reserve invite a saisir une quantite
+     * fausse : le stock de depart doit etre celui qu'on va reellement corriger.
+     */
+    afficherStockZone: function (familleId, stockRayon) {
+        var me = this;
+        var champ = me.getVnostockField();
+        if (!champ) {
+            return;
+        }
+        var cboZone = Ext.getCmp('str_ZONE_AJUSTEMENT');
+        var surReserve = cboZone && cboZone.getValue() === 'RESERVE';
+        if (!surReserve || !familleId) {
+            champ.setValue(stockRayon);
+            return;
+        }
+        champ.setValue('...');
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/reserve/stock-reserve/' + encodeURIComponent(familleId),
+            success: function (response) {
+                var res = Ext.JSON.decode(response.responseText, true) || {};
+                champ.setValue(res.int_STOCK_RESERVE || 0);
+            },
+            failure: function () {
+                // Sans reponse, on n'invente pas une valeur : on affiche zero plutot que le
+                // stock rayon, qui n'a rien a voir avec la zone ajustee.
+                champ.setValue(0);
+            }
+        });
+    },
+
     produitSelect: function (cmp, record) {
         var me = this;
         var record = cmp.findRecord("lgFAMILLEID" || "intCIP", cmp.getValue());
         if (record) {
-            let vnostockField = me.getVnostockField();
-            vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
+            me.afficherStockZone(record.get('lgFAMILLEID'), record.get('intNUMBERAVAILABLE'));
             /* focus directement sur la quantite (produit + qte, produit + qte...) ;
              * le motif reste selectionnable a la souris */
             me.getVnoqtyField().focus(true, 100);
@@ -157,8 +190,7 @@ Ext.define('testextjs.controller.AjustementCtr', {
                 } else {
                     var record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
                     if (record) {
-                        var vnostockField = me.getVnostockField();
-                        vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
+                        me.afficherStockZone(record.get('lgFAMILLEID'), record.get('intNUMBERAVAILABLE'));
                         me.getVnoqtyField().focus(true, 100);
                     } else {
                         me.checkDouchette(combo);
@@ -180,8 +212,7 @@ Ext.define('testextjs.controller.AjustementCtr', {
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     var produit = result.data;
-                    var vnostockField = me.getVnostockField();
-                    vnostockField.setValue(produit.intNUMBERAVAILABLE);
+                    me.afficherStockZone(produit.lgFAMILLEID, produit.intNUMBERAVAILABLE);
                     me.getVnoqtyField().focus(true, 100);
                 } else {
                     field.focus(true, 100);
@@ -215,13 +246,35 @@ Ext.define('testextjs.controller.AjustementCtr', {
                 if (record) {
                     var commentaire = me.getCommentaire().getValue();
                     var qte = parseInt(field.getValue());
+                    // Zone RESERVE : on refuse DES L'AJOUT une quantite qui rendrait le stock
+                    // reserve negatif. Sans ce controle, la ligne descendait dans le tableau, la
+                    // cloture partait, et la ligne etait refusee en silence cote serveur : on ne
+                    // voyait aucune trace de ce qui n'avait pas ete applique.
+                    var cboZoneCtrl = Ext.getCmp('str_ZONE_AJUSTEMENT');
+                    if (cboZoneCtrl && cboZoneCtrl.getValue() === 'RESERVE') {
+                        var stockZone = parseInt(me.getVnostockField().getValue(), 10);
+                        if (!isNaN(stockZone) && !isNaN(qte) && (stockZone + qte) < 0) {
+                            Ext.MessageBox.alert('Stock reserve insuffisant',
+                                    'Le stock reserve de ce produit est de <b>' + stockZone
+                                    + '</b> : il ne permet pas de retirer <b>' + Math.abs(qte)
+                                    + '</b> unite(s).<br>Corrigez la quantite avant d\'ajouter le produit.',
+                                    function () {
+                                        field.focus(true, 50);
+                                    });
+                            return;
+                        }
+                    }
+                    // Zone ciblee : n'est prise en compte qu'a la creation de l'ajustement,
+                    // elle vaut ensuite pour toutes ses lignes.
+                    var cboZone = Ext.getCmp('str_ZONE_AJUSTEMENT');
                     var params = {
                         "refParent": ajustementId,
                         "value": qte,
                         "description": commentaire,
                         "refTwo": record.get('lgFAMILLEID'),
                         "valueTwo": record.get('intNUMBERAVAILABLE'),
-                        "valueFour": typeAjustement
+                        "valueFour": typeAjustement,
+                        "zone": (cboZone && cboZone.getValue()) ? cboZone.getValue() : 'RAYON'
                     };
                     me.addAjustement(params, url, field, produitCmp);
                 }
@@ -429,6 +482,11 @@ Ext.define('testextjs.controller.AjustementCtr', {
                     var result = Ext.JSON.decode(response.responseText, true);
                     progress.hide();
                     if (result.success) {
+                        // Des lignes ont pu etre refusees faute de stock : on le dit AVANT de
+                        // proposer l'impression, sinon la cloture passerait pour un succes complet.
+                        if (result.avecRefus) {
+                            Ext.MessageBox.alert('Cloture partielle', result.msg);
+                        }
                         Ext.MessageBox.show({
                             title: 'Impression',
                             msg: 'Voulez-vous imprimer ?',
