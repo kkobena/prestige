@@ -174,8 +174,9 @@ public class ReserveServiceImpl implements ReserveService {
             return out;
         }
         try {
-            List<TFamille> familles = em.createQuery("SELECT f FROM TFamille f WHERE f.lgFAMILLEID IN :ids",
-                    TFamille.class).setParameter("ids", ids).getResultList();
+            List<TFamille> familles = em
+                    .createQuery("SELECT f FROM TFamille f WHERE f.lgFAMILLEID IN :ids", TFamille.class)
+                    .setParameter("ids", ids).getResultList();
             for (TFamille f : familles) {
                 out.put(f.getLgFAMILLEID(), f);
             }
@@ -202,8 +203,7 @@ public class ReserveServiceImpl implements ReserveService {
             }
             Query q = em.createNativeQuery("SELECT f.lg_FAMILLE_ID, "
                     + "COALESCE(MAX(fs.int_NUMBER_AVAILABLE), 0), COALESCE(MAX(tsf.int_NUMBER), 0) "
-                    + "FROM t_famille f "
-                    + "LEFT JOIN t_famille_stock fs ON fs.lg_FAMILLE_ID = f.lg_FAMILLE_ID "
+                    + "FROM t_famille f " + "LEFT JOIN t_famille_stock fs ON fs.lg_FAMILLE_ID = f.lg_FAMILLE_ID "
                     + "  AND fs.lg_EMPLACEMENT_ID = ?1 AND fs.str_STATUT = 'enable' "
                     + "LEFT JOIN t_type_stock_famille tsf ON tsf.lg_FAMILLE_ID = f.lg_FAMILLE_ID "
                     + "  AND tsf.lg_EMPLACEMENT_ID = ?1 AND tsf.lg_TYPE_STOCK_ID = '" + TYPE_STOCK_RESERVE + "' "
@@ -459,8 +459,8 @@ public class ReserveServiceImpl implements ReserveService {
         }
         if (qte <= 0) {
             LOG.log(Level.WARNING, "doMove: qte invalide ({0})", qte);
-            return fail(CODE_QUANTITE_INVALIDE, "La quantite doit etre superieure a zero.")
-                    .put("lg_FAMILLE_ID", familleId);
+            return fail(CODE_QUANTITE_INVALIDE, "La quantite doit etre superieure a zero.").put("lg_FAMILLE_ID",
+                    familleId);
         }
         try {
             String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
@@ -617,8 +617,7 @@ public class ReserveServiceImpl implements ReserveService {
             // Phrase lisible plutot qu'une formule : l'utilisateur doit comprendre le calcul sans
             // avoir a le dechiffrer. Les valeurs sont celles CONSTATEES A LA CREATION.
             json.put("str_FORMULE", "A la creation : rayon " + stockRayon + ", seuil reserve " + seuilReserve
-                    + ". Le rayon depasse le seuil de " + proposition + " : on range " + proposition
-                    + " en reserve.");
+                    + ". Le rayon depasse le seuil de " + proposition + " : on range " + proposition + " en reserve.");
         } else {
             // Rayon sous le seuil mini : on regarnit depuis la reserve, sans jamais depasser le disponible.
             // Meme formule que lignesSuggestions() et que l'onglet REASSORT.
@@ -629,10 +628,10 @@ public class ReserveServiceImpl implements ReserveService {
             json.put("int_CIBLE", seuilReserve);
             json.put("int_DISPONIBLE", stockReserve);
             json.put("int_PROPOSITION", proposition);
-            json.put("str_FORMULE", "A la creation : rayon " + stockRayon + ", seuil reserve " + seuilReserve
-                    + ", reserve " + stockReserve + ". Il manque " + manque
-                    + " en rayon et la reserve en contient " + stockReserve + " : on envoie le plus petit des deux, "
-                    + proposition + ".");
+            json.put("str_FORMULE",
+                    "A la creation : rayon " + stockRayon + ", seuil reserve " + seuilReserve + ", reserve "
+                            + stockReserve + ". Il manque " + manque + " en rayon et la reserve en contient "
+                            + stockReserve + " : on envoie le plus petit des deux, " + proposition + ".");
         }
         return json;
     }
@@ -692,8 +691,8 @@ public class ReserveServiceImpl implements ReserveService {
             return fail(CODE_ARTICLE_INTROUVABLE, "Article introuvable.");
         }
         if (delta == 0) {
-            return fail(CODE_QUANTITE_INVALIDE, "La quantite d'ajustement ne peut pas etre nulle.")
-                    .put("lg_FAMILLE_ID", familleId);
+            return fail(CODE_QUANTITE_INVALIDE, "La quantite d'ajustement ne peut pas etre nulle.").put("lg_FAMILLE_ID",
+                    familleId);
         }
         try {
             String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
@@ -711,9 +710,9 @@ public class ReserveServiceImpl implements ReserveService {
             int avant = nz(typeReserve.getIntNUMBER());
             int apres = avant + delta;
             if (apres < 0) {
-                return fail(CODE_STOCK_RESERVE_INSUFFISANT,
-                        "Stock reserve insuffisant (" + avant + " disponible, retrait de " + Math.abs(delta)
-                                + " demande).").put("lg_FAMILLE_ID", familleId).put("int_DISPONIBLE", avant);
+                return fail(CODE_STOCK_RESERVE_INSUFFISANT, "Stock reserve insuffisant (" + avant
+                        + " disponible, retrait de " + Math.abs(delta) + " demande).").put("lg_FAMILLE_ID", familleId)
+                                .put("int_DISPONIBLE", avant);
             }
 
             typeReserve.setIntNUMBER(apres);
@@ -809,8 +808,7 @@ public class ReserveServiceImpl implements ReserveService {
         }
 
         // Sens inverse : ce qui etait parti du rayon y revient, et reciproquement.
-        String typeInverse = TMouvementReserve.TYPE_ASSORT.equals(source.getStrTYPE())
-                ? TMouvementReserve.TYPE_REASSORT
+        String typeInverse = TMouvementReserve.TYPE_ASSORT.equals(source.getStrTYPE()) ? TMouvementReserve.TYPE_REASSORT
                 : TMouvementReserve.TYPE_ASSORT;
 
         // doMove applique le meme controle de disponible et le meme verrou que tout autre mouvement :
@@ -826,23 +824,22 @@ public class ReserveServiceImpl implements ReserveService {
             TMouvementReserve inverse = em.find(TMouvementReserve.class, inverseId);
             if (inverse != null) {
                 inverse.setLgMOUVEMENTSOURCEID(source.getLgMOUVEMENTID());
-                inverse.setStrMOTIFANNULATION(
-                        motif == null || motif.trim().isEmpty() ? "Annulation" : motif.trim());
+                inverse.setStrMOTIFANNULATION(motif == null || motif.trim().isEmpty() ? "Annulation" : motif.trim());
                 em.merge(inverse);
             }
         }
         LOG.log(Level.INFO, "annulation mouvement={0} par inverse={1} user={2}",
                 new Object[] { mouvementId, inverseId, user.getLgUSERID() });
         return new JSONObject().put("success", true).put("message", "Mouvement annule.")
-                .put("lg_MOUVEMENT_ID", mouvementId).put("lg_MOUVEMENT_INVERSE_ID", inverseId)
-                .put("int_QTE", qte).put("lg_FAMILLE_ID", familleId);
+                .put("lg_MOUVEMENT_ID", mouvementId).put("lg_MOUVEMENT_INVERSE_ID", inverseId).put("int_QTE", qte)
+                .put("lg_FAMILLE_ID", familleId);
     }
 
     /** Un mouvement est deja annule des lors qu'un autre mouvement pointe vers lui. */
     private boolean dejaAnnule(String mouvementId) {
         try {
-            Query q = em.createNativeQuery(
-                    "SELECT COUNT(*) FROM t_mouvement_reserve WHERE lg_MOUVEMENT_SOURCE_ID = ?1");
+            Query q = em
+                    .createNativeQuery("SELECT COUNT(*) FROM t_mouvement_reserve WHERE lg_MOUVEMENT_SOURCE_ID = ?1");
             q.setParameter(1, mouvementId);
             return ((Number) q.getSingleResult()).intValue() > 0;
         } catch (Exception e) {
@@ -903,8 +900,7 @@ public class ReserveServiceImpl implements ReserveService {
             w.append(" AND EXISTS (SELECT 1 FROM t_mouvement_reserve a"
                     + " WHERE a.lg_MOUVEMENT_SOURCE_ID = m.lg_MOUVEMENT_ID) ");
         } else if ("NORMAL".equalsIgnoreCase(annulation)) {
-            w.append(" AND m.lg_MOUVEMENT_SOURCE_ID IS NULL"
-                    + " AND NOT EXISTS (SELECT 1 FROM t_mouvement_reserve a"
+            w.append(" AND m.lg_MOUVEMENT_SOURCE_ID IS NULL" + " AND NOT EXISTS (SELECT 1 FROM t_mouvement_reserve a"
                     + " WHERE a.lg_MOUVEMENT_SOURCE_ID = m.lg_MOUVEMENT_ID) ");
         }
         return w.toString();
@@ -939,8 +935,8 @@ public class ReserveServiceImpl implements ReserveService {
                     + "TRIM(CONCAT(COALESCE(u.str_FIRST_NAME,''),' ',COALESCE(u.str_LAST_NAME,''))), "
                     + "m.lg_MOUVEMENT_ID, m.lg_MOUVEMENT_SOURCE_ID, m.str_MOTIF_ANNULATION, "
                     + "EXISTS (SELECT 1 FROM t_mouvement_reserve a"
-                    + "        WHERE a.lg_MOUVEMENT_SOURCE_ID = m.lg_MOUVEMENT_ID)"
-                    + HISTORIQUE_FROM + where + " ORDER BY m.dt_CREATED DESC");
+                    + "        WHERE a.lg_MOUVEMENT_SOURCE_ID = m.lg_MOUVEMENT_ID)" + HISTORIQUE_FROM + where
+                    + " ORDER BY m.dt_CREATED DESC");
             q.setParameter(1, empl);
             if (notBlank(search)) {
                 q.setParameter(2, "%" + search.trim() + "%");
@@ -958,19 +954,17 @@ public class ReserveServiceImpl implements ReserveService {
                 String typeTechnique = r[3] == null ? "" : String.valueOf(r[3]);
                 results.put(new JSONObject().put("dt_CREATED", r[0] == null ? "" : fmt.format((java.util.Date) r[0]))
                         .put("int_CIP", r[1] == null ? "" : String.valueOf(r[1]))
-                        .put("str_NAME", r[2] == null ? "" : String.valueOf(r[2]))
-                        .put("str_TYPE", typeTechnique).put("str_MOUVEMENT", libelleMouvement(typeTechnique))
-                        .put("int_QTE", nombre(r[4])).put("int_STOCK_RAYON_AVANT", nombre(r[5]))
-                        .put("int_STOCK_RAYON_APRES", nombre(r[6])).put("int_STOCK_RESERVE_AVANT", nombre(r[7]))
-                        .put("int_STOCK_RESERVE_APRES", nombre(r[8]))
+                        .put("str_NAME", r[2] == null ? "" : String.valueOf(r[2])).put("str_TYPE", typeTechnique)
+                        .put("str_MOUVEMENT", libelleMouvement(typeTechnique)).put("int_QTE", nombre(r[4]))
+                        .put("int_STOCK_RAYON_AVANT", nombre(r[5])).put("int_STOCK_RAYON_APRES", nombre(r[6]))
+                        .put("int_STOCK_RESERVE_AVANT", nombre(r[7])).put("int_STOCK_RESERVE_APRES", nombre(r[8]))
                         .put("str_USER", r[9] == null ? "" : String.valueOf(r[9]))
                         .put("lg_MOUVEMENT_ID", r[10] == null ? "" : String.valueOf(r[10]))
                         // Deux informations distinctes : cette ligne DEFAIT un mouvement anterieur,
                         // ou cette ligne A ETE defaite par une ligne posterieure.
                         .put("lg_MOUVEMENT_SOURCE_ID", r[11] == null ? "" : String.valueOf(r[11]))
                         .put("str_MOTIF_ANNULATION", r[12] == null ? "" : String.valueOf(r[12]))
-                        .put("bl_EST_ANNULATION", r[11] != null)
-                        .put("bl_ANNULE", nombre(r[13]) == 1));
+                        .put("bl_EST_ANNULATION", r[11] != null).put("bl_ANNULE", nombre(r[13]) == 1));
             }
             return new JSONObject().put("total", total).put("results", results);
         } catch (Exception e) {
@@ -1038,8 +1032,8 @@ public class ReserveServiceImpl implements ReserveService {
             }
             long total = ((Number) countQ.getSingleResult()).longValue();
 
-            Query q = em.createNativeQuery("SELECT DISTINCT m.lg_FAMILLE_ID" + HISTORIQUE_FROM + where
-                    + " ORDER BY m.lg_FAMILLE_ID");
+            Query q = em.createNativeQuery(
+                    "SELECT DISTINCT m.lg_FAMILLE_ID" + HISTORIQUE_FROM + where + " ORDER BY m.lg_FAMILLE_ID");
             q.setParameter(1, empl);
             if (notBlank(search)) {
                 q.setParameter(2, "%" + search.trim() + "%");
@@ -1119,8 +1113,8 @@ public class ReserveServiceImpl implements ReserveService {
             @SuppressWarnings("unchecked")
             List<Object[]> rows = q.getResultList();
             for (Object[] r : rows) {
-                out.put(new JSONObject().put("lg_USER_ID", String.valueOf(r[0]))
-                        .put("nom", r[1] == null ? "" : String.valueOf(r[1])));
+                out.put(new JSONObject().put("lg_USER_ID", String.valueOf(r[0])).put("nom",
+                        r[1] == null ? "" : String.valueOf(r[1])));
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "utilisateursMouvements", e);
@@ -1236,13 +1230,11 @@ public class ReserveServiceImpl implements ReserveService {
             try {
                 name = m.getLgFAMILLEID() != null ? m.getLgFAMILLEID().getStrNAME() : "";
                 cip = m.getLgFAMILLEID() != null && m.getLgFAMILLEID().getIntCIP() != null
-                        ? m.getLgFAMILLEID().getIntCIP()
-                        : "";
+                        ? m.getLgFAMILLEID().getIntCIP() : "";
             } catch (Exception e) {
             }
             results.put(new JSONObject().put("lg_MOUVEMENT_ID", m.getLgMOUVEMENTID()).put("str_NAME", name)
-                    .put("int_CIP", cip)
-                    .put("str_TYPE", m.getStrTYPE()).put("int_QTE", nz(m.getIntQTE()))
+                    .put("int_CIP", cip).put("str_TYPE", m.getStrTYPE()).put("int_QTE", nz(m.getIntQTE()))
                     .put("int_STOCK_RAYON_AVANT", nz(m.getIntSTOCKRAYONAVANT()))
                     .put("int_STOCK_RESERVE_AVANT", nz(m.getIntSTOCKRESERVEAVANT()))
                     .put("int_STOCK_RAYON_APRES", nz(m.getIntSTOCKRAYONAPRES()))
