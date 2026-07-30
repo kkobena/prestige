@@ -30,7 +30,6 @@ import javax.persistence.Query;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.ReserveService;
-import static rest.service.ReserveService.PRIVILEGE_ANNULATION;
 
 /**
  * Implementation du service de reserve. Chaque mutation rayon/reserve s'execute dans sa PROPRE transaction JTA
