@@ -302,6 +302,15 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
                         iconCls: 'export_excel_icon',
                         handler: this.exportToExcel
+                    },
+                    {
+                        xtype: 'tbseparator'
+                    },
+                    {
+                        text: 'Relev&eacute; FNE',
+                        tooltip: 'Relev&eacute; des factures certifi&eacute;es et avoirs FNE du tiers payant',
+                        scope: this,
+                        handler: this.onReleveFne
                     }
                 ]
             },
@@ -367,7 +376,13 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             }, {
                 header: 'Code Facture',
                 dataIndex: 'str_CODE_FACTURE',
-                flex: 0.5
+                flex: 0.5,
+                renderer: function (value, meta, rec) {
+                    if (rec.get('str_STATUT') === 'avoir') {
+                        return '<span style="color:#c0392b;font-weight:bold;">' + value + ' (Annul&eacute;e - avoir)</span>';
+                    }
+                    return value;
+                }
 
             }, {
                 header: 'Organisme',
@@ -436,7 +451,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 menuDisabled: true,
                 items: [{
                         getClass: function (v, meta, rec) {
-
+                            if (rec.get('fneUrl')) {
+                                return 'x-hide-display';
+                            }
                             if (rec.get('str_STATUT') !== "paid") {
 
                                 if (!rec.get('isALLOWED')) {
@@ -449,6 +466,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             }
                         },
                         getTip: function (v, meta, rec) {
+                            if (rec.get('fneUrl')) {
+                                return '';
+                            }
                             if (rec.get('str_STATUT') !== "paid") {
                                 if (!rec.get('isALLOWED')) {
                                     return '';
@@ -476,6 +496,12 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 sortable: false,
                 menuDisabled: true,
                 items: [{
+                        getClass: function (v, meta, rec) {
+                            if (rec.get('str_STATUT') === 'avoir') {
+                                return 'x-hide-display';
+                            }
+                            return 'x-display-hide';
+                        },
                         icon: 'resources/images/icons/certication.png',
                         tooltip: 'Certification',
                         scope: this,
@@ -503,6 +529,40 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         tooltip: 'Télécharger',
                         scope: this,
                         handler: this.onOpenFneLink
+                    }]
+            },
+            {
+                xtype: 'actioncolumn',
+                width: 30,
+                sortable: false,
+                menuDisabled: true,
+                items: [{
+                        getClass: function (v, meta, rec) {
+                            if (rec.get('fneUrl') && !rec.get('fneAvoirReference') && rec.get('AUTORISATION_AVOIR_FNE')
+                                    && rec.get('str_STATUT') !== 'paid' && rec.get('str_STATUT') !== 'avoir') {
+                                return 'x-display-hide';
+                            } else {
+                                return 'x-hide-display';
+                            }
+                        },
+                        icon: 'resources/images/icons/fam/retour.png',
+                        tooltip: 'Émettre un avoir FNE (total)',
+                        scope: this,
+                        handler: this.onAvoirFneClick
+                    }, {
+                        getClass: function (v, meta, rec) {
+                            if (rec.get('fneAvoirReference')) {
+                                return 'x-display-hide';
+                            } else {
+                                return 'x-hide-display';
+                            }
+                        },
+                        getTip: function (v, meta, rec) {
+                            return 'Avoir FNE : ' + rec.get('fneAvoirReference');
+                        },
+                        icon: 'resources/images/icons/fam/recu.png',
+                        scope: this,
+                        handler: this.onOpenFneAvoirLink
                     }]
             },
             {
@@ -613,6 +673,80 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         if (fneUrl) {
             window.open(fneUrl);
         }
+
+    },
+    onOpenFneAvoirLink: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
+        const fneAvoirUrl = rec.get('fneAvoirUrl');
+        if (fneAvoirUrl) {
+            window.open(fneAvoirUrl);
+        } else if (rec.get('fneAvoirReference')) {
+            Ext.MessageBox.alert('Info', 'Avoir FNE : ' + rec.get('fneAvoirReference'));
+        }
+
+    },
+    onReleveFne: function () {
+        const tiersPayantId = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue();
+        if (!tiersPayantId) {
+            Ext.MessageBox.alert('Relevé FNE', 'Sélectionnez d\'abord un tiers payant dans la barre de recherche.');
+            return;
+        }
+        const dtStart = Ext.getCmp('datedebut').getSubmitValue() || '';
+        const dtEnd = Ext.getCmp('datefin').getSubmitValue() || '';
+        window.open('../webservices/sm_user/facturation/ws_rp_releve_fne.jsp?tiersPayantId='
+                + encodeURIComponent(tiersPayantId) + '&dtStart=' + dtStart + '&dtEnd=' + dtEnd);
+    },
+    onAvoirFneClick: function (grid, rowIndex) {
+        const me = this;
+        const rec = grid.getStore().getAt(rowIndex);
+        if (!rec.get('fneUrl') || rec.get('fneAvoirReference') || !rec.get('AUTORISATION_AVOIR_FNE')) {
+            return;
+        }
+        Ext.MessageBox.confirm('Avoir FNE',
+                'Émettre un avoir total à la FNE pour la facture ' + rec.get('str_CODE_FACTURE')
+                + ' ?<br/>Toutes les lignes certifiées seront retournées, la facture sera annulée sur Prestige et les ventes redeviendront facturables.<br/>Cette opération consomme un sticker et est irréversible.',
+                function (btn) {
+                    if (btn === 'yes') {
+                        me.doAvoirFne(rec.get('lg_FACTURE_ID'), grid);
+                    }
+                });
+    },
+    doAvoirFne: function (idFacture, grid) {
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Avoir FNE en cours!');
+        Ext.Ajax.request({
+            url: '../api/v1/fne/invoices/avoir/' + idFacture,
+            method: 'POST',
+            success: function (response) {
+                progress.hide();
+                let message = 'Avoir FNE émis';
+                try {
+                    const json = Ext.decode(response.responseText);
+                    if (json.reference) {
+                        message = 'Avoir FNE émis. Référence : ' + json.reference;
+                    }
+                    if (json.annulation) {
+                        message += '<br/>La facture a été annulée : les ventes sont à nouveau facturables.';
+                    } else if (json.warning) {
+                        message += '<br/><b>' + json.warning + '</b>';
+                    }
+                } catch (e) {
+                }
+                Ext.MessageBox.alert('Info', message);
+                grid.getStore().reload();
+            },
+            failure: function (response) {
+                progress.hide();
+                let message = response.responseText;
+                try {
+                    const json = Ext.decode(response.responseText);
+                    if (json.message) {
+                        message = json.message;
+                    }
+                } catch (e) {
+                }
+                Ext.MessageBox.alert('Avoir FNE impossible', message);
+            }
+        });
 
     },
     shwoChoiceModal: function (grid, rowIndex) {
@@ -781,6 +915,16 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
     onRemoveClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
+        if (rec.get('fneUrl')) {
+            Ext.MessageBox.show({
+                title: 'Facture certifiée FNE',
+                width: 360,
+                msg: 'Cette facture est certifiée à la FNE : elle ne peut pas être supprimée.<br/>La régularisation passe par un avoir FNE (icône avoir).',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING
+            });
+            return;
+        }
         if (rec.get('str_STATUT') !== "paid" && rec.get('isALLOWED')) {
 
             Ext.MessageBox.confirm('Message',
@@ -806,7 +950,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                                         Ext.MessageBox.show({
                                             title: 'Avertissement',
                                             width: 320,
-                                            msg: 'Cette facture a subit un r&eacute;glement',
+                                            msg: (object.errors && object.errors !== 'null') ? object.errors : 'Cette facture a subit un r&eacute;glement',
                                             buttons: Ext.MessageBox.OK,
                                             icon: Ext.MessageBox.WARNING
                                         });
