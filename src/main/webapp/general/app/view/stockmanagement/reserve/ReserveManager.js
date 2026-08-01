@@ -110,8 +110,8 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveManager', {
                 tabConfig: {
                     cls: 'tab-suggestions',
                     tooltip: tip('Les suggestions enregistrees, a traiter ou deja traitees.<br>'
-                            + 'Chaque suggestion garde la trace de ce qui a ete propose,<br>'
-                            + 'de ce qui a ete retenu et de ce qui a reellement ete deplace.')
+                            + 'Chaque suggestion garde la trace de ce qui a été proposé,<br>'
+                            + 'de ce qui a été retenu et de ce qui a réellement été déplacé.')
                 }
             },
             {
@@ -133,6 +133,23 @@ Ext.define('testextjs.view.stockmanagement.reserve.ReserveManager', {
                 card.reloadGrid();
             }
         };
+
+        // Onglet a ouvrir, pose par l'appelant (la cloche notamment). Sans cela le premier
+        // onglet s'affichait, lancait SA requete, et on basculait ensuite sur SUGGESTIONS : deux
+        // chargements pour un seul besoin.
+        var ongletDemande = {SUGGESTIONS: 'ongletSuggestions', HISTORIQUE: 'ongletHistorique'}[
+                window.PRESTIGE_RESERVE_ONGLET];
+        if (ongletDemande) {
+            // Index deduit de la liste plutot que fige : ajouter ou deplacer un onglet demain ne
+            // doit pas ouvrir le mauvais.
+            for (var i = 0; i < this.items.length; i++) {
+                if (this.items[i].itemId === ongletDemande) {
+                    this.activeTab = i;
+                    break;
+                }
+            }
+        }
+        window.PRESTIGE_RESERVE_ONGLET = null;
 
         this.listeners = {
             tabchange: function (tabPanel, newCard) {

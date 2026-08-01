@@ -69,7 +69,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historiqueGlobal', {
                     }
                 },
                 change: {
-                    buffer: 400,
+                    buffer: 800,
                     fn: function (f, v) {
                         var terme = (v || '').trim();
                         if (terme.length > 0 && terme.length < 3) {
@@ -130,8 +130,11 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historiqueGlobal', {
                     handler: function () {
                         rechField.setValue('');
                         rechField.dernierTerme = '';
-                        dtStartField.reset();
-                        dtEndField.reset();
+                        // On revient a la journee en cours, et non a une periode vide qui
+                        // rechargerait tout l'historique.
+                        var ceJour = new Date();
+                        dtStartField.setValue(ceJour);
+                        dtEndField.setValue(ceJour);
                         typeCombo.setValue(me.getTypeFilter() || 'ALL');
                         typeFilter = me.getTypeFilter() || 'ALL';
                         loadWithFilters();
@@ -168,7 +171,30 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historiqueGlobal', {
                 },
                 {header: 'Utilisateur', dataIndex: 'str_USER', flex: 1}
             ],
-            viewConfig: {emptyText: 'Aucun mouvement enregistre.', deferEmptyText: false}
+            viewConfig: {emptyText: 'Aucun mouvement enregistre.', deferEmptyText: false},
+            // Un meme produit peut apparaitre sur plusieurs mouvements : le nombre de lignes ne
+            // dit donc pas combien de produits sont concernes. Les deux sont affiches.
+            bbar: [{xtype: 'tbtext', itemId: 'compteurs', text: ''}]
+        });
+
+        // Recalcul des compteurs a chaque chargement, sur les lignes REELLEMENT ramenees.
+        store.on('load', function (st, records) {
+            var produits = {}, distincts = 0, i, id;
+            records = records || [];
+            for (i = 0; i < records.length; i++) {
+                // Le CIP identifie le produit et fait partie des champs declares du store ;
+                // lg_FAMILLE_ID ne l'est pas et serait lu comme vide.
+                id = records[i].get('int_CIP');
+                if (id && !produits[id]) {
+                    produits[id] = true;
+                    distincts++;
+                }
+            }
+            var cmp = grid.down('#compteurs');
+            if (cmp) {
+                cmp.setText('<b>' + records.length + '</b> mouvement(s) &nbsp;&mdash;&nbsp; <b>'
+                        + distincts + '</b> produit(s) distinct(s)');
+            }
         });
 
         // Impression PDF via le modele JasperReports correspondant au type de mouvement
@@ -192,9 +218,10 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historiqueGlobal', {
         var win = new Ext.window.Window({
             autoShow: true,
             title: me.getTitre() || 'Historique des mouvements',
-            width: 950,
-            height: 530,
-            minWidth: 650,
+            // Elargie : la designation et le type etaient tronques a 950.
+            width: 1180,
+            height: 560,
+            minWidth: 900,
             minHeight: 380,
             layout: 'fit',
             modal: true,
@@ -209,7 +236,12 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.historiqueGlobal', {
             ]
         });
 
-        // Chargement initial avec le filtre type passe en config
+        // A l'ouverture on se limite a la JOURNEE EN COURS, comme l'onglet HISTORIQUE : charger
+        // tout l'historique coutait cher pour des lignes qu'on ne regarde pas. Les dates sont
+        // posees dans les champs pour que la periode retenue soit visible et modifiable.
+        var aujourdhui = new Date();
+        dtStartField.setValue(aujourdhui);
+        dtEndField.setValue(aujourdhui);
         loadWithFilters();
 
         // La recherche prend la main des l'ouverture : le delai laisse la fenetre finir son

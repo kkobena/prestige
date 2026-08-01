@@ -35,8 +35,23 @@ Ext.define('testextjs.view.produits.Ajuster', {
 
                         }
                     ],
-            autoLoad: false,
+            autoLoad: true,
             pageSize: 9999,
+            listeners: {
+                load: function (st) {
+                    var cbo = Ext.ComponentQuery.query('doajustementmanager #typeAjustement')[0];
+                    if (!cbo || cbo.getValue()) {
+                        return;
+                    }
+                    var idx = st.findBy(function (r) {
+                        var lib = (r.get('libelle') || '').toLowerCase();
+                        return lib.indexOf('correction') !== -1 && lib.indexOf('stock') !== -1;
+                    });
+                    if (idx >= 0) {
+                        cbo.setValue(st.getAt(idx).get('id'));
+                    }
+                }
+            },
 
             proxy: {
                 type: 'ajax',
@@ -126,7 +141,9 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                     valueField: 'lgFAMILLEID',
                                     displayField: 'strNAME',
                                     typeAhead: false,
-                                    flex: 1.5,
+                                    // Elargi : les designations longues passaient sur deux lignes
+                                    // dans la liste deroulante.
+                                    flex: 3,
 //                                    margin: '0 10 0 0',
                                     queryMode: 'remote',
                                     autoSelect: true,
@@ -323,8 +340,10 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                                     editor: {
                                                         xtype: 'numberfield',
                                                         allowBlank: true,
-                                                        minValue: 1,
-                                                        maskRe: /[0-9.]/,
+                                                        // Un ajustement corrige un ecart : il peut
+                                                        // retirer du stock, donc etre negatif.
+                                                        allowDecimals: false,
+                                                        maskRe: /[0-9-]/,
                                                         selectOnFocus: true,
                                                         hideTrigger: true
                                                     }

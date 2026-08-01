@@ -55,6 +55,14 @@ public interface DataReporingService {
             String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre, int start, int limit,
             boolean all);
 
+    /**
+     * Variante portant le nombre de mois, pour que le DOCUMENT IMPRIME retienne exactement la meme selection que la
+     * liste affichee.
+     */
+    List<ArticleDTO> statsArticlesInvendus(String dtStart, String dtEnd, String codeFamile, String query, TUser u,
+            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre, int start, int limit, boolean all,
+            int nombreMois);
+
     JSONObject statsArticlesInvendus(String dtStart, String dtEnd, String codeFamile, String query, TUser u,
             String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre, int start, int limit)
             throws JSONException;
@@ -64,11 +72,14 @@ public interface DataReporingService {
             int nombreMois) throws JSONException;
 
     byte[] exportArticlesInvendusCsv(String dtStart, String dtEnd, String codeFamile, String query, TUser u,
-            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre) throws IOException, JSONException;
+            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre, int nombreMois)
+            throws IOException, JSONException;
 
     byte[] exportArticlesInvendusExcel(String dtStart, String dtEnd, String codeFamile, String query, TUser u,
-            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre) throws IOException, JSONException;
+            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre, int nombreMois)
+            throws IOException, JSONException;
 
     JSONObject createInventaireArticlesInvendus(String dtStart, String dtEnd, String codeFamile, String query, TUser u,
-            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre) throws JSONException;
+            String codeRayon, String codeGrossiste, int stock, MargeEnum stockFiltre, int nombreMois)
+            throws JSONException;
 }

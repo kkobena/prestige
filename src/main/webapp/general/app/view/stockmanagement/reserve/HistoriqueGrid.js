@@ -82,7 +82,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.HistoriqueGrid', {
                     },
                     // Recherche automatique a partir de 3 caracteres, apres une pause de frappe.
                     change: {
-                        buffer: 400,
+                        buffer: 800,
                         fn: function (f, v) {
                             var terme = (v || '').trim();
                             if (terme.length > 0 && terme.length < 3) {
@@ -289,11 +289,36 @@ Ext.define('testextjs.view.stockmanagement.reserve.HistoriqueGrid', {
                 c.setValue(null);
             }
         });
-        me.store.getProxy().extraParams = {};
-        me.store.loadPage(1);
+        // Les dates reviennent a la journee en cours : les vider rechargerait tout l'historique,
+        // ce que l'affichage par defaut cherche justement a eviter.
+        var ceJour = new Date();
+        var d = me.down('#hDebut'), f = me.down('#hFin');
+        if (d) {
+            d.setValue(ceJour);
+        }
+        if (f) {
+            f.setValue(ceJour);
+        }
+        me.onRechercher();
     },
 
     reloadGrid: function () {
+        // Au premier affichage on se limite a la JOURNEE EN COURS : charger tout l'historique
+        // coutait cher et n'est presque jamais ce qu'on vient consulter. Les dates sont posees
+        // dans les champs pour que la periode retenue soit visible et modifiable.
+        if (!this.filtreInitialise) {
+            this.filtreInitialise = true;
+            var auj = new Date();
+            var d = this.down('#hDebut'), f = this.down('#hFin');
+            if (d && !d.getValue()) {
+                d.setValue(auj);
+            }
+            if (f && !f.getValue()) {
+                f.setValue(auj);
+            }
+            this.onRechercher();
+            return;
+        }
         this.store.loadPage(1);
     },
 

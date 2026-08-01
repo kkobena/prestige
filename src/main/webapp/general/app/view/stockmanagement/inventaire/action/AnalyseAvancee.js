@@ -39,10 +39,9 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
         });
 
         var detailStore = Ext.create('Ext.data.Store', {
-            fields: ['nom', 'emplacement', 'qteInitiale', 'qteSaisie', 'ecartQte', 'prixAchat', 'prixVente', 'ratioVA']
+            fields: ['codeCip', 'nom', 'emplacement', 'qteInitiale', 'qteSaisie', 'ecartQte', 'prixAchat', 'prixVente', 'ratioVA']
         });
 
-        
         var moneyRenderer = function(val) {
             if (val === null || val === undefined) return '0 F';
             var sign = val < 0 ? '-' : '';
@@ -120,6 +119,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                         itemId: 'detailGrid',
                         store: detailStore,
                         columns: [
+                            { text: 'Code CIP', dataIndex: 'codeCip', width: 110 },
                             { text: 'Produit', dataIndex: 'nom', flex: 2 },
                             { text: 'Emplacement', dataIndex: 'emplacement', flex: 1.5 },
                             { text: 'Qté Machine', dataIndex: 'qteInitiale', align: 'center' },

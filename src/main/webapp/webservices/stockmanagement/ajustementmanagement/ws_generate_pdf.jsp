@@ -27,6 +27,39 @@
 <%@page import="bll.userManagement.privilege"  %>
 <%@page import="toolkits.parameters.commonparameter"  %>
 
+<%!
+    /**
+     * Mise en forme des numeros de telephone SANS perdre le zero de tete.
+     *
+     * La fonction commune convertit le numero en nombre : 0709133208 ressortait en 7-09-13-32-08.
+     * On travaille ici sur le texte, et on accepte plusieurs numeros separes par ; / ou virgule.
+     */
+    String telephones(String brut) {
+        if (brut == null || brut.trim().isEmpty()) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder();
+        for (String numero : brut.split("[;/,]")) {
+            String chiffres = numero.replaceAll("[^0-9]", "");
+            if (chiffres.isEmpty()) {
+                continue;
+            }
+            StringBuilder mis = new StringBuilder();
+            for (int i = 0; i < chiffres.length(); i++) {
+                if (i > 0 && (chiffres.length() - i) % 2 == 0) {
+                    mis.append('-');
+                }
+                mis.append(chiffres.charAt(i));
+            }
+            if (out.length() > 0) {
+                out.append(" / ");
+            }
+            out.append(mis);
+        }
+        return out.length() == 0 ? "" : "(+225) " + out;
+    }
+%>
+
 <%
     Translate OTranslate = new Translate();
     dataManager OdataManager = new dataManager();
@@ -69,12 +102,18 @@
     TAjustement oTAjustement = OdataManager.getEm().find(dal.TAjustement.class, lg_AJUSTEMENT_ID);
     String scr_report_file = "rp_fiche_ajustement_";
 
+    String zoneAjustement = oTAjustement.getStrZONE() == null ? "RAYON" : oTAjustement.getStrZONE();
     String report_generate_file = key.GetNumberRandom();
+    // Nom parlant : Fiche_ajustement_<zone>_<jjmmaaaa>_<hhmmss>, pour distinguer les documents
+    // sans avoir a les ouvrir.
+    String horodatage = new java.text.SimpleDateFormat("ddMMyyyy_HHmmss").format(new java.util.Date());
 
     new logger().OCategory.info("scr_report_file " + scr_report_file);
     report_generate_file = report_generate_file + ".pdf";
     OreportManager.setPath_report_src(Ojdom.scr_report_file + scr_report_file + ".jrxml");
-    OreportManager.setPath_report_pdf(Ojdom.scr_report_pdf + "fiche_ajustement_" + report_generate_file);
+    String nomFichier = "Fiche_ajustement_" + ("RESERVE".equalsIgnoreCase(zoneAjustement) ? "reserve" : "rayon")
+            + "_" + horodatage + "_" + report_generate_file;
+    OreportManager.setPath_report_pdf(Ojdom.scr_report_pdf + nomFichier);
 
     TOfficine oTOfficine = OdataManager.getEm().find(dal.TOfficine.class, "1");
 
@@ -83,7 +122,11 @@
     Paper paper = new Paper();
     PageFormat format = new PageFormat();
 
-    String P_H_CLT_INFOS = "Fiche d'ajustement de stock";
+    // La zone figure dans le TITRE plutot que dans une colonne : le modele .jrxml n'a pas a
+    // changer, l'intitule etant un parametre. Un ajustement anterieur a la gestion par zone
+    // releve du rayon, comportement historique.
+    String P_H_CLT_INFOS = "Fiche d'ajustement de stock - "
+            + ("RESERVE".equalsIgnoreCase(zoneAjustement) ? "RESERVE" : "RAYON");
     String P_H_CC_P_H_RC = "", P_H_CI_P_H_RI = "";
     if ((oTOfficine.getStrCOMPTECONTRIBUABLE() != null && !"".equals(oTOfficine.getStrCOMPTECONTRIBUABLE())) && (oTOfficine.getStrREGISTRECOMMERCE() != null && !"".equals(oTOfficine.getStrREGISTRECOMMERCE()))) {
         P_H_CC_P_H_RC = oTOfficine.getStrCOMPTECONTRIBUABLE() + " / " + oTOfficine.getStrREGISTRECOMMERCE();
@@ -122,20 +165,28 @@
     parameters.put("P_REFERENCE", oTAjustement.getLgAJUSTEMENTID());
     parameters.put("P_H_EMPLACEMENT", lg_EMPLACEMENT_ID);
     parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS.toUpperCase());
-    String finalphonestring = oTOfficine.getStrPHONE() != null ? "Tel: " + conversion.PhoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
-            if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
-                String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
-                for (String va : phone) {
-                    finalphonestring += " / " + conversion.PhoneNumberFormat(va);
-                }
-            }
-            parameters.put("P_H_PHONE", finalphonestring);
+    // Tous les numeros sont assembles PUIS mis en forme en une seule fois : appeler la fonction
+    // par numero repetait l'indicatif (+225) devant chacun et allongeait la ligne au point de la
+    // faire deborder du document.
+    StringBuilder numeros = new StringBuilder();
+    if (oTOfficine.getStrPHONE() != null) {
+        numeros.append(oTOfficine.getStrPHONE());
+    }
+    if (oTOfficine.getStrAUTRESPHONES() != null && !"".equals(oTOfficine.getStrAUTRESPHONES())) {
+        if (numeros.length() > 0) {
+            numeros.append(";");
+        }
+        numeros.append(oTOfficine.getStrAUTRESPHONES());
+    }
+    String misEnForme = telephones(numeros.toString());
+    String finalphonestring = "".equals(misEnForme) ? "" : "Tel: " + misEnForme;
+    parameters.put("P_H_PHONE", finalphonestring);
        
      OreportManager.BuildReport(parameters, Ojconnexion);
 
     Ojconnexion.CloseConnexion();
 
-    response.sendRedirect("../../../data/reports/pdf/" + "fiche_ajustement_" + report_generate_file);
+    response.sendRedirect("../../../data/reports/pdf/" + nomFichier);
 
 %>
 

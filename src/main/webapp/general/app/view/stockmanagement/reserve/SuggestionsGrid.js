@@ -96,7 +96,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.SuggestionsGrid', {
                     },
                     // Recherche automatique a partir de 3 caracteres, apres une pause de frappe.
                     change: {
-                        buffer: 400,
+                        buffer: 800,
                         fn: function (f, v) {
                             var terme = (v || '').trim();
                             if (terme.length > 0 && terme.length < 3) {
@@ -262,7 +262,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.SuggestionsGrid', {
             items: [
                 {
                     icon: 'resources/images/icons/fam/delete.png',
-                    tooltip: '<div style=\'white-space:normal;width:230px;line-height:1.5\'><b>Supprimer la suggestion</b><br>Impossible des qu\'une ligne a ete traitee.</div>',
+                    tooltip: '<div style=\'white-space:normal;width:230px;line-height:1.5\'><b>Supprimer la suggestion</b><br>Impossible dès qu\'une ligne a été traitée.</div>',
                     getClass: function (v, m, rec) {
                         // Une suggestion cloturee ne peut plus etre supprimee : l'icone disparait.
                         var s = rec.get('str_STATUT');
@@ -282,7 +282,16 @@ Ext.define('testextjs.view.stockmanagement.reserve.SuggestionsGrid', {
             selModel: Ext.create('Ext.selection.CheckboxModel', {checkOnly: true, mode: 'MULTI'}),
             columns: [
                 // Reference et date/heure elargies : elles doivent se lire en entier, sans troncature.
-                {header: 'Reference', dataIndex: 'str_REF', width: 175},
+                {
+                    // Meme code couleur que la colonne du sens : la reference se lit d'un coup
+                    // d'oeil sans avoir a parcourir la ligne.
+                    header: 'Reference', dataIndex: 'str_REF', width: 175,
+                    renderer: function (v, m, rec) {
+                        m.style = 'color:' + (rec.get('str_CATEGORIE') === 'RESERVE'
+                                ? '#c26500' : '#256b2a') + ';font-weight:bold;';
+                        return v;
+                    }
+                },
                 {header: 'Creee le', dataIndex: 'dt_CREATED', width: 135},
                 {
                     header: 'Sens du mouvement', dataIndex: 'str_CATEGORIE', flex: 1, minWidth: 200,

@@ -134,6 +134,7 @@ public class AnalyseInvServiceImpl implements AnalyseInvService {
     private List<Map<String, Object>> buildDetailData(List<AnalyseInvDTO> rawData) {
         return rawData.stream().map(dto -> {
             Map<String, Object> item = new HashMap<>();
+            item.put("codeCip", dto.getCodeCip());
             item.put("nom", dto.getNom());
             item.put("emplacement", dto.getEmplacement());
             item.put("qteInitiale", dto.getQteInitiale());

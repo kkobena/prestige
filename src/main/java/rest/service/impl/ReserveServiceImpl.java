@@ -1261,9 +1261,9 @@ public class ReserveServiceImpl implements ReserveService {
         if (ids.isEmpty()) {
             return new JSONObject().put("count", 0).put("message", "Aucun produit a inventorier.");
         }
-        String title = buildInventaireName();
-        int count = inventaireService.createReserveInventaire(ids, title);
-        return new JSONObject().put("count", count).put("message", title);
+        String title = buildInventaireName(type);
+        JSONObject cr = inventaireService.createReserveInventaireDetaille(ids, title, title);
+        return cr.put("message", title);
     }
 
     @Override
@@ -1279,14 +1279,38 @@ public class ReserveServiceImpl implements ReserveService {
         }
         String title = (titre != null && !titre.trim().isEmpty()) ? titre.trim() : buildInventaireName();
         String description = (commentaire != null && !commentaire.trim().isEmpty()) ? commentaire.trim() : title;
-        int count = inventaireService.createReserveInventaire(ids, title, description);
-        return new JSONObject().put("count", count).put("message", title);
+        JSONObject cr = inventaireService.createReserveInventaireDetaille(ids, title, description);
+        return cr.put("message", title);
     }
 
-    // Nom de l'inventaire reserve : "Inventaire reserve du dd/MM/yyyy HH:mm"
+    /**
+     * Nom de l'inventaire reserve : {@code Inventaire reserve-<PORTEE> ddMMyyyy-HHmmssS}.
+     *
+     * <p>
+     * La portee reprend le filtre de l'ecran au moment de la creation : RAYON, RESERVE, ou TOUS quand aucun filtre
+     * n'est pose. Elle est indispensable pour relire la liste des inventaires : deux inventaires crees le meme jour ne
+     * se distinguent autrement que par l'heure.
+     *
+     * <p>
+     * L'horodatage descend a la milliseconde : deux inventaires lances dans la meme seconde restent distincts.
+     */
+    private String buildInventaireName(String type) {
+        Date maintenant = new Date();
+        String jour = new java.text.SimpleDateFormat("ddMMyyyy").format(maintenant);
+        String heure = new java.text.SimpleDateFormat("HHmmssS").format(maintenant);
+        return "Inventaire reserve-" + porteeInventaire(type) + " " + jour + "-" + heure;
+    }
+
     private String buildInventaireName() {
-        String jour = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date());
-        return "Inventaire reserve du " + jour;
+        return buildInventaireName(null);
+    }
+
+    /** Libelle de portee affiche dans le nom : le filtre de l'ecran, ou TOUS a defaut. */
+    private String porteeInventaire(String type) {
+        if (type == null || type.trim().isEmpty() || "ALL".equalsIgnoreCase(type.trim())) {
+            return "TOUS";
+        }
+        return type.trim().toUpperCase();
     }
 
     // ----------------------------------------------------------------- HELPERS
