@@ -519,6 +519,82 @@ public class InventaireManager extends bllBase {
     }
 
     /**
+     * Condition commune au comptage et a la page ci-dessous, pour qu'ils ne puissent pas diverger.
+     */
+    private String clauseListeInventaires(String str_STATUT, String zone, String recherche) {
+        StringBuilder jpql = new StringBuilder(" WHERE t.lgEMPLACEMENTID.lgEMPLACEMENTID = :empl");
+        if (str_STATUT == null || str_STATUT.trim().isEmpty()) {
+            jpql.append(" AND t.strSTATUT IN (:enable, :closed)");
+        } else {
+            jpql.append(" AND t.strSTATUT = :statut");
+        }
+        if ("reserve".equalsIgnoreCase(zone)) {
+            jpql.append(" AND LOWER(t.strTYPE) = 'reserve'");
+        } else if ("rayon".equalsIgnoreCase(zone)) {
+            // Tout ce qui n'est pas un inventaire de reserve releve du rayon, type non renseigne compris.
+            jpql.append(" AND (t.strTYPE IS NULL OR LOWER(t.strTYPE) <> 'reserve')");
+        }
+        if (recherche != null && !recherche.trim().isEmpty()) {
+            jpql.append(" AND (LOWER(t.strNAME) LIKE :recherche OR LOWER(t.strDESCRIPTION) LIKE :recherche)");
+        }
+        return jpql.toString();
+    }
+
+    private void poserParametresListe(javax.persistence.Query q, String str_STATUT, String recherche) {
+        q.setParameter("empl", this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        if (str_STATUT == null || str_STATUT.trim().isEmpty()) {
+            q.setParameter("enable", commonparameter.statut_enable);
+            q.setParameter("closed", commonparameter.statut_is_Closed);
+        } else {
+            q.setParameter("statut", str_STATUT);
+        }
+        if (recherche != null && !recherche.trim().isEmpty()) {
+            q.setParameter("recherche", "%" + recherche.trim().toLowerCase() + "%");
+        }
+    }
+
+    /**
+     * Nombre d'inventaires correspondant aux filtres, compte PAR LA BASE.
+     *
+     * <p>
+     * Les methodes listInventaire() historiques ramenent la totalite des inventaires de l'emplacement, la pagination
+     * etant faite ensuite en memoire. Ce couple comptage / page est ajoute A COTE, sans les modifier, pour que l'ecran
+     * ne charge plus que la page qu'il affiche.
+     */
+    public long countInventaires(String str_STATUT, String zone, String recherche) {
+        try {
+            javax.persistence.Query q = this.getOdataManager().getEm().createQuery(
+                    "SELECT COUNT(t) FROM TInventaire t" + clauseListeInventaires(str_STATUT, zone, recherche));
+            poserParametresListe(q, str_STATUT, recherche);
+            Object r = q.getSingleResult();
+            return r == null ? 0L : ((Number) r).longValue();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0L;
+        }
+    }
+
+    /** Page d'inventaires correspondant aux filtres, du plus recent au plus ancien. */
+    public List<TInventaire> listInventairesPagines(String str_STATUT, String zone, String recherche, int start,
+            int limit) {
+        try {
+            javax.persistence.Query q = this.getOdataManager().getEm().createQuery("SELECT t FROM TInventaire t"
+                    + clauseListeInventaires(str_STATUT, zone, recherche) + " ORDER BY t.dtCREATED DESC");
+            poserParametresListe(q, str_STATUT, recherche);
+            if (start > 0) {
+                q.setFirstResult(start);
+            }
+            if (limit > 0) {
+                q.setMaxResults(limit);
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    /**
      * Liste des inventaires restreinte a une ZONE : 'reserve' pour les inventaires de reserve, 'rayon' pour tous les
      * autres.
      *
@@ -1362,6 +1438,97 @@ public class InventaireManager extends bllBase {
     // fin liste objet article
 
     // function creation inventaire 12042016 kobena
+    /**
+     * Creation d'un inventaire portant sur PLUSIEURS valeurs d'un meme axe.
+     *
+     * <p>
+     * L'ecran ne proposait qu'une valeur : un emplacement, une famille ou un grossiste. On peut desormais en cocher
+     * plusieurs. La procedure stockee qui remplit les lignes n'est PAS modifiee : elle est simplement appelee une fois
+     * par valeur cochee, avec le meme inventaire. Comme un produit appartient a un seul rayon, une seule famille et un
+     * seul grossiste, cocher plusieurs valeurs d'un meme axe ne peut pas creer de doublon.
+     *
+     * <p>
+     * Une liste de valeurs vide signifie "toutes" : on retombe alors sur un unique appel avec le joker, c'est-a-dire
+     * exactement le comportement precedent.
+     *
+     * @param axe
+     *            EMPLACEMENT, FAMILLE ou GROSSISTE : designe sur quel critere portent les valeurs
+     *
+     * @return nombre total de lignes creees ; l'inventaire est supprime s'il n'en reste aucune
+     */
+    public long createInventaireMultiCriteres(String str_NAME, List<String> valeurs, String axe, String str_BEGIN,
+            String str_END, String str_TYPE, int bool_INVENTAIRE, String stockFilter, Integer stockProduit) {
+        long count = 0;
+        Date today = new Date();
+        TInventaire creePartiellement = null;
+        try {
+            // L'utilisateur de la session a ete charge par une AUTRE couche de persistance et n'est
+            // plus rattache a la sienne. L'attacher tel quel au nouvel inventaire fait remonter ses
+            // collections paresseuses au moment de la validation, et la creation echoue par
+            // intermittence - selon que ces collections avaient deja ete lues ou non. On repasse
+            // donc par l'utilisateur relu ICI, dans le contexte courant.
+            TUser auteur = this.getOdataManager().getEm().find(TUser.class, this.getOTUser().getLgUSERID());
+            if (auteur == null) {
+                this.buildErrorTraceMessage("Utilisateur introuvable : création de l'inventaire abandonnée");
+                return 0;
+            }
+
+            TInventaire oTInventaire = new TInventaire(this.getKey().getComplexId());
+            oTInventaire.setStrNAME(str_NAME);
+            oTInventaire.setStrDESCRIPTION(str_NAME);
+            oTInventaire.setLgUSERID(auteur);
+            oTInventaire.setStrTYPE(str_TYPE.toLowerCase());
+            oTInventaire.setStrSTATUT(commonparameter.statut_enable);
+            oTInventaire.setDtCREATED(today);
+            oTInventaire.setDtUPDATED(today);
+            oTInventaire.setLgEMPLACEMENTID(auteur.getLgEMPLACEMENTID());
+            if (!this.persiste(oTInventaire)) {
+                this.buildErrorTraceMessage("Echec de création de l'inventaire");
+                return ECHEC_TECHNIQUE;
+            }
+            creePartiellement = oTInventaire;
+
+            List<String> aParcourir = (valeurs == null || valeurs.isEmpty()) ? Arrays.asList("%%") : valeurs;
+            for (String valeur : aParcourir) {
+                String zone = "%%", famille = "%%", grossiste = "%%";
+                if ("EMPLACEMENT".equalsIgnoreCase(axe)) {
+                    zone = valeur;
+                } else if ("FAMILLE".equalsIgnoreCase(axe)) {
+                    famille = valeur;
+                } else if ("GROSSISTE".equalsIgnoreCase(axe)) {
+                    grossiste = valeur;
+                }
+                count += this.createInventaireFamille("%%", oTInventaire.getLgINVENTAIREID(), famille, zone, grossiste,
+                        str_BEGIN, str_END, bool_INVENTAIRE, str_TYPE, stockFilter, stockProduit);
+            }
+
+            if (count == 0) {
+                // Meme regle que la creation a critere unique : pas de ligne, pas d'inventaire.
+                this.delete(oTInventaire);
+            }
+            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.buildErrorTraceMessage("Echec de création de l'inventaire");
+            new logger().OCategory.info(this.getDetailmessage());
+            // Ne pas laisser derriere soi un inventaire vide : l'ecran annonce un echec, la liste
+            // ne doit pas afficher une ligne creee a moitie.
+            if (creePartiellement != null) {
+                try {
+                    this.delete(creePartiellement);
+                } catch (Exception suppression) {
+                    new logger().OCategory
+                            .info("Inventaire incomplet non supprime : " + creePartiellement.getLgINVENTAIREID());
+                }
+            }
+            return ECHEC_TECHNIQUE;
+        }
+        return count;
+    }
+
+    /** Retour de createInventaireMultiCriteres signalant un echec TECHNIQUE, distinct de "aucune ligne". */
+    public static final long ECHEC_TECHNIQUE = -1L;
+
     public long createInventaire(String str_NAME, String lg_FAMILLE_ID, String str_DESCRIPTION,
             String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String lg_GROSSISTE_ID, String str_BEGIN,
             String str_END, String str_TYPE, int bool_INVENTAIRE, String stockFilter, Integer stockProduit) {
@@ -1504,6 +1671,34 @@ public class InventaireManager extends bllBase {
         return count;
     }
 
+    /**
+     * Demande a EclipseLink de charger EN LOT les entites liees d'une page d'inventaire.
+     *
+     * <p>
+     * Les associations de TInventaireFamille vers le produit, et du produit vers son rayon, sa famille et son
+     * grossiste, sont declarees en ManyToOne sans mode de chargement : elles sont donc EAGER. Sans indication, chaque
+     * ligne affichee provoque ses propres lectures, et le cout d'une page devient proportionnel a la taille de la page
+     * plutot qu'au travail reel - c'est ce qui rendait l'ouverture d'une fiche aussi lente pour 344 lignes que pour
+     * 8086.
+     *
+     * <p>
+     * Le lot ne change RIEN au resultat : ce sont les memes entites, ramenees en une requete par association au lieu
+     * d'une par ligne. Les indications sont posees dans un try : une version d'EclipseLink qui ne les comprendrait pas
+     * doit laisser la requete s'executer normalement, simplement sans le regroupement.
+     */
+    private javax.persistence.Query lecturesEnLot(javax.persistence.Query q) {
+        try {
+            q.setHint("eclipselink.batch.type", "IN");
+            for (String association : new String[] { "t.lgFAMILLEID", "t.lgFAMILLEID.lgZONEGEOID",
+                    "t.lgFAMILLEID.lgFAMILLEARTICLEID", "t.lgFAMILLEID.lgGROSSISTEID", "t.lgINVENTAIREID" }) {
+                q.setHint("eclipselink.batch", association);
+            }
+        } catch (Exception e) {
+            new logger().OCategory.info("lecturesEnLot ignore : " + e.getMessage());
+        }
+        return q;
+    }
+
     public List<TInventaireFamille> listTFamilleByInventaire(String search_value, String lg_INVENTAIRE_ID,
             String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String lg_GROSSISTE_ID, boolean boolINVENTAIRE,
             int start, int limit, String lg_USER_ID) {
@@ -1520,49 +1715,49 @@ public class InventaireManager extends bllBase {
             if (!"%%".equals(lg_INVENTAIRE_ID)) {
                 OInventaire = this.getOdataManager().getEm().find(TInventaire.class, lg_INVENTAIRE_ID);
                 if (OInventaire.getStrTYPE().equalsIgnoreCase("famille")) {
-                    lstTInventaireFamille = this.getOdataManager().getEm().createQuery(
-                            "SELECT DISTINCT t FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 ORDER BY t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE ASC, t.lgFAMILLEID.strDESCRIPTION")
+                    lstTInventaireFamille = lecturesEnLot(this.getOdataManager().getEm().createQuery(
+                            "SELECT DISTINCT t FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 ORDER BY t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE ASC, t.lgFAMILLEID.strDESCRIPTION")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
                             .setParameter(9, lg_USER_ID).setFirstResult(start).setMaxResults(limit)
-                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS).getResultList();
+                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS)).getResultList();
                 } else if (OInventaire.getStrTYPE().equalsIgnoreCase("emplacement")) {
-                    lstTInventaireFamille = this.getOdataManager().getEm().createQuery(
-                            "SELECT DISTINCT t FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6  OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.lgZONEGEOID.strCODE ASC, t.lgFAMILLEID.strNAME ASC ")
+                    lstTInventaireFamille = lecturesEnLot(this.getOdataManager().getEm().createQuery(
+                            "SELECT DISTINCT t FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.intEAN13 LIKE ?6  OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.lgZONEGEOID.strCODE ASC, t.lgFAMILLEID.strNAME ASC ")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
                             .setParameter(9, lg_USER_ID).setFirstResult(start).setMaxResults(limit)
-                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS).getResultList();
+                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS)).getResultList();
 
                 } else if (OInventaire.getStrTYPE().equalsIgnoreCase("grossiste")) {
-                    lstTInventaireFamille = this.getOdataManager().getEm().createQuery(
-                            "SELECT DISTINCT t FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.lgGROSSISTEID.strCODE ASC, t.lgFAMILLEID.strDESCRIPTION ASC")
+                    lstTInventaireFamille = lecturesEnLot(this.getOdataManager().getEm().createQuery(
+                            "SELECT DISTINCT t FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.lgGROSSISTEID.strCODE ASC, t.lgFAMILLEID.strDESCRIPTION ASC")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
                             .setParameter(9, lg_USER_ID).setFirstResult(start).setMaxResults(limit)
-                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS).getResultList();
+                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS)).getResultList();
                 } else {
-                    lstTInventaireFamille = this.getOdataManager().getEm().createQuery(
-                            "SELECT DISTINCT t FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.lgZONEGEOID.strCODE , t.lgFAMILLEID.strDESCRIPTION")
+                    lstTInventaireFamille = lecturesEnLot(this.getOdataManager().getEm().createQuery(
+                            "SELECT DISTINCT t FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.lgZONEGEOID.strCODE , t.lgFAMILLEID.strDESCRIPTION")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
                             .setParameter(9, lg_USER_ID).setFirstResult(start).setMaxResults(limit)
-                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS).getResultList();
+                            .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS)).getResultList();
 
                 }
             } else {
 
-                lstTInventaireFamille = this.getOdataManager().getEm().createQuery(
+                lstTInventaireFamille = lecturesEnLot(this.getOdataManager().getEm().createQuery(
                         "SELECT DISTINCT t FROM TInventaireFamille t, TFamille g WHERE t.lgINVENTAIREID.lgINVENTAIREID =?1  AND g.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND g.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?3 AND g.lgZONEGEOID.lgZONEGEOID  LIKE ?4 AND (g.strDESCRIPTION LIKE ?5 OR g.intCIP LIKE ?5 OR g.lgGROSSISTEID.strLIBELLE LIKE ?5  OR g.intEAN13 LIKE ?5 OR g.lgGROSSISTEID.strCODE LIKE 5 ) AND t.boolINVENTAIRE = ?6  AND t.strUPDATEDID LIKE ?9 ORDER BY g.strNAME ASC ")
                         .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                         .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                         .setParameter(5, search_value + "%").setParameter(6, search_value + "%")
                         .setParameter(8, boolINVENTAIRE).setParameter(9, lg_USER_ID)
-                        .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS).getResultList();
+                        .setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS)).getResultList();
 
             }
             // new logger().OCategory.info("Taille liste " + lstTInventaireFamille.size());
@@ -1658,7 +1853,7 @@ public class InventaireManager extends bllBase {
                 if (OInventaire.getStrTYPE().equalsIgnoreCase("famille")) {
 
                     object = this.getOdataManager().getEm().createQuery(
-                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9")
+                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8 AND t.strUPDATEDID LIKE ?9")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
@@ -1668,7 +1863,7 @@ public class InventaireManager extends bllBase {
 
                 } else if (OInventaire.getStrTYPE().equalsIgnoreCase("emplacement")) {
                     object = this.getOdataManager().getEm().createQuery(
-                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6  OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8  AND t.strUPDATEDID LIKE ?9 ")
+                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.intEAN13 LIKE ?6  OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8  AND t.strUPDATEDID LIKE ?9 ")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
@@ -1678,7 +1873,7 @@ public class InventaireManager extends bllBase {
 
                 } else if (OInventaire.getStrTYPE().equalsIgnoreCase("grossiste")) {
                     object = this.getOdataManager().getEm().createQuery(
-                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8  AND t.strUPDATEDID LIKE ?9")
+                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8  AND t.strUPDATEDID LIKE ?9")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)
@@ -1688,7 +1883,7 @@ public class InventaireManager extends bllBase {
 
                 } else {
                     object = this.getOdataManager().getEm().createQuery(
-                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t, TFamilleGrossiste g WHERE g.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR g.strCODEARTICLE LIKE ?6 OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8  AND t.strUPDATEDID LIKE ?9 ")
+                            "SELECT COUNT(DISTINCT t) FROM TInventaireFamille t WHERE EXISTS (SELECT 1 FROM TFamilleGrossiste gx WHERE gx.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID) AND t.lgINVENTAIREID.lgINVENTAIREID LIKE ?1 AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID LIKE ?2 AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID LIKE ?3 AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID LIKE ?4 AND (t.lgFAMILLEID.strDESCRIPTION LIKE ?6 OR t.lgFAMILLEID.intCIP LIKE ?6 OR EXISTS (SELECT 1 FROM TFamilleGrossiste gs WHERE gs.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND gs.strCODEARTICLE LIKE ?6) OR t.lgFAMILLEID.intEAN13 LIKE ?6 OR t.lgFAMILLEID.lgZONEGEOID.strCODE LIKE ?6 OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strCODEFAMILLE LIKE ?6) AND t.boolINVENTAIRE = ?8  AND t.strUPDATEDID LIKE ?9 ")
                             .setParameter(1, lg_INVENTAIRE_ID).setParameter(2, lg_GROSSISTE_ID)
                             .setParameter(3, lg_ZONE_GEO_ID).setParameter(4, lg_FAMILLEARTICLE_ID)
                             .setParameter(6, "%" + search_value + "%").setParameter(8, boolINVENTAIRE)

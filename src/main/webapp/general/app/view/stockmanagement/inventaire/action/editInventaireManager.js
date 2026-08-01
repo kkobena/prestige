@@ -94,7 +94,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
 
 
 
-        url_services_data_inventaire_famille = '../webservices/stockmanagement/inventaire/ws_data_inventaire_famille.jsp?lg_INVENTAIRE_ID=' + ref;
+        url_services_data_inventaire_famille = '../api/v1/inventaire/detail?lg_INVENTAIRE_ID=' + ref;
 
         var itemsPerPage = 20;
         var itemsPerPageGrid = 30;
@@ -111,7 +111,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste_inventaire + "?lg_INVENTAIRE_ID=" + ref,
+                url: '../api/v1/inventaire/criteres?axe=GROSSISTE&lg_INVENTAIRE_ID=' + ref,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -127,7 +127,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_zonegeo_inventaire + "?lg_INVENTAIRE_ID=" + ref,
+                url: '../api/v1/inventaire/criteres?axe=ZONE&lg_INVENTAIRE_ID=' + ref,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -144,7 +144,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_utilisateur,
+                url: '../api/v1/inventaire/criteres?axe=UTILISATEUR&lg_INVENTAIRE_ID=' + ref,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -160,7 +160,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_famillearticle_inventaire + "?lg_INVENTAIRE_ID=" + ref,
+                url: '../api/v1/inventaire/criteres?axe=FAMILLE&lg_INVENTAIRE_ID=' + ref,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -454,8 +454,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                                         var int_NUMBER_INIT = record.get("int_TAUX_MARQUE");
 
                                                         Ext.Ajax.request({
-                                                            url: url_services_transaction_inventaire + 'updateinventairefamille',
-                                                            params: {
+                                                            // Enregistrement de la saisie par le
+                                                            // service REST, en remplacement du mode
+                                                            // updateinventairefamille de la JSP. La
+                                                            // reponse garde la meme forme.
+                                                            url: '../api/v1/inventaire/ligne/quantite',
+                                                            method: 'POST',
+                                                            jsonData: {
                                                                 lg_INVENTAIRE_FAMILLE_ID: lg_INVENTAIRE_FAMILLE_ID,
                                                                 int_NUMBER: Number(int_NUMBER)
                                                             },
@@ -1327,8 +1332,11 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                     if (btn === 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
                         Ext.Ajax.request({
-                            url: url_services_transaction_inventaire + 'deleteInventaireFamille',
-                            params: {
+                            // Retrait d'un article de l'inventaire par le service REST, en
+                            // remplacement du mode deleteInventaireFamille de la JSP.
+                            url: '../api/v1/inventaire/ligne/supprimer',
+                            method: 'POST',
+                            jsonData: {
                                 lg_INVENTAIRE_FAMILLE_ID: rec.get('lg_INVENTAIRE_FAMILLE_ID')
                             },
                             success: function (response)

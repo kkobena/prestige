@@ -433,6 +433,282 @@ public class InventaireServiceImpl implements InventaireService {
     }
 
     @Override
+    public JSONObject updateQuantiteLigne(Long ligneId, Integer quantite) {
+        JSONObject json = new JSONObject();
+        if (ligneId == null) {
+            return json.put("success", 0).put("errors", "Ligne d'inventaire non identifiee.");
+        }
+        if (quantite == null || quantite < 0) {
+            return json.put("success", 0).put("errors", "Quantite invalide.");
+        }
+        TInventaireFamille ligne = em.find(TInventaireFamille.class, ligneId);
+        if (ligne == null) {
+            // L'ancienne page partait en erreur technique dans ce cas ; on rend un refus lisible.
+            return json.put("success", 0).put("errors", "Cette ligne d'inventaire n'existe plus.");
+        }
+        ligne.setIntNUMBER(quantite);
+        ligne.setDtUPDATED(new Date());
+        // Auteur de la saisie. La colonne restait vide sur ce chemin, ce qui privait le filtre
+        // par utilisateur de la fiche de toute matiere : filtrer sur quelqu'un ne rendait rien.
+        try {
+            TUser auteur = sessionHelperService.getCurrentUser();
+            if (auteur != null) {
+                ligne.setStrUPDATEDID(auteur.getLgUSERID());
+            }
+        } catch (Exception e) {
+            // L'auteur n'est qu'une trace : son absence ne doit pas empecher d'enregistrer le comptage.
+            LOG.log(Level.WARNING, "updateQuantiteLigne : auteur non identifie", e);
+        }
+        em.merge(ligne);
+        return json.put("success", 1).put("int_NUMBER", quantite);
+    }
+
+    @Override
+    public JSONObject criteresInventaire(String inventaireId, String axe, String recherche) {
+        JSONArray results = new JSONArray();
+        String like = "%" + (StringUtils.isBlank(recherche) ? "" : recherche.trim()) + "%";
+        try {
+            if ("UTILISATEUR".equalsIgnoreCase(axe)) {
+                remplirUtilisateurs(results, inventaireId, like);
+            } else {
+                remplirCriteres(results, inventaireId, axe, like);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "criteresInventaire", e);
+        }
+        // Entree "Tous" en tete : c'est elle qui remet le filtre a zero. Les anciennes pages la
+        // placaient en fin de liste ; en tete elle est immediatement accessible.
+        JSONArray avecTous = new JSONArray();
+        avecTous.put(entreeCritere(axe, "", "Tous", ""));
+        for (int i = 0; i < results.length(); i++) {
+            avecTous.put(results.get(i));
+        }
+        return new JSONObject().put("total", avecTous.length()).put("results", avecTous);
+    }
+
+    private void remplirCriteres(JSONArray results, String inventaireId, String axe, String like) {
+        String chemin, libelle, code;
+        if ("FAMILLE".equalsIgnoreCase(axe)) {
+            chemin = "t.lgFAMILLEID.lgFAMILLEARTICLEID";
+            libelle = "strLIBELLE";
+            code = "strCODEFAMILLE";
+        } else if ("GROSSISTE".equalsIgnoreCase(axe)) {
+            chemin = "t.lgFAMILLEID.lgGROSSISTEID";
+            libelle = "strLIBELLE";
+            code = "strCODE";
+        } else {
+            chemin = "t.lgFAMILLEID.lgZONEGEOID";
+            libelle = "strLIBELLEE";
+            code = "strCODE";
+        }
+        // On ne ramene que les valeurs REELLEMENT presentes dans cet inventaire.
+        String jpql = "SELECT DISTINCT c FROM TInventaireFamille t JOIN " + chemin + " c"
+                + " WHERE t.lgINVENTAIREID.lgINVENTAIREID = ?1" + " AND (c." + libelle + " LIKE ?2 OR c." + code
+                + " LIKE ?2)" + " ORDER BY c." + libelle;
+        @SuppressWarnings("unchecked")
+        List<Object> lignes = em.createQuery(jpql).setParameter(1, inventaireId).setParameter(2, like).getResultList();
+        for (Object o : lignes) {
+            if (o instanceof dal.TFamillearticle) {
+                dal.TFamillearticle f = (dal.TFamillearticle) o;
+                results.put(entreeCritere(axe, f.getLgFAMILLEARTICLEID(), f.getStrLIBELLE(), f.getStrCODEFAMILLE()));
+            } else if (o instanceof dal.TGrossiste) {
+                dal.TGrossiste g = (dal.TGrossiste) o;
+                results.put(entreeCritere(axe, g.getLgGROSSISTEID(), g.getStrLIBELLE(), g.getStrCODE()));
+            } else if (o instanceof dal.TZoneGeographique) {
+                dal.TZoneGeographique z = (dal.TZoneGeographique) o;
+                results.put(entreeCritere(axe, z.getLgZONEGEOID(), z.getStrLIBELLEE(), z.getStrCODE()));
+            }
+        }
+    }
+
+    /**
+     * Utilisateurs ayant saisi sur cet inventaire.
+     *
+     * <p>
+     * La colonne str_UPDATED_ID n'est alimentee que par certains chemins de saisie. Quand elle est vide partout, cadrer
+     * la liste la viderait aussi : on retombe alors sur l'ensemble des utilisateurs, comme avant.
+     */
+    private void remplirUtilisateurs(JSONArray results, String inventaireId, String like) {
+        @SuppressWarnings("unchecked")
+        List<TUser> saisisseurs = em
+                .createQuery("SELECT DISTINCT u FROM TInventaireFamille t, TUser u"
+                        + " WHERE t.lgINVENTAIREID.lgINVENTAIREID = ?1 AND t.strUPDATEDID = u.lgUSERID"
+                        + " AND (u.strFIRSTNAME LIKE ?2 OR u.strLASTNAME LIKE ?2) ORDER BY u.strFIRSTNAME")
+                .setParameter(1, inventaireId).setParameter(2, like).getResultList();
+        if (saisisseurs.isEmpty()) {
+            @SuppressWarnings("unchecked")
+            List<TUser> tous = em
+                    .createQuery("SELECT u FROM TUser u WHERE u.strSTATUT = ?1"
+                            + " AND (u.strFIRSTNAME LIKE ?2 OR u.strLASTNAME LIKE ?2) ORDER BY u.strFIRSTNAME")
+                    .setParameter(1, Constant.STATUT_ENABLE).setParameter(2, like).getResultList();
+            saisisseurs = tous;
+        }
+        for (TUser u : saisisseurs) {
+            JSONObject row = new JSONObject();
+            row.put("lg_USER_ID", u.getLgUSERID());
+            row.put("str_FIRST_NAME", StringUtils.defaultString(u.getStrFIRSTNAME()));
+            row.put("str_LAST_NAME", StringUtils.defaultString(u.getStrLASTNAME()));
+            results.put(row);
+        }
+    }
+
+    /** Une entree de filtre, avec les noms de champs que l'ecran attend deja pour cet axe. */
+    private JSONObject entreeCritere(String axe, String id, String libelle, String code) {
+        JSONObject row = new JSONObject();
+        if ("UTILISATEUR".equalsIgnoreCase(axe)) {
+            row.put("lg_USER_ID", id);
+            row.put("str_FIRST_NAME", libelle);
+            row.put("str_LAST_NAME", "");
+            return row;
+        }
+        if ("FAMILLE".equalsIgnoreCase(axe)) {
+            row.put("lg_FAMILLEARTICLE_ID", id);
+            row.put("str_LIBELLE", libelle);
+        } else if ("GROSSISTE".equalsIgnoreCase(axe)) {
+            row.put("lg_GROSSISTE_ID", id);
+            row.put("str_LIBELLE", libelle);
+        } else {
+            row.put("lg_ZONE_GEO_ID", id);
+            row.put("str_LIBELLEE", libelle);
+        }
+        row.put("str_CODE", StringUtils.defaultString(code));
+        return row;
+    }
+
+    @Override
+    public JSONObject retenirLigne(Long ligneId, boolean retenue) {
+        JSONObject json = new JSONObject();
+        if (ligneId == null) {
+            return json.put("success", 0).put("errors", "Ligne d'inventaire non identifiee.");
+        }
+        TInventaireFamille ligne = em.find(TInventaireFamille.class, ligneId);
+        if (ligne == null) {
+            return json.put("success", 0).put("errors", "Cette ligne d'inventaire n'existe plus.");
+        }
+        ligne.setBoolINVENTAIRE(retenue);
+        em.merge(ligne);
+        return json.put("success", 1).put("errors", retenue ? "Article retenu." : "Article ecarte.");
+    }
+
+    @Override
+    public JSONObject retenirLignes(String inventaireId, List<Long> ligneIds, List<String> produitIds,
+            boolean retenue) {
+        JSONObject json = new JSONObject();
+        Set<Long> aTraiter = new LinkedHashSet<>();
+        if (ligneIds != null) {
+            aTraiter.addAll(ligneIds);
+        }
+        // Un produit est designe par son identifiant : on retrouve sa ligne dans cet inventaire.
+        if (produitIds != null && !produitIds.isEmpty() && StringUtils.isNotBlank(inventaireId)) {
+            @SuppressWarnings("unchecked")
+            List<Long> trouvees = em
+                    .createQuery("SELECT t.lgINVENTAIREFAMILLEID FROM TInventaireFamille t"
+                            + " WHERE t.lgINVENTAIREID.lgINVENTAIREID = ?1 AND t.lgFAMILLEID.lgFAMILLEID IN ?2")
+                    .setParameter(1, inventaireId).setParameter(2, produitIds).getResultList();
+            aTraiter.addAll(trouvees);
+        }
+        if (aTraiter.isEmpty()) {
+            return json.put("success", 0).put("errors", "Aucun article a traiter.");
+        }
+        int count = 0;
+        for (Long id : aTraiter) {
+            TInventaireFamille ligne = em.find(TInventaireFamille.class, id);
+            if (ligne != null) {
+                ligne.setBoolINVENTAIRE(retenue);
+                em.merge(ligne);
+                count++;
+            }
+        }
+        return json.put("success", count > 0 ? 1 : 0).put("count", count).put("errors",
+                count + (retenue ? " article(s) ajoute(s) a l'inventaire." : " article(s) retire(s)."));
+    }
+
+    @Override
+    public JSONObject articlesUnitaires(String inventaireId, String recherche, String familleArticleId,
+            String zoneGeoId, String grossisteId, int start, int limit) {
+        JSONArray results = new JSONArray();
+        long total = 0;
+        try {
+            // Memes criteres que la page qu'on remplace, mais le decoupage est demande a la base.
+            StringBuilder where = new StringBuilder(
+                    " FROM TInventaireFamille t" + " WHERE t.lgINVENTAIREID.lgINVENTAIREID = :inventaire");
+            boolean parFamille = StringUtils.isNotBlank(familleArticleId) && !"%%".equals(familleArticleId);
+            boolean parZone = StringUtils.isNotBlank(zoneGeoId) && !"%%".equals(zoneGeoId);
+            boolean parGrossiste = StringUtils.isNotBlank(grossisteId) && !"%%".equals(grossisteId);
+            boolean avecRecherche = StringUtils.isNotBlank(recherche);
+            if (parFamille) {
+                where.append(" AND t.lgFAMILLEID.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID = :famille");
+            }
+            if (parZone) {
+                where.append(" AND t.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID = :zone");
+            }
+            if (parGrossiste) {
+                where.append(" AND t.lgFAMILLEID.lgGROSSISTEID.lgGROSSISTEID = :grossiste");
+            }
+            if (avecRecherche) {
+                where.append(" AND (t.lgFAMILLEID.strNAME LIKE :recherche OR t.lgFAMILLEID.intCIP LIKE :recherche"
+                        + " OR t.lgFAMILLEID.lgFAMILLEARTICLEID.strLIBELLE LIKE :recherche)");
+            }
+
+            javax.persistence.Query qc = em.createQuery("SELECT COUNT(t)" + where);
+            javax.persistence.Query q = em.createQuery("SELECT t" + where
+                    + " ORDER BY t.lgFAMILLEID.lgZONEGEOID.strCODE ASC, t.lgFAMILLEID.strDESCRIPTION ASC");
+            for (javax.persistence.Query requete : new javax.persistence.Query[] { qc, q }) {
+                requete.setParameter("inventaire", inventaireId);
+                if (parFamille) {
+                    requete.setParameter("famille", familleArticleId);
+                }
+                if (parZone) {
+                    requete.setParameter("zone", zoneGeoId);
+                }
+                if (parGrossiste) {
+                    requete.setParameter("grossiste", grossisteId);
+                }
+                if (avecRecherche) {
+                    requete.setParameter("recherche", "%" + recherche.trim() + "%");
+                }
+            }
+            total = ((Number) qc.getSingleResult()).longValue();
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start)).setMaxResults(limit);
+            }
+            @SuppressWarnings("unchecked")
+            List<TInventaireFamille> lignes = q.getResultList();
+            for (TInventaireFamille l : lignes) {
+                TFamille produit = l.getLgFAMILLEID();
+                JSONObject row = new JSONObject();
+                row.put("lg_INVENTAIRE_FAMILLE_ID", l.getLgINVENTAIREFAMILLEID());
+                row.put("lg_FAMILLE_ID", produit.getLgFAMILLEID());
+                row.put("str_NAME", StringUtils.defaultString(produit.getStrNAME()));
+                row.put("str_DESCRIPTION", StringUtils.defaultString(produit.getStrDESCRIPTION()));
+                row.put("int_PRICE", produit.getIntPRICE());
+                row.put("int_CIP", StringUtils.defaultString(produit.getIntCIP()));
+                row.put("int_PAF", produit.getIntPAF());
+                row.put("int_PAT", produit.getIntPAT());
+                row.put("is_select", Boolean.TRUE.equals(l.getBoolINVENTAIRE()));
+                results.put(row);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "articlesUnitaires", e);
+        }
+        return new JSONObject().put("total", total).put("results", results);
+    }
+
+    @Override
+    public JSONObject supprimerLigne(Long ligneId) {
+        JSONObject json = new JSONObject();
+        if (ligneId == null) {
+            return json.put("success", 0).put("errors", "Ligne d'inventaire non identifiee.");
+        }
+        TInventaireFamille ligne = em.find(TInventaireFamille.class, ligneId);
+        if (ligne == null) {
+            return json.put("success", 0).put("errors", "Cette ligne d'inventaire n'existe plus.");
+        }
+        em.remove(ligne);
+        return json.put("success", 1).put("errors", "Article retire de l'inventaire.");
+    }
+
+    @Override
     public void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire) {
         TInventaireFamille inventaireFamille = em.find(TInventaireFamille.class, updateInventaire.getId());
         inventaireFamille.setIntNUMBER(updateInventaire.getQuantite());

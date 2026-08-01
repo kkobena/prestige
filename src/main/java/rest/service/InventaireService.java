@@ -78,6 +78,72 @@ public interface InventaireService {
     org.json.JSONObject updateCommentaire(String inventaireId, String commentaire);
 
     /**
+     * Enregistre la quantite comptee sur une ligne d'inventaire.
+     *
+     * <p>
+     * Remplace le mode {@code updateinventairefamille} de ws_transactions.jsp. Le traitement est le meme : seules la
+     * quantite et la date de mise a jour changent. Le retour porte {@code success} (1 ou 0) et, en cas d'echec,
+     * {@code errors}, pour que l'ecran de saisie reagisse comme avant.
+     */
+    org.json.JSONObject updateQuantiteLigne(Long ligneId, Integer quantite);
+
+    /**
+     * Retire une ligne d'un inventaire. Remplace le mode {@code deleteInventaireFamille} de ws_transactions.jsp.
+     *
+     * <p>
+     * Le retour porte {@code success} et {@code errors}, les deux champs que l'ecran lit deja.
+     */
+    org.json.JSONObject supprimerLigne(Long ligneId);
+
+    /**
+     * Articles d'un inventaire unitaire, PAGINE PAR LA BASE.
+     *
+     * <p>
+     * Remplace ws_data_article_unitaire.jsp, qui ramenait toutes les lignes de l'inventaire avant d'en decouper une
+     * page en memoire. Le contenu de chaque ligne est identique, {@code is_select} portant toujours l'appartenance a
+     * l'inventaire.
+     */
+    org.json.JSONObject articlesUnitaires(String inventaireId, String recherche, String familleArticleId,
+            String zoneGeoId, String grossisteId, int start, int limit);
+
+    /**
+     * Retient ou ecarte une ligne d'un inventaire unitaire.
+     *
+     * <p>
+     * Remplace le mode {@code updateInventaireUnitaireFamille} de ws_transactions.jsp. Sur un inventaire unitaire,
+     * toutes les lignes existent des la creation mais ne sont pas retenues ; cocher une ligne la fait entrer dans
+     * l'inventaire, la decocher l'en sort. Seul {@code bool_INVENTAIRE} change.
+     */
+    org.json.JSONObject retenirLigne(Long ligneId, boolean retenue);
+
+    /**
+     * Retient ou ecarte PLUSIEURS lignes d'un coup.
+     *
+     * <p>
+     * Les lignes peuvent etre designees soit par leur propre identifiant, soit par un couple inventaire / produit -
+     * l'ecran d'ajout d'articles connait tantot l'un, tantot l'autre.
+     *
+     * @param ligneIds
+     *            identifiants de lignes d'inventaire, peut etre vide
+     * @param produitIds
+     *            identifiants de produits, resolus dans l'inventaire indique
+     */
+    org.json.JSONObject retenirLignes(String inventaireId, java.util.List<Long> ligneIds,
+            java.util.List<String> produitIds, boolean retenue);
+
+    /**
+     * Valeurs disponibles pour un filtre de la fiche d'inventaire.
+     *
+     * <p>
+     * Les listes sont CADREES SUR L'INVENTAIRE : un inventaire cree sur trois emplacements ne propose que ces trois
+     * emplacements, jamais la totalite du referentiel. Idem pour les familles et les grossistes.
+     *
+     * @param axe
+     *            ZONE, FAMILLE, GROSSISTE ou UTILISATEUR
+     */
+    org.json.JSONObject criteresInventaire(String inventaireId, String axe, String recherche);
+
+    /**
      * Meme traitement que {@link #createReserveInventaire(Set, String, String)}, mais rend compte du detail.
      *
      * <p>

@@ -1,6 +1,6 @@
 /* global Ext */
 
-var url_services_data_inventaire = '../webservices/stockmanagement/inventaire/ws_data.jsp';
+var url_services_data_inventaire = '../api/v1/inventaire/liste';
 var url_services_transaction_inventaire = '../webservices/stockmanagement/inventaire/ws_transactions.jsp?mode=';
 var Me;
 var url_services_pdf_fiche_inventaire = '../webservices/stockmanagement/inventaire/ws_generate_pdf.jsp';
@@ -373,6 +373,49 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     iconCls: 'addicon',
                     handler: this.onImportCsvClick
                 }, '-', {
+                    /* Recherche par libelle ou par commentaire d'inventaire. Entree cherche tout
+                     * de suite ; a partir de trois caracteres la recherche part seule apres une
+                     * pause de frappe, comme les autres zones de recherche de l'application. */
+                    xtype: 'textfield',
+                    itemId: 'rechercheInventaire',
+                    width: 210,
+                    emptyText: 'Rechercher (libelle ou commentaire)',
+                    listeners: {
+                        specialkey: function (f, e) {
+                            if (e.getKey() === e.ENTER) {
+                                f.dernierTerme = (f.getValue() || '').trim();
+                                Me.filtreRecherche = f.dernierTerme;
+                                Me.rechargerAvecFiltres();
+                            }
+                        },
+                        change: {
+                            buffer: 800,
+                            fn: function (f, v) {
+                                var terme = (v || '').trim();
+                                if (terme.length > 0 && terme.length < 3) {
+                                    return;
+                                }
+                                if (terme === f.dernierTerme) {
+                                    return;
+                                }
+                                f.dernierTerme = terme;
+                                Me.filtreRecherche = terme;
+                                Me.rechargerAvecFiltres();
+                            }
+                        }
+                    }
+                }, {
+                    text: 'Effacer',
+                    handler: function () {
+                        var champ = Me.down('#rechercheInventaire');
+                        if (champ) {
+                            champ.dernierTerme = '';
+                            champ.setValue('');
+                        }
+                        Me.filtreRecherche = '';
+                        Me.rechargerAvecFiltres();
+                    }
+                }, '-', {
                     xtype: 'combobox',
                     name: 'str_TYPE',
                     margins: '0 0 0 10',
@@ -443,14 +486,18 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
      * pas faire oublier le statut deja selectionne, et inversement. */
     filtreStatut: '',
     filtreZone: '',
+    filtreRecherche: '',
     rechargerAvecFiltres: function () {
-        var url = '../webservices/stockmanagement/inventaire/ws_data.jsp';
+        var url = url_services_data_inventaire;
         var params = [];
         if (this.filtreStatut) {
             params.push('str_TYPE=' + encodeURIComponent(this.filtreStatut));
         }
         if (this.filtreZone && this.filtreZone !== 'ALL') {
             params.push('str_ZONE=' + encodeURIComponent(this.filtreZone));
+        }
+        if (this.filtreRecherche) {
+            params.push('search_value=' + encodeURIComponent(this.filtreRecherche));
         }
         this.getStore().getProxy().url = params.length ? url + '?' + params.join('&') : url;
         this.getStore().loadPage(1);
@@ -505,9 +552,10 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                         }
                         var rec = aSupprimer[index];
                         Ext.Ajax.request({
-                            url: url_services_transaction_inventaire + 'delete',
+                            url: url_services_rest_inventaire + '/supprimer',
+                            method: 'POST',
                             timeout: 1800000,
-                            params: {lg_INVENTAIRE_ID: rec.get('lg_INVENTAIRE_ID')},
+                            jsonData: {lg_INVENTAIRE_ID: rec.get('lg_INVENTAIRE_ID')},
                             callback: function (opts, ok, response) {
                                 var object = ok ? Ext.JSON.decode(response.responseText, true) : null;
                                 if (ok && object && object.code_statut != "0") {
@@ -707,9 +755,12 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                         var rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_inventaire + 'delete',
+                            // Suppression par le service REST, en remplacement du mode delete
+                            // de la JSP. La reponse garde les memes champs.
+                            url: url_services_rest_inventaire + '/supprimer',
+                            method: 'POST',
                             timeout: 1800000,
-                            params: {
+                            jsonData: {
                                 lg_INVENTAIRE_ID: rec.get('lg_INVENTAIRE_ID')
                             },
                             success: function(response)
