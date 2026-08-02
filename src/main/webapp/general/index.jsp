@@ -81,7 +81,12 @@
         <!-- </x-bootstrap> -->
 
         <script type="text/javascript" src="../resources/boostrap/bb/js/jquery.min.js"></script>
-        <script type="text/javascript" src="include-ext.js"></script>
+         <%-- ExtJS est deja charge par ext/ext-all.js ci-dessus. Ne pas charger include-ext.js ici :
+             ce helper de developpement tente d'injecter un theme dont l'URL n'est pas definie et
+             provoque une requete parasite vers /prestige/general/undefined. 
+         <script type="text/javascript" src="include-ext.js"></script>
+         --%>
+
         <script type="text/javascript" src="../resources/js/modernizr-2.6.2.min.js"></script>
         <script src="ext/locale/ext-lang-fr.js" type="text/javascript"></script>
         <script src="app.js"></script>

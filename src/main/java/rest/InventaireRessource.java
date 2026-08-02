@@ -151,6 +151,36 @@ public class InventaireRessource {
     }
 
     /**
+     * Indique si l'utilisateur a le droit de voir le stock machine sur les editions.
+     *
+     * <p>
+     * C'est le meme privilege que celui qui pilote la case "Afficher stock" de la fiche. La liste des inventaires s'en
+     * sert pour ne proposer le choix qu'a ceux qui y ont droit : les autres impriment sans stock, sans qu'on leur pose
+     * une question dont la reponse serait ignoree.
+     */
+    @GET
+    @Path("privilege-stock")
+    public Response privilegeStock() {
+        TUser user = currentUser();
+        if (user == null) {
+            return deconnecte();
+        }
+        dataManager odm = new dataManager();
+        odm.initEntityManager();
+        try {
+            boolean autorise = new privilege(odm, user)
+                    .isColonneStockMachineIsAuthorize(commonparameter.P_SHOW_INVENTAIRE);
+            return Response.ok().entity(new JSONObject().put("authorize", autorise).toString()).build();
+        } catch (Exception e) {
+            // En cas de doute on refuse : mieux vaut ne pas proposer le stock que l'exposer a tort.
+            LOG.log(Level.WARNING, "privilegeStock", e);
+            return Response.ok().entity(new JSONObject().put("authorize", false).toString()).build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
      * Valeurs proposees par les filtres de la fiche d'inventaire : remplace les pages
      * configmanagement/*_/ws_data_inventaire.jsp et sm_user/utilisateur/ws_data.jsp.
      *
@@ -532,7 +562,9 @@ public class InventaireRessource {
         json.put("str_STATUT", libelleStatut);
         json.put("etat", inv.getStrSTATUT());
         json.put("str_TYPE", inv.getStrTYPE());
-        json.put("dt_CREATED", cle.DateToString(inv.getDtCREATED(), cle.formatterShort));
+        // Date ET heure : deux inventaires du meme jour ne se distinguaient pas dans la liste.
+        json.put("dt_CREATED",
+                cle.DateToString(inv.getDtCREATED(), new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm")));
         json.put("dt_UPDATED", cle.DateToString(inv.getDtUPDATED(), cle.formatterShort));
         return json;
     }
@@ -737,8 +769,32 @@ public class InventaireRessource {
     @Produces("application/vnd.ms-excel")
     public Response exportExcel(@PathParam("id") String id) throws Exception {
         byte[] data = inventaireService.exportInventaireExcel(id);
-        return Response.ok(data)
-                .header("Content-Disposition", "attachment; filename=\"produits_inventaire_" + id + ".xls\"").build();
+        // Nom du fichier : libelle de l'inventaire et horodatage, plutot que son identifiant
+        // technique, illisible et sans indication du moment de l'export.
+        String nom = "produits_inventaires_" + libellePourFichier(id) + "_"
+                + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("ddMMyyyy_HHmmss"))
+                + ".xls";
+        return Response.ok(data).header("Content-Disposition", "attachment; filename=\"" + nom + "\"").build();
+    }
+
+    /** Libelle d'un inventaire ramene a un nom de fichier : sans accent, sans espace ni ponctuation. */
+    private String libellePourFichier(String inventaireId) {
+        String libelle = "";
+        dataManager odm = new dataManager();
+        odm.initEntityManager();
+        try {
+            TInventaire inv = odm.getEm().find(TInventaire.class, inventaireId);
+            if (inv != null && inv.getStrNAME() != null) {
+                libelle = inv.getStrNAME();
+            }
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "libellePourFichier", e);
+        } finally {
+            odm.closeEntityManager();
+        }
+        libelle = java.text.Normalizer.normalize(libelle, java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+                .replaceAll("[^A-Za-z0-9]+", "_").replaceAll("^_+|_+$", "");
+        return libelle.length() > 60 ? libelle.substring(0, 60) : libelle;
     }
 
     @POST
