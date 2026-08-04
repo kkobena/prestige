@@ -158,7 +158,7 @@
     parameters.put("P_FOOTER_RC", P_FOOTER_RC);
 
     TGroupeTierspayant g = controller.findById(lg_GROUPE_ID);
-    TGroupeFactures gp = controller.getgroupeFactureByCodeFacture(CODEFACTURE);
+    TGroupeFactures gp = controller.getgroupeFactureByCodeFacture(CODEFACTURE, g.getLgGROUPEID());
     String footer = "";
     Integer AMOUTGRP = controller.groupeTiersPayantAmount(g.getLgGROUPEID(), CODEFACTURE);
     String P_H_CLT_INFOS = "PERIODE DU " + date.formatterShort.format(gp.getDtDEBUTFACTURE()) + " AU " + date.formatterShort.format(gp.getDtFINFACTURE());

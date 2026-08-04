@@ -1,17 +1,17 @@
 /* global Ext */
 
 var url_services_data_type_facture = '../webservices/sm_user/typefacture/ws_data.jsp';
-var url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=';
+var url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=';
 
-url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp';
+url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/assiette';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 
 var url_services_data_type_tierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
 var url_services_data_nature_vente_dovente = '../webservices/configmanagement/naturevente/ws_data.jsp';
-var url_services_data_modereglement_dovente = '../webservices/sm_user/modereglement/ws_data.jsp';
+var url_services_data_modereglement_dovente = '../api/v1/reglement-facture/modes-reglement';
 
-var url_detail_bordereau = '../webservices/sm_user/reglement/ws_data_reglement_by_bordereau.jsp?lg_dossier_reglement_id=';
-var url_detail_dossier = '../webservices/sm_user/reglement/ws_data_reglement_by_bordereau.jsp?lg_dossier_reglement_id=';
+var url_detail_bordereau = '../api/v1/reglement-facture/details-bordereau?lg_dossier_reglement_id=';
+var url_detail_dossier = '../api/v1/reglement-facture/details-bordereau?lg_dossier_reglement_id=';
 
 var odatasource;
 var my_url;
@@ -104,9 +104,9 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
         titre = this.getTitre();
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
         myAppController = Ext.create('testextjs.controller.App', {});
-        url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+        url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
 
-        my_url = '../webservices/sm_user/modereglement/ws_data.jsp';
+        my_url = '../api/v1/reglement-facture/modes-reglement';
 
         var store_modereglement = LaborexWorkFlow.BuildStore('testextjs.model.ModeReglement', itemsPerPage, url_services_data_modereglement_dovente);
 
@@ -134,7 +134,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/sm_user/reglement/ws_mode_reglemnt.jsp',
+                url: '../api/v1/reglement-facture/types-reglement',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -1156,7 +1156,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
 
         myAppController.ShowWaitingProcess();
         Ext.Ajax.request({
-            url: '../webservices/sm_user/reglement/ws_transaction.jsp',
+            url: '../api/v1/reglement-facture/do-reglement',
             timeout: 24000000,
             params: {
                 mode: 'doReglement',
@@ -1348,7 +1348,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
             myAppController.ShowWaitingProcess();
 
             Ext.Ajax.request({
-                url: '../webservices/sm_user/reglement/ws_transaction.jsp',
+                url: '../api/v1/reglement-facture/do-reglement',
                 timeout: 24000000,
                 params: {
                     mode: 'doReglement',

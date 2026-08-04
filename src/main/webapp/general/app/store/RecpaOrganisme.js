@@ -11,7 +11,7 @@ Ext.define('testextjs.store.RecpaOrganisme', {
     pageSize:20,  
     proxy: {
         type: 'ajax',
-        url: '../webservices/sm_user/RecapOrganisme/ws_data.jsp',
+        url: '../api/v1/recap-organisme/list',
         reader: {
             type: 'json',
             root: 'data',

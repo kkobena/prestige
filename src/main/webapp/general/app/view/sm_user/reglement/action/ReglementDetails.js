@@ -1,12 +1,12 @@
 
 /* global Ext */
 
-url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp';
+url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/assiette';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 
 
 
-var url_detail_ = '../webservices/sm_user/reglement/ws_details_reglement.jsp';
+var url_detail_ = '../api/v1/reglement-facture/details';
 
 
 var odatasource;

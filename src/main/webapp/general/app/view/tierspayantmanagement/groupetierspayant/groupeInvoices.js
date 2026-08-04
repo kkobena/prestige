@@ -35,13 +35,17 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
     initComponent: function () {
         var mydataSource = this.getOdatasource();
         codeFact = mydataSource.CODEGROUPE;
+        // CODEGROUPE n'est ajoute que si l'ecran est ouvert depuis une facture precise :
+        // depuis le menu, odatasource est vide et l'URL n'envoie plus CODEGROUPE=undefined
+        var urlInvoices = '../api/v1/groupe-tierspayant/invoices'
+                + (codeFact !== undefined && codeFact !== null && codeFact !== '' ? '?CODEGROUPE=' + codeFact : '');
         var groupesInvoice = new Ext.data.Store({
             model: 'testextjs.model.groupFactureModel',
             pageSize: 20,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_groupeInvoices.jsp?CODEGROUPE=' + codeFact,
+                url: urlInvoices,
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -57,7 +61,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_data.jsp',
+                url: '../api/v1/groupe-tierspayant/list',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -166,6 +170,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
 
                                         new testextjs.view.tierspayantmanagement.groupetierspayant.action.facturegroupe({
                                             odatasource: rec.get('CODEFACTURE'),
+                                            ogroupe: rec.get('lg_GROUPE_ID'),
                                             parentview: this,
                                             titre: "Les factures du groupe [" + rec.get('str_LIB') + "]"
                                         });
@@ -251,7 +256,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                         }
                                         testextjs.app.getController('App').ShowWaitingProcess();
                                         Ext.Ajax.request({
-                                            url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                            url: '../api/v1/groupe-tierspayant/transaction',
                                             params: {
                                                 mode: 7,
                                                 CODEFACTURE: rec.get('CODEFACTURE'),
@@ -367,7 +372,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                         },
                         select: function (field, e) {
                             var mystore = Ext.getCmp('invoiceGRID').getStore();
-                            mystore.getProxy().url = "../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
+                            mystore.getProxy().url = "../api/v1/groupe-tierspayant/invoices";
 
                             mystore.load(
                                     {params: {
@@ -405,7 +410,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                     combox = '';
                                 }
                                 const mystore = Ext.getCmp('invoiceGRID').getStore();
-                                mystore.getProxy().url = "../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
+                                mystore.getProxy().url = "../api/v1/groupe-tierspayant/invoices";
 
                                 mystore.load({params: {
                                         lg_GROUPE_ID: combox,
@@ -439,7 +444,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             }
                             codeFact = '';
                             var mystore = Ext.getCmp('invoiceGRID').getStore();
-                            mystore.getProxy().url = "../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
+                            mystore.getProxy().url = "../api/v1/groupe-tierspayant/invoices";
                             mystore.load({params: {
                                     lg_GROUPE_ID: combox,
                                     'dt_end': Ext.getCmp('dt_end').getSubmitValue(),

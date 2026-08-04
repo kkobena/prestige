@@ -41,7 +41,7 @@ Ext.define('testextjs.view.sm_user.reglement.ReglementManager', {
     ],
     frame: true,
     initComponent: function () {
-        var url_services_data_reglement = '../webservices/sm_user/reglement/ws_data.jsp';
+        var url_services_data_reglement = '../api/v1/reglement-facture/list';
         var url_services_data_reglement_transact = '../webservices/sm_user/diffclient/ws_transaction.jsp?mode=';
 
         var searchstore = Ext.create('testextjs.store.Statistics.TiersPayans');

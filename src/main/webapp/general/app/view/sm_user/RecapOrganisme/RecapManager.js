@@ -12,7 +12,7 @@ Ext.define('testextjs.view.sm_user.RecapOrganisme.RecapManager', {
     requires: [
         
     ],
-    title: 'Le r&eacute;ecapitulatif par compte d’organisme',
+    title: 'Le r&eacute;capitulatif par compte d’organisme',
     frame: true,
     initComponent: function () {
         var itemsPerPage = 20;
@@ -143,14 +143,22 @@ Ext.define('testextjs.view.sm_user.RecapOrganisme.RecapManager', {
                                     flex: 1.5,
                                     store: Ext.create('Ext.data.Store', {
                                         fields: [
-                                            {name: 'lg_TIERS_PAYANT_ID', type: 'string'},
-                                            {name: 'str_FULLNAME', type: 'string'}
+                                            // l'API REST renvoie lgTIERSPAYANTID / strFULLNAME
+                                            {name: 'lg_TIERS_PAYANT_ID', type: 'string', mapping: function (data) {
+                                                    return data.lgTIERSPAYANTID !== undefined ? data.lgTIERSPAYANTID : data.lg_TIERS_PAYANT_ID;
+                                                }},
+                                            {name: 'str_FULLNAME', type: 'string', mapping: function (data) {
+                                                    return data.strFULLNAME !== undefined ? data.strFULLNAME : data.str_FULLNAME;
+                                                }}
                                         ],
-                                        autoLoad: true,
+                                        // pas d'autoLoad : le combo distant charge lui-meme la liste a l'ouverture
+                                        // du menu deroulant ; l'autoLoad ne faisait que doubler la requete
+                                        // tiers-payants a l'affichage de l'ecran
+                                        autoLoad: false,
                                         pageSize: 10,
                                         proxy: {
                                             type: 'ajax',
-                                            url: '../webservices/tierspayantmanagement/tierspayant/ws_data_search.jsp',
+                                            url: '../api/v1/client/tiers-payants',
                                             reader: {
                                                 type: 'json',
                                                 root: 'data',

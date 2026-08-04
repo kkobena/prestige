@@ -56,6 +56,18 @@ public class tierspayantManagement extends bllBase {
         this.checkDatamanager();
     }
 
+    /** Modes de tri des lignes lors de la generation de facture d'un tiers payant. */
+    public static final String MODE_TRI_FACTURE_ALPHABETIQUE = "ALPHABETIQUE";
+    public static final String MODE_TRI_FACTURE_DATE_BON = "DATE_BON";
+
+    /** Toute valeur inconnue retombe sur le tri historique par nom de client (ALPHABETIQUE). */
+    public static String normalizeModeTriFacture(String modeTri) {
+        if (modeTri != null && MODE_TRI_FACTURE_DATE_BON.equalsIgnoreCase(modeTri.trim())) {
+            return MODE_TRI_FACTURE_DATE_BON;
+        }
+        return MODE_TRI_FACTURE_ALPHABETIQUE;
+    }
+
     public boolean create(String str_CODE_ORGANISME, String str_NAME, String str_FULLNAME, String str_ADRESSE,
             String str_MOBILE, String str_TELEPHONE, String str_MAIL, double dbl_PLAFOND_CREDIT,
             double dbl_TAUX_REMBOURSEMENT, String str_NUMERO_CAISSE_OFFICIEL, String str_CENTRE_PAYEUR,
@@ -69,7 +81,7 @@ public class tierspayantManagement extends bllBase {
             String lg_RISQUE_ID, double dbl_CAUTION, double dbl_QUOTA_CONSO_MENSUELLE, int dbl_SOLDE,
             boolean bool_IsACCOUNT, TSequencier OTSequencier, String str_REGISTRE_COMMERCE, String str_CODE_OFFICINE,
             String str_COMPTE_CONTRIBUABLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact,
-            boolean groupingByTaux, boolean cmu, int caution) {
+            boolean groupingByTaux, boolean cmu, int caution, String str_MODE_TRI_FACTURE) {
         boolean result = false;
         String str_PHOTO = "default.png";
         try {
@@ -187,6 +199,7 @@ public class tierspayantManagement extends bllBase {
                 OTTiersPayant.setLgRISQUEID(OTRisque);
             }
 
+            OTTiersPayant.setStrMODETRIFACTURE(normalizeModeTriFacture(str_MODE_TRI_FACTURE));
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtCREATED(new Date());
 
@@ -220,7 +233,7 @@ public class tierspayantManagement extends bllBase {
             String lg_VILLE_ID, String lg_TYPE_TIERS_PAYANT_ID, String lg_TYPE_CONTRAT_ID, String lg_REGIMECAISSE_ID,
             String lg_RISQUE_ID, String str_CODE_OFFICINE, String str_REGISTRE_COMMERCE, String str_COMPTE_CONTRIBUABLE,
             double dbl_QUOTA_CONSO_MENSUELLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons,
-            Integer montantFact, boolean groupingByTaux, boolean cmu, int caution) {
+            Integer montantFact, boolean groupingByTaux, boolean cmu, int caution, String str_MODE_TRI_FACTURE) {
         TTiersPayant OTTiersPayant = null, OTTiersPayantOld = null;
         TCompteClient OTCompteClient = null;
         try {
@@ -341,6 +354,7 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setStrCODEDOCCOMPTOIRE(str_CODE_DOC_COMPTOIRE);
             OTTiersPayant.setBoolENABLED(bool_ENABLED);
             OTTiersPayant.setGroupingByTaux(groupingByTaux);
+            OTTiersPayant.setStrMODETRIFACTURE(normalizeModeTriFacture(str_MODE_TRI_FACTURE));
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtUPDATED(new Date());
 
@@ -1823,8 +1837,8 @@ public class tierspayantManagement extends bllBase {
                         tabString[4].trim(), tabString[4].trim(), "", 0, 0, "", "", "", 0, false, "46700000000", false,
                         0, "", 0, 0, 0, "1", Integer.parseInt(tabString[5].trim()), 0, 0, "", 0, 0, "", false, "1",
                         (tabString[6].trim().equalsIgnoreCase("X") ? "2" : "1"), "", "", "55181642844215217016", 0, 0,
-                        0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false, false,
-                        0)) {
+                        0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false, false, 0,
+                        MODE_TRI_FACTURE_ALPHABETIQUE)) {
                     count++;
                 }
 

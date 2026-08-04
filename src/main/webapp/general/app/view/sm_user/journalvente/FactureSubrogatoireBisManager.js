@@ -79,7 +79,9 @@ requires: [
                         }
                     ],
             pageSize: itemsPerPage,
-            autoLoad: true,
+            // pas d'autoLoad : le controller (doInitStore -> doSearch) charge la grille avec les dates,
+            // l'autoLoad ne faisait que doubler la requete au clic sur le menu
+            autoLoad: false,
             groupField: 'tiersPayantId',
             proxy: {
                 type: 'ajax',

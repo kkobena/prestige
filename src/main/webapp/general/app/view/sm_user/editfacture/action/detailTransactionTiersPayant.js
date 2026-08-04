@@ -76,8 +76,8 @@ Ext.define('testextjs.view.sm_user.editfacture.action.detailTransactionTiersPaya
 
 
         var itemsPerPage = 20;
-        var url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_facture.jsp';
-        var url_services_data_detailsvente = '../webservices/sm_user/facturation/ws_data_details_vente.jsp?';
+        var url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/detail-facture';
+        var url_services_data_detailsvente = '../api/v1/facture-tiers-payant/details-vente?';
 
         var store_details = new Ext.data.Store({
             model: 'testextjs.model.DetailsVente',
@@ -495,7 +495,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.detailTransactionTiersPaya
         var internal_url = "";
 
         Ext.Ajax.request({
-            url: '../webservices/sm_user/facturation/ws_data_details_vente.jsp',
+            url: '../api/v1/facture-tiers-payant/details-vente',
             params: {
                 lg_PREENREGISTREMENT_ID: lg_PREENREGISTREMENT_ID,
                 str_STATUT: str_STATUT

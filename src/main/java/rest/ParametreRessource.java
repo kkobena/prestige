@@ -74,6 +74,32 @@ public class ParametreRessource {
         return Response.ok().entity(ResultFactory.getSuccessResult(value, 1)).build();
     }
 
+    /**
+     * Detail d'un parametre par cle : MEMES cles JSON que la JSP historique sm_user/parameter/ws_data.jsp (utilisee par
+     * le controller LaborexWorkFlow, ex. KEY_ACTIVATE_CONTROLE_VENTE_USER).
+     */
+    @GET
+    @Path("detail")
+    public Response detail(@DefaultValue("") @QueryParam("str_KEY") String strKey) {
+        dataManager odm = new dataManager();
+        String key = strKey, value = "", description = "";
+        odm.initEntityManager();
+        TparameterManager manager = new TparameterManager(odm);
+        try {
+            TParameters parametre = manager.getParameter(strKey);
+            key = parametre.getStrKEY();
+            value = parametre.getStrVALUE();
+            description = parametre.getStrDESCRIPTION();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "detail parametre " + strKey, e);
+        } finally {
+            odm.closeEntityManager();
+        }
+        return Response.ok().entity(new JSONObject().put("success", StringUtils.defaultString(manager.getMessage()))
+                .put("str_KEY", StringUtils.defaultString(key)).put("str_VALUE", StringUtils.defaultString(value))
+                .put("str_DESCRIPTION", StringUtils.defaultString(description)).toString()).build();
+    }
+
     private TUser currentUser() {
         return (TUser) servletRequest.getSession().getAttribute(Constant.AIRTIME_USER);
     }
@@ -170,6 +196,56 @@ public class ParametreRessource {
                     .put("errors", StringUtils.defaultString(manager.getDetailmessage())).toString()).build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "update parametre", e);
+            return Response.ok().entity(new JSONObject().put("success", commonparameter.PROCESS_FAILED)
+                    .put("errors", "Impossible de mettre à jour le paramètre").toString()).build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Bascule d'un parametre booleen (interrupteur de l'ecran Gestion des parametrages) : ne modifie QUE str_VALUE (la
+     * description existante est conservee), avec la MEME regle d'exclusivite SEMOIS_ABC / SEMOIS_PAR_PRODUIT que
+     * l'endpoint update. Refuse toute valeur autre que 0 ou 1.
+     */
+    @POST
+    @Path("toggle")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response toggle(@FormParam("str_KEY") String key, @FormParam("str_VALUE") String value) {
+        if (currentUser() == null) {
+            return deconnecte();
+        }
+        String v = value != null ? value.trim() : "";
+        if (!"0".equals(v) && !"1".equals(v)) {
+            return Response.ok().entity(new JSONObject().put("success", commonparameter.PROCESS_FAILED)
+                    .put("errors", "Valeur non booléenne").toString()).build();
+        }
+        dataManager odm = new dataManager();
+        odm.initEntityManager();
+        try {
+            TparameterManager manager = new TparameterManager(odm);
+            TParameters existant = manager.getParameter(key);
+            if (existant == null) {
+                return Response.ok().entity(new JSONObject().put("success", commonparameter.PROCESS_FAILED)
+                        .put("errors", "Paramètre introuvable").toString()).build();
+            }
+            manager.updateParameter(key, v, existant.getStrDESCRIPTION());
+            // Exclusivite SEMOIS_ABC / SEMOIS_PAR_PRODUIT : si l'un passe a 1, l'autre est force a 0
+            if ("SEMOIS_ABC".equals(key) && "1".equals(v)) {
+                TParameters autre = manager.getParameter("SEMOIS_PAR_PRODUIT");
+                if (autre != null) {
+                    manager.updateParameter("SEMOIS_PAR_PRODUIT", "0", autre.getStrDESCRIPTION());
+                }
+            } else if ("SEMOIS_PAR_PRODUIT".equals(key) && "1".equals(v)) {
+                TParameters autre = manager.getParameter("SEMOIS_ABC");
+                if (autre != null) {
+                    manager.updateParameter("SEMOIS_ABC", "0", autre.getStrDESCRIPTION());
+                }
+            }
+            return Response.ok().entity(new JSONObject().put("success", manager.getMessage())
+                    .put("errors", StringUtils.defaultString(manager.getDetailmessage())).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "toggle parametre", e);
             return Response.ok().entity(new JSONObject().put("success", commonparameter.PROCESS_FAILED)
                     .put("errors", "Impossible de mettre à jour le paramètre").toString()).build();
         } finally {

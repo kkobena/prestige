@@ -1,4 +1,4 @@
-var url_services_data_factureententeedition = '../webservices/sm_user/journalvente/ws_facture_ententeedition.jsp';
+var url_services_data_factureententeedition = '../api/v1/dossiers-attente-edition/list';
 var url_services_data_factureententeedition_generate_pdf = '../webservices/sm_user/journalvente/ws_generate_facture_attente_edition.jsp';
 var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 

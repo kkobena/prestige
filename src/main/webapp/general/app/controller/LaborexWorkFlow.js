@@ -38,7 +38,7 @@ Ext.define('testextjs.controller.LaborexWorkFlow', {
     },
     getKEY_ACTIVATE_CONTROLE_VENTE_USER: function () {
         Ext.Ajax.request({
-            url: '../webservices/sm_user/parameter/ws_data.jsp?str_KEY=KEY_ACTIVATE_CONTROLE_VENTE_USER',
+            url: '../api/v1/app-params/detail?str_KEY=KEY_ACTIVATE_CONTROLE_VENTE_USER',
             success: Me_Workflow.processKeyActivateControleVenteUSerSucces,
             failure: Me_Workflow.processKeyActivateControleVenteUSerFailure
         });

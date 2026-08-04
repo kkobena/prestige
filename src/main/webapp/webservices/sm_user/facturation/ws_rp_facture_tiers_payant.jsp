@@ -86,6 +86,14 @@
     TFacture OFacture = obllBase.getOdataManager().getEm().find(TFacture.class, lg_FACTURE_ID);
     TTiersPayant OTiersPayant = obllBase.getOdataManager().getEm().find(TTiersPayant.class, OFacture.getStrCUSTOMER());
     TTypeMvtCaisse OTypeMvtCaisse = obllBase.getOdataManager().getEm().find(TTypeMvtCaisse.class, OFacture.getLgTYPEFACTUREID().getLgTYPEFACTUREID());
+    // Modele de facture dynamique (createur de modeles) : si le tiers payant y est rattache,
+    // l'edition est prise en charge par l'API REST dediee. Les modeles Jasper historiques
+    // restent inchanges pour les autres tiers payants. Le parametre modeId (choix explicite
+    // d'un modele Jasper) conserve la priorite sur le modele dynamique.
+    if (request.getParameter("modeId") == null && OTiersPayant.getModelFactureDynamiqueId() != null) {
+        response.sendRedirect(request.getContextPath() + "/api/v1/model-facture-dynamique/pdf/" + lg_FACTURE_ID);
+        return;
+    }
     TModelFacture modelFacture = OTiersPayant.getLgMODELFACTUREID();
     String codeModelFacture = modelFacture.getLgMODELFACTUREID();
     TParameters recapParam = null;

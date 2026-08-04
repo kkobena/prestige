@@ -1814,10 +1814,11 @@ public class GroupeTierspayantController implements Serializable {
     // TGroupeFactures
 
     public TGroupeTierspayant getGroupByCODEFACT(String codeFacture) {
-        List<TGroupeTierspayant> groupes = getEntityManager()
-                .createQuery("SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ",
-                        TGroupeTierspayant.class)
-                .setParameter(1, codeFacture).setMaxResults(1).getResultList();
+        // Tri par date de creation decroissante pour rendre la recherche par code seul deterministe
+        // (des codes facture peuvent se repeter d'une annee a l'autre).
+        List<TGroupeTierspayant> groupes = getEntityManager().createQuery(
+                "SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ORDER BY o.dtCREATED DESC",
+                TGroupeTierspayant.class).setParameter(1, codeFacture).setMaxResults(1).getResultList();
         return groupes.isEmpty() ? null : groupes.get(0);
 
     }
@@ -1827,9 +1828,24 @@ public class GroupeTierspayantController implements Serializable {
     }
 
     public TGroupeFactures getgroupeFactureByCodeFacture(String codeFacture) {
+        // Tri par date de creation decroissante pour rendre la recherche par code seul deterministe
+        // (des codes facture peuvent se repeter d'une annee a l'autre).
         List<TGroupeFactures> groupeFactures = getEntityManager()
-                .createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ", TGroupeFactures.class)
+                .createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ORDER BY o.dtCREATED DESC",
+                        TGroupeFactures.class)
                 .setParameter(1, codeFacture).setMaxResults(1).getResultList();
+        return groupeFactures.isEmpty() ? null : groupeFactures.get(0);
+
+    }
+
+    public TGroupeFactures getgroupeFactureByCodeFacture(String codeFacture, Integer idGroupe) {
+        if (idGroupe == null || idGroupe <= 0) {
+            return getgroupeFactureByCodeFacture(codeFacture);
+        }
+        List<TGroupeFactures> groupeFactures = getEntityManager().createQuery(
+                "SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 AND o.lgGROUPEID.lgGROUPEID=?2 ORDER BY o.dtCREATED DESC",
+                TGroupeFactures.class).setParameter(1, codeFacture).setParameter(2, idGroupe).setMaxResults(1)
+                .getResultList();
         return groupeFactures.isEmpty() ? null : groupeFactures.get(0);
 
     }
@@ -2013,6 +2029,15 @@ public class GroupeTierspayantController implements Serializable {
 
     public List<TFacture> getGroupeInvoiceDetails(boolean all, String search, String lgTP, String codeFacture,
             int start, int limit) {
+        return getGroupeInvoiceDetails(all, search, lgTP, codeFacture, null, start, limit);
+    }
+
+    /**
+     * Meme recherche que la surcharge historique, avec en plus le filtre optionnel sur le groupe tiers payant (idGroupe
+     * > 0) pour eviter les collisions de codes facture reutilises d'une annee a l'autre.
+     */
+    public List<TFacture> getGroupeInvoiceDetails(boolean all, String search, String lgTP, String codeFacture,
+            Integer idGroupe, int start, int limit) {
 
         EntityManager em = null;
         try {
@@ -2033,6 +2058,9 @@ public class GroupeTierspayantController implements Serializable {
                 criteria = cb.and(criteria, cb.or(cb.like(root.get("strCODEFACTURE"), search + "%")));
             }
             criteria = cb.and(criteria, cb.equal(pr.get("strCODEFACTURE"), codeFacture));
+            if (idGroupe != null && idGroupe > 0) {
+                criteria = cb.and(criteria, cb.equal(pr.get("lgGROUPEID").get("lgGROUPEID"), idGroupe));
+            }
 
             cq.orderBy(cb.asc(pr.get("strCODEFACTURE")));
             cq.where(criteria);
@@ -2054,6 +2082,10 @@ public class GroupeTierspayantController implements Serializable {
     }
 
     public int getGroupeInvoiceDetails(String search, String lgTP, String codeFacture) {
+        return getGroupeInvoiceDetails(search, lgTP, codeFacture, null);
+    }
+
+    public int getGroupeInvoiceDetails(String search, String lgTP, String codeFacture, Integer idGroupe) {
 
         EntityManager em = null;
         try {
@@ -2075,6 +2107,9 @@ public class GroupeTierspayantController implements Serializable {
                 criteria = cb.and(criteria, cb.or(cb.like(root.get("strCODEFACTURE"), search + "%")));
             }
             criteria = cb.and(criteria, cb.equal(pr.get("strCODEFACTURE"), codeFacture));
+            if (idGroupe != null && idGroupe > 0) {
+                criteria = cb.and(criteria, cb.equal(pr.get("lgGROUPEID").get("lgGROUPEID"), idGroupe));
+            }
 
             cq.select(cb.count(root));
             cq.where(criteria);

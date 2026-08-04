@@ -168,6 +168,8 @@ public class TiersPayantServiceImpl implements TiersPayantService {
             json.put("str_REGISTRE_COMMERCE",
                     tTiersPayant.getStrREGISTRECOMMERCE() != null ? tTiersPayant.getStrREGISTRECOMMERCE() : "");
             json.put("groupingByTaux", tTiersPayant.getGroupingByTaux());
+            json.put("str_MODE_TRI_FACTURE",
+                    tTiersPayant.getStrMODETRIFACTURE() != null ? tTiersPayant.getStrMODETRIFACTURE() : "ALPHABETIQUE");
             json.put("str_STATUT", tTiersPayant.getStrSTATUT());
             json.put("b_IsAbsolute", tTiersPayant.getBIsAbsolute());
             json.put("db_CONSOMMATION_MENSUELLE", encoursParTp.getOrDefault(tTiersPayant.getLgTIERSPAYANTID(), 0));

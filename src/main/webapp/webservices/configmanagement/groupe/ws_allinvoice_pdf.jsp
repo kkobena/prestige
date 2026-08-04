@@ -162,7 +162,8 @@
 
 
         TGroupeTierspayant g = controller.getGroupByCODEFACT(codeFac);
-        TGroupeFactures gp = controller.getgroupeFactureByCodeFacture(codeFac);
+        TGroupeFactures gp = g != null ? controller.getgroupeFactureByCodeFacture(codeFac, g.getLgGROUPEID())
+                : controller.getgroupeFactureByCodeFacture(codeFac);
         if (g == null || gp == null) {
             continue;
         }

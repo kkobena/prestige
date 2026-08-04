@@ -204,6 +204,7 @@ Ext.define('testextjs.model.TiersPayant', {
             type: 'int'
         }, {name: 'BTNDELETE', type: 'boolean'}
         , {name: 'groupingByTaux', type: 'boolean'},
+        {name: 'str_MODE_TRI_FACTURE', type: 'string'},
         {
             name: 'str_CODE_OFFICINE',
             type: 'string'

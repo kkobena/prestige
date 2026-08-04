@@ -2,8 +2,8 @@
 /* global Ext, LaborexWorkFlow */
 //detailfacturevente
 var url_services_data_type_facture = '../webservices/sm_user/typefacture/ws_data.jsp';
-var url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=';
-var url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp';
+var url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=';
+var url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/assiette';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 var url_services_data_fournisseur = '../webservices/configmanagement/grossiste/ws_data.jsp';
 var url_services_data_type_tierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
@@ -63,7 +63,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
     xtype: 'addeditfacture',
     id: 'addeditfactureID',
     frame: true,
-    title: 'Editer une facture',
+    title: 'G&eacute;n&eacute;rer une facture',
     bodyPadding: 5,
     layout: 'column',
     initComponent: function () {
@@ -79,14 +79,14 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         ref = this.getNameintern();
         LaborexWorkFlow_facture = Ext.create('testextjs.controller.LaborexWorkFlow', {});
         myAppController = Ext.create('testextjs.controller.App', {});
-        url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+        url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
         var groupesStore = new Ext.data.Store({
             model: 'testextjs.model.GroupeModel',
             pageSize: 20, 
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/facture_data.jsp',
+                url: '../api/v1/groupe-tierspayant/facture-data',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -106,11 +106,10 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             data: [
                 {"value": "1", "name": "Sélection massive"},
                 {"value": "2", "name": "Type tiers payant"},
-                {"value": "3", "name": "Code de regroupement"},
                 {"value": "5", "name": "Par tiers payant"},
                 {"value": "4", "name": "Tous les tiers payant"},
                 {"value": "6", "name": "Par groupes et compagnies d'assurances"},
-                {"value": "7", "name": "Par Sélection de bons"} 
+                {"value": "7", "name": "Par Sélection de bons"}
             ]
         });
 
@@ -290,7 +289,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                             if (grid.columns[4].isVisible()) {
                                                                 grid.columns[4].setVisible(false);
                                                             }
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').hide();
                                                             Ext.getCmp('cmb_fact_GROUPECOMPAGNIES').hide();
                                                             Ext.getCmp('detailfacturevente').getLayout().setActiveItem(0);
                                                             break;
@@ -298,20 +296,8 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                             Ext.getCmp('cmb_TYPE_TIERS_PAYANT').hide();
                                                             Ext.getCmp('cmb_fact_TIERS_PAYANT').hide();
                                                             Ext.getCmp('All').show();
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').hide();
                                                             Ext.getCmp('cmb_fact_GROUPECOMPAGNIES').hide();
                                                             grid.columns[4].setVisible(true);
-                                                            Ext.getCmp('detailfacturevente').getLayout().setActiveItem(0);
-                                                            break;
-                                                        case "3":
-                                                            Ext.getCmp('cmb_TYPE_TIERS_PAYANT').hide();
-                                                            Ext.getCmp('cmb_fact_TIERS_PAYANT').hide();
-                                                            Ext.getCmp('All').hide();
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').show();
-                                                            Ext.getCmp('cmb_fact_GROUPECOMPAGNIES').hide();
-                                                            if (grid.columns[4].isVisible()) {
-                                                                grid.columns[4].setVisible(false);
-                                                            }
                                                             Ext.getCmp('detailfacturevente').getLayout().setActiveItem(0);
                                                             break;
                                                         case "4":
@@ -322,7 +308,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                             if (grid.columns[4].isVisible()) {
                                                                 grid.columns[4].setVisible(false);
                                                             }
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').hide();
                                                             Ext.getCmp('detailfacturevente').getLayout().setActiveItem(0);
                                                             break;
                                                         case "5":
@@ -332,12 +317,10 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                             if (grid.columns[4].isVisible()) {
                                                                 grid.columns[4].setVisible(false);
                                                             }
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').hide();
                                                             Ext.getCmp('cmb_fact_GROUPECOMPAGNIES').hide();
                                                             Ext.getCmp('detailfacturevente').getLayout().setActiveItem(0);
                                                             break;
                                                         case "6":
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').hide();
                                                             Ext.getCmp('cmb_TYPE_TIERS_PAYANT').hide();
                                                             Ext.getCmp('cmb_fact_TIERS_PAYANT').hide();
                                                             Ext.getCmp('All').hide();
@@ -346,7 +329,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                             Ext.getCmp('cmb_fact_GROUPECOMPAGNIES').show();
                                                             break;
                                                         case "7":
-                                                            Ext.getCmp('str_CODE_REGROUPEMENT').hide();
                                                             Ext.getCmp('cmb_TYPE_TIERS_PAYANT').hide();
                                                             Ext.getCmp('cmb_fact_TIERS_PAYANT').clearValue();
                                                             Ext.getCmp('cmb_fact_TIERS_PAYANT').hide();
@@ -565,21 +547,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                 }
                                             }
                                         }, {
-                                            xtype: 'textfield',
-                                            fieldLabel: 'Code regroupement',
-                                            margin: '0 0 0 15',
-                                            id: 'str_CODE_REGROUPEMENT',
-                                            name: 'str_CODE_REGROUPEMENT',
-                                            hidden: true,
-                                            labelWidth: 130,
-                                            width: 300, enableKeyEvents: true,
-                                            listeners: {
-                                                keypress: this.onKeyPress
-                                            }
-
-                                        }, 
-                                        
-                                        {
                                             text: 'Rechercher',
                                             id: 'btn_add',
                                             margins: '0 0 0 15',
@@ -690,7 +657,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                         border: '0',
                                         items: ['->',
                                             {
-                                                text: 'Editer facture',
+                                                text: 'G&eacute;n&eacute;rer facture',
                                                 id: 'btn_create_facture',
                                                 iconCls: 'icon-clear-group',
                                                 scope: this,
@@ -724,7 +691,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                         items: ['->',
 
                                             {
-                                                text: 'Editer facture',
+                                                text: 'G&eacute;n&eacute;rer facture',
                                                 xtype: 'button',
 
                                                 /* iconCls: 'invoice',*/iconCls: 'icon-clear-group',
@@ -888,7 +855,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                         items: ['->',
 
                                             {
-                                                text: 'Editer facture',
+                                                text: 'G&eacute;n&eacute;rer facture',
                                                 xtype: 'button',
 
                                                 /* iconCls: 'invoice',*/iconCls: 'icon-clear-group',
@@ -1480,8 +1447,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         dt_debut = Ext.Date.format(Ext.getCmp('dt_debut').getValue(), 'Y-m-d');
         dt_fin = Ext.Date.format(Ext.getCmp('dt_fin').getValue(), 'Y-m-d');
         var cmMODE_SELECTION = Ext.getCmp('MODE_SELECTION').getValue();
-        var str_CODE_REGROUPEMENT = Ext.getCmp('str_CODE_REGROUPEMENT').getValue(),
-                cmb_fact_TIERS_PAYANT = Ext.getCmp('cmb_fact_TIERS_PAYANT').getValue(),
+        var cmb_fact_TIERS_PAYANT = Ext.getCmp('cmb_fact_TIERS_PAYANT').getValue(),
                 lg_TYPE_TIERS_PAYANT_ID = Ext.getCmp('cmb_TYPE_TIERS_PAYANT').getValue();
         if (lg_TYPE_TIERS_PAYANT_ID === null) {
             lg_TYPE_TIERS_PAYANT_ID = "";
@@ -1496,20 +1462,12 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             cmb_fact_TIERS_PAYANT = "";
 
         }
-        if (cmMODE_SELECTION !== "3") {
-            str_CODE_REGROUPEMENT = "";
-
-        }
-        if (str_CODE_REGROUPEMENT === null) {
-            str_CODE_REGROUPEMENT = "";
-
-        }
         if (cmMODE_SELECTION !== "2") {
             lg_TYPE_TIERS_PAYANT_ID = "";
 
         }
 
-        var url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp?str_CODE_REGROUPEMENT=' + str_CODE_REGROUPEMENT + '&lg_TYPE_TIERS_PAYANT_ID=' + lg_TYPE_TIERS_PAYANT_ID + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin + '&lg_TIERS_PAYANT=' + cmb_fact_TIERS_PAYANT;
+        var url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/assiette?lg_TYPE_TIERS_PAYANT_ID=' + lg_TYPE_TIERS_PAYANT_ID + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin + '&lg_TIERS_PAYANT=' + cmb_fact_TIERS_PAYANT;
         var OGrid = Ext.getCmp('gridpanelID');
         OGrid.getStore().getProxy().url = url_services_data_detail_facture_tiers_payant;
         OGrid.getStore().load();
@@ -1539,7 +1497,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         var dt_debut = Ext.Date.format(Ext.getCmp('dt_debut').getValue(), 'Y-m-d'),
                 dt_fin = Ext.Date.format(Ext.getCmp('dt_fin').getValue(), 'Y-m-d'),
                 MODE_SELECTION = Ext.getCmp('MODE_SELECTION').getValue(),
-                str_CODE_REGROUPEMENT = Ext.getCmp('str_CODE_REGROUPEMENT').getValue(),
                 cmb_fact_TIERS_PAYANT = Ext.getCmp('cmb_fact_TIERS_PAYANT').getValue(),
                 lg_TYPE_TIERS_PAYANT_ID = Ext.getCmp('cmb_TYPE_TIERS_PAYANT').getValue();
         if (cmb_fact_TIERS_PAYANT === null) {
@@ -1549,12 +1506,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             lg_TYPE_TIERS_PAYANT_ID = "";
 
         }
-        if (MODE_SELECTION !== "3") {
-            str_CODE_REGROUPEMENT = "";
-        }
-        if (str_CODE_REGROUPEMENT === null) {
-            str_CODE_REGROUPEMENT = "";
-        }
         if (MODE_SELECTION !== "2") {
             lg_TYPE_TIERS_PAYANT_ID = "";
         }
@@ -1562,7 +1513,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             cmb_fact_TIERS_PAYANT = "";
         }
 
-        url_services_data_detail_transaction = '../webservices/sm_user/facturation/ws_transaction.jsp';
+        url_services_data_detail_transaction = '../api/v1/facture-tiers-payant/transaction';
 
         str_mode = 'create facture tiers';
 
@@ -1594,7 +1545,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                 params: {
                     MODE_SELECTION: all.getValue() ? 'ALL' : 'SELECTED',
                     dt_fin: dt_fin,
-                    str_CODE_REGROUPEMENT: str_CODE_REGROUPEMENT,
                     lg_TYPE_TIERS_PAYANT_ID: lg_TYPE_TIERS_PAYANT_ID,
                     lg_TIERS_PAYANT: cmb_fact_TIERS_PAYANT,
                     uncheckedList: Ext.encode(uncheckedList),
@@ -1615,7 +1565,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
                                     if (choice === 'yes') {
 
-                                        var url = '../webservices/sm_user/facturation/ws_rp_print_all_invoices.jsp?printAll=printAll&CODEREGROUPEMENT=' + str_CODE_REGROUPEMENT;
+                                        var url = '../webservices/sm_user/facturation/ws_rp_print_all_invoices.jsp?printAll=printAll&CODEREGROUPEMENT=';
                                         Me.lunchPrinter(url);
                                         var xtype = "facturemanager";
                                         var alias = 'widget.' + xtype;
@@ -1654,7 +1604,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                 params: {
                     MODE_SELECTION: 'OTHERS',
                     dt_fin: dt_fin,
-                    str_CODE_REGROUPEMENT: str_CODE_REGROUPEMENT,
                     lg_TYPE_TIERS_PAYANT_ID: lg_TYPE_TIERS_PAYANT_ID,
                     lg_TIERS_PAYANT: cmb_fact_TIERS_PAYANT,
                     dt_debut: dt_debut,
@@ -1669,7 +1618,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                 function (choice) {
                                     if (choice === 'yes') {
 
-                                        var url = '../webservices/sm_user/facturation/ws_rp_print_all_invoices.jsp?printAll=printAll&CODEREGROUPEMENT=' + str_CODE_REGROUPEMENT;
+                                        var url = '../webservices/sm_user/facturation/ws_rp_print_all_invoices.jsp?printAll=printAll&CODEREGROUPEMENT=';
                                         Me.lunchPrinter(url);
                                         var xtype = "facturemanager";
                                         var alias = 'widget.' + xtype;
@@ -1685,12 +1634,21 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
                     } else {
                         myAppController.StopWaitingProcess();
+                        // affiche la cause reelle de l'echec (avant : echec silencieux)
+                        Ext.MessageBox.show({
+                            title: 'Avertissement',
+                            width: 420,
+                            msg: (object.errors && object.errors !== 'null')
+                                    ? object.errors : 'La g&eacute;n&eacute;ration des factures a &eacute;chou&eacute;',
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.WARNING
+                        });
                     }
 
                     store.load();
                 }, failure: function (response, options) {
-
-//                    store.rejectChanges();
+                    myAppController.StopWaitingProcess();
+                    Ext.MessageBox.alert('Error Message', response.responseText);
 
                 }
             });
@@ -1708,50 +1666,6 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         var sitename = tableau[1];
         var linkUrl = url;
         window.open(linkUrl);
-    },
-    onKeyPress: function (field, e, options) {
-
-        if (e.getKey() === e.ENTER) {
-
-            var dt_debut = Ext.Date.format(Ext.getCmp('dt_debut').getValue(), 'Y-m-d'),
-                    dt_fin = Ext.Date.format(Ext.getCmp('dt_fin').getValue(), 'Y-m-d'),
-                    cmMODE_SELECTION = Ext.getCmp('MODE_SELECTION').getValue(),
-                    str_CODE_REGROUPEMENT = Ext.getCmp('str_CODE_REGROUPEMENT').getValue(),
-                    str_CODE_REGROUPEMENT = Ext.getCmp('str_CODE_REGROUPEMENT').getValue(),
-                    cmb_fact_TIERS_PAYANT = Ext.getCmp('cmb_fact_TIERS_PAYANT').getValue(),
-                    lg_TYPE_TIERS_PAYANT_ID = Ext.getCmp('cmb_TYPE_TIERS_PAYANT').getValue();
-
-            if (cmb_fact_TIERS_PAYANT === null) {
-                cmb_fact_TIERS_PAYANT = "";
-            }
-            if (lg_TYPE_TIERS_PAYANT_ID === null) {
-                lg_TYPE_TIERS_PAYANT_ID = "";
-            }
-            if (str_CODE_REGROUPEMENT === null) {
-                str_CODE_REGROUPEMENT = "";
-            }
-            if (lg_TYPE_TIERS_PAYANT_ID === null) {
-                lg_TYPE_TIERS_PAYANT_ID = "";
-
-            }
-            if (cmMODE_SELECTION !== "3") {
-                str_CODE_REGROUPEMENT = "";
-            }
-            if (str_CODE_REGROUPEMENT === null) {
-                str_CODE_REGROUPEMENT = "";
-            }
-            if (cmMODE_SELECTION !== "2") {
-                lg_TYPE_TIERS_PAYANT_ID = "";
-            }
-            if (cmMODE_SELECTION !== "5") {
-                cmb_fact_TIERS_PAYANT = "";
-            }
-
-            var url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp?str_CODE_REGROUPEMENT=' + str_CODE_REGROUPEMENT + '&lg_TYPE_TIERS_PAYANT_ID=' + lg_TYPE_TIERS_PAYANT_ID + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin + '&lg_TIERS_PAYANT=' + cmb_fact_TIERS_PAYANT;
-            var OGrid = Ext.getCmp('gridpanelID');
-            OGrid.getStore().getProxy().url = url_services_data_detail_facture_tiers_payant;
-            OGrid.getStore().load();
-        }
     },
     onCheckChange: function (column, rowIndex, checked, eOpts) {
 

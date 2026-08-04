@@ -741,6 +741,7 @@ Ext.application({
         'testextjs.view.Report.resultatstva.TvaManager',
         'testextjs.view.produits.mvtproduit.*',
         'testextjs.view.facturation.ModelFacture',
+        'testextjs.view.facturation.ModelFactureDynamique',
         'testextjs.view.facturation.FactureProvisoire',
         'testextjs.view.caisseManager.Importation',
         'testextjs.view.actions.action',

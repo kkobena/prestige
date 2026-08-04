@@ -1,9 +1,9 @@
 /* global Ext */
 
 
-var url_services_data_facturation = '../webservices/sm_user/facturation/ws_data.jsp';
+var url_services_data_facturation = '../api/v1/facture-tiers-payant/list';
 var url_services_data_typefacture = '../webservices/sm_user/typefacture/ws_data.jsp';
-var url_services_transaction_facturation = '../webservices/sm_user/facturation/ws_transaction.jsp?mode=';
+var url_services_transaction_facturation = '../api/v1/facture-tiers-payant/transaction?mode=';
 var url_services_pdf_tiers_payant = '../webservices/sm_user/facturation/ws_rp_facture_tiers_payant.jsp?lg_FACTURE_ID=';
 var url_services_pdf_fournisseurs = '../webservices/sm_user/facturation/ws_rp_facture_fournisseur.jsp?lg_FACTURE_ID=';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_search_data.jsp';

@@ -1,9 +1,9 @@
 //var url_services_data_famille_select_order = '../webservices/sm_user/famille/ws_data.jsp';
 //var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
 var url_services_data_type_facture = '../webservices/sm_user/typefacture/ws_data.jsp';
-var url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=';
+var url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=';
 
-url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp';
+url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/assiette';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 var url_services_data_fournisseur = '../webservices/configmanagement/grossiste/ws_data.jsp';
 var url_services_data_type_tierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
@@ -68,7 +68,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         titre = this.getTitre();
         ref = this.getNameintern();
         LaborexWorkFlow_facture = Ext.create('testextjs.controller.LaborexWorkFlow', {});
-        url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+        url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
         var storetypefacture = new Ext.data.Store({
             model: 'testextjs.model.TypeFacture',
             pageSize: itemsPerPage,
@@ -643,9 +643,9 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
     setTitleFrame: function (str_data) {
         /*this.title = this.title + " :: Ref " + str_data;
          ref = str_data;
-         url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+         url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
          var OGrid = Ext.getCmp('gridpanelID');
-         url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+         url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
          OGrid.getStore().getProxy().url = url_services_data_detail_facture;
          OGrid.getStore().reload();*/
     },
@@ -688,7 +688,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         type_facture = Ext.getCmp('lg_TYPE_FACTURE_ID').getValue();
         str_CUSTOMER = Ext.getCmp('cmb_CUSTOMER_ID').getValue();
         if (type_facture == "1") {
-            url_services_data_detail_facture_tiers_payant = '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp?lg_customer_id=' + str_CUSTOMER + '&lg_type_facture=' + type_facture + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin;
+            url_services_data_detail_facture_tiers_payant = '../api/v1/facture-tiers-payant/assiette?lg_customer_id=' + str_CUSTOMER + '&lg_type_facture=' + type_facture + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin;
             var OGrid = Ext.getCmp('gridpanelID');
             OGrid.getStore().getProxy().url = url_services_data_detail_facture_tiers_payant;
             OGrid.getStore().reload();
@@ -697,7 +697,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
 
             Ext.Ajax.request({
-                url: '../webservices/sm_user/facturation/ws_data_detail_tiers_payant.jsp',
+                url: '../api/v1/facture-tiers-payant/assiette',
                 params: {
                     dt_debut: dt_debut,
                     dt_fin: dt_fin,

@@ -1,6 +1,7 @@
 /* global Ext */
 
-var url_services_data_detailsvente = '../webservices/sm_user/detailsvente/ws_data.jsp';
+// REST (memes cles JSON que la JSP historique detailsvente/ws_data.jsp)
+var url_services_data_detailsvente = '../api/v1/details-vente/list';
 var OCltgridpanelID;
 var Oview;
 var Omode;
@@ -78,7 +79,7 @@ Ext.define('testextjs.view.sm_user.journalvente.action.detailProduct', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: "../webservices/sm_user/detailsvente/ws_data.jsp?lg_PREENREGISTREMENT_ID=" + ref + "&str_STATUT=is_Closed",
+                url: "../api/v1/details-vente/list?lg_PREENREGISTREMENT_ID=" + ref + "&str_STATUT=is_Closed",
                 reader: {
                     type: 'json',
                     root: 'results',

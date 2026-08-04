@@ -2,6 +2,8 @@ var url_services_data_parametre = '../webservices/sm_user/parameter/ws_data_all.
 var url_services_data_parametre_transaction = '../webservices/sm_user/parameter/ws_transaction.jsp';
 // REST dedie a cet ecran (memes formats JSON et memes regles de visibilite que la JSP)
 var url_rest_data_parametre = '../api/v1/app-params/liste';
+// bascule d'un parametre booleen : ne modifie que la valeur, conserve la description
+var url_rest_toggle_parametre = '../api/v1/app-params/toggle';
 
 var Me;
 Ext.define('testextjs.view.sm_user.parameter.ParameterManager', {
@@ -90,6 +92,31 @@ Ext.define('testextjs.view.sm_user.parameter.ParameterManager', {
                     flex: 1
                 },
                 {
+                    // Interrupteur pour les parametres booleens (valeur 0 ou 1) : un clic bascule la
+                    // valeur sans passer par la fenetre d'edition. Les autres lignes restent vides.
+                    header: 'Activation',
+                    itemId: 'paramSwitchColumn',
+                    dataIndex: 'str_VALUE',
+                    width: 80,
+                    sortable: false,
+                    menuDisabled: true,
+                    align: 'center',
+                    renderer: function (value, meta, rec) {
+                        var v = rec.get('str_VALUE');
+                        if (v !== '0' && v !== '1') {
+                            return '';
+                        }
+                        var on = (v === '1');
+                        meta.tdAttr = 'data-qtip="' + (on ? 'Cliquer pour d&eacute;sactiver' : 'Cliquer pour activer') + '"';
+                        meta.tdStyle = 'cursor:pointer;';
+                        return '<span style="display:inline-block;width:36px;height:18px;border-radius:9px;'
+                                + 'background-color:' + (on ? '#5cb85c' : '#bbbbbb') + ';position:relative;vertical-align:middle;">'
+                                + '<span style="position:absolute;top:2px;' + (on ? 'right:2px;' : 'left:2px;')
+                                + 'width:14px;height:14px;border-radius:50%;background-color:#ffffff;"></span>'
+                                + '</span>';
+                    }
+                },
+                {
                     xtype: 'actioncolumn',
                     width: 30,
                     sortable: false,
@@ -114,6 +141,10 @@ Ext.define('testextjs.view.sm_user.parameter.ParameterManager', {
                         }
                     ]
                 }*/],
+            listeners: {
+                cellclick: this.onCellClick,
+                scope: this
+            },
             selModel: {
                 selType: 'cellmodel'
             },
@@ -172,6 +203,45 @@ Ext.define('testextjs.view.sm_user.parameter.ParameterManager', {
             parentview: this,
             mode: "create",
             titre: "Creation d'parametre"
+        });
+    },
+    onCellClick: function (view, td, cellIndex, rec, tr, rowIndex, e) {
+        var column = view.getHeaderAtIndex(cellIndex);
+        if (!column || column.itemId !== 'paramSwitchColumn') {
+            return;
+        }
+        var valeur = rec.get('str_VALUE');
+        if (valeur !== '0' && valeur !== '1') {
+            return;
+        }
+        var nouvelleValeur = (valeur === '1') ? '0' : '1';
+        var store = this.getStore();
+        Ext.Ajax.request({
+            url: url_rest_toggle_parametre,
+            method: 'POST',
+            params: {
+                str_KEY: rec.get('str_KEY'),
+                str_VALUE: nouvelleValeur
+            },
+            success: function (response) {
+                var object = Ext.JSON.decode(response.responseText, false);
+                if (object.success === "0") {
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 320,
+                        msg: object.errors,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                    return;
+                }
+                // recharge pour refleter aussi l'exclusivite SEMOIS_ABC / SEMOIS_PAR_PRODUIT
+                store.reload();
+            },
+            failure: function (response) {
+                console.log("Bug " + response.responseText);
+                Ext.MessageBox.alert('Error Message', response.responseText);
+            }
         });
     },
    onEditClick: function (grid, rowIndex) {

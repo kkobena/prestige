@@ -33,7 +33,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_data.jsp',
+                url: '../api/v1/groupe-tierspayant/list',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -364,7 +364,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                             handler: function (grid, rowIndex) {
                                 var rec = grid.getStore().getAt(rowIndex);
                                 Ext.Ajax.request({
-                                    url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                    url: '../api/v1/groupe-tierspayant/transaction',
                                     params: {
                                         mode: 2,
 
@@ -905,7 +905,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 
 
             Ext.Ajax.request({
-                url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                url: '../api/v1/groupe-tierspayant/transaction',
                 params: {
                     mode: 0,
                     str_LIBELLE: lib,
@@ -958,7 +958,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 
 
             Ext.Ajax.request({
-                url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                url: '../api/v1/groupe-tierspayant/transaction',
                 params: {
                     mode: 1,
                     lg_GROUPE_ID: record.get('lg_GROUPE_ID'),

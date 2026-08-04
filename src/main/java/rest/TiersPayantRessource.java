@@ -163,8 +163,8 @@ public class TiersPayantRessource {
             @DefaultValue("-1") @FormParam("nbrbons") int nbrBons,
             @DefaultValue("-1") @FormParam("montantFact") int montantFact,
             @DefaultValue("false") @FormParam("groupingByTaux") boolean groupingByTaux,
-            @DefaultValue("false") @FormParam("cmu") boolean cmu,
-            @DefaultValue("0") @FormParam("caution") int caution) {
+            @DefaultValue("false") @FormParam("cmu") boolean cmu, @DefaultValue("0") @FormParam("caution") int caution,
+            @DefaultValue("ALPHABETIQUE") @FormParam("str_MODE_TRI_FACTURE") String strModeTriFacture) {
         TUser sessionUser = utilisateurSession();
         if (sessionUser == null) {
             return reponseDeconnecte();
@@ -182,7 +182,7 @@ public class TiersPayantRessource {
                     dateDerniereEdition, numeroIdfOrganisme, montantFClient, baseRemise, codeDocComptoire, enabled,
                     villeId, typeTiersPayantId, typeContratId, regimeCaisseId, risque, codeOfficine, registreCommerce,
                     compteContribuable, quotaConsoMensuelle, isAbsolute, groupeId, nbrBons, montantFact, groupingByTaux,
-                    cmu, caution);
+                    cmu, caution, strModeTriFacture);
             return reponseSimple(otm.getMessage(), otm.getDetailmessage());
         } catch (Exception e) {
             LOG_GESTION.log(Level.SEVERE, "updateTiersPayant", e);

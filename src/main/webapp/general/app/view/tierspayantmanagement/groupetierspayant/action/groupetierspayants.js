@@ -143,7 +143,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.groupe
                                         });
 
                                         Ext.Ajax.request({
-                                            url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                            url: '../api/v1/groupe-tierspayant/transaction',
                                             params: {
                                                 mode: 4,
                                                 listtp: Ext.encode(selectedrecords),
@@ -229,7 +229,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.groupe
                                         var selectedrecords = [];
                                         testextjs.app.getController('App').ShowWaitingProcess();
                                         Ext.Ajax.request({
-                                            url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                            url: '../api/v1/groupe-tierspayant/transaction',
                                             params: {
                                                 mode: 5,
                                                 listtp: Ext.encode(selectedrecords),
@@ -288,7 +288,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.groupe
                                             if (this.getValue()) {
 
                                                 Ext.Ajax.request({
-                                                    url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                                    url: '../api/v1/groupe-tierspayant/transaction',
                                                     params: {
                                                         mode: 5,
                                                         listtp: Ext.encode(selectedrecords),
@@ -393,7 +393,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.groupe
                                         });
 
                                         Ext.Ajax.request({
-                                            url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                            url: '../api/v1/groupe-tierspayant/transaction',
                                             params: {
                                                 mode: 3,
                                                 listtp: Ext.encode(selectedrecords),
@@ -483,7 +483,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.groupe
                                         var selectedrecords = [];
                                         testextjs.app.getController('App').ShowWaitingProcess();
                                         Ext.Ajax.request({
-                                            url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                            url: '../api/v1/groupe-tierspayant/transaction',
                                             params: {
                                                 mode: 6,
                                                 listtp: Ext.encode(selectedrecords),
@@ -544,7 +544,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.groupe
                                             if (this.getValue()) {
 
                                                 Ext.Ajax.request({
-                                                    url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                                    url: '../api/v1/groupe-tierspayant/transaction',
                                                     params: {
                                                         mode: 6,
                                                         listtp: Ext.encode(selectedrecords),

@@ -11,7 +11,9 @@ Ext.define('testextjs.store.Statistics.TiersPayans', {
     autoLoad: true,
     proxy: {
         type: 'ajax',
-        url: '../webservices/tierspayantmanagement/tierspayant/ws_data_search.jsp',
+        // API REST existante (remplace ws_data_search.jsp) : memes cles data/total,
+        // champs mappes dans testextjs.model.statistics.TiersPayant
+        url: '../api/v1/client/tiers-payants',
         reader: {
             type: 'json',
             root: 'data',

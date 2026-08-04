@@ -397,6 +397,33 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                 }
 
                             ]
+                        },
+                        {
+                            xtype: 'container',
+                            layout: 'hbox',
+                            defaultType: 'textfield',
+                            margin: '0 0 5 0',
+                            items: [
+                                {
+                                    // Tri des lignes lors de la generation de la facture de ce tiers payant
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Tri facture',
+                                    name: 'str_MODE_TRI_FACTURE',
+                                    id: 'str_MODE_TRI_FACTURE_TP',
+                                    store: Ext.create('Ext.data.ArrayStore', {
+                                        data: [
+                                            ['ALPHABETIQUE', 'Alphab&eacute;tique (nom du client)'],
+                                            ['DATE_BON', 'Date du bon / op&eacute;ration']
+                                        ],
+                                        fields: [{name: 'value', type: 'string'}, {name: 'libelle', type: 'string'}]
+                                    }),
+                                    valueField: 'value',
+                                    displayField: 'libelle',
+                                    editable: false,
+                                    queryMode: 'local',
+                                    value: 'ALPHABETIQUE'
+                                }
+                            ]
                         }
 
 
@@ -919,6 +946,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             Ext.getCmp('montantFact').setValue(this.getOdatasource().montantFact);
             Ext.getCmp('nbrbons').setValue(this.getOdatasource().nbrbons);
             Ext.getCmp('groupingByTaux').setValue(this.getOdatasource().groupingByTaux);
+            Ext.getCmp('str_MODE_TRI_FACTURE_TP').setValue(this.getOdatasource().str_MODE_TRI_FACTURE || 'ALPHABETIQUE');
             Ext.getCmp('cmu').setValue(this.getOdatasource().cmu);
             Ext.getCmp('caution').setValue(this.getOdatasource().caution);
             
@@ -1047,6 +1075,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                     montantFact: Ext.getCmp('montantFact').getValue(),
                     nbrbons: Ext.getCmp('nbrbons').getValue(),
                     groupingByTaux: Ext.getCmp('groupingByTaux').getValue(),
+                    str_MODE_TRI_FACTURE: Ext.getCmp('str_MODE_TRI_FACTURE_TP').getValue(),
                     cmu: Ext.getCmp('cmu').getValue(),
                     caution: Ext.getCmp('caution').getValue()
                 },

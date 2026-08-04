@@ -214,6 +214,14 @@ public class TTiersPayant implements Serializable {
     @Column(name = "regime_imposition")
     private String regimeImposition;
 
+    // Tri des lignes lors de la generation de facture : ALPHABETIQUE (nom client) ou DATE_BON
+    @Column(name = "str_MODE_TRI_FACTURE", length = 30)
+    private String strMODETRIFACTURE = "ALPHABETIQUE";
+
+    // Rattachement optionnel a un modele de facture dynamique (NULL = circuit Jasper historique)
+    @Column(name = "model_facture_dynamique_id")
+    private Integer modelFactureDynamiqueId;
+
     @OneToMany(mappedBy = "tiersPayant")
     private List<Caution> cautions = new ArrayList<>();
     @Transient
@@ -241,6 +249,22 @@ public class TTiersPayant implements Serializable {
 
     public void setRegimeImposition(String regimeImposition) {
         this.regimeImposition = regimeImposition;
+    }
+
+    public String getStrMODETRIFACTURE() {
+        return strMODETRIFACTURE;
+    }
+
+    public void setStrMODETRIFACTURE(String strMODETRIFACTURE) {
+        this.strMODETRIFACTURE = strMODETRIFACTURE;
+    }
+
+    public Integer getModelFactureDynamiqueId() {
+        return modelFactureDynamiqueId;
+    }
+
+    public void setModelFactureDynamiqueId(Integer modelFactureDynamiqueId) {
+        this.modelFactureDynamiqueId = modelFactureDynamiqueId;
     }
 
     public TTiersPayant() {

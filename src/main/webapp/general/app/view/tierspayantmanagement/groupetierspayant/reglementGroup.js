@@ -2,7 +2,7 @@
 
 
 
-var url_services_data_modereglement_dovente = '../webservices/sm_user/modereglement/ws_data.jsp';
+var url_services_data_modereglement_dovente = '../api/v1/reglement-facture/modes-reglement';
 
 
 var odatasource;
@@ -93,7 +93,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
         myAppController = Ext.create('testextjs.controller.App', {});
 
-        my_url = '../webservices/sm_user/modereglement/ws_data.jsp';
+        my_url = '../api/v1/reglement-facture/modes-reglement';
 
         var store_modereglement = LaborexWorkFlow.BuildStore('testextjs.model.ModeReglement', itemsPerPage, url_services_data_modereglement_dovente);
 
@@ -117,7 +117,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/sm_user/reglement/ws_mode_reglemnt.jsp',
+                url: '../api/v1/reglement-facture/types-reglement',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -130,10 +130,12 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
         var store_detail_bordereau = Ext.data.Store({
             model: 'testextjs.model.Facture',
             pageSize: 15,
-            autoLoad: true,
+            // pas d'autoLoad : loadStore (afterlayout) charge deja la grille, l'autoLoad
+            // ne faisait que doubler la requete invoices-reglement a l'ouverture
+            autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_invoices.jsp?CODEFACTURE=' + CODEFACTURE,
+                url: '../api/v1/groupe-tierspayant/invoices-reglement?CODEFACTURE=' + CODEFACTURE,
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -1102,7 +1104,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
 
         myAppController.ShowWaitingProcess();
         Ext.Ajax.request({
-            url: '../webservices/configmanagement/groupe/ws_reglement.jsp',
+            url: '../api/v1/reglement-facture/groupe',
             timeout: 24000000,
             params: {
                 mode: mode,

@@ -1,9 +1,9 @@
 /* global Ext */
 
 
-var url_services_data_facturation = '../webservices/sm_user/facturation/ws_data.jsp';
+var url_services_data_facturation = '../api/v1/facture-tiers-payant/list';
 var url_services_data_typefacture = '../webservices/sm_user/typefacture/ws_data.jsp';
-var url_services_transaction_facturation = '../webservices/sm_user/facturation/ws_transaction.jsp?mode=';
+var url_services_transaction_facturation = '../api/v1/facture-tiers-payant/transaction?mode=';
 var url_services_pdf_tiers_payant = '../webservices/sm_user/facturation/ws_rp_facture_tiers_payant.jsp?lg_FACTURE_ID=';
 var url_services_pdf_fournisseurs = '../webservices/sm_user/facturation/ws_rp_facture_fournisseur.jsp?lg_FACTURE_ID=';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_search_data.jsp';
@@ -65,7 +65,10 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_facturation,
+                // URL en dur : la globale url_services_data_facturation est redefinie par
+                // d'autres ecrans charges apres celui-ci (FactureRegleManager, ...), ce qui
+                // renvoyait la grille vers l'ancienne JSP selon l'ordre de chargement
+                url: '../api/v1/facture-tiers-payant/list',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -176,30 +179,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             }
                         }
                     }, '-',
-                    {
-                        xtype: 'textfield',
-                        id: 'rechecherCode',
-                        width: 150,
-                        value: sessionStorage.getItem('codeGroupe') || '',
-                        emptyText: 'Rech Code facture',
-                        listeners: {
-                            specialKey: function (field, e) {
-                                if (e.getKey() === e.ENTER) {
-                                    Ext.getCmp('facturemanagerID').getStore().load({
-                                        params: {
-                                            CODEGROUPE: field.getValue()
-                                        }
-                                    });
-
-                                    sessionStorage.setItem('codeGroupe', field.getValue());
-
-
-                                }
-                            }
-                        }
-                    }
-                    , '-'
-                            ,
                     {
                         xtype: 'combobox',
                         id: 'lg_TIERS_PAYANT_ID',
@@ -332,7 +311,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             dt_fin: '',
                             dt_debut: '',
                             lg_customer_id: '',
-                            CODEGROUPE: '',
                             'impayes': ''
                         };
                         var val = Ext.getCmp('rechecherFacture').getValue();
@@ -353,7 +331,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         myProxy.setExtraParam('dt_debut', dt_debut);
                         myProxy.setExtraParam('dt_fin', dt_fin);
                         myProxy.setExtraParam('impayes', filtreImpayes);
-                        myProxy.setExtraParam('CODEGROUPE', Ext.getCmp('rechecherCode').getValue());
 
                     }
 
@@ -934,7 +911,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
                             myAppController.ShowWaitingProcess();
                             Ext.Ajax.request({
-                                url: url_services_transaction_facturation + 'delete',
+                                url: '../api/v1/facture-tiers-payant/transaction?mode=delete',
                                 params: {
                                     lg_FACTURE_ID: rec.get('lg_FACTURE_ID'),
                                     mode: 'delete'
@@ -1035,7 +1012,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 }
                 var rec = deletable[index];
                 Ext.Ajax.request({
-                    url: url_services_transaction_facturation + 'delete',
+                    url: '../api/v1/facture-tiers-payant/transaction?mode=delete',
                     params: {
                         lg_FACTURE_ID: rec.get('lg_FACTURE_ID'),
                         mode: 'delete'
@@ -1063,7 +1040,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
         var xtype = "addeditfacture";
         var alias = 'widget.' + xtype;
-        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Edition de facture", rec.get('lg_FACTURE_ID'), rec.data);
+        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "G&eacute;n&eacute;ration de facture", rec.get('lg_FACTURE_ID'), rec.data);
 
 
 
@@ -1086,7 +1063,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 lg_customer_id: lg_customer_id,
                 dt_fin: Ext.getCmp('datefin').getSubmitValue(),
                 dt_debut: Ext.getCmp('datedebut').getSubmitValue(),
-                'CODEGROUPE': Ext.getCmp('rechecherCode').getValue(),
                 'impayes': filtreImpayes
             }});
         sessionStorage.setItem('impayes', filtreImpayes);
@@ -1094,7 +1070,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         sessionStorage.setItem('searchQuery', val);
         sessionStorage.setItem('datefin', Ext.getCmp('datefin').getSubmitValue());
         sessionStorage.setItem('dateStart', Ext.getCmp('datedebut').getSubmitValue());
-        sessionStorage.setItem('codeGroupe', Ext.getCmp('rechecherCode').getValue());
+        sessionStorage.removeItem('codeGroupe');
 
     },
     onExel: function (grid, rowIndex) {
@@ -1145,7 +1121,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         }
         const search_value = Ext.getCmp('rechecherFacture').getValue();
 
-        window.open("../releveFactureServlet" + "?lg_customer_id=" + lg_customer_id + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin + "&search_value=" + search_value + "&impayes=" + filtreImpayes + '&codeFacture=' + Ext.getCmp('rechecherCode').getValue());
+        window.open("../releveFactureServlet" + "?lg_customer_id=" + lg_customer_id + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin + "&search_value=" + search_value + "&impayes=" + filtreImpayes + '&codeFacture=');
     },
     exportToExcel: function () {
         var lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),

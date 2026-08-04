@@ -53,7 +53,7 @@ public class ListDesBonServiceImpl implements ListDesBonService {
             + " AND cl.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND\n"
             + " cl.lg_COMPTE_CLIENT_ID=cpt.lg_COMPTE_CLIENT_ID \n"
             + "AND tp.lg_TYPE_TIERS_PAYANT_ID=typeTp.`lg_TYPE_TIERS_PAYANT_ID` AND cpt.`lg_CLIENT_ID`=clt.`lg_CLIENT_ID`\n"
-            + "AND p.`lg_PREENREGISTREMENT_ID`=cp.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`dt_UPDATED` BETWEEN  ?1 AND ?2  AND  m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 "
+            + "AND p.`lg_PREENREGISTREMENT_ID`=cp.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`dt_UPDATED` >= ?1 AND p.`dt_UPDATED` <= ?2  AND m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 "
             + " AND p.imported=0 AND p.`b_IS_CANCEL`=0 AND p.`int_PRICE` >0 {excludeStatement} {search} {tierspayantId} ORDER BY  libelleTiersPayant,p.`dt_UPDATED`  ";
 
     private static final String RAPPORT_SQL_LIKE = " AND (cp.`str_REF_BON` LIKE '%s' OR cl.`str_NUMERO_SECURITE_SOCIAL` LIKE '%s' OR tp.str_NAME LIKE '%s' OR clt.`str_FIRST_NAME` LIKE '%s' OR clt.`str_FIRST_NAME` LIKE '%s') ";
@@ -67,7 +67,7 @@ public class ListDesBonServiceImpl implements ListDesBonService {
             + " AND cl.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND\n"
             + " cl.lg_COMPTE_CLIENT_ID=cpt.lg_COMPTE_CLIENT_ID \n"
             + "AND tp.lg_TYPE_TIERS_PAYANT_ID=typeTp.`lg_TYPE_TIERS_PAYANT_ID` AND cpt.`lg_CLIENT_ID`=clt.`lg_CLIENT_ID`\n"
-            + "AND p.`lg_PREENREGISTREMENT_ID`=cp.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`dt_UPDATED` BETWEEN  ?1 AND ?2  AND  m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 "
+            + "AND p.`lg_PREENREGISTREMENT_ID`=cp.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`dt_UPDATED` >= ?1 AND p.`dt_UPDATED` <= ?2  AND m.`typeTransaction`=1 AND m.pkey=p.`lg_PREENREGISTREMENT_ID` AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 "
             + " AND p.imported=0 AND p.`b_IS_CANCEL`=0 AND p.`int_PRICE` >0 {excludeStatement} {search} {tierspayantId} ";
 
     @PersistenceContext(unitName = "JTA_UNIT")
@@ -91,12 +91,15 @@ public class ListDesBonServiceImpl implements ListDesBonService {
                 bonsParam.isShowAllAmount());
         LOG.log(Level.INFO, "sql--- listAllBons {0}", sql);
         try {
+            // TIMESTAMP (et non DATE) : les bornes gardent leurs heures. Avec DATE, la borne de fin
+            // etait tronquee a minuit (les bons du dernier jour etaient exclus) et les champs
+            // heure debut/fin de l'ecran etaient ignores.
             Query query = em.createNativeQuery(sql, Tuple.class).setParameter(3, DateConverter.DEPOT_EXTENSION)
                     .setParameter(4, bonsParam.getEmplacementId())
                     .setParameter(1, DateCommonUtils.convertLocalDateTimeToDate(dateParams.getLeft()),
-                            TemporalType.DATE)
+                            TemporalType.TIMESTAMP)
                     .setParameter(2, DateCommonUtils.convertLocalDateTimeToDate(dateParams.getRight()),
-                            TemporalType.DATE);
+                            TemporalType.TIMESTAMP);
 
             return Optional.ofNullable((Tuple) query.getSingleResult()).map(this::buildBonsTotaux)
                     .orElse(BonsTotauxDTO.builder().build());
@@ -137,12 +140,13 @@ public class ListDesBonServiceImpl implements ListDesBonService {
                 bonsParam.isShowAllAmount());
         LOG.log(Level.INFO, "sql--- listAllBons {0}", sql);
         try {
+            // TIMESTAMP : memes bornes exactes que la requete des totaux (heures respectees)
             Query query = em.createNativeQuery(sql, Tuple.class).setParameter(3, DateConverter.DEPOT_EXTENSION)
                     .setParameter(4, bonsParam.getEmplacementId())
                     .setParameter(1, DateCommonUtils.convertLocalDateTimeToDate(dateParams.getLeft()),
-                            TemporalType.DATE)
+                            TemporalType.TIMESTAMP)
                     .setParameter(2, DateCommonUtils.convertLocalDateTimeToDate(dateParams.getRight()),
-                            TemporalType.DATE);
+                            TemporalType.TIMESTAMP);
             if (!bonsParam.isAll()) {
                 query.setFirstResult(bonsParam.getStart());
                 query.setMaxResults(bonsParam.getLimit());

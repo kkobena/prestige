@@ -2,7 +2,9 @@
 
 /* global Ext, my_view_title, url_services_pdf_ticket */
 
-url_services_data_detail_facture_tiers_payant_bordereau = '../webservices/sm_user/bordereau/ws_data_detail_tiers_payant_bordereau.jsp';
+// La JSP bordereau/ws_data_detail_tiers_payant_bordereau.jsp n'a jamais existe dans le projet (la grille
+// recevait une 404) : on sert les factures IMPAYEES (montant restant > 0) du tiers payant via l'API REST.
+url_services_data_detail_facture_tiers_payant_bordereau = '../api/v1/facture-tiers-payant/list?impayes=impayes';
 //var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 var url_services_data_type_facture = '../webservices/';
@@ -75,7 +77,7 @@ Ext.define('testextjs.view.sm_user.editbordereau.action.addBordereau', {
         titre = this.getTitre();
 //        ref = this.getNameintern();
         LaborexWorkFlow_facture = Ext.create('testextjs.controller.LaborexWorkFlow', {});
-        url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+        url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
 
         var storetypefacture = new Ext.data.Store({
             model: 'testextjs.model.TypeFacture',
@@ -451,9 +453,9 @@ Ext.define('testextjs.view.sm_user.editbordereau.action.addBordereau', {
     setTitleFrame: function (str_data) {
         /*this.title = this.title + " :: Ref " + str_data;
          ref = str_data;
-         url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+         url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
          var OGrid = Ext.getCmp('gridpanelIDBorderau');
-         url_services_data_detail_facture = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
+         url_services_data_detail_facture = '../api/v1/order-detail/list?lg_ORDER_ID=' + ref;
          OGrid.getStore().getProxy().url = url_services_data_detail_facture;
          OGrid.getStore().reload();*/
     },
@@ -498,7 +500,7 @@ Ext.define('testextjs.view.sm_user.editbordereau.action.addBordereau', {
 
 
 
-        url_services_data_detail_facture_tiers_payant_bordereau = '../webservices/sm_user/bordereau/ws_data_detail_tiers_payant_bordereau.jsp?lg_customer_id=' + str_CUSTOMER + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin;
+        url_services_data_detail_facture_tiers_payant_bordereau = '../api/v1/facture-tiers-payant/list?impayes=impayes&lg_customer_id=' + str_CUSTOMER + '&dt_debut=' + dt_debut + '&dt_fin=' + dt_fin;
         var OGrid = Ext.getCmp('gridpanelIDBorderau');
         OGrid.getStore().getProxy().url = url_services_data_detail_facture_tiers_payant_bordereau;
         OGrid.getStore().reload();

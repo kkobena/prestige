@@ -3,7 +3,7 @@
 
 
 var url_services_data_typefacture = '../webservices/sm_user/typefacture/ws_data.jsp';
-var url_services_transaction_facturation = '../webservices/sm_user/facturation/ws_transaction.jsp?mode=';
+var url_services_transaction_facturation = '../api/v1/facture-tiers-payant/transaction?mode=';
 var url_services_pdf_tiers_payant = '../webservices/sm_user/facturation/ws_rp_facture_tiers_payant.jsp?lg_FACTURE_ID=';
 var url_services_pdf_fournisseurs = '../webservices/sm_user/facturation/ws_rp_facture_fournisseur.jsp?lg_FACTURE_ID=';
 var url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_search_data.jsp';
@@ -12,6 +12,7 @@ var valdatedebut;
 var valdatefin;
 var myAppController;
 var CODEFACTURE = "";
+var GROUPE_ID_FACTURE = "";
  var win ;
 function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
@@ -41,13 +42,17 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
         odatasource: '',
         parentview: '',
         mode: '',
-        titre: ''
+        titre: '',
+        ogroupe: ''
     },
     initComponent: function () {
 
         Me = this;
          Oview = this.getParentview();
         CODEFACTURE = this.getOdatasource();
+        // identifiant du groupe transmis par la grille des factures de groupe : evite de
+        // confondre deux factures de groupes differents portant le meme code (ex 2025/2026)
+        GROUPE_ID_FACTURE = this.getOgroupe() || '';
         myAppController = Ext.create('testextjs.controller.App', {});
         var itemsPerPage = 20;
         var store = new Ext.data.Store({
@@ -56,7 +61,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_invoiceDetails.jsp',
+                url: '../api/v1/groupe-tierspayant/invoice-details',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -65,7 +70,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
             }
 
         });
-        store.load({params:{CODEFACTURE:CODEFACTURE}});
+        store.load({params: {CODEFACTURE: CODEFACTURE, lg_GROUPE_ID: GROUPE_ID_FACTURE}});
         var searchstore = Ext.create('testextjs.store.Statistics.TiersPayans');
 
 
@@ -250,8 +255,9 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
                                         search_value: val,
 
                                         CODEFACTURE: CODEFACTURE,
+                                        lg_GROUPE_ID: GROUPE_ID_FACTURE,
                                         lgTP: lg_customer_id
-//               
+//
                                     }
                                 });
 
@@ -336,6 +342,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
                         }
 
                         myProxy.setExtraParam('CODEFACTURE', CODEFACTURE);
+                        myProxy.setExtraParam('lg_GROUPE_ID', GROUPE_ID_FACTURE);
                         myProxy.setExtraParam('lgTP', lg_customer_id);
                         myProxy.setExtraParam('search_value', val);
 
@@ -398,7 +405,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
 
                             myAppController.ShowWaitingProcess();
                             Ext.Ajax.request({
-                                url: url_services_transaction_facturation + 'delete',
+                                // URL en dur : la globale est redefinie par d'autres ecrans (JSP)
+                                url: '../api/v1/facture-tiers-payant/transaction?mode=delete',
                                 params: {
                                     lg_FACTURE_ID: rec.get('lg_FACTURE_ID'),
                                     mode: 'delete'
@@ -452,8 +460,9 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
             params: {
                 search_value: val,
                 CODEFACTURE: CODEFACTURE,
+                lg_GROUPE_ID: GROUPE_ID_FACTURE,
                 lgTP: lg_customer_id
-//               
+//
             }
         });
     },
