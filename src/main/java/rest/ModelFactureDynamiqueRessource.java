@@ -17,6 +17,7 @@ import dal.TFactureDetail;
 import dal.TOfficine;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
+import dal.TModelFacture;
 import dal.TTiersPayant;
 import dal.TUser;
 import dal.dataManager;
@@ -128,7 +129,8 @@ public class ModelFactureDynamiqueRessource {
                     .getResultList();
             JSONArray data = new JSONArray();
             for (ModelFactureDynamique m : modeles) {
-                Long nbTp = em.createQuery("SELECT COUNT(t) FROM TTiersPayant t WHERE t.modelFactureDynamiqueId = ?1",
+                Long nbTp = em.createQuery(
+                        "SELECT COUNT(t) FROM TTiersPayant t WHERE t.lgMODELFACTUREID.modelFactureDynamiqueId = ?1",
                         Long.class).setParameter(1, m.getId()).getSingleResult();
                 JSONArray cols = new JSONArray();
                 for (ModelFactureDynamiqueColonne c : m.getColonnes()) {
@@ -150,6 +152,60 @@ public class ModelFactureDynamiqueRessource {
     }
 
     /** Creation / modification d'un modele (id vide = creation) avec ses colonnes (tableau JSON). */
+
+    /**
+     * Cree ou met a jour la ligne de t_model_facture representant ce modele dynamique : c'est elle qui apparait dans le
+     * champ "Code.Edit.Bordereau" de la fiche tiers payant et qui porte l'affectation. La valeur (str_VALUE) est unique
+     * car la fiche tiers payant resout le modele par cette colonne.
+     */
+    private void synchroniserModelFacture(EntityManager em, ModelFactureDynamique modele) {
+        List<TModelFacture> existants = em
+                .createQuery("SELECT m FROM TModelFacture m WHERE m.modelFactureDynamiqueId = ?1", TModelFacture.class)
+                .setParameter(1, modele.getId()).getResultList();
+        String libelle = "Modèle dynamique : " + modele.getNom();
+        if (existants.isEmpty()) {
+            Long maxId = 0L;
+            try {
+                List<TModelFacture> tous = em.createQuery("SELECT m FROM TModelFacture m", TModelFacture.class)
+                        .getResultList();
+                for (TModelFacture m : tous) {
+                    try {
+                        maxId = Math.max(maxId, Long.parseLong(m.getLgMODELFACTUREID().trim()));
+                    } catch (NumberFormatException ignore) {
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+            TModelFacture ligne = new TModelFacture();
+            ligne.setLgMODELFACTUREID(String.valueOf(maxId + 1));
+            ligne.setStrVALUE("DYN" + modele.getId());
+            ligne.setStrDESCRIPTION(libelle);
+            ligne.setStrSTATUT(commonparameter.statut_enable);
+            ligne.setDtCREATED(new Date());
+            ligne.setDtUPDATED(new Date());
+            ligne.setModelFactureDynamiqueId(modele.getId());
+            // Colonnes NOT NULL sans valeur par defaut en base : elles designent un fichier
+            // Jasper, sans objet pour un modele dynamique dont la mise en page est construite
+            // par le moteur. Sans ces valeurs, l'enregistrement echoue en base.
+            ligne.setNomFichier("");
+            ligne.setNomFichierRemiseTierspayant("");
+            em.persist(ligne);
+        } else {
+            TModelFacture ligne = existants.get(0);
+            ligne.setStrDESCRIPTION(libelle);
+            ligne.setDtUPDATED(new Date());
+            em.merge(ligne);
+        }
+    }
+
+    /** Ligne t_model_facture representant un modele dynamique, ou null. */
+    private TModelFacture modelFactureDe(EntityManager em, int modelId) {
+        List<TModelFacture> existants = em
+                .createQuery("SELECT m FROM TModelFacture m WHERE m.modelFactureDynamiqueId = ?1", TModelFacture.class)
+                .setParameter(1, modelId).getResultList();
+        return existants.isEmpty() ? null : existants.get(0);
+    }
+
     @POST
     @Path("save")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -211,6 +267,10 @@ public class ModelFactureDynamiqueRessource {
             } else {
                 em.merge(modele);
             }
+            em.flush();
+            // Le modele doit apparaitre dans la liste des modeles de facture de la fiche tiers
+            // payant : on tient a jour la ligne t_model_facture qui le represente.
+            synchroniserModelFacture(em, modele);
             em.getTransaction().commit();
             return reponseJson(new JSONObject().put("success", "1").put("errors", "Modèle enregistré"));
         } catch (Exception e) {
@@ -240,9 +300,15 @@ public class ModelFactureDynamiqueRessource {
                 em.getTransaction().rollback();
                 return reponseJson(new JSONObject().put("success", "0").put("errors", "Modèle introuvable"));
             }
-            em.createQuery(
-                    "UPDATE TTiersPayant t SET t.modelFactureDynamiqueId = NULL WHERE t.modelFactureDynamiqueId = ?1")
-                    .setParameter(1, id).executeUpdate();
+            // Les tiers payants rattaches reviennent au modele Jasper par defaut, puis la ligne
+            // t_model_facture representant ce modele dynamique est supprimee.
+            TModelFacture ligne = modelFactureDe(em, id);
+            if (ligne != null) {
+                TModelFacture defaut = em.find(TModelFacture.class, commonparameter.PROCESS_SUCCESS);
+                em.createQuery("UPDATE TTiersPayant t SET t.lgMODELFACTUREID = ?1 WHERE t.lgMODELFACTUREID = ?2")
+                        .setParameter(1, defaut).setParameter(2, ligne).executeUpdate();
+                em.remove(em.contains(ligne) ? ligne : em.merge(ligne));
+            }
             em.remove(modele);
             em.getTransaction().commit();
             return reponseJson(new JSONObject().put("success", "1").put("errors", "Modèle supprimé"));
@@ -264,11 +330,9 @@ public class ModelFactureDynamiqueRessource {
         dataManager odm = new dataManager();
         try {
             odm.initEntityManager();
-            List<TTiersPayant> tps = odm.getEm()
-                    .createQuery(
-                            "SELECT t FROM TTiersPayant t WHERE t.modelFactureDynamiqueId = ?1 ORDER BY t.strFULLNAME",
-                            TTiersPayant.class)
-                    .setParameter(1, modelId).getResultList();
+            List<TTiersPayant> tps = odm.getEm().createQuery(
+                    "SELECT t FROM TTiersPayant t WHERE t.lgMODELFACTUREID.modelFactureDynamiqueId = ?1 ORDER BY t.strFULLNAME",
+                    TTiersPayant.class).setParameter(1, modelId).getResultList();
             JSONArray data = new JSONArray();
             for (TTiersPayant tp : tps) {
                 data.put(new JSONObject().put("lg_TIERS_PAYANT_ID", tp.getLgTIERSPAYANTID()).put("str_FULLNAME",
@@ -308,7 +372,19 @@ public class ModelFactureDynamiqueRessource {
                 }
             }
             em.getTransaction().begin();
-            tp.setModelFactureDynamiqueId(modelId);
+            // L'affectation passe par le modele de facture de la fiche tiers payant (un seul
+            // endroit d'affectation, comme pour les modeles Jasper historiques).
+            if (modelId > 0) {
+                TModelFacture ligne = modelFactureDe(em, modelId);
+                if (ligne == null) {
+                    em.getTransaction().rollback();
+                    return reponseJson(new JSONObject().put("success", "0").put("errors",
+                            "Modèle introuvable dans la liste des modèles de facture"));
+                }
+                tp.setLgMODELFACTUREID(ligne);
+            } else {
+                tp.setLgMODELFACTUREID(em.find(TModelFacture.class, commonparameter.PROCESS_SUCCESS));
+            }
             em.merge(tp);
             em.getTransaction().commit();
             return reponseJson(new JSONObject().put("success", "1").put("errors",
@@ -339,8 +415,12 @@ public class ModelFactureDynamiqueRessource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
             TTiersPayant tiersPayant = em.find(TTiersPayant.class, facture.getStrCUSTOMER());
-            ModelFactureDynamique modele = tiersPayant != null && tiersPayant.getModelFactureDynamiqueId() != null
-                    ? em.find(ModelFactureDynamique.class, tiersPayant.getModelFactureDynamiqueId()) : null;
+            // Le modele dynamique est porte par le modele de facture affecte au tiers payant
+            // (fiche tiers payant, champ "Code.Edit.Bordereau")
+            Integer idModeleDyn = tiersPayant != null && tiersPayant.getLgMODELFACTUREID() != null
+                    ? tiersPayant.getLgMODELFACTUREID().getModelFactureDynamiqueId() : null;
+            ModelFactureDynamique modele = idModeleDyn != null ? em.find(ModelFactureDynamique.class, idModeleDyn)
+                    : null;
             if (modele == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity("Aucun modèle de facture dynamique pour ce tiers payant").type("text/plain").build();
@@ -577,6 +657,116 @@ public class ModelFactureDynamiqueRessource {
             return l.dossier.getIntPERCENT() != null ? String.valueOf(l.dossier.getIntPERCENT()) : "";
         default:
             return conversion.AmountFormat((int) valeurNumerique(champ, l));
+        }
+    }
+
+    /**
+     * Recherche de tiers payants pour l'ecran d'affectation : renvoie le modele actuellement affecte a chacun, pour
+     * voir d'un coup d'oeil ce qui va changer avant de valider une affectation de masse.
+     */
+    @GET
+    @Path("rechercher-tiers-payants")
+    public Response rechercherTiersPayants(@DefaultValue("") @QueryParam("query") String query,
+            @DefaultValue("200") @QueryParam("limit") int limit) {
+        if (utilisateurSession() == null) {
+            return reponseDeconnecte();
+        }
+        dataManager odm = new dataManager();
+        try {
+            odm.initEntityManager();
+            EntityManager em = odm.getEm();
+            String recherche = "%" + StringUtils.defaultString(query).trim() + "%";
+            List<TTiersPayant> tps = em
+                    .createQuery("SELECT t FROM TTiersPayant t WHERE (t.strFULLNAME LIKE ?1 OR t.strNAME LIKE ?1) "
+                            + "AND t.strSTATUT = ?2 ORDER BY t.strFULLNAME", TTiersPayant.class)
+                    .setParameter(1, recherche).setParameter(2, commonparameter.statut_enable)
+                    .setMaxResults(limit > 0 ? limit : 200).getResultList();
+            JSONArray data = new JSONArray();
+            for (TTiersPayant tp : tps) {
+                JSONObject json = new JSONObject();
+                json.put("lg_TIERS_PAYANT_ID", tp.getLgTIERSPAYANTID());
+                json.put("str_FULLNAME", tp.getStrFULLNAME());
+                String modeleActuel = "";
+                boolean dynamique = false;
+                if (tp.getLgMODELFACTUREID() != null) {
+                    modeleActuel = StringUtils.defaultString(tp.getLgMODELFACTUREID().getStrDESCRIPTION());
+                    if (StringUtils.isBlank(modeleActuel)) {
+                        modeleActuel = StringUtils.defaultString(tp.getLgMODELFACTUREID().getStrVALUE());
+                    }
+                    dynamique = tp.getLgMODELFACTUREID().isDynamique();
+                }
+                json.put("MODELE_ACTUEL", modeleActuel);
+                json.put("EST_DYNAMIQUE", dynamique);
+                json.put("isChecked", false);
+                data.put(json);
+            }
+            return reponseJson(new JSONObject().put("data", data).put("total", data.length()));
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recherche tiers payants pour affectation", e);
+            return reponseJson(new JSONObject().put("data", new JSONArray()).put("total", 0));
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Affectation d'un modele a PLUSIEURS tiers payants en une fois (liste d'identifiants issue de la recherche).
+     * modelId = 0 retire le modele dynamique et remet le modele Jasper par defaut.
+     */
+    @POST
+    @Path("assigner-masse")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response assignerMasse(@DefaultValue("0") @FormParam("modelId") int modelId,
+            @DefaultValue("[]") @FormParam("tiersPayants") String tiersPayantsParam) {
+        if (utilisateurSession() == null) {
+            return reponseDeconnecte();
+        }
+        JSONArray ids;
+        try {
+            ids = new JSONArray(tiersPayantsParam);
+        } catch (Exception e) {
+            return reponseJson(new JSONObject().put("success", "0").put("errors", "Liste de tiers payants invalide"));
+        }
+        if (ids.length() == 0) {
+            return reponseJson(
+                    new JSONObject().put("success", "0").put("errors", "Sélectionnez au moins un tiers payant"));
+        }
+        dataManager odm = new dataManager();
+        try {
+            odm.initEntityManager();
+            EntityManager em = odm.getEm();
+            TModelFacture cible;
+            if (modelId > 0) {
+                cible = modelFactureDe(em, modelId);
+                if (cible == null) {
+                    return reponseJson(new JSONObject().put("success", "0").put("errors",
+                            "Modèle introuvable dans la liste des modèles de facture"));
+                }
+            } else {
+                cible = em.find(TModelFacture.class, commonparameter.PROCESS_SUCCESS);
+            }
+            em.getTransaction().begin();
+            int affectes = 0;
+            for (int i = 0; i < ids.length(); i++) {
+                String id = ids.optString(i);
+                if (StringUtils.isBlank(id)) {
+                    continue;
+                }
+                TTiersPayant tp = em.find(TTiersPayant.class, id);
+                if (tp != null) {
+                    tp.setLgMODELFACTUREID(cible);
+                    em.merge(tp);
+                    affectes++;
+                }
+            }
+            em.getTransaction().commit();
+            return reponseJson(new JSONObject().put("success", "1").put("total", affectes).put("errors",
+                    affectes + " tiers payant(s) mis à jour"));
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "affectation de masse modele dynamique", e);
+            return reponseJson(new JSONObject().put("success", "0").put("errors", "Impossible d'affecter le modèle"));
+        } finally {
+            odm.closeEntityManager();
         }
     }
 }

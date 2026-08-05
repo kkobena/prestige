@@ -6,12 +6,14 @@ import bll.facture.factureManagement;
 import dal.TFacture;
 import dal.TGroupeFactures;
 import dal.TGroupeTierspayant;
+import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TTiersPayant;
 import dal.TUser;
 import dal.dataManager;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +36,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.date;
+import util.DateConverter;
 
 /**
  * Migration REST des webservices JSP des groupes tiers payants (webservices/configmanagement/groupe/ws_data.jsp,
@@ -440,6 +443,194 @@ public class GroupeTierspayantRessource {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "transaction groupe", e);
             return Response.ok().entity(new JSONObject().put("status", 0).toString()).build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Bons d'un groupe tiers payant pour l'ecran Generer facture (option "Par groupes et compagnies d'assurances") :
+     * port de configmanagement/groupe/ws_groupe_data.jsp, MEME methode metier getGoupBons, memes cles JSON.
+     */
+    @GET
+    @Path("bons-groupe")
+    public Response bonsGroupe(@DefaultValue("0") @QueryParam("lg_GROUPE_ID") int lgGroupeId,
+            @DefaultValue("") @QueryParam("dt_start") String dtStartParam,
+            @DefaultValue("") @QueryParam("dt_end") String dtEndParam,
+            @DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("query") String query, @DefaultValue("0") @QueryParam("start") int start,
+            @DefaultValue("15") @QueryParam("limit") int limit) {
+        if (utilisateurSession() == null) {
+            return reponseDeconnecte();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String dtStart = StringUtils.isNotEmpty(dtStartParam) ? dtStartParam
+                    : date.formatterMysqlShort.format(new Date());
+            String dtEnd = StringUtils.isNotEmpty(dtEndParam) ? dtEndParam
+                    : date.formatterMysqlShort.format(new Date());
+            String search = StringUtils.isNotEmpty(query) ? query : searchValue;
+            odm.initEntityManager();
+            GroupeTierspayantController groupeCtl = new GroupeTierspayantController(odm.getEmf());
+            JSONArray arrayObj = groupeCtl.getGoupBons(false, dtStart, dtEnd, lgGroupeId,
+                    StringUtils.defaultString(search), start, limit);
+            int count = groupeCtl.getGoupBons(dtStart, dtEnd, lgGroupeId, StringUtils.defaultString(search));
+            return Response.ok().entity(new JSONObject().put("data", arrayObj).put("total", count).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "bons du groupe", e);
+            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).put("total", 0).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Generation des factures d'un groupe tiers payant : port de configmanagement/groupe/ws_facturation.jsp (MEME
+     * methode metier generateGroupeFacture, meme cle JSON "status" et meme depot en session des factures a imprimer).
+     */
+    @POST
+    @Path("facturation-groupe")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response facturationGroupe(@DefaultValue("0") @FormParam("MODE_SELECTION") int modeSelection,
+            @DefaultValue("0") @FormParam("lg_GROUPE_ID") int lgGroupeId,
+            @DefaultValue("") @FormParam("dt_start") String dtStartParam,
+            @DefaultValue("") @FormParam("dt_end") String dtEndParam,
+            @DefaultValue("") @FormParam("listProductSelected") String listProductSelectedParam,
+            @DefaultValue("") @FormParam("unselectedrecords") String unselectedrecordsParam) {
+        TUser sessionUser = utilisateurSession();
+        if (sessionUser == null) {
+            return reponseDeconnecte();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String dtStart = StringUtils.isNotEmpty(dtStartParam) ? dtStartParam
+                    : date.formatterMysqlShort.format(new Date());
+            String dtEnd = StringUtils.isNotEmpty(dtEndParam) ? dtEndParam : dtStart;
+            JSONArray listProductSelected = StringUtils.isNotEmpty(listProductSelectedParam)
+                    ? new JSONArray(listProductSelectedParam) : new JSONArray();
+            JSONArray unselectedrecords = StringUtils.isNotEmpty(unselectedrecordsParam)
+                    ? new JSONArray(unselectedrecordsParam) : new JSONArray();
+
+            odm.initEntityManager();
+            TUser user = odm.getEm().find(TUser.class, sessionUser.getLgUSERID());
+            GroupeTierspayantController groupeCtl = new GroupeTierspayantController(odm.getEmf());
+            Map<String, LinkedHashSet<TFacture>> grfact = groupeCtl.generateGroupeFacture(dtStart, dtEnd, lgGroupeId,
+                    listProductSelected, unselectedrecords, modeSelection, user);
+            int success = grfact != null ? grfact.size() : 0;
+            if (success > 0) {
+                servletRequest.getSession().setAttribute("groupeinvoicesToPrint", grfact);
+            }
+            return Response.ok().entity(new JSONObject().put("status", success).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "generation factures de groupe", e);
+            String cause = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            return Response.ok().entity(
+                    new JSONObject().put("status", 0).put("message", "Génération impossible : " + cause).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Bons d'un tiers payant pour l'ecran Generer facture (option "Par Selection de bons") : port de
+     * configmanagement/groupe/ws_allbons.jsp, MEMES methodes metier findAllBons / allBonsCount, memes cles JSON.
+     */
+    @GET
+    @Path("tous-bons")
+    public Response tousBons(@DefaultValue("") @QueryParam("lg_TIERS_PAYANT_ID") String lgTiersPayantId,
+            @DefaultValue("") @QueryParam("dt_start") String dtStartParam,
+            @DefaultValue("") @QueryParam("dt_end") String dtEndParam,
+            @DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("query") String query, @DefaultValue("0") @QueryParam("start") int start,
+            @DefaultValue("15") @QueryParam("limit") int limit) {
+        if (utilisateurSession() == null) {
+            return reponseDeconnecte();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String dtStart = StringUtils.isNotEmpty(dtStartParam) ? dtStartParam
+                    : date.formatterMysqlShort.format(new Date());
+            String dtEnd = StringUtils.isNotEmpty(dtEndParam) ? dtEndParam
+                    : date.formatterMysqlShort.format(new Date());
+            String search = StringUtils.isNotEmpty(query) ? query : searchValue;
+            odm.initEntityManager();
+            GroupeTierspayantController groupeCtl = new GroupeTierspayantController(odm.getEmf());
+            List<TPreenregistrementCompteClientTiersPayent> lis = groupeCtl.findAllBons(false, dtStart, dtEnd, start,
+                    limit, StringUtils.defaultString(lgTiersPayantId), StringUtils.defaultString(search));
+            int count = groupeCtl.allBonsCount(dtStart, dtEnd, StringUtils.defaultString(lgTiersPayantId),
+                    StringUtils.defaultString(search));
+            JSONArray arrayObj = new JSONArray();
+            for (TPreenregistrementCompteClientTiersPayent obj : lis) {
+                JSONObject json = new JSONObject();
+                json.put("lg_PCMT_ID", obj.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID());
+                json.put("REFBON", obj.getStrREFBON());
+                json.put("AMOUNT", obj.getIntPRICE());
+                json.put("AMOUNT_VENTE", obj.getLgPREENREGISTREMENTID().getIntPRICE());
+                try {
+                    json.put("CLIENT_FULLNAME", obj.getLgPREENREGISTREMENTID().getClient().getStrFIRSTNAME() + " "
+                            + obj.getLgPREENREGISTREMENTID().getClient().getStrLASTNAME());
+                } catch (Exception ignore) {
+                }
+                json.put("DATE_VENTE",
+                        DateConverter.convertDateToDD_MM_YYYY_HH_mm(obj.getLgPREENREGISTREMENTID().getDtUPDATED()));
+                json.put("isChecked", false);
+                arrayObj.put(json);
+            }
+            return Response.ok().entity(new JSONObject().put("data", arrayObj).put("total", count).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "tous les bons", e);
+            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).put("total", 0).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Generation des factures a partir de bons selectionnes : port de configmanagement/groupe/ws_selectedBons.jsp (MEME
+     * methode metier generateFacture, meme cle JSON "status", meme depot en session des factures a imprimer).
+     */
+    @POST
+    @Path("facturation-bons")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response facturationBons(@DefaultValue("0") @FormParam("MODE_SELECTION") int modeSelection,
+            @DefaultValue("") @FormParam("lg_TIERS_PAYANT_ID") String lgTiersPayantId,
+            @DefaultValue("") @FormParam("dt_start") String dtStartParam,
+            @DefaultValue("") @FormParam("dt_end") String dtEndParam,
+            @DefaultValue("") @FormParam("listProductSelected") String listProductSelectedParam,
+            @DefaultValue("") @FormParam("unselectedrecords") String unselectedrecordsParam) {
+        TUser sessionUser = utilisateurSession();
+        if (sessionUser == null) {
+            return reponseDeconnecte();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String dtStart = StringUtils.isNotEmpty(dtStartParam) ? dtStartParam
+                    : date.formatterMysqlShort.format(new Date());
+            String dtEnd = StringUtils.isNotEmpty(dtEndParam) ? dtEndParam : dtStart;
+            JSONArray listProductSelected = StringUtils.isNotEmpty(listProductSelectedParam)
+                    ? new JSONArray(listProductSelectedParam) : new JSONArray();
+            JSONArray unselectedrecords = StringUtils.isNotEmpty(unselectedrecordsParam)
+                    ? new JSONArray(unselectedrecordsParam) : new JSONArray();
+
+            odm.initEntityManager();
+            TUser user = odm.getEm().find(TUser.class, sessionUser.getLgUSERID());
+            GroupeTierspayantController groupeCtl = new GroupeTierspayantController(odm.getEmf());
+            Set<TFacture> grfact = groupeCtl.generateFacture(dtStart, dtEnd, unselectedrecords, listProductSelected,
+                    StringUtils.defaultString(lgTiersPayantId), modeSelection, user);
+            int success = grfact != null ? grfact.size() : 0;
+            if (success > 0) {
+                servletRequest.getSession().setAttribute("invoicesToPrint", grfact);
+            }
+            return Response.ok().entity(new JSONObject().put("status", success).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "generation factures par selection de bons", e);
+            String cause = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            return Response.ok().entity(
+                    new JSONObject().put("status", 0).put("message", "Génération impossible : " + cause).toString())
+                    .build();
         } finally {
             odm.closeEntityManager();
         }

@@ -48,7 +48,7 @@ public class TSousMenu implements Serializable {
     @Basic(optional = false)
     @Column(name = "lg_SOUS_MENU_ID", nullable = false, length = 40)
     private String lgSOUSMENUID;
-    @Column(name = "str_VALUE", length = 35)
+    @Column(name = "str_VALUE", length = 100)
     private String strVALUE;
     @Column(name = "str_IMAGE_CSS", length = 30)
     private String strIMAGECSS;

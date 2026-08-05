@@ -18,6 +18,23 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
     
     },
     closable: false,
+    statics: {
+        // Quand l'ecran est ouvert en fenetre modale (ex. caisse fermee pendant un
+        // reglement de facture), on ferme simplement la fenetre pour revenir a l'ecran
+        // appelant ; sinon navigation historique via xtypeload.
+        retourNavigation: function () {
+            var vue = Ext.getCmp('ouverturecaissemangerID');
+            if (!vue) {
+                return;
+            }
+            var win = vue.up('window');
+            if (win) {
+                win.close();
+            } else {
+                testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager.retourNavigation();
+            }
+        }
+    },
     initComponent: function () {
         Me = this;
         this.items = [{
@@ -142,9 +159,9 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
                         Me.lunchPrinter(ref);
 
                     } else {
-                        testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
+                        testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager.retourNavigation();
                     }
-                    testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
+                    testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager.retourNavigation();
                 });
 
     },
@@ -157,7 +174,7 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
             success: function (response)
             {
 
-                testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
+                testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager.retourNavigation();
 
             },
             failure: function (response)

@@ -142,7 +142,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_groupe_data.jsp',
+                url: '../api/v1/groupe-tierspayant/bons-groupe',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -158,7 +158,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_allbons.jsp',
+                url: '../api/v1/groupe-tierspayant/tous-bons',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -180,10 +180,15 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                     root: 'results',
                     totalProperty: 'total'
                 }
+            },
+            listeners: {
+                // la recherche de la selection massive est transmise a chaque chargement
+                // (chargement initial, touche Entree et pagination)
+                beforeload: function (st) {
+                    var champ = Ext.getCmp('rechAssietteMassive');
+                    st.getProxy().setExtraParam('search_value', champ ? (champ.getValue() || '') : '');
+                }
             }
-
-
-
         });
         store_detail_facture_fournisseur = new Ext.data.Store({
             model: 'testextjs.model.Facture',
@@ -208,7 +213,9 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_type_tierspayant,
+                // URL en dur : la globale url_services_data_type_tierspayant est redefinie par
+                // d'autres ecrans selon l'ordre de chargement et ramenait l'ancienne JSP
+                url: '../api/v1/reglement-facture/types-tierspayant',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -607,6 +614,26 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                             id: 'gridpanelID',
                             store: store_detail_tiers_payant,
                             minHeight: 350,
+                            tbar: [{
+                                    xtype: 'textfield',
+                                    id: 'rechAssietteMassive',
+                                    flex: 1,
+                                    emptyText: 'Rechercher un tiers payant...',
+                                    enableKeyEvents: true,
+                                    listeners: {
+                                        specialKey: function (field, e) {
+                                            if (e.getKey() === e.ENTER) {
+                                                store_detail_tiers_payant.loadPage(1);
+                                            }
+                                        }
+                                    }
+                                }, {
+                                    text: 'Rechercher',
+                                    iconCls: 'searchicon',
+                                    handler: function () {
+                                        store_detail_tiers_payant.loadPage(1);
+                                    }
+                                }],
                             columns: [
                                 {
                                     header: 'ID tiers Payant',
@@ -1266,8 +1293,40 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
     },
 
+    /**
+     * Verifie qu'au moins un dossier est coche (ou "Tous selectionner" actif) avant de lancer
+     * une generation. Compte directement les lignes cochees de la grille : plus fiable que la
+     * seule liste interne, qui peut ne pas refleter l'etat affiche.
+     */
+    verifierSelectionAvantGeneration: function (grille, caseToutSelectionner) {
+        if (caseToutSelectionner && caseToutSelectionner.getValue()) {
+            return true;
+        }
+        var nbCoches = 0;
+        if (grille && grille.getStore()) {
+            grille.getStore().each(function (rec) {
+                if (rec.get('isChecked')) {
+                    nbCoches++;
+                }
+            });
+        }
+        if (nbCoches === 0 && (!listProductSelected || listProductSelected.length === 0)) {
+            Ext.MessageBox.alert('Information',
+                    'Aucun dossier n\'est coch\u00e9.<br/>Cochez au moins un dossier, ou cochez '
+                    + '"Tous s\u00e9lectionner" pour tout facturer, avant de g\u00e9n\u00e9rer la facture.');
+            return false;
+        }
+        return true;
+    },
+
     onGenerateInvoice: function () {
         if (Ext.getCmp('INGridGROUPE').getStore().getCount() === 0) {
+            return;
+        }
+        // Aucun dossier coche : on n'engage pas la generation (evite de facturer par megarde
+        // tout le groupe alors que l'utilisateur n'a rien choisi)
+        if (!this.verifierSelectionAvantGeneration(Ext.getCmp('INGridGROUPE'),
+                Ext.getCmp('selectGROUPSELECT'))) {
             return;
         }
         var mode = 0;
@@ -1291,7 +1350,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
         testextjs.app.getController('App').ShowWaitingProcess();
         Ext.Ajax.request({
-            url: '../webservices/configmanagement/groupe/ws_facturation.jsp',
+            url: '../api/v1/groupe-tierspayant/facturation-groupe',
             method: 'POST',
             timeout: 24000000,
             params: {
@@ -1360,6 +1419,11 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         if (Ext.getCmp('notINGridSELECT').getStore().getCount() === 0) {
             return;
         }
+        // Meme regle que la generation par groupe : au moins un bon coche
+        if (!this.verifierSelectionAvantGeneration(Ext.getCmp('notINGridSELECT'),
+                Ext.getCmp('selectALLSELECT'))) {
+            return;
+        }
         var mode = 0;
         var selectALL = Ext.getCmp('selectALLSELECT').getValue();
         if (selectALL) {
@@ -1374,7 +1438,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
         var gridStore = Ext.getCmp('notINGridSELECT').getStore();
         testextjs.app.getController('App').ShowWaitingProcess();
         Ext.Ajax.request({
-            url: '../webservices/configmanagement/groupe/ws_selectedBons.jsp',
+            url: '../api/v1/groupe-tierspayant/facturation-bons',
             method: 'POST',
             timeout: 24000000,
             params: {
@@ -1792,5 +1856,3 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
 
 });
-
-

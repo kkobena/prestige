@@ -341,6 +341,16 @@ requires: [
                             flex: 1
                         }
                         , {
+                            header: '%',
+                            dataIndex: 'intPERCENT',
+                            flex: 0.5,
+                            align: 'center',
+                            renderer: function (value) {
+                                // taux de prise en charge du bon, en bleu
+                                return "<span style='color:blue;font-weight:bold;'>" + (Ext.isEmpty(value) ? '' : value) + "</span>";
+                            }
+                        }
+                        , {
                             header: 'Montant Attendu',
                             dataIndex: 'intPRICE',
                             flex: 1,

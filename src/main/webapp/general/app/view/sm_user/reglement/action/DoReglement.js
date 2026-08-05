@@ -209,7 +209,9 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
             remoteFilter: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_tiers_payant,
+                // URL en dur : la globale url_services_data_tiers_payant est redefinie par
+                // d'autres ecrans (ws_data.jsp / ws_search_data.jsp selon l'ordre de chargement)
+                url: '../api/v1/reglement-facture/tierspayants',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -225,7 +227,9 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_type_tierspayant,
+                // URL en dur : types de tiers payant en REST (la JSP historique reste utilisee
+                // par les autres ecrans non migres)
+                url: '../api/v1/reglement-facture/types-tierspayant',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -1051,9 +1055,38 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
         }
     },
     onbtncancel: function () {
-
-        var xtype = "facturemanager";
-        testextjs.app.getController('App').onLoadNewComponent(xtype, "", "");
+        this.retourVuePrecedente();
+    },
+    // Ouverte en fenetre modale depuis la liste des factures : fermer la fenetre suffit,
+    // le listener close de la fenetre actualise la liste en dessous. Hors fenetre
+    // (ancien mode plein ecran), navigation historique conservee.
+    retourVuePrecedente: function () {
+        var win = this.up('window');
+        if (win) {
+            win.close();
+        } else {
+            testextjs.app.getController('App').onLoadNewComponent('facturemanager', 'Gestion Facturation', '');
+        }
+    },
+    // Message d'echec du reglement : si la caisse est fermee, proposer de l'ouvrir
+    // (vue d'ouverture de caisse en modale, retour a la facture apres validation)
+    afficherErreurReglement: function (messageErreur) {
+        if (String(messageErreur || '').toLowerCase().indexOf('caisse est ferm') !== -1) {
+            Ext.Msg.confirm('Caisse ferm\u00e9e', 'Votre caisse est ferm\u00e9e, voulez-vous l\'ouvrir ?', function (btn) {
+                if (btn === 'yes') {
+                    Ext.create('Ext.window.Window', {
+                        title: 'Ouverture de caisse',
+                        modal: true,
+                        width: 470,
+                        autoScroll: true,
+                        layout: 'fit',
+                        items: [{xtype: 'ouverturecaissemanger'}]
+                    }).show();
+                }
+            });
+        } else {
+            Ext.MessageBox.alert('Error Message', messageErreur);
+        }
     },
 
     Doreglement: function () {
@@ -1183,7 +1216,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                 myAppController.StopWaitingProcess();
                 var object = Ext.JSON.decode(response.responseText, false);
 //                alert(object.success);
-                if (object.errors === "1") {
+                if (object.success === "1") {
                     checkedList = [];
                     listProductSelected = [];
                     Ext.Msg.confirm("Information", "Voulez-vous imprimer ?",
@@ -1193,15 +1226,13 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                                     Me.lunchPrinter(object.lg_DOSSIER_REGLEMENT_ID);
 //                                  
                                 } else {
-                                    var xtype = "facturemanager";
-                                    var alias = 'widget.' + xtype;
-                                    testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion Facturation", "");
+                                    Ext.getCmp('doreglementmanagerID').retourVuePrecedente();
                                 }
                             });
 
 
                 } else {
-                    Ext.MessageBox.alert('Error Message', object.success);
+                    Ext.getCmp('doreglementmanagerID').afficherErreurReglement(object.success);
                 }
                 net = 0;
                 listProductSelected = [];
@@ -1239,9 +1270,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                     Ext.MessageBox.alert('Error Message', object.errors);
                     return;
                 }
-                var xtype = "facturemanager";
-                var alias = 'widget.' + xtype;
-                testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion Facturation", "");
+                Ext.getCmp('doreglementmanagerID').retourVuePrecedente();
 
 
             },
@@ -1376,7 +1405,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                     myAppController.StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
 
-                    if (object.errors === "1") {
+                    if (object.success === "1") {
                         checkedList = [];
                         listProductSelected = [];
                         Ext.Msg.confirm("Confirme", "Voulez-vous imprimer ?",
@@ -1385,15 +1414,13 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                                     
                                         Me.lunchPrinter(object.lg_DOSSIER_REGLEMENT_ID);
                                     } else {
-                                        var xtype = "facturemanager";
-                                        var alias = 'widget.' + xtype;
-                                        testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion Facturation", "");
+                                        Ext.getCmp('doreglementmanagerID').retourVuePrecedente();
                                     }
                                 });
 
 
                     } else {
-                        Ext.MessageBox.alert('Error Message', object.success);
+                        Ext.getCmp('doreglementmanagerID').afficherErreurReglement(object.success);
                     }
                     net = 0;
                     listProductSelected = [];

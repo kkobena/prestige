@@ -358,10 +358,10 @@
                     parameters.put("P_REMISE_VENTE", P_REMISE_VENTE);
                     parameters.put("P_TOTAL_GENERAL", "TOTAL GENERAL " + OTiersPayant.getStrNAME() + " ( NOMBRE DE BONS=" + entityDatas.size() + " )");
                     parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(Double.parseDouble(P_ATT_AMOUNT + "")).toUpperCase() + " (" + conversion.AmountFormat(Integer.valueOf(P_ATT_AMOUNT + "")) + " FCFA)");
-                    scr_report_file = "rp_facture_" + OTiersPayant.getLgMODELFACTUREID().getStrVALUE();
+                    scr_report_file = "rp_facture_" + (OTiersPayant.getLgMODELFACTUREID().isDynamique() ? "0202" : OTiersPayant.getLgMODELFACTUREID().getStrVALUE());
 
                     if (OTiersPayant.getDblPOURCENTAGEREMISE() > 0) {
-                        scr_report_file = "rp_facture_withremise_" + OTiersPayant.getLgMODELFACTUREID().getStrVALUE();
+                        scr_report_file = "rp_facture_withremise_" + (OTiersPayant.getLgMODELFACTUREID().isDynamique() ? "0202" : OTiersPayant.getLgMODELFACTUREID().getStrVALUE());
                     }
 
                     report_generate_file = key.GetNumberRandom();

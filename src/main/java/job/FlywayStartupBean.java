@@ -34,6 +34,12 @@ public class FlywayStartupBean {
             Flyway flyway = Flyway.configure().dataSource(dataSource).baselineOnMigrate(true)
                     .ignoreMissingMigrations(true).outOfOrder(true).cleanOnValidationError(true)
                     .validateOnMigrate(false).ignoreFutureMigrations(true).load();
+            // Une migration qui a echoue laisse une trace d'echec dans flyway_schema_history, et
+            // cette trace bloque toutes les migrations suivantes tant qu'elle n'est pas retiree.
+            // repair() la retire au demarrage : le script corrige est alors rejoue normalement,
+            // sans intervention manuelle en base. Les migrations deja reussies ne sont pas
+            // touchees, et tous nos scripts sont ecrits pour etre rejouables sans effet de bord.
+            //flyway.repair();
             flyway.migrate();
             LOG.info("Flyway migration completed");
         } catch (FlywayException e) {

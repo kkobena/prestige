@@ -187,6 +187,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 {
                                     allowBlank: false,
@@ -232,14 +234,35 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     store: store_modelfacture
 
 
+                                },
+                                {
+                                    // Tri des lignes lors de la generation de la facture de ce tiers payant
+                                    // (4e colonne des informations generales)
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Tri facture',
+                                    name: 'str_MODE_TRI_FACTURE',
+                                    id: 'str_MODE_TRI_FACTURE_TP',
+                                    store: Ext.create('Ext.data.ArrayStore', {
+                                        data: [
+                                            ['ALPHABETIQUE', 'Alphabétique (nom du client)'],
+                                            ['DATE_BON', 'Date du bon / opération']
+                                        ],
+                                        fields: [{name: 'value', type: 'string'}, {name: 'libelle', type: 'string'}]
+                                    }),
+                                    valueField: 'value',
+                                    displayField: 'libelle',
+                                    editable: false,
+                                    queryMode: 'local',
+                                    value: 'ALPHABETIQUE'
                                 }
-                                
                             ]
                         }, {
                             xtype: 'container',
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 {
                                     allowBlank: false,
@@ -273,7 +296,11 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                             name: 'int_NBRE_EXEMPLAIRE_BORD',
                                             id: 'int_NBRE_EXEMPLAIRE_BORD',
                                             minValue: 1
-                                        }
+                                        },
+                                {
+                                    // 4e colonne vide : garde l'alignement des colonnes
+                                    xtype: 'container'
+                                }
                             ]
                         },
                         {
@@ -281,6 +308,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 {
                                     allowBlank: false,
@@ -309,6 +338,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     name: 'str_CODE_OFFICINE',
                                     id: 'str_CODE_OFFICINE',
                                     //width: 500
+                                },
+                                {
+                                    // 4e colonne vide : garde l'alignement des colonnes
+                                    xtype: 'container'
                                 }
                             ]
                         },
@@ -318,6 +351,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
 
                                 {
@@ -360,6 +395,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'Montant Facture',
                                     name: 'montantFact',
                                     id: 'montantFact'
+                                },
+                                {
+                                    // 4e colonne vide : garde l'alignement des colonnes
+                                    xtype: 'container'
                                 }
 
 
@@ -371,6 +410,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
 
                                 {
@@ -394,35 +435,12 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'Registre de Commerce',
                                     name: 'str_REGISTRE_COMMERCE',
                                     id: 'str_REGISTRE_COMMERCE'
+                                },
+                                {
+                                    // 4e colonne vide : garde l'alignement des colonnes
+                                    xtype: 'container'
                                 }
 
-                            ]
-                        },
-                        {
-                            xtype: 'container',
-                            layout: 'hbox',
-                            defaultType: 'textfield',
-                            margin: '0 0 5 0',
-                            items: [
-                                {
-                                    // Tri des lignes lors de la generation de la facture de ce tiers payant
-                                    xtype: 'combobox',
-                                    fieldLabel: 'Tri facture',
-                                    name: 'str_MODE_TRI_FACTURE',
-                                    id: 'str_MODE_TRI_FACTURE_TP',
-                                    store: Ext.create('Ext.data.ArrayStore', {
-                                        data: [
-                                            ['ALPHABETIQUE', 'Alphab&eacute;tique (nom du client)'],
-                                            ['DATE_BON', 'Date du bon / op&eacute;ration']
-                                        ],
-                                        fields: [{name: 'value', type: 'string'}, {name: 'libelle', type: 'string'}]
-                                    }),
-                                    valueField: 'value',
-                                    displayField: 'libelle',
-                                    editable: false,
-                                    queryMode: 'local',
-                                    value: 'ALPHABETIQUE'
-                                }
                             ]
                         }
 
@@ -445,6 +463,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
 
                                 {
@@ -476,6 +496,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 {
                                     // allowBlank: false,
@@ -506,6 +528,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 // int_NUMERO_DECOMPTE*
                                 {
@@ -540,6 +564,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 // dbl_POURCENTAGE_REMISE*
                                 {
@@ -614,6 +640,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 // dbl_MONTANT_F_CLIENT*
                                 {
@@ -733,6 +761,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 {
                                     // allowBlank: false,
@@ -768,6 +798,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
 
                                 {
@@ -829,6 +861,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             layout: 'hbox',
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
+                            // 4 colonnes de largeur egale et libelles alignes sur tout le bloc
+                            defaults: {flex: 1, labelWidth: 115, margin: '0 10 0 0'},
                             items: [
                                 {
                                     allowBlank: false,

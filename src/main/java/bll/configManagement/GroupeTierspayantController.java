@@ -952,18 +952,12 @@ public class GroupeTierspayantController implements Serializable {
             OTTiersPayant.setBCANBEUSE(true);
             em.merge(OTTiersPayant);
         }
-        List<TCompteClientTiersPayant> list = (List<TCompteClientTiersPayant>) OTTiersPayant
-                .getTCompteClientTiersPayantCollection();
-        list.stream().filter((compteClientTiersPayant) -> (!compteClientTiersPayant.getBIsAbsolute()))
-                .map((compteClientTiersPayant) -> {
-                    compteClientTiersPayant.setBCANBEUSE(true);
-                    return compteClientTiersPayant;
-                }).map((compteClientTiersPayant) -> {
-                    compteClientTiersPayant.setDbCONSOMMATIONMENSUELLE(0);
-                    return compteClientTiersPayant;
-                }).forEachOrdered((compteClientTiersPayant) -> {
-                    em.merge(compteClientTiersPayant);
-                });
+        // Mise a jour groupee des comptes clients du tiers payant : meme effet que la boucle
+        // historique, en UNE requete au lieu de charger toute la collection puis de faire un
+        // merge par compte (identique a la generation individuelle).
+        em.createQuery("UPDATE TCompteClientTiersPayant c SET c.bCANBEUSE = TRUE, c.dbCONSOMMATIONMENSUELLE = 0 "
+                + "WHERE c.lgTIERSPAYANTID = ?1 AND c.bIsAbsolute = FALSE").setParameter(1, OTTiersPayant)
+                .executeUpdate();
     }
 
     private List<TPreenregistrementDetail> findItems(String OTPreenregistrement, EntityManager em) {
@@ -1059,6 +1053,11 @@ public class GroupeTierspayantController implements Serializable {
             i = 2;
         } else if (p.getIntNBREBONS() <= 0 && p.getIntMONTANTFAC() > 0) {
             i = 1;
+        } else if (Boolean.TRUE.equals(p.getGroupingByTaux())) {
+            // "Grouper les factures par taux" : meme regle que la generation individuelle
+            // (factureManagement.getCase). Les switch sans case 3 tombent dans default et
+            // gardent leur comportement historique.
+            i = 3;
         }
         return i;
     }
@@ -2371,6 +2370,24 @@ public class GroupeTierspayantController implements Serializable {
 
                 }
                 break;
+            case 3:
+                // "Grouper les factures par taux" : une facture par pourcentage de prise en
+                // charge, meme decoupage que la generation individuelle (factureManagement cas 3)
+                if (!finalTp.isEmpty()) {
+                    finalTp.stream()
+                            .collect(Collectors.groupingBy(TPreenregistrementCompteClientTiersPayent::getIntPERCENT))
+                            .forEach((taux, bons) -> {
+                                try {
+                                    TFacture facTaux = this.createInvoices(bons,
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, us);
+                                    factures.add(facTaux);
+                                    createGroupeFacture(g, facTaux, CODEFACTURE, em);
+                                } catch (Exception e) {
+                                }
+                            });
+                }
+                break;
             default:
 
                 if (finalTp.size() > 0) {
@@ -2407,6 +2424,13 @@ public class GroupeTierspayantController implements Serializable {
 
             List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1,
                     p.getLgTIERSPAYANTID(), -1, "");
+
+            // Aucun bon sur la periode pour ce tiers payant : pas de facture (une facture a 0
+            // n'a pas de sens metier et faisait echouer l'edition PDF "document has no pages").
+            // Meme garde que la variante de generation avec exclusions.
+            if (finalTp.isEmpty()) {
+                return;
+            }
 
             switch (getCase(p)) {
 
@@ -2533,6 +2557,24 @@ public class GroupeTierspayantController implements Serializable {
                     factures.add(of);
                     createGroupeFacture(g, of, CODEFACTURE, em);
 
+                }
+                break;
+            case 3:
+                // "Grouper les factures par taux" : une facture par pourcentage de prise en
+                // charge, meme decoupage que la generation individuelle (factureManagement cas 3)
+                if (!finalTp.isEmpty()) {
+                    finalTp.stream()
+                            .collect(Collectors.groupingBy(TPreenregistrementCompteClientTiersPayent::getIntPERCENT))
+                            .forEach((taux, bons) -> {
+                                try {
+                                    TFacture facTaux = this.createInvoices(bons,
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, u);
+                                    factures.add(facTaux);
+                                    createGroupeFacture(g, facTaux, CODEFACTURE, em);
+                                } catch (Exception e) {
+                                }
+                            });
                 }
                 break;
             default:
@@ -5143,6 +5185,25 @@ public class GroupeTierspayantController implements Serializable {
                         factures.add(of);
                         createGroupeFacture(g, of, codeFacture, em);
 
+                    }
+                    break;
+                case 3:
+                    // "Grouper les factures par taux" : une facture par pourcentage de prise en
+                    // charge, meme decoupage que la generation individuelle (factureManagement cas 3)
+                    if (!finalTp.isEmpty()) {
+                        finalTp.stream()
+                                .collect(
+                                        Collectors.groupingBy(TPreenregistrementCompteClientTiersPayent::getIntPERCENT))
+                                .forEach((taux, bons) -> {
+                                    try {
+                                        TFacture facTaux = this.createInvoices(bons,
+                                                date.formatterMysqlShort.parse(dt_start),
+                                                date.formatterMysqlShort.parse(dt_end), p, em, us);
+                                        factures.add(facTaux);
+                                        createGroupeFacture(g, facTaux, codeFacture, em);
+                                    } catch (Exception e) {
+                                    }
+                                });
                     }
                     break;
                 default:

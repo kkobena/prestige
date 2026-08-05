@@ -84,13 +84,24 @@
 
     TOfficine oTOfficine = obllBase.getOdataManager().getEm().find(dal.TOfficine.class, "1");
     TFacture OFacture = obllBase.getOdataManager().getEm().find(TFacture.class, lg_FACTURE_ID);
+    // Facture sans aucun bon : l'edition Jasper produirait un document a 0 page et une
+    // erreur technique brute ("The document has no pages"). On explique la situation.
+    if (OFacture != null && (OFacture.getIntNBDOSSIER() == null || OFacture.getIntNBDOSSIER() == 0)) {
+        out.println("<html><head><meta charset=\"UTF-8\"><title>Impression impossible</title></head><body style=\"font-family:Arial,sans-serif;padding:30px;\">");
+        out.println("<h3 style=\"color:#C00000;\">Impression impossible : cette facture ne contient aucun bon.</h3>");
+        out.println("<p>La facture N&deg; " + OFacture.getStrCODEFACTURE() + " a ete creee sans dossier (montant 0), il n'y a donc rien a imprimer.</p>");
+        out.println("<p>Vous pouvez la supprimer depuis la liste des factures, puis relancer la generation sur une periode contenant des bons.</p>");
+        out.println("</body></html>");
+        return;
+    }
     TTiersPayant OTiersPayant = obllBase.getOdataManager().getEm().find(TTiersPayant.class, OFacture.getStrCUSTOMER());
     TTypeMvtCaisse OTypeMvtCaisse = obllBase.getOdataManager().getEm().find(TTypeMvtCaisse.class, OFacture.getLgTYPEFACTUREID().getLgTYPEFACTUREID());
     // Modele de facture dynamique (createur de modeles) : si le tiers payant y est rattache,
     // l'edition est prise en charge par l'API REST dediee. Les modeles Jasper historiques
     // restent inchanges pour les autres tiers payants. Le parametre modeId (choix explicite
     // d'un modele Jasper) conserve la priorite sur le modele dynamique.
-    if (request.getParameter("modeId") == null && OTiersPayant.getModelFactureDynamiqueId() != null) {
+    if (request.getParameter("modeId") == null && OTiersPayant.getLgMODELFACTUREID() != null
+            && OTiersPayant.getLgMODELFACTUREID().isDynamique()) {
         response.sendRedirect(request.getContextPath() + "/api/v1/model-facture-dynamique/pdf/" + lg_FACTURE_ID);
         return;
     }
@@ -150,6 +161,17 @@
     parameters.put("P_LG_FACTURE_ID", lg_FACTURE_ID);
 
     parameters.put("P_LG_TIERS_PAYANT_ID", OTiersPayant.getLgTIERSPAYANTID());
+    // Tri des lignes du PDF selon la fiche du tiers payant (P_ORDER_BY ignore par les
+    // modeles .jrxml qui ne declarent pas ce parametre) : alphabetique par defaut,
+    // ou par date de bon si demande sur la fiche
+    String triFacture = "c.str_FIRST_NAME, c.str_LAST_NAME";
+    try {
+        if ("DATE_BON".equalsIgnoreCase(OTiersPayant.getStrMODETRIFACTURE())) {
+            triFacture = "DATE(preenreg.dt_UPDATED) ASC, c.str_FIRST_NAME ASC, c.str_LAST_NAME ASC";
+        }
+    } catch (Exception e) {
+    }
+    parameters.put("P_ORDER_BY", triFacture);
     parameters.put("P_CODE_FACTURE", "FACTURE N� " + OFacture.getStrCODEFACTURE() + " (" + OTiersPayant.getStrNAME() + ")");
     parameters.put("P_TIERS_PAYANT_NAME", OTiersPayant.getStrFULLNAME());
     parameters.put("P_CODE_COMPTABLE", "CODE COMPTABLE : " + OTypeMvtCaisse.getStrCODECOMPTABLE());

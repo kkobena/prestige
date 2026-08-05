@@ -142,7 +142,9 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_type_tierspayant,
+                // URL en dur : la globale url_services_data_type_tierspayant est redefinie par
+                // d'autres ecrans selon l'ordre de chargement et ramenait l'ancienne JSP
+                url: '../api/v1/reglement-facture/types-tierspayant',
                 reader: {
                     type: 'json',
                     root: 'results',

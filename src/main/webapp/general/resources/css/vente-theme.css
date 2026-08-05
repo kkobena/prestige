@@ -563,3 +563,9 @@ body.x-body,
     font-weight: bold;
     letter-spacing: 1px;
 }
+
+/* Factures : coche de selection masquee pour les lignes non supprimables
+   (reglees, partiellement reglees ou FNE) — voir EditFactureManager.estSupprimable */
+.facture-non-supprimable .x-grid-row-checker {
+    visibility: hidden;
+}

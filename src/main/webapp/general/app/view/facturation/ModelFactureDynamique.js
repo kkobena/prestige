@@ -360,9 +360,13 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
         });
     },
 
-    // ============================ Fenetre de rattachement des tiers payants ====================
+    // ============================ Fenetre d'affectation des tiers payants ====================
+    // Deux grilles : en haut la recherche (affectation selective ou de masse aux resultats
+    // coches), en bas les tiers payants deja rattaches au modele.
     openAssignWindow: function (rec) {
         var me = this;
+        var modelId = rec.get('id');
+
         var assignedStore = Ext.create('Ext.data.Store', {
             fields: [
                 {name: 'lg_TIERS_PAYANT_ID', type: 'string'},
@@ -371,80 +375,179 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: url_rest_model_facture_dynamique + 'tiers-payants?modelId=' + rec.get('id'),
-                reader: {
-                    type: 'json',
-                    root: 'data',
-                    totalProperty: 'total'
-                }
+                url: url_rest_model_facture_dynamique + 'tiers-payants?modelId=' + modelId,
+                reader: {type: 'json', root: 'data', totalProperty: 'total'}
             }
         });
-        var searchstore = Ext.create('testextjs.store.Statistics.TiersPayans');
+
+        var rechercheStore = Ext.create('Ext.data.Store', {
+            fields: [
+                {name: 'lg_TIERS_PAYANT_ID', type: 'string'},
+                {name: 'str_FULLNAME', type: 'string'},
+                {name: 'MODELE_ACTUEL', type: 'string'},
+                {name: 'EST_DYNAMIQUE', type: 'boolean'},
+                {name: 'isChecked', type: 'boolean'}
+            ],
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: url_rest_model_facture_dynamique + 'rechercher-tiers-payants',
+                reader: {type: 'json', root: 'data', totalProperty: 'total'}
+            }
+        });
+
+        var lancerRecherche = function (grille) {
+            var champ = grille.up('window').down('#mfdRecherche');
+            rechercheStore.load({params: {query: champ ? (champ.getValue() || '') : ''}});
+        };
+
+        var idsCoches = function () {
+            var ids = [];
+            rechercheStore.each(function (r) {
+                if (r.get('isChecked')) {
+                    ids.push(r.get('lg_TIERS_PAYANT_ID'));
+                }
+            });
+            return ids;
+        };
+
+        var affecter = function (ids, idModele, libelleAction) {
+            if (!ids.length) {
+                Ext.MessageBox.alert('Information',
+                        'Cochez au moins un tiers payant dans les r\u00e9sultats de recherche.');
+                return;
+            }
+            Ext.MessageBox.confirm('Confirmation',
+                    libelleAction + ' pour ' + ids.length + ' tiers payant(s) ?',
+                    function (btn) {
+                        if (btn !== 'yes') {
+                            return;
+                        }
+                        Ext.Ajax.request({
+                            url: url_rest_model_facture_dynamique + 'assigner-masse',
+                            method: 'POST',
+                            params: {modelId: idModele, tiersPayants: Ext.encode(ids)},
+                            success: function (response) {
+                                var object = Ext.JSON.decode(response.responseText, false);
+                                if (object.success === "0") {
+                                    Ext.MessageBox.alert('Message d\'erreur', object.errors);
+                                    return;
+                                }
+                                Ext.MessageBox.alert('Information', object.errors);
+                                rechercheStore.each(function (r) {
+                                    r.set('isChecked', false);
+                                });
+                                rechercheStore.commitChanges();
+                                assignedStore.reload();
+                                me.modelStore.reload();
+                            },
+                            failure: function (response) {
+                                Ext.MessageBox.alert('Error Message', response.responseText);
+                            }
+                        });
+                    });
+        };
 
         var win = Ext.create('Ext.window.Window', {
             autoShow: true,
             modal: true,
-            title: 'Tiers payants factur&eacute;s avec le mod&egrave;le [' + rec.get('nom') + ']',
-            width: 640,
-            height: 500,
-            layout: 'fit',
-            items: [{
+            title: 'Affecter le mod&egrave;le [' + rec.get('nom') + '] &agrave; des tiers payants',
+            width: 820,
+            height: 620,
+            layout: {type: 'vbox', align: 'stretch'},
+            items: [
+                {
                     xtype: 'gridpanel',
-                    store: assignedStore,
+                    title: '1. Rechercher des tiers payants et cocher ceux &agrave; affecter',
+                    flex: 1,
+                    store: rechercheStore,
                     tbar: [
                         {
-                            xtype: 'combobox',
-                            itemId: 'mfdTpCombo',
+                            xtype: 'textfield',
+                            itemId: 'mfdRecherche',
                             flex: 1,
-                            store: searchstore,
-                            pageSize: 10,
-                            valueField: 'lg_TIERS_PAYANT_ID',
-                            displayField: 'str_FULLNAME',
-                            minChars: 2,
-                            queryMode: 'remote',
-                            emptyText: 'Selectionner tiers payant...',
-                            listConfig: {
-                                loadingText: 'Recherche...',
-                                emptyText: 'Pas de donn&eacute;es trouv&eacute;es.',
-                                getInnerTpl: function () {
-                                    return '<span>{str_FULLNAME}</span>';
+                            emptyText: 'Nom du tiers payant (laisser vide pour tout lister)...',
+                            enableKeyEvents: true,
+                            listeners: {
+                                specialKey: function (field, e) {
+                                    if (e.getKey() === e.ENTER) {
+                                        rechercheStore.load({params: {query: field.getValue() || ''}});
+                                    }
                                 }
                             }
                         },
                         {
-                            text: 'Rattacher',
-                            iconCls: 'addicon',
+                            text: 'Rechercher',
+                            iconCls: 'searchicon',
                             handler: function (btn) {
-                                var combo = btn.up('toolbar').down('#mfdTpCombo');
-                                var tpId = combo.getValue();
-                                if (!tpId) {
-                                    Ext.MessageBox.alert('Avertissement', 'Selectionnez un tiers payant');
-                                    return;
-                                }
-                                Ext.Ajax.request({
-                                    url: url_rest_model_facture_dynamique + 'assigner',
-                                    method: 'POST',
-                                    params: {
-                                        lg_TIERS_PAYANT_ID: tpId,
-                                        modelId: rec.get('id')
-                                    },
-                                    success: function (response) {
-                                        var object = Ext.JSON.decode(response.responseText, false);
-                                        if (object.success === "0") {
-                                            Ext.MessageBox.alert('Message d\'erreur', object.errors);
-                                            return;
-                                        }
-                                        combo.clearValue();
-                                        assignedStore.reload();
-                                        me.modelStore.reload();
-                                    },
-                                    failure: function (response) {
-                                        Ext.MessageBox.alert('Error Message', response.responseText);
-                                    }
+                                lancerRecherche(btn.up('gridpanel'));
+                            }
+                        },
+                        '-',
+                        {
+                            text: 'Tout cocher',
+                            handler: function () {
+                                rechercheStore.each(function (r) {
+                                    r.set('isChecked', true);
                                 });
+                                rechercheStore.commitChanges();
+                            }
+                        },
+                        {
+                            text: 'Tout d&eacute;cocher',
+                            handler: function () {
+                                rechercheStore.each(function (r) {
+                                    r.set('isChecked', false);
+                                });
+                                rechercheStore.commitChanges();
+                            }
+                        },
+                        '->',
+                        {
+                            text: 'Affecter ce mod&egrave;le',
+                            iconCls: 'addicon',
+                            handler: function () {
+                                affecter(idsCoches(), modelId, 'Affecter le mod\u00e8le "' + rec.get('nom') + '"');
+                            }
+                        },
+                        {
+                            text: 'Retirer le mod&egrave;le',
+                            iconCls: 'cancelicon',
+                            tooltip: 'Remettre le mod&egrave;le de facture par d&eacute;faut',
+                            handler: function () {
+                                affecter(idsCoches(), 0, 'Remettre le mod\u00e8le par d\u00e9faut');
                             }
                         }
                     ],
+                    columns: [
+                        {
+                            xtype: 'checkcolumn',
+                            dataIndex: 'isChecked',
+                            width: 40
+                        },
+                        {
+                            header: 'Tiers payant',
+                            dataIndex: 'str_FULLNAME',
+                            flex: 1.6
+                        },
+                        {
+                            header: 'Mod&egrave;le actuellement affect&eacute;',
+                            dataIndex: 'MODELE_ACTUEL',
+                            flex: 1.4,
+                            renderer: function (value, meta, r) {
+                                if (r.get('EST_DYNAMIQUE')) {
+                                    return '<span style="color:green;">' + (value || '') + '</span>';
+                                }
+                                return value || '';
+                            }
+                        }
+                    ]
+                },
+                {
+                    xtype: 'gridpanel',
+                    title: '2. Tiers payants actuellement factur&eacute;s avec ce mod&egrave;le',
+                    flex: 1,
+                    store: assignedStore,
                     columns: [
                         {
                             header: 'Tiers payant',
@@ -458,7 +561,7 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                             menuDisabled: true,
                             items: [{
                                     icon: 'resources/images/icons/fam/delete.png',
-                                    tooltip: 'D&eacute;tacher du mod&egrave;le (retour aux mod&egrave;les classiques)',
+                                    tooltip: 'D&eacute;tacher du mod&egrave;le (retour au mod&egrave;le par d&eacute;faut)',
                                     handler: function (grid, rowIndex) {
                                         var tpRec = grid.getStore().getAt(rowIndex);
                                         Ext.Ajax.request({
@@ -485,7 +588,8 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                                 }]
                         }
                     ]
-                }],
+                }
+            ],
             buttons: [{
                     text: 'Fermer',
                     handler: function () {

@@ -343,7 +343,8 @@ public class FactureTiersPayantRessource {
             @DefaultValue("") @QueryParam("str_CODE_REGROUPEMENT") String strCodeRegroupement,
             @DefaultValue("") @QueryParam("lg_TIERS_PAYANT") String lgTiersPayant,
             @DefaultValue("") @QueryParam("action") String action, @QueryParam("start") String startParam,
-            @DefaultValue("0") @QueryParam("limit") int limit) {
+            @DefaultValue("0") @QueryParam("limit") int limit,
+            @DefaultValue("") @QueryParam("search_value") String searchValue) {
         TUser sessionUser = utilisateurSession();
         if (sessionUser == null) {
             return reponseDeconnecte();
@@ -364,6 +365,18 @@ public class FactureTiersPayantRessource {
             factureManagement ofm = new factureManagement(odm, sessionUser);
             List<EntityData> listEntityData = ofm.getVenteTiersPayant(dtDebut, dtFin, codeRegroupement, typeTp,
                     tiersPayant);
+            // Recherche de la selection massive : filtre sur le nom du tiers payant, applique
+            // en memoire AVANT la pagination (parametre optionnel : sans recherche, liste inchangee)
+            if (StringUtils.isNotEmpty(searchValue)) {
+                String cherche = searchValue.toLowerCase();
+                List<EntityData> filtres = new ArrayList<>();
+                for (EntityData ed : listEntityData) {
+                    if (ed.getStr_value1() != null && ed.getStr_value1().toLowerCase().contains(cherche)) {
+                        filtres.add(ed);
+                    }
+                }
+                listEntityData = filtres;
+            }
             double montantTotal = 0;
 
             int pgInt;
@@ -524,15 +537,56 @@ public class FactureTiersPayantRessource {
             return Response.ok().entity(result).build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "transaction facturation", e);
+            // rollback explicite AVANT la fermeture : sinon closeEntityManager detecte une
+            // transaction restee ouverte et emet un evenement generique sans le contexte
+            try {
+                if (odm.getEm() != null && odm.getEm().getTransaction() != null
+                        && odm.getEm().getTransaction().isActive()) {
+                    odm.getEm().getTransaction().rollback();
+                }
+            } catch (Exception ignore) {
+            }
             // remonte la cause reelle a l'ecran (la JSP historique laissait partir une erreur 500)
             String cause = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 cause = e.getCause().getMessage();
             }
+            // evenement support PRECIS : quelle operation, quels parametres, quelle cause
+            String operation = "génération/suppression de factures (mode=" + mode + ", sélection=" + modeSelection
+                    + ", période du " + dtDebutParam + " au " + dtFinParam + ", tiers payant=" + lgTiersPayant
+                    + ", type TP=" + lgTypeTiersPayantId + ", facture=" + lgFactureId + ")";
+            signalerAuSupportFacturation(operation, cause, e);
             return Response.ok().entity(new JSONObject().put("success", commonparameter.PROCESS_FAILED)
                     .put("errors", "Génération impossible : " + cause).toString()).build();
         } finally {
             odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Incident de facturation transmis au Centre de Support avec l'operation en cours et la cause exacte, pour un
+     * depannage direct (l'evenement generique "transaction non cloturee" ne disait pas quelle ecriture avait echoue).
+     * Best-effort : ne perturbe jamais la reponse.
+     */
+    private static void signalerAuSupportFacturation(String operation, String cause, Exception e) {
+        try {
+            StringBuilder pile = new StringBuilder();
+            for (StackTraceElement frame : e.getStackTrace()) {
+                pile.append(frame).append('\n');
+            }
+            rest.service.SupportEventService support = javax.enterprise.inject.spi.CDI.current()
+                    .select(rest.service.SupportEventService.class).get();
+            rest.service.dto.SupportEventDTO dto = new rest.service.dto.SupportEventDTO();
+            dto.setType("JAVA");
+            dto.setNiveau("ERROR");
+            dto.setModule("FACTURATION");
+            dto.setMessageCourt("Echec " + operation + " : " + cause);
+            dto.setUrlOuEcran("api/v1/facture-tiers-payant/transaction");
+            dto.setPayloadJson("Cause exacte : " + cause);
+            dto.setStack(pile.length() > 20000 ? pile.substring(0, 20000) : pile.toString());
+            support.record(dto, "");
+        } catch (RuntimeException ex) {
+            // centre de support indisponible : la trace serveur reste
         }
     }
 
@@ -570,5 +624,120 @@ public class FactureTiersPayantRessource {
         } catch (Exception e) {
         }
         return pageAsInt;
+    }
+
+    /**
+     * Liste des dossiers en attente de facturation (ex "factures en attente d'edition") : port de
+     * webservices/sm_user/journalvente/ws_facture_ententeedition.jsp, MEMES methodes metier
+     * bll.preenregistrement.Preenregistrement et MEMES cles JSON. Relogee dans cette classe (au lieu d'une ressource
+     * autonome) : sur certains environnements la ressource dediee n'etait pas enregistree par le serveur (404).
+     */
+    @GET
+    @Path("dossiers-en-attente/list")
+    public Response dossiersEnAttente(@DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("dt_Date_Debut") String dtDebutParam,
+            @DefaultValue("") @QueryParam("dt_Date_Fin") String dtFinParam,
+            @DefaultValue("") @QueryParam("lg_TIERS_PAYANT_ID") String lgTiersPayantId,
+            @DefaultValue("") @QueryParam("action") String action, @QueryParam("start") String startParam) {
+        TUser sessionUser = utilisateurSession();
+        if (sessionUser == null) {
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            date key = new date();
+            Date today = new Date();
+            String strDateDebut = StringUtils.isNotEmpty(dtDebutParam) ? dtDebutParam
+                    : key.DateToString(today, key.formatterMysqlShort);
+            String strDateFin = StringUtils.isNotEmpty(dtFinParam) ? dtFinParam
+                    : key.DateToString(today, key.formatterMysqlShort);
+            String tiersPayantId = StringUtils.isNotEmpty(lgTiersPayantId) ? lgTiersPayantId : "%%";
+
+            Date dtDateFin = key.stringToDate(strDateFin, key.formatterMysqlShort);
+            String odateFin = key.DateToString(dtDateFin, key.formatterMysqlShort2);
+            dtDateFin = key.getDate(odateFin, "23:59");
+            Date dtDateDebut = key.stringToDate(strDateDebut, key.formatterMysqlShort);
+            String odateDebut = key.DateToString(dtDateDebut, key.formatterMysqlShort2);
+            dtDateDebut = key.getDate(odateDebut, "00:00");
+
+            odm.initEntityManager();
+            Preenregistrement op = new Preenregistrement(odm, sessionUser);
+            List<TPreenregistrementCompteClientTiersPayent> lst = op.getListVenteTiersPayant(searchValue, tiersPayantId,
+                    dtDateDebut, dtDateFin);
+            double totalBon = op.getTotalBon(lst);
+            double totalAttenduTp = op.getTotalAttenduParTP(lst);
+            int nbreBon = op.getTotalNbreBon(lst);
+
+            int dataPerPage = jdom.int_size_pagination;
+            int pageAsInt = 0;
+            try {
+                if (!"filltable".equals(action)) {
+                    if (startParam != null) {
+                        pageAsInt = (Integer.parseInt(startParam) / dataPerPage) + 1;
+                    } else {
+                        pageAsInt = 1;
+                    }
+                }
+            } catch (Exception e) {
+            }
+            if (dataPerPage > lst.size()) {
+                dataPerPage = lst.size();
+            }
+            int pgInt = pageAsInt - 1;
+            int pgIntLast;
+            if (pgInt == 0) {
+                pgIntLast = dataPerPage;
+            } else {
+                pgIntLast = (lst.size() - (dataPerPage * (pgInt)));
+                pgIntLast = (dataPerPage * (pgInt) + pgIntLast);
+                if (pgIntLast > (dataPerPage * (pgInt + 1))) {
+                    pgIntLast = dataPerPage * (pgInt + 1);
+                }
+                pgInt = ((dataPerPage) * (pgInt));
+            }
+
+            JSONArray arrayObj = new JSONArray();
+            for (int i = pgInt; i < pgIntLast; i++) {
+                TPreenregistrementCompteClientTiersPayent pc = lst.get(i);
+                JSONObject json = new JSONObject();
+                json.put("lg_PREENREGISTREMENT_ID", pc.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID());
+                json.put("str_DESCRIPTION", pc.getStrREFBON());
+                json.put("str_REF", pc.getLgPREENREGISTREMENTID().getStrREF());
+                json.put("lg_USER_CAISSIER_ID", pc.getLgPREENREGISTREMENTID().getLgUSERCAISSIERID().getStrFIRSTNAME()
+                        + " " + pc.getLgPREENREGISTREMENTID().getLgUSERCAISSIERID().getStrFIRSTNAME());
+                json.put("int_PRICE_DETAIL", pc.getLgPREENREGISTREMENTID().getIntPRICE());
+                json.put("int_QTEDETAIL", pc.getIntPRICE());
+                json.put("dt_CREATED",
+                        date.DateToString(pc.getLgPREENREGISTREMENTID().getDtUPDATED(), date.formatterShort));
+                json.put("lg_ETAT_ARTICLE_ID",
+                        date.DateToString(pc.getLgPREENREGISTREMENTID().getDtUPDATED(), date.NomadicUiFormat_Time));
+                json.put("str_DESCRIPTION_PLUS",
+                        pc.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getStrFIRSTNAME()
+                                + " " + pc.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID()
+                                        .getStrLASTNAME());
+                json.put("lg_AJUSTEMENTDETAIL_ID", pc.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID()
+                        .getLgCLIENTID().getStrNUMEROSECURITESOCIAL());
+                json.put("MOUVEMENT",
+                        "<span style='display: inline-block;width:15%;'>"
+                                + pc.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME()
+                                + "</span><span style='display: inline-block;width:10%;'>"
+                                + (pc.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getLgTYPETIERSPAYANTID()
+                                        .getLgTYPETIERSPAYANTID().equalsIgnoreCase("1") ? "S" : "X")
+                                + "</span>");
+                json.put("int_NUMBER_AVAILABLE_DECONDITION", totalAttenduTp);
+                json.put("int_NUMBERDETAIL", totalBon);
+                json.put("int_SEUIL_RESERVE", nbreBon);
+                arrayObj.put(json);
+            }
+            String result = "{\"total\":\"" + lst.size() + " \",\"results\":" + arrayObj.toString() + "}";
+            return Response.ok().entity(result).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "dossiers en attente de facturation", e);
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
     }
 }

@@ -2,13 +2,17 @@ package rest;
 
 import bll.bllBase;
 import bll.entity.EntityData;
+import bll.report.StatisticsFamilleArticle;
 import bll.facture.reglementManager;
 import bll.teller.tellerManagement;
+import bll.tierspayantManagement.tierspayantManagement;
 import dal.TDossierReglement;
 import dal.TFactureDetail;
 import dal.TModeReglement;
 import dal.TPreenregistrementCompteClientTiersPayent;
+import dal.TTiersPayant;
 import dal.TTypeReglement;
+import dal.TTypeTiersPayant;
 import dal.TUser;
 import dal.dataManager;
 import java.util.Date;
@@ -267,9 +271,12 @@ public class ReglementFactureRessource {
             obllBase.setMessage(orm.getMessage());
             obllBase.setDetailmessage(orm.getDetailmessage());
 
+            // errors vide quand le reglement a abouti : la JSP historique y mettait le code retour
+            // interne ("1" = succes), ce qui pretait a confusion cote utilisateur
+            String erreurs = "1".equals(obllBase.getDetailmessage()) ? "" : obllBase.getMessage();
             String result = "{\"success\":\"" + obllBase.getDetailmessage() + "\",\"str_ref\":\"" + lgFactureId
-                    + "\",\"lg_DOSSIER_REGLEMENT_ID\":\"" + lgDossierReglementId + "\", \"errors\": \""
-                    + obllBase.getMessage() + "\"}";
+                    + "\",\"lg_DOSSIER_REGLEMENT_ID\":\"" + lgDossierReglementId + "\", \"errors\": \"" + erreurs
+                    + "\"}";
             return Response.ok().entity(result).build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "do reglement", e);
@@ -589,6 +596,206 @@ public class ReglementFactureRessource {
             return Response.ok().entity(result).build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "details reglement", e);
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Recapitulatif par compte d'organisme : port de webservices/sm_user/RecapOrganisme/ws_data.jsp, MEME methode
+     * metier bll.report.StatisticsFamilleArticle.getRecapReglementByOrganismeData, memes cles JSON. Relogee dans cette
+     * classe (au lieu d'une ressource autonome) : sur certains environnements la ressource dediee n'etait pas
+     * enregistree par le serveur (404).
+     */
+    @GET
+    @Path("recap-organisme/list")
+    public Response recapOrganisme(@DefaultValue("") @QueryParam("dt_start_vente") String dtStartParam,
+            @DefaultValue("") @QueryParam("dt_end_vente") String dtEndParam,
+            @DefaultValue("") @QueryParam("lg_TIERS_PAYANT_ID") String lgTiersPayantId,
+            @DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("query") String query, @DefaultValue("") @QueryParam("action") String action,
+            @QueryParam("start") String startParam) {
+        TUser sessionUser = utilisateurSession();
+        if (sessionUser == null) {
+            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).put("total", 0).toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String dtStart = StringUtils.isNotEmpty(dtStartParam) ? dtStartParam
+                    : date.formatterMysqlShort.format(new Date());
+            String dtEnd = StringUtils.isNotEmpty(dtEndParam) ? dtEndParam
+                    : date.formatterMysqlShort.format(new Date());
+            String tiersPayantId = StringUtils.isNotEmpty(lgTiersPayantId) ? lgTiersPayantId : "%%";
+            String search = "%%";
+            if (StringUtils.isNotEmpty(searchValue)) {
+                search = searchValue;
+            }
+            if (StringUtils.isNotEmpty(query)) {
+                search = query;
+            }
+            odm.initEntityManager();
+            StatisticsFamilleArticle familleArticle = new StatisticsFamilleArticle(odm);
+            List<EntityData> lstdetails = familleArticle.getRecapReglementByOrganismeData(dtStart, dtEnd, tiersPayantId,
+                    search);
+
+            int dataPerPage = 20;
+            int pageAsInt = 0;
+            try {
+                if (!"filltable".equals(action)) {
+                    if (startParam != null) {
+                        pageAsInt = (Integer.parseInt(startParam) / dataPerPage) + 1;
+                    } else {
+                        pageAsInt = 1;
+                    }
+                }
+            } catch (Exception e) {
+            }
+            if (dataPerPage > lstdetails.size()) {
+                dataPerPage = lstdetails.size();
+            }
+            int pgInt = pageAsInt - 1;
+            int pgIntLast;
+            if (pgInt == 0) {
+                pgIntLast = dataPerPage;
+            } else {
+                pgIntLast = (lstdetails.size() - (dataPerPage * (pgInt)));
+                pgIntLast = (dataPerPage * (pgInt) + pgIntLast);
+                if (pgIntLast > (dataPerPage * (pgInt + 1))) {
+                    pgIntLast = dataPerPage * (pgInt + 1);
+                }
+                pgInt = ((dataPerPage) * (pgInt));
+            }
+
+            JSONArray arrayObj = new JSONArray();
+            for (int i = pgInt; i < pgIntLast; i++) {
+                JSONObject json = new JSONObject();
+                json.put("id", i);
+                json.put("TYPEORGANISME", lstdetails.get(i).getStr_value2());
+                json.put("CODEORGANISME", lstdetails.get(i).getStr_value3());
+                json.put("NUMORGANISME", lstdetails.get(i).getStr_value5());
+                json.put("COMPTECOMPTABLE", lstdetails.get(i).getStr_value4());
+                json.put("MONTANTOP", lstdetails.get(i).getStr_value6());
+                json.put("MONTANTSOLDE", lstdetails.get(i).getStr_value8());
+                json.put("FULNAME", lstdetails.get(i).getStr_value1());
+                json.put("CREDIT", lstdetails.get(i).getStr_value7());
+                arrayObj.put(json);
+            }
+            return Response.ok()
+                    .entity(new JSONObject().put("data", arrayObj).put("total", lstdetails.size()).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recap organisme", e);
+            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).put("total", 0).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Liste des tiers payants pour les ecrans de reglement : port de
+     * tierspayantmanagement/tierspayant/ws_search_data.jsp (MEME methode metier ShowAllOrOneTierspayant, memes cles
+     * JSON). Le decoupage respecte start/limit quand l'ecran les envoie (la JSP decoupait toujours par 10, d'ou des
+     * pages identiques quand la taille de page differait).
+     */
+    @GET
+    @Path("tierspayants")
+    public Response tierspayants(@DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("query") String query,
+            @DefaultValue("") @QueryParam("lg_TIERS_PAYANT_ID") String lgTiersPayantId,
+            @DefaultValue("") @QueryParam("lg_TYPE_TIERS_PAYANT_ID") String lgTypeTiersPayantId,
+            @DefaultValue("") @QueryParam("cmb_TYPE_TIERS_PAYANT") String cmbTypeTiersPayant,
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("10") @QueryParam("limit") int limit) {
+        if (utilisateurSession() == null) {
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String search = StringUtils.isNotEmpty(query) ? query : searchValue;
+            String tpId = StringUtils.isNotEmpty(lgTiersPayantId) ? lgTiersPayantId : "%%";
+            String typeTp = "%%";
+            if (StringUtils.isNotEmpty(lgTypeTiersPayantId)) {
+                typeTp = lgTypeTiersPayantId;
+            }
+            if (StringUtils.isNotEmpty(cmbTypeTiersPayant)) {
+                typeTp = cmbTypeTiersPayant;
+            }
+            odm.initEntityManager();
+            tierspayantManagement otm = new tierspayantManagement(odm);
+            List<TTiersPayant> lst = otm.ShowAllOrOneTierspayant(StringUtils.defaultString(search), tpId, typeTp,
+                    commonparameter.statut_enable);
+            int fin = limit > 0 ? Math.min(lst.size(), Math.max(0, start) + limit) : lst.size();
+            JSONArray arrayObj = new JSONArray();
+            for (int i = Math.max(0, start); i < fin; i++) {
+                TTiersPayant t = lst.get(i);
+                JSONObject json = new JSONObject();
+                json.put("lg_TIERS_PAYANT_ID", t.getLgTIERSPAYANTID());
+                json.put("str_CODE_ORGANISME", t.getStrCODEORGANISME());
+                json.put("str_NAME", t.getStrNAME());
+                json.put("str_FULLNAME", t.getStrFULLNAME());
+                arrayObj.put(json);
+            }
+            String result = "{\"total\":\"" + lst.size() + " \",\"results\":" + arrayObj.toString() + "}";
+            return Response.ok().entity(result).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "liste tiers payants reglement", e);
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Types de tiers payant : port de tierspayantmanagement/typetierspayant/ws_data.jsp (MEME requete, memes cles
+     * JSON), avec decoupage start/limit.
+     */
+    @GET
+    @Path("types-tierspayant")
+    public Response typesTierspayant(@DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("lg_TYPE_TIERS_PAYANT_ID") String lgTypeTiersPayantId,
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("20") @QueryParam("limit") int limit) {
+        if (utilisateurSession() == null) {
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String typeTp = "%%";
+            if (StringUtils.isNotEmpty(lgTypeTiersPayantId) && !"ALL".equals(lgTypeTiersPayantId)) {
+                typeTp = lgTypeTiersPayantId;
+            }
+            String search = "%" + StringUtils.defaultString(searchValue) + "%";
+            odm.initEntityManager();
+            List<TTypeTiersPayant> lst = odm.getEm().createQuery(
+                    "SELECT t FROM TTypeTiersPayant t WHERE t.lgTYPETIERSPAYANTID LIKE ?1 AND t.strCODETYPETIERSPAYANT LIKE ?2 AND t.strSTATUT LIKE ?3 ")
+                    .setParameter(1, typeTp).setParameter(2, search).setParameter(3, commonparameter.statut_enable)
+                    .getResultList();
+            int fin = limit > 0 ? Math.min(lst.size(), Math.max(0, start) + limit) : lst.size();
+            JSONArray arrayObj = new JSONArray();
+            date key = new date();
+            for (int i = Math.max(0, start); i < fin; i++) {
+                TTypeTiersPayant t = lst.get(i);
+                JSONObject json = new JSONObject();
+                json.put("lg_TYPE_TIERS_PAYANT_ID", t.getLgTYPETIERSPAYANTID());
+                json.put("str_CODE_TYPE_TIERS_PAYANT", t.getStrCODETYPETIERSPAYANT());
+                json.put("str_LIBELLE_TYPE_TIERS_PAYANT", t.getStrLIBELLETYPETIERSPAYANT());
+                json.put("str_STATUT", t.getStrSTATUT());
+                if (t.getDtCREATED() != null) {
+                    json.put("dt_CREATED", key.DateToString(t.getDtCREATED(), key.formatterOrange));
+                }
+                if (t.getDtUPDATED() != null) {
+                    json.put("dt_UPDATED", key.DateToString(t.getDtUPDATED(), key.formatterOrange));
+                }
+                arrayObj.put(json);
+            }
+            String result = "{\"total\":\"" + lst.size() + " \",\"results\":" + arrayObj.toString() + "}";
+            return Response.ok().entity(result).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "types tiers payant", e);
             return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
                     .build();
         } finally {

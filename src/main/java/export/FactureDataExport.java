@@ -5,10 +5,16 @@
  */
 package export;
 
+import bll.entity.EntityData;
 import bll.facture.factureManagement;
+import bll.facture.reglementManager;
+import bll.preenregistrement.Preenregistrement;
 import bll.report.StatisticSales;
 import bll.report.StatisticsFamilleArticle;
+import dal.TPreenregistrementCompteClientTiersPayent;
+import dal.TUser;
 import dal.dataManager;
+import java.util.List;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
@@ -117,6 +123,102 @@ public class FactureDataExport extends HttpServlet {
                 dataToExport = statisticSales.dataJsonArticleVenduACredi(search_value, dt_debut, dt_fin);
                 extportSimpleData(dataToExport, response, "Liste des articles vendus à crédit");
             } catch (JSONException ex) {
+                Logger.getLogger(FactureDataExport.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        // Export Excel de la liste des reglements (mêmes colonnes que l'écran)
+        if ("reglements".equals(action)) {
+            try {
+                TUser sessionUser = (TUser) request.getSession()
+                        .getAttribute(toolkits.parameters.commonparameter.AIRTIME_USER);
+                String dtDebutReg = request.getParameter("dt_debut") != null
+                        && !"".equals(request.getParameter("dt_debut")) ? request.getParameter("dt_debut")
+                                : date.formatterMysqlShort.format(new Date());
+                String dtFinReg = request.getParameter("dt_fin") != null && !"".equals(request.getParameter("dt_fin"))
+                        ? request.getParameter("dt_fin") + " 23:59:59" : date.formatterMysql.format(new Date());
+                String tpId = request.getParameter("lg_TIERS_PAYANT_ID") != null
+                        && !"".equals(request.getParameter("lg_TIERS_PAYANT_ID"))
+                                ? request.getParameter("lg_TIERS_PAYANT_ID") : "%%";
+                String rech = "".equals(search_value) ? "%%" : search_value;
+                reglementManager orm = new reglementManager(OdataManager, sessionUser);
+                List<EntityData> lignes = orm.getAllDossierReglements(tpId, rech, dtDebutReg, dtFinReg);
+                JSONObject export = new JSONObject();
+                JSONArray entetes = new JSONArray();
+                for (String h : new String[] { "Organisme", "Type", "Mode de règlement", "Montant versé",
+                        "Montant attendu", "Date", "Heure", "Opérateur", "Code facture" }) {
+                    entetes.put(h);
+                }
+                export.put("dataheader", entetes);
+                JSONArray valeurs = new JSONArray();
+                for (EntityData ligne : lignes) {
+                    JSONArray l = new JSONArray();
+                    l.put(ligne.getStr_value4()).put(ligne.getStr_value8()).put(ligne.getStr_value3())
+                            .put(ligne.getStr_value2()).put(ligne.getStr_value10()).put(ligne.getStr_value6())
+                            .put(ligne.getStr_value7()).put(ligne.getStr_value5()).put(ligne.getStr_value9());
+                    valeurs.put(l);
+                }
+                export.put("datavalue", valeurs);
+                extportSimpleData(export, response, "Liste des règlements");
+            } catch (Exception ex) {
+                Logger.getLogger(FactureDataExport.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        // Export Excel des dossiers en attente de facturation (mêmes colonnes que l'écran)
+        if ("dossiersAttente".equals(action)) {
+            try {
+                TUser sessionUser = (TUser) request.getSession()
+                        .getAttribute(toolkits.parameters.commonparameter.AIRTIME_USER);
+                date key = new date();
+                String dtDebutAtt = request.getParameter("dt_Date_Debut") != null
+                        && !"".equals(request.getParameter("dt_Date_Debut")) ? request.getParameter("dt_Date_Debut")
+                                : key.DateToString(new Date(), key.formatterMysqlShort);
+                String dtFinAtt = request.getParameter("dt_Date_Fin") != null
+                        && !"".equals(request.getParameter("dt_Date_Fin")) ? request.getParameter("dt_Date_Fin")
+                                : key.DateToString(new Date(), key.formatterMysqlShort);
+                String tpId = request.getParameter("lg_TIERS_PAYANT_ID") != null
+                        && !"".equals(request.getParameter("lg_TIERS_PAYANT_ID"))
+                                ? request.getParameter("lg_TIERS_PAYANT_ID") : "%%";
+                Date dFin = key.getDate(
+                        key.DateToString(key.stringToDate(dtFinAtt, key.formatterMysqlShort), key.formatterMysqlShort2),
+                        "23:59");
+                Date dDebut = key.getDate(key.DateToString(key.stringToDate(dtDebutAtt, key.formatterMysqlShort),
+                        key.formatterMysqlShort2), "00:00");
+                Preenregistrement op = new Preenregistrement(OdataManager, sessionUser);
+                List<TPreenregistrementCompteClientTiersPayent> lignes = op.getListVenteTiersPayant(search_value, tpId,
+                        dDebut, dFin);
+                JSONObject export = new JSONObject();
+                JSONArray entetes = new JSONArray();
+                for (String h : new String[] { "Organisme", "Type", "Réf. bon", "Ticket", "Caissier", "Date", "Heure",
+                        "Client", "Matricule", "Montant vente", "Montant attendu TP" }) {
+                    entetes.put(h);
+                }
+                export.put("dataheader", entetes);
+                JSONArray valeurs = new JSONArray();
+                for (TPreenregistrementCompteClientTiersPayent ligne : lignes) {
+                    JSONArray l = new JSONArray();
+                    l.put(ligne.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME())
+                            .put(ligne.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getLgTYPETIERSPAYANTID()
+                                    .getLgTYPETIERSPAYANTID().equalsIgnoreCase("1") ? "S" : "X")
+                            .put(ligne.getStrREFBON()).put(ligne.getLgPREENREGISTREMENTID().getStrREF())
+                            .put(ligne.getLgPREENREGISTREMENTID().getLgUSERCAISSIERID().getStrFIRSTNAME() + " "
+                                    + ligne.getLgPREENREGISTREMENTID().getLgUSERCAISSIERID().getStrLASTNAME())
+                            .put(date.DateToString(ligne.getLgPREENREGISTREMENTID().getDtUPDATED(),
+                                    date.formatterShort))
+                            .put(date.DateToString(ligne.getLgPREENREGISTREMENTID().getDtUPDATED(),
+                                    date.NomadicUiFormat_Time))
+                            .put(ligne.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID()
+                                    .getStrFIRSTNAME()
+                                    + " "
+                                    + ligne.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID()
+                                            .getStrLASTNAME())
+                            .put(ligne.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID()
+                                    .getStrNUMEROSECURITESOCIAL())
+                            .put(ligne.getLgPREENREGISTREMENTID().getIntPRICE()).put(ligne.getIntPRICE());
+                    valeurs.put(l);
+                }
+                export.put("datavalue", valeurs);
+                extportSimpleData(export, response, "Dossiers en attente de facturation");
+            } catch (Exception ex) {
                 Logger.getLogger(FactureDataExport.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

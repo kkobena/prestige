@@ -11,7 +11,8 @@ Ext.define('testextjs.store.RecpaOrganisme', {
     pageSize:20,  
     proxy: {
         type: 'ajax',
-        url: '../api/v1/recap-organisme/list',
+        // endpoint reloge sous reglement-facture (la ressource autonome n'etait pas enregistree sur certains serveurs -> 404)
+        url: '../api/v1/reglement-facture/recap-organisme/list',
         reader: {
             type: 'json',
             root: 'data',

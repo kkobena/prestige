@@ -980,11 +980,18 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
         }
     },
     onbtncancel: function () {
-
-        //  var xtype = "groupeInvoices";
-        var xtype = "facturemanager";
-
-        testextjs.app.getController('App').onLoadNewComponent(xtype, "", "");
+        this.retourVuePrecedente();
+    },
+    // Ouverte en fenetre modale depuis la liste des factures de groupe : fermer la
+    // fenetre suffit (la liste en dessous est actualisee a la fermeture). Hors fenetre,
+    // navigation historique conservee.
+    retourVuePrecedente: function () {
+        var win = this.up('window');
+        if (win) {
+            win.close();
+        } else {
+            testextjs.app.getController('App').onLoadNewComponent('facturemanager', '', '');
+        }
     },
     checkIfGridIsEmpty: function () {
         var gridTotalCount = Ext.getCmp('reglementGROUPID').getStore().getTotalCount();
@@ -1141,13 +1148,17 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.WARNING,
                         fn: function () {
-//                            var xtype = "groupeInvoices";
-//                            var alias = 'widget.' + xtype;
-//                            testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion Factures Groupées", "");
-                            var xtype = "facturemanager";
-                            var alias = 'widget.' + xtype;
-                            testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion Facturation", "");
-
+                            // recapitulatif du reglement imprimable (oui/non) avant le retour a la liste
+                            Ext.Msg.confirm('R\u00e9capitulatif',
+                                    'Voulez-vous imprimer le r\u00e9capitulatif du r\u00e8glement ?',
+                                    function (btn) {
+                                        if (btn === 'yes') {
+                                            window.open('../webservices/configmanagement/groupe/ws_rp_recap_reglement_groupe.jsp'
+                                                    + '?lg_GROUPE_ID=' + (odatasource.lg_GROUPE_ID || '')
+                                                    + '&CODEFACTURE=' + CODEFACTURE);
+                                        }
+                                        Ext.getCmp('reglementGroupeFactureID').retourVuePrecedente();
+                                    });
                         }
                     });
 
@@ -1196,9 +1207,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                     Ext.MessageBox.alert('Error Message', object.errors);
 //                    return;
                 }
-                var xtype = "groupeInvoices";
-                var alias = 'widget.' + xtype;
-                testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion Factures Groupées", "");
+                Ext.getCmp('reglementGroupeFactureID').retourVuePrecedente();
 
 
             },

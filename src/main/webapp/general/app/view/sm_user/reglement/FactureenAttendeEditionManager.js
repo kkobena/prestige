@@ -1,4 +1,5 @@
-var url_services_data_factureententeedition = '../api/v1/dossiers-attente-edition/list';
+// endpoint reloge sous facture-tiers-payant (la ressource autonome n'etait pas enregistree sur certains serveurs -> 404)
+var url_services_data_factureententeedition = '../api/v1/facture-tiers-payant/dossiers-en-attente/list';
 var url_services_data_factureententeedition_generate_pdf = '../webservices/sm_user/journalvente/ws_generate_facture_attente_edition.jsp';
 var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
 
@@ -16,7 +17,7 @@ Ext.define('testextjs.view.sm_user.reglement.FactureenAttendeEditionManager', {
     extend: 'Ext.grid.Panel',
     xtype: 'factureenattenteedition',
     id: 'factureenattenteeditionID',
-    title: 'Liste des factures en attentes d\'&eacute;dition',
+    title: 'Liste des dossiers en attente de facturation',
     requires: [
         'Ext.selection.CellModel',
         'Ext.grid.*',
@@ -397,6 +398,19 @@ var searchstore = Ext.create('Ext.data.Store', {
                     iconCls: 'printable',
 //                    hidden: true, //a retirer demain
                     handler: this.onPdfListVenteClick
+                }, {
+                    text: 'Exporter Excel',
+                    iconCls: 'excel',
+                    tooltip: 'Exporter les r\u00e9sultats affich\u00e9s en Excel',
+                    handler: function () {
+                        var tp = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() || '';
+                        var lien = '../FactureDataExport?action=dossiersAttente'
+                                + '&dt_Date_Debut=' + (Ext.getCmp('dt_debut_journal').getSubmitValue() || '')
+                                + '&dt_Date_Fin=' + (Ext.getCmp('dt_fin_journal').getSubmitValue() || '')
+                                + '&lg_TIERS_PAYANT_ID=' + tp
+                                + '&search_value=' + encodeURIComponent(Ext.getCmp('rechecher').getValue() || '');
+                        window.location = lien;
+                    }
                 }
             ],
             bbar: {

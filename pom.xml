@@ -154,6 +154,13 @@
             <version>1.9.2</version>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <scope>provided</scope>
@@ -213,6 +220,13 @@
             <version>2.12.5</version>
         </dependency>
         
+        <!-- Tests unitaires (portee test : rien n'est embarque dans le war livre) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
   
     <build>
@@ -265,6 +279,13 @@
                     <source>11</source>
                     <target>11</target>
                 </configuration>
+            </plugin>
+            <!-- Execution des tests unitaires : mvn test (le build de livraison utilise
+                 -DskipTests et n'est donc pas impacte) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
             </plugin>
 
         </plugins>

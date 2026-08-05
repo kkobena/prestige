@@ -219,8 +219,6 @@ public class TTiersPayant implements Serializable {
     private String strMODETRIFACTURE = "ALPHABETIQUE";
 
     // Rattachement optionnel a un modele de facture dynamique (NULL = circuit Jasper historique)
-    @Column(name = "model_facture_dynamique_id")
-    private Integer modelFactureDynamiqueId;
 
     @OneToMany(mappedBy = "tiersPayant")
     private List<Caution> cautions = new ArrayList<>();
@@ -257,14 +255,6 @@ public class TTiersPayant implements Serializable {
 
     public void setStrMODETRIFACTURE(String strMODETRIFACTURE) {
         this.strMODETRIFACTURE = strMODETRIFACTURE;
-    }
-
-    public Integer getModelFactureDynamiqueId() {
-        return modelFactureDynamiqueId;
-    }
-
-    public void setModelFactureDynamiqueId(Integer modelFactureDynamiqueId) {
-        this.modelFactureDynamiqueId = modelFactureDynamiqueId;
     }
 
     public TTiersPayant() {

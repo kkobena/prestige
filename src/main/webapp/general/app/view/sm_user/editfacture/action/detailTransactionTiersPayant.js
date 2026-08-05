@@ -494,50 +494,21 @@ Ext.define('testextjs.view.sm_user.editfacture.action.detailTransactionTiersPaya
         var str_STATUT = "is_Closed";
         var internal_url = "";
 
-        Ext.Ajax.request({
-            url: '../api/v1/facture-tiers-payant/details-vente',
+        // Un seul chargement : l'appel Ajax d'en-tete faisait un DOUBLON exact de la requete de la
+        // grille (memes donnees) ; les infos d'en-tete viennent de la ligne selectionnee et du
+        // total renvoye par la reponse de la grille (rawData du reader).
+        Ext.getCmp('lg_TYPE_VENTE_ID').setValue(dt_DATE + ' ' + dt_HEURE);
+        Ext.getCmp('str_MEDECIN').setValue(str_REF);
+        Ext.getCmp('int_total_vente').setValue(Number(int_PRICE) + '  CFA');
+        var OGrid = Ext.getCmp('gridpanelFacureID');
+        OGrid.getStore().load({
             params: {
                 lg_PREENREGISTREMENT_ID: lg_PREENREGISTREMENT_ID,
                 str_STATUT: str_STATUT
             },
-            success: function (response)
-            {
-
-                var object = Ext.JSON.decode(response.responseText, false);
-                /* var str_type_vente = object.lg_TYPE_VENTE_ID
-                 if (str_type_vente == "ASSURANCE_MUTUELLE") {
-                 str_type_vente = "Assurance Mutuelle";
-                 }*/
-
-                Ext.getCmp('lg_TYPE_VENTE_ID').setValue(dt_DATE + ' ' + dt_HEURE);
-                Ext.getCmp('str_MEDECIN').setValue(str_REF);
-                var int_total_product = Number(object.int_total_product);
-                Ext.getCmp('int_total_product').setValue(int_total_product + '  Produit(s)');
-                //var int_total_formated = Ext.util.Format.number(object.total_vente, '0,000.');
-                // alert(object.total_vente);
-                var int_total_formated = Number(int_PRICE);
-                Ext.getCmp('int_total_vente').setValue(int_total_formated + '  CFA');
-                var OGrid = Ext.getCmp('gridpanelFacureID');
-//                OGrid.getStore().getProxy().url = url_services_data_detailsvente + "?lg_PREENREGISTREMENT_ID=" + lg_PREENREGISTREMENT_ID + "&str_STATUT=" + str_STATUT;
-//                OGrid.getStore().reload();
-//                
-                //* added by kobena **/               
-                // OGrid.getStore().getProxy().url = url_services_data_detailsvente + "?lg_PREENREGISTREMENT_ID=" + lg_PREENREGISTREMENT_ID + "&str_STATUT=" + str_STATUT;
-                OGrid.getStore().load({
-                    params: {
-                        lg_PREENREGISTREMENT_ID: lg_PREENREGISTREMENT_ID,
-                        str_STATUT: str_STATUT
-                    }
-                });
-//                  OGrid.getStore().reload();             
-                //OGrid.getStore().getProxy().url = url_services_data_detail_facture_tiers_payant;
-
-            },
-            failure: function (response)
-            {
-                var object = Ext.JSON.decode(response.responseText, false);
-                console.log("Bug " + response.responseText);
-                Ext.MessageBox.alert('Error Message', response.responseText);
+            callback: function () {
+                var raw = OGrid.getStore().getProxy().getReader().rawData || {};
+                Ext.getCmp('int_total_product').setValue(Number(raw.int_total_product || 0) + '  Produit(s)');
             }
         });
 
@@ -589,5 +560,5 @@ Ext.define('testextjs.view.sm_user.editfacture.action.detailTransactionTiersPaya
         var alias = 'widget.' + xtype;
         testextjs.app.getController('App').onLoadNewComponent(xtype, "Editer la facture", "0");
 
-    },
+    }
 });

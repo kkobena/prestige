@@ -232,6 +232,30 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             sortable: false,
                             menuDisabled: true,
                             items: [{
+                                    // reedition du recapitulatif de reglement : uniquement si un
+                                    // reglement (partiel ou total) a ete fait sur la ligne
+                                    getClass: function (v, meta, rec) {
+                                        return (Number(rec.get('AMOUNTPAYE') || 0) > 0) ? 'recu' : 'x-hide-display';
+                                    },
+                                    getTip: function (v, meta, rec) {
+                                        return 'R&eacute;capitulatif de r&egrave;glement';
+                                    },
+                                    scope: this,
+                                    handler: function (grid, rowIndex) {
+                                        var rec = grid.getStore().getAt(rowIndex);
+                                        window.open('../webservices/configmanagement/groupe/ws_rp_recap_reglement_groupe.jsp'
+                                                + '?lg_GROUPE_ID=' + rec.get('lg_GROUPE_ID')
+                                                + '&CODEFACTURE=' + rec.get('CODEFACTURE'));
+                                    }
+                                }]
+                        },
+
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
                                     getClass: function (v, meta, rec) {
 
                                         if (rec.get('STATUT') !== "paid") {
@@ -521,11 +545,38 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
     onPaidFactureClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
         if (rec.get('STATUT') !== "paid" && rec.get('ACTION_REGLER_FACTURE')) {
-            const xtype = "reglementGroupeFacture";
-            const alias = 'widget.' + xtype;
-            const rec = grid.getStore().getAt(rowIndex);
-            testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Faire un r&eacute;glement", rec.get('lg_GROUPE_ID'), rec.data);
-
+            // Reglement en fenetre modale (comme Voir les differentes factures) : la liste
+            // des factures de groupe reste en dessous et est actualisee a la fermeture
+            const moi = this;
+            const dejaOuvert = Ext.getCmp('reglementGroupeFactureID');
+            if (dejaOuvert) {
+                if (dejaOuvert.up('window')) {
+                    dejaOuvert.up('window').destroy();
+                } else {
+                    dejaOuvert.destroy();
+                }
+            }
+            Ext.create('Ext.window.Window', {
+                title: 'Faire un r&eacute;glement [' + rec.get('CODEFACTURE') + ']',
+                modal: true,
+                width: '95%',
+                height: 620,
+                maximizable: true,
+                autoScroll: true,
+                layout: 'fit',
+                items: [{
+                        xtype: 'reglementGroupeFacture',
+                        odatasource: rec.data,
+                        parentview: moi,
+                        nameintern: rec.get('lg_GROUPE_ID'),
+                        titre: 'Faire un r&eacute;glement'
+                    }],
+                listeners: {
+                    close: function () {
+                        moi.getStore().load();
+                    }
+                }
+            }).show();
         }
     },
     shwoChoiceModal: function (grid, rowIndex) {

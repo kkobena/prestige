@@ -43,7 +43,19 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     // Mise en evidence de la ligne survolee (uniquement cette grille)
     viewConfig: {
         trackOver: true,
-        overItemCls: 'facture-row-over'
+        overItemCls: 'facture-row-over',
+        // coche de selection masquee (CSS) pour les lignes non supprimables :
+        // reglees, partiellement reglees ou avec facture/avoir FNE
+        getRowClass: function (rec) {
+            return testextjs.view.sm_user.editfacture.EditFactureManager.estSupprimable(rec)
+                    ? '' : 'facture-non-supprimable';
+        }
+    },
+    statics: {
+        estSupprimable: function (rec) {
+            return rec.get('str_STATUT') !== 'paid' && Number(rec.get('dbl_MONTANT_PAYE') || 0) <= 0
+                    && !rec.get('fneUrl') && !rec.get('fneAvoirUrl') && rec.get('isALLOWED');
+        }
     },
     listeners: {
         render: function (grid) {
@@ -104,7 +116,21 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         _this.selModel = Ext.create('Ext.selection.CheckboxModel', {
             mode: 'MULTI',
             checkOnly: true,
-            pruneRemoved: false
+            pruneRemoved: false,
+            listeners: {
+                // double securite avec le masquage CSS de la coche
+                beforeselect: function (sm, rec) {
+                    return testextjs.view.sm_user.editfacture.EditFactureManager.estSupprimable(rec);
+                }
+            }
+        });
+        // le bouton "Supprimer la selection" ne s'affiche qu'avec le privilege de suppression
+        // (isALLOWED est renvoye par l'API sur chaque ligne, meme valeur pour tout l'ecran)
+        factureStore.on('load', function (st, records) {
+            var btn = Ext.getCmp('btnSupprimerSelectionFacture');
+            if (btn && records && records.length > 0) {
+                btn.setVisible(!!records[0].get('isALLOWED'));
+            }
         });
         this.callParent();
 
@@ -124,6 +150,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         handler: this.onAddCreate
                     }, '-', {
                         text: 'Supprimer la s&eacute;lection',
+                        id: 'btnSupprimerSelectionFacture',
+                        hidden: true, // affiche au chargement si l'utilisateur a le privilege de suppression
                         tooltip: 'Supprimer les factures coch&eacute;es',
                         iconCls: 'cancelicon',
                         scope: this,
@@ -174,7 +202,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         listeners: {
                             specialKey: function (field, e) {
                                 if (e.getKey() === e.ENTER) {
-                                    Me.onRechClick();
+                                    _this.onRechClick(); // _this = la vue liste ; la globale Me est ecrasee par la vue de detail
                                 }
                             }
                         }
@@ -213,7 +241,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
                             },
                             select: function (cmp) {
-                                Me.onRechClick();
+                                _this.onRechClick(); // _this = la vue liste ; la globale Me est ecrasee par la vue de detail
                             }
 
                         }
@@ -240,7 +268,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         listeners: {
 
                             select: function (cmp) {
-                                Me.onRechClick();
+                                _this.onRechClick(); // _this = la vue liste ; la globale Me est ecrasee par la vue de detail
                             }
 
                         }
@@ -866,10 +894,38 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         var rec = grid.getStore().getAt(rowIndex);
 
         if ((rec.get('str_STATUT') === "enable" || rec.get('str_STATUT') === "is_Process") && rec.get('ACTION_REGLER_FACTURE')) {
-            var xtype = "doreglementmanager";
-            var alias = 'widget.' + xtype;
-
-            testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Faire un r&eacute;glement", rec.get('lg_FACTURE_ID'), rec.data);
+            // Reglement en fenetre modale (comme Detail Bordereau) : la liste des factures
+            // reste en dessous et est actualisee a la fermeture de la fenetre
+            var moi = this;
+            var dejaOuvert = Ext.getCmp('doreglementmanagerID');
+            if (dejaOuvert) {
+                if (dejaOuvert.up('window')) {
+                    dejaOuvert.up('window').destroy();
+                } else {
+                    dejaOuvert.destroy();
+                }
+            }
+            Ext.create('Ext.window.Window', {
+                title: 'Faire un r&eacute;glement [' + rec.get('str_CUSTOMER_NAME') + ']',
+                modal: true,
+                width: '95%',
+                height: 620,
+                maximizable: true,
+                autoScroll: true,
+                layout: 'fit',
+                items: [{
+                        xtype: 'doreglementmanager',
+                        odatasource: rec.data,
+                        parentview: moi,
+                        nameintern: rec.get('lg_FACTURE_ID'),
+                        titre: 'Faire un r&eacute;glement'
+                    }],
+                listeners: {
+                    close: function () {
+                        moi.onRechClick();
+                    }
+                }
+            }).show();
         } else if (rec.get('str_STATUT') === "group") {
             var xtype = "groupeInvoices";
             var alias = 'widget.' + xtype;
@@ -967,7 +1023,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         var deletable = [];
         var ignored = 0;
         Ext.each(selection, function (rec) {
-            if (rec.get('str_STATUT') !== 'paid' && rec.get('isALLOWED')) {
+            if (testextjs.view.sm_user.editfacture.EditFactureManager.estSupprimable(rec)) {
                 deletable.push(rec);
             } else {
                 ignored++;

@@ -817,11 +817,10 @@ public class factureManagement extends bll.bllBase {
                     "SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.strSTATUT = ?1  AND t.strSTATUT = ?1   AND (t.lgPREENREGISTREMENTID.dtUPDATED > ?2 AND t.lgPREENREGISTREMENTID.dtUPDATED <= ?3) AND t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID LIKE ?4 AND t.strSTATUTFACTURE = ?5 AND t.lgPREENREGISTREMENTID.bISCANCEL = FALSE AND t.lgPREENREGISTREMENTID.intPRICE > 0 AND t.lgPREENREGISTREMENTID.bWITHOUTBON =FALSE   AND t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID LIKE ?6  AND t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTYPETIERSPAYANTID.lgTYPETIERSPAYANTID LIKE ?7 ORDER BY t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strNAME,t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME,t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strLASTNAME")
                     .setParameter(1, commonparameter.statut_is_Closed).setParameter(2, dt_debut).setParameter(3, dt_fin)
                     .setParameter(4, lg_tiers_payant_id).setParameter(5, commonparameter.UNPAID)
-                    .setParameter(6, lg_CLIENT_ID).setParameter(7, lg_TYPE_TIERS_PAYANT_ID).getResultList();
-
-            for (TPreenregistrementCompteClientTiersPayent tPreenregistrementCompteClientTiersPayent : ListVenteTiersPayant) {
-                this.refresh(tPreenregistrementCompteClientTiersPayent);
-            }
+                    .setParameter(6, lg_CLIENT_ID).setParameter(7, lg_TYPE_TIERS_PAYANT_ID)
+                    // Donnees relues depuis la base en UNE fois : remplace le refresh applique
+                    // bon par bon (un aller-retour SQL par bon), pour la meme fraicheur.
+                    .setHint("eclipselink.refresh", true).getResultList();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -1619,18 +1618,15 @@ public class factureManagement extends bll.bllBase {
             OTTiersPayant.setBCANBEUSE(true);
             this.getOdataManager().getEm().merge(OTTiersPayant);
         }
-        List<TCompteClientTiersPayant> list = (List<TCompteClientTiersPayant>) OTTiersPayant
-                .getTCompteClientTiersPayantCollection();
-        list.stream().filter((compteClientTiersPayant) -> (!compteClientTiersPayant.getBIsAbsolute()))
-                .map((compteClientTiersPayant) -> {
-                    compteClientTiersPayant.setBCANBEUSE(true);
-                    return compteClientTiersPayant;
-                }).map((compteClientTiersPayant) -> {
-                    compteClientTiersPayant.setDbCONSOMMATIONMENSUELLE(0);
-                    return compteClientTiersPayant;
-                }).forEachOrdered((compteClientTiersPayant) -> {
-                    this.getOdataManager().getEm().merge(compteClientTiersPayant);
-                });
+        // Mise a jour groupee des comptes clients du tiers payant : meme effet que la boucle
+        // historique (remise a zero de la consommation et reouverture des comptes non
+        // plafonnes), en UNE requete au lieu de charger toute la collection puis de faire un
+        // merge par compte - c'est ce qui rendait la generation lente pour les tiers payants
+        // comptant beaucoup d'assures.
+        this.getOdataManager().getEm()
+                .createQuery("UPDATE TCompteClientTiersPayant c SET c.bCANBEUSE = TRUE, c.dbCONSOMMATIONMENSUELLE = 0 "
+                        + "WHERE c.lgTIERSPAYANTID = ?1 AND c.bIsAbsolute = FALSE")
+                .setParameter(1, OTTiersPayant).executeUpdate();
     }
 
     private int getCase(TTiersPayant p) {

@@ -42,6 +42,12 @@ public class TModelFacture implements Serializable {
     private String strDESCRIPTION;
     @Column(name = "str_STATUT", length = 20)
     private String strSTATUT;
+    /**
+     * Definition du modele de facture dynamique (createur de modeles) quand cette ligne en represente un ; null pour
+     * les modeles Jasper historiques.
+     */
+    @Column(name = "model_facture_dynamique_id")
+    private Integer modelFactureDynamiqueId;
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtCREATED;
@@ -98,6 +104,19 @@ public class TModelFacture implements Serializable {
 
     public TModelFacture(String lgMODELFACTUREID) {
         this.lgMODELFACTUREID = lgMODELFACTUREID;
+    }
+
+    public Integer getModelFactureDynamiqueId() {
+        return modelFactureDynamiqueId;
+    }
+
+    public void setModelFactureDynamiqueId(Integer modelFactureDynamiqueId) {
+        this.modelFactureDynamiqueId = modelFactureDynamiqueId;
+    }
+
+    /** true si ce modele est un modele dynamique (edition PDF pilotee par les colonnes choisies). */
+    public boolean isDynamique() {
+        return modelFactureDynamiqueId != null;
     }
 
     public String getLgMODELFACTUREID() {

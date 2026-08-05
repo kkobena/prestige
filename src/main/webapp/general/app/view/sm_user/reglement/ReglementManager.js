@@ -357,6 +357,19 @@ Ext.define('testextjs.view.sm_user.reglement.ReglementManager', {
                     tooltip: 'imprimer',
                     scope: this,
                     handler: this.onPdfPrint
+                }, {
+                    text: 'Exporter Excel',
+                    iconCls: 'excel',
+                    tooltip: 'Exporter les r\u00e9sultats affich\u00e9s en Excel',
+                    handler: function () {
+                        var tp = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() || '';
+                        var lien = '../FactureDataExport?action=reglements'
+                                + '&dt_debut=' + (Ext.getCmp('datedebut').getSubmitValue() || '')
+                                + '&dt_fin=' + (Ext.getCmp('datefin').getSubmitValue() || '')
+                                + '&lg_TIERS_PAYANT_ID=' + tp
+                                + '&search_value=' + encodeURIComponent(Ext.getCmp('re_search').getValue() || '');
+                        window.location = lien;
+                    }
                 }
 
 
