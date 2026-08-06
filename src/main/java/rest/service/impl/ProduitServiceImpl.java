@@ -9,6 +9,7 @@ import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.ComboDTO;
 import commonTasks.dto.LotItemDTO;
 import commonTasks.dto.MvtArticleParams;
+import commonTasks.dto.MvtProduitCompletDTO;
 import commonTasks.dto.MvtProduitDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.QueryDTO;
@@ -44,6 +45,7 @@ import dal.TFormeArticle;
 import dal.TGrossiste;
 import dal.TGrossiste_;
 import dal.TInventaireFamille;
+import dal.TMouvementReserve;
 import dal.TParameters;
 import dal.TPreenregistrementDetail;
 import dal.TRetourFournisseurDetail;
@@ -118,6 +120,8 @@ public class ProduitServiceImpl implements ProduitService {
     private LogService logService;
     @EJB
     private NotificationService notificationService;
+    @EJB
+    private rest.service.utils.ReportExcelExportService reportExcelExportService;
     @EJB
     private SessionHelperService sessionHelperService;
 
@@ -730,68 +734,12 @@ public class ProduitServiceImpl implements ProduitService {
             List<TFamille> familles = produitMvtArticle(params);
             List<MvtProduitDTO> mvtProduits = new ArrayList<>();
             familles.stream().forEach(v -> {
-                LongAdder venteStock = new LongAdder();
                 MvtProduitDTO mvtProduit = new MvtProduitDTO();
                 mvtProduit.setCip(v.getIntCIP());
                 mvtProduit.setProduitId(v.getLgFAMILLEID());
                 mvtProduit.setProduitName(v.getStrNAME());
                 mvtProduit.setCurrentStock(getFamilleStockByProduitId(v.getLgFAMILLEID(), params.getMagasinId()));
-                Map<String, List<HMvtProduit>> hmps = suivitMvtArcticle(params.getDtStart(), params.getDtEnd(),
-                        v.getLgFAMILLEID(), params.getMagasinId()).stream()
-                                .collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
-
-                hmps.forEach((k, values) -> {
-                    switch (k) {
-                    case DateConverter.ENTREE_EN_STOCK:
-                        // case DateConverter.TMVTP_RETOUR_DEPOT:
-                        mvtProduit.setQtyEntree(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.VENTE:
-                    case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
-                        Integer qtyVente = values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum);
-                        venteStock.add(qtyVente);
-                        break;
-                    case DateConverter.ANNULATION_DE_VENTE:
-                    case DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION:
-                        mvtProduit
-                                .setQtyAnnulation(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-
-                    case DateConverter.INVENTAIRE:
-                        mvtProduit.setEcartInventaire(findEcartInventaire(Long.parseLong(values.get(0).getPkey())));
-                        mvtProduit.setQtyInv(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.DECONDTIONNEMENT_POSITIF:
-                        mvtProduit.setQtyDeconEntrant(
-                                values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.DECONDTIONNEMENT_NEGATIF:
-                        mvtProduit.setQtyDecondSortant(
-                                values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-
-                    case DateConverter.AJUSTEMENT_NEGATIF:
-                        mvtProduit
-                                .setQtyAjustSortie(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.AJUSTEMENT_POSITIF:
-                        mvtProduit.setQtyAjust(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.RETOUR_FOURNISSEUR:
-                        mvtProduit.setQtyRetour(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.PERIME:
-                        mvtProduit.setQtyPerime(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.TMVTP_RETOUR_DEPOT:
-                        mvtProduit
-                                .setQtyRetourDepot(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    default:
-                        break;
-                    }
-                });
-                mvtProduit.setQtyVente(venteStock.intValue());
+                remplirQuantitesGenerales(mvtProduit, params);
                 mvtProduits.add(mvtProduit);
             });
             mvtProduits.sort(comparatorByLibelle);
@@ -800,6 +748,607 @@ public class ProduitServiceImpl implements ProduitService {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * Agrege les mouvements HMvtProduit d'un article sur la periode et renseigne les quantites du DTO. Partage entre le
+     * suivi mouvement article 2 et le suivi complet : les deux ecrans affichent donc rigoureusement les memes chiffres
+     * pour les mouvements generaux.
+     */
+    private void remplirQuantitesGenerales(MvtProduitDTO mvtProduit, MvtArticleParams params) {
+        LongAdder venteStock = new LongAdder();
+        Map<String, List<HMvtProduit>> hmps = suivitMvtArcticle(params.getDtStart(), params.getDtEnd(),
+                mvtProduit.getProduitId(), params.getMagasinId()).stream()
+                        .collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
+        hmps.forEach((k, values) -> {
+            switch (k) {
+            case DateConverter.ENTREE_EN_STOCK:
+                // case DateConverter.TMVTP_RETOUR_DEPOT:
+                mvtProduit.setQtyEntree(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.VENTE:
+            case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
+                Integer qtyVente = values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum);
+                venteStock.add(qtyVente);
+                break;
+            case DateConverter.ANNULATION_DE_VENTE:
+            case DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION:
+                mvtProduit.setQtyAnnulation(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+
+            case DateConverter.INVENTAIRE:
+                mvtProduit.setEcartInventaire(findEcartInventaire(Long.parseLong(values.get(0).getPkey())));
+                mvtProduit.setQtyInv(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.DECONDTIONNEMENT_POSITIF:
+                mvtProduit.setQtyDeconEntrant(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.DECONDTIONNEMENT_NEGATIF:
+                mvtProduit.setQtyDecondSortant(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+
+            case DateConverter.AJUSTEMENT_NEGATIF:
+                mvtProduit.setQtyAjustSortie(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.AJUSTEMENT_POSITIF:
+                mvtProduit.setQtyAjust(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.RETOUR_FOURNISSEUR:
+                mvtProduit.setQtyRetour(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.PERIME:
+                mvtProduit.setQtyPerime(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            case DateConverter.TMVTP_RETOUR_DEPOT:
+                mvtProduit.setQtyRetourDepot(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                break;
+            default:
+                break;
+            }
+        });
+        mvtProduit.setQtyVente(venteStock.intValue());
+    }
+
+    // ------------------------------------------------- SUIVI MOUVEMENT ARTICLE COMPLET
+    // Ecran separe du "Suivi mouvement article 2" : celui-ci reste inchange pour les officines qui
+    // n'utilisent pas la reserve. Le suivi complet ajoute, en LECTURE seule, les mouvements internes
+    // rayon<->reserve (t_mouvement_reserve reste la source de verite) et les stocks rayon/reserve/total.
+
+    /** Identifiant du type de stock "reserve" dans t_type_stock_famille (meme valeur que ReserveServiceImpl). */
+    private static final String TYPE_STOCK_RESERVE = "2";
+
+    @Override
+    public JSONObject suivitMvtArticleCompletViewDatas(MvtArticleParams params) throws JSONException {
+        JSONObject json = new JSONObject();
+        try {
+            List<Object[]> familles = famillesSuiviComplet(params);
+            if (familles.isEmpty()) {
+                json.put("total", 0);
+                json.put("data", new JSONArray());
+                return json;
+            }
+            List<Object[]> page = familles;
+            if (!params.isAll()) {
+                int from = Math.min(Math.max(0, params.getStart()), familles.size());
+                int to = params.getLimit() > 0 ? Math.min(from + params.getLimit(), familles.size()) : familles.size();
+                page = familles.subList(from, to);
+            }
+            List<MvtProduitCompletDTO> data = lignesSuiviComplet(page, params);
+            json.put("total", familles.size());
+            json.put("data", new JSONArray(data));
+            return json;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            json.put("total", 0);
+            json.put("data", new JSONArray());
+            return json;
+        }
+    }
+
+    @Override
+    public List<MvtProduitCompletDTO> suivitMvtArticleComplet(MvtArticleParams params) {
+        try {
+            return lignesSuiviComplet(famillesSuiviComplet(params), params);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public byte[] exportSuiviMvtArticleComplet(MvtArticleParams params) throws java.io.IOException {
+        params.setAll(true);
+        List<MvtProduitCompletDTO> lignes = suivitMvtArticleComplet(params);
+        if (lignes.isEmpty()) {
+            return new byte[0];
+        }
+        String periode = "du " + params.getDtStart().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                + " au " + params.getDtEnd().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String[] entetes = { "CIP", "Designation", "Vente", "Ret.four", "Qte perimee", "Ajust. sortie", "Decon. sortie",
+                "Qte entree", "Ajust. entree", "Decon. entree", "Qte annulee", "Ret. depot", "Qte inventaire",
+                "Ecart inventaire", "Vers reserve", "Vers rayon", "Ajust. reserve", "Stock rayon", "Stock reserve",
+                "Stock total" };
+        return reportExcelExportService.createExcelReport("Suivi mouvement article complet " + periode, entetes, lignes,
+                (row, o) -> {
+                    int col = 0;
+                    row.createCell(col++).setCellValue(o.getCip() == null ? "" : o.getCip());
+                    row.createCell(col++).setCellValue(o.getProduitName() == null ? "" : o.getProduitName());
+                    row.createCell(col++).setCellValue(o.getQtyVente());
+                    row.createCell(col++).setCellValue(o.getQtyRetour());
+                    row.createCell(col++).setCellValue(o.getQtyPerime());
+                    row.createCell(col++).setCellValue(o.getQtyAjustSortie());
+                    row.createCell(col++).setCellValue(o.getQtyDecondSortant());
+                    row.createCell(col++).setCellValue(o.getQtyEntree());
+                    row.createCell(col++).setCellValue(o.getQtyAjust());
+                    row.createCell(col++).setCellValue(o.getQtyDeconEntrant());
+                    row.createCell(col++).setCellValue(o.getQtyAnnulation());
+                    row.createCell(col++).setCellValue(o.getQtyRetourDepot());
+                    row.createCell(col++).setCellValue(o.getQtyInv());
+                    row.createCell(col++).setCellValue(o.getEcartInventaire());
+                    row.createCell(col++).setCellValue(o.getQtyVersReserve());
+                    row.createCell(col++).setCellValue(o.getQtyVersRayon());
+                    row.createCell(col++).setCellValue(o.getQtyAjustReserve());
+                    row.createCell(col++).setCellValue(o.getCurrentStock());
+                    row.createCell(col++).setCellValue(o.getCurrentStockReserve());
+                    row.createCell(col).setCellValue(o.getCurrentStockTotal());
+                });
+    }
+
+    @Override
+    public byte[] exportSuiviMvtArticleCompletPdf(MvtArticleParams params, TUser user) {
+        params.setAll(true);
+        List<MvtProduitCompletDTO> lignes = suivitMvtArticleComplet(params);
+        return rest.report.pdf.SuiviMvtCompletPdf.liste(nomOfficine(), lignes,
+                periodeLibelle(params.getDtStart(), params.getDtEnd()), nomOperateur(user));
+    }
+
+    @Override
+    public byte[] exportFicheArticleCompletPdf(MvtArticleParams params, TUser user) {
+        MvtProduitCompletDTO meta = eclateComplet(params.getDtStart(), params.getDtEnd(), params.getProduitId(),
+                params.getMagasinId());
+        List<MvtProduitCompletDTO> jours = new ArrayList<>();
+        for (MvtProduitDTO j : meta.getProduits()) {
+            jours.add((MvtProduitCompletDTO) j);
+        }
+        TFamille famille = findById(params.getProduitId());
+        String article = famille == null ? ""
+                : (famille.getIntCIP() == null ? "" : famille.getIntCIP()) + " " + famille.getStrNAME();
+        return rest.report.pdf.SuiviMvtCompletPdf.ficheArticle(nomOfficine(), article,
+                periodeLibelle(params.getDtStart(), params.getDtEnd()), nomOperateur(user), jours, meta);
+    }
+
+    /** Nom abrege de l'officine (meme source que les editions Jasper : TOfficine id "1"). */
+    private String nomOfficine() {
+        try {
+            dal.TOfficine officine = getEntityManager().find(dal.TOfficine.class, "1");
+            return officine == null ? "" : officine.getStrNOMABREGE();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String periodeLibelle(LocalDate dtStart, LocalDate dtEnd) {
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (dtStart.isEqual(dtEnd)) {
+            return "DU " + dtStart.format(fmt);
+        }
+        return "DU " + dtStart.format(fmt) + " AU " + dtEnd.format(fmt);
+    }
+
+    private static String nomOperateur(TUser user) {
+        if (user == null) {
+            return "";
+        }
+        return (user.getStrFIRSTNAME() == null ? "" : user.getStrFIRSTNAME()) + " "
+                + (user.getStrLASTNAME() == null ? "" : user.getStrLASTNAME());
+    }
+
+    @Override
+    public JSONObject suivitEclateCompletViewDatas(LocalDate dtStart, LocalDate dtEnd, String produitId, String empl)
+            throws JSONException {
+        JSONObject json = new JSONObject();
+        try {
+            MvtProduitCompletDTO meta = eclateComplet(dtStart, dtEnd, produitId, empl);
+            json.put("total", meta.getProduits().size());
+            json.put("data", new JSONArray(meta.getProduits()));
+            json.put("metaData", new JSONObject(meta));
+            return json;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            json.put("total", 0);
+            json.put("data", new JSONArray());
+            return json;
+        }
+    }
+
+    /**
+     * Detail jour par jour du suivi complet : les lignes-jour (instances MvtProduitCompletDTO) sont dans
+     * {@code getProduits()} du DTO retourne, qui porte lui-meme les totaux de la periode. Partage entre la reponse JSON
+     * de l'ecran et la fiche PDF : les deux editions montrent exactement les memes chiffres.
+     */
+    private MvtProduitCompletDTO eclateComplet(LocalDate dtStart, LocalDate dtEnd, String produitId, String empl) {
+        MvtProduitDTO base = suivitEclate(dtStart, dtEnd, produitId, empl);
+        Map<LocalDate, MvtProduitCompletDTO> parJour = new HashMap<>();
+        for (MvtProduitDTO jour : base.getProduits()) {
+            parJour.put(jour.getDateOperation(), new MvtProduitCompletDTO(jour));
+        }
+        // [jour, versReserve, versRayon, ajustSigne, rayonAvantPremier, rayonApresDernier,
+        // reserveAvantPremier, reserveApresDernier, premierHorodatage, dernierHorodatage]
+        Map<LocalDate, Object[]> reserveParJour = new HashMap<>();
+        for (Object[] r : agregatsReserveParJour(produitId, empl, dtStart, dtEnd)) {
+            LocalDate date = ((java.sql.Date) r[0]).toLocalDate();
+            reserveParJour.put(date, r);
+            if (!parJour.containsKey(date)) {
+                // Jour sans aucun mouvement general : la ligne existe quand meme, avec les stocks
+                // rayon debut/fin lus dans la trace de reserve (avant du premier / apres du dernier).
+                MvtProduitCompletDTO jour = new MvtProduitCompletDTO();
+                jour.setDateOperation(date);
+                jour.setStockInit(entier(r[4]));
+                jour.setStockFinal(entier(r[5]));
+                parJour.put(date, jour);
+            }
+        }
+        List<MvtProduitCompletDTO> data = new ArrayList<>(parJour.values());
+        data.sort(mvtrByDate);
+
+        // Pour un jour mixte, la photo du stock rayon debut/fin doit venir de l'historique dont le
+        // mouvement est chronologiquement le premier/le dernier : un reassort fait apres la derniere
+        // vente du jour modifie le stock rayon SANS ecrire dans HMvtProduit, la photo du suivi
+        // general serait donc perimee.
+        Map<LocalDate, java.time.LocalDateTime[]> bornesGeneral = bornesGeneralParJour(produitId, empl, dtStart, dtEnd);
+
+        // Stock reserve debut/fin de chaque jour. La trace de reserve est l'UNIQUE voie de
+        // modification de ce stock : entre deux mouvements il est constant, on peut donc le
+        // reporter d'un jour a l'autre a partir du dernier mouvement anterieur a la periode.
+        int reserveCourante = stockReserveAvantDate(produitId, empl, dtStart);
+        int totalVersReserve = 0, totalVersRayon = 0, totalAjustReserve = 0;
+        for (MvtProduitCompletDTO jour : data) {
+            Object[] r = reserveParJour.get(jour.getDateOperation());
+            if (r != null) {
+                jour.setQtyVersReserve(entier(r[1]));
+                jour.setQtyVersRayon(entier(r[2]));
+                jour.setQtyAjustReserve(entier(r[3]));
+                jour.setStockReserveInit(entier(r[6]));
+                jour.setStockReserveFinal(entier(r[7]));
+                reserveCourante = entier(r[7]);
+                totalVersReserve += entier(r[1]);
+                totalVersRayon += entier(r[2]);
+                totalAjustReserve += entier(r[3]);
+
+                java.time.LocalDateTime[] general = bornesGeneral.get(jour.getDateOperation());
+                if (general != null && r[8] != null && r[9] != null) {
+                    java.time.LocalDateTime reservePremier = ((java.sql.Timestamp) r[8]).toLocalDateTime();
+                    java.time.LocalDateTime reserveDernier = ((java.sql.Timestamp) r[9]).toLocalDateTime();
+                    if (reservePremier.isBefore(general[0])) {
+                        jour.setStockInit(entier(r[4]));
+                    }
+                    if (reserveDernier.isAfter(general[1])) {
+                        jour.setStockFinal(entier(r[5]));
+                    }
+                }
+            } else {
+                jour.setStockReserveInit(reserveCourante);
+                jour.setStockReserveFinal(reserveCourante);
+            }
+        }
+
+        MvtProduitCompletDTO meta = new MvtProduitCompletDTO(base);
+        meta.setQtyVersReserve(totalVersReserve);
+        meta.setQtyVersRayon(totalVersRayon);
+        meta.setQtyAjustReserve(totalAjustReserve);
+        meta.setProduits(new ArrayList<>(data));
+        return meta;
+    }
+
+    private static int entier(Object o) {
+        return o == null ? 0 : ((Number) o).intValue();
+    }
+
+    /**
+     * Premier et dernier horodatage des mouvements GENERAUX (HMvtProduit) de chaque jour de la periode. Sert a
+     * departager, pour un jour mixte, quel historique detient la photo du stock rayon en debut et en fin de journee :
+     * un reassort fait apres la derniere vente du jour doit se voir dans la colonne "Fin de journee".
+     */
+    private Map<LocalDate, java.time.LocalDateTime[]> bornesGeneralParJour(String produitId, String empl,
+            LocalDate dtStart, LocalDate dtEnd) {
+        Map<LocalDate, java.time.LocalDateTime[]> out = new HashMap<>();
+        try {
+            TypedQuery<Object[]> q = getEntityManager()
+                    .createQuery("SELECT o.mvtDate, MIN(o.createdAt), MAX(o.createdAt) FROM HMvtProduit o "
+                            + "WHERE o.famille.lgFAMILLEID = :fid AND o.emplacement.lgEMPLACEMENTID = :empl "
+                            + "AND o.mvtDate BETWEEN :d1 AND :d2 GROUP BY o.mvtDate", Object[].class);
+            q.setParameter("fid", produitId);
+            q.setParameter("empl", empl);
+            q.setParameter("d1", dtStart);
+            q.setParameter("d2", dtEnd);
+            for (Object[] r : q.getResultList()) {
+                out.put((LocalDate) r[0], new java.time.LocalDateTime[] { (java.time.LocalDateTime) r[1],
+                        (java.time.LocalDateTime) r[2] });
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return out;
+    }
+
+    /**
+     * Stock reserve juste avant une date : "apres" du dernier mouvement de reserve anterieur. Zero si le produit n'a
+     * jamais eu de mouvement de reserve avant cette date (la trace etant la seule voie de modification du stock
+     * reserve, l'absence de trace signifie une reserve vide).
+     */
+    private int stockReserveAvantDate(String produitId, String empl, LocalDate date) {
+        try {
+            Query q = getEntityManager().createNativeQuery("SELECT m.int_STOCK_RESERVE_APRES "
+                    + "FROM t_mouvement_reserve m WHERE m.lg_FAMILLE_ID = ?1 AND m.lg_EMPLACEMENT_ID = ?2 "
+                    + "AND m.dt_CREATED < ?3 ORDER BY m.dt_CREATED DESC LIMIT 1");
+            q.setParameter(1, produitId);
+            q.setParameter(2, empl);
+            q.setParameter(3, java.sql.Timestamp.valueOf(date.atStartOfDay()));
+            @SuppressWarnings("unchecked")
+            List<Object> res = q.getResultList();
+            return res.isEmpty() ? 0 : entier(res.get(0));
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    /**
+     * Agregats des mouvements de reserve d'un article, par JOUR : [jour, somme ASSORT, somme REASSORT, delta signe des
+     * AJUSTEMENT, stock rayon avant du premier mouvement, stock rayon apres du dernier]. Le filtre de periode porte sur
+     * la colonne nue dt_CREATED (bornes ouvertes au lendemain) pour rester sur l'index ; DATE() ne sert qu'au
+     * regroupement.
+     */
+    @SuppressWarnings("unchecked")
+    private List<Object[]> agregatsReserveParJour(String produitId, String empl, LocalDate dtStart, LocalDate dtEnd) {
+        try {
+            Query q = getEntityManager().createNativeQuery("SELECT DATE(m.dt_CREATED) AS jour, "
+                    + "SUM(CASE WHEN m.str_TYPE = 'ASSORT' THEN m.int_QTE ELSE 0 END), "
+                    + "SUM(CASE WHEN m.str_TYPE = 'REASSORT' THEN m.int_QTE ELSE 0 END), "
+                    + "SUM(CASE WHEN m.str_TYPE = 'AJUSTEMENT' THEN m.int_STOCK_RESERVE_APRES - m.int_STOCK_RESERVE_AVANT ELSE 0 END), "
+                    + "CAST(SUBSTRING_INDEX(GROUP_CONCAT(m.int_STOCK_RAYON_AVANT ORDER BY m.dt_CREATED ASC), ',', 1) AS SIGNED), "
+                    + "CAST(SUBSTRING_INDEX(GROUP_CONCAT(m.int_STOCK_RAYON_APRES ORDER BY m.dt_CREATED DESC), ',', 1) AS SIGNED), "
+                    + "CAST(SUBSTRING_INDEX(GROUP_CONCAT(m.int_STOCK_RESERVE_AVANT ORDER BY m.dt_CREATED ASC), ',', 1) AS SIGNED), "
+                    + "CAST(SUBSTRING_INDEX(GROUP_CONCAT(m.int_STOCK_RESERVE_APRES ORDER BY m.dt_CREATED DESC), ',', 1) AS SIGNED), "
+                    + "MIN(m.dt_CREATED), MAX(m.dt_CREATED) "
+                    + "FROM t_mouvement_reserve m WHERE m.lg_FAMILLE_ID = ?1 AND m.lg_EMPLACEMENT_ID = ?2 "
+                    + "AND m.dt_CREATED >= ?3 AND m.dt_CREATED < ?4 GROUP BY DATE(m.dt_CREATED)");
+            q.setParameter(1, produitId);
+            q.setParameter(2, empl);
+            q.setParameter(3, java.sql.Timestamp.valueOf(dtStart.atStartOfDay()));
+            q.setParameter(4, java.sql.Timestamp.valueOf(dtEnd.plusDays(1).atStartOfDay()));
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Union des familles ayant bouge sur la periode, toutes sources confondues : mouvements generaux (HMvtProduit) ET
+     * mouvements de reserve. Un produit n'ayant connu que des transferts rayon/reserve apparait donc bien dans la
+     * liste, ce que ne garantit pas le suivi 2. Retour : [lg_FAMILLE_ID, str_NAME] tries par designation.
+     */
+    private List<Object[]> famillesSuiviComplet(MvtArticleParams params) {
+        return unionFamilles(famillesMvtGeneral(params), famillesMvtReserve(params));
+    }
+
+    /**
+     * Union sans doublon des deux listes de familles [id, nom], triee par designation sans tenir compte de la casse. En
+     * cas de doublon, la ligne du suivi general fait foi. Statique et sans etat : couverte par les tests unitaires.
+     */
+    static List<Object[]> unionFamilles(List<Object[]> general, List<Object[]> reserve) {
+        Map<String, Object[]> union = new HashMap<>();
+        for (Object[] r : general) {
+            union.putIfAbsent((String) r[0], r);
+        }
+        for (Object[] r : reserve) {
+            union.putIfAbsent((String) r[0], r);
+        }
+        List<Object[]> out = new ArrayList<>(union.values());
+        out.sort(Comparator.comparing(r -> String.valueOf(r[1]), String.CASE_INSENSITIVE_ORDER));
+        return out;
+    }
+
+    /** Familles avec au moins un mouvement general sur la periode : memes filtres que le suivi 2, sans pagination. */
+    private List<Object[]> famillesMvtGeneral(MvtArticleParams params) {
+        try {
+            List<Predicate> predicates = new ArrayList<>();
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
+            Root<HMvtProduit> root = cq.from(HMvtProduit.class);
+            Join<HMvtProduit, TFamille> fa = root.join(HMvtProduit_.famille, JoinType.INNER);
+            cq.multiselect(fa.get(TFamille_.lgFAMILLEID), fa.get(TFamille_.strNAME)).distinct(true);
+            predicates.add(cb.and(cb.equal(root.get(HMvtProduit_.emplacement).get(TEmplacement_.lgEMPLACEMENTID),
+                    params.getMagasinId())));
+            // mvtdate est deja une colonne DATE : comparer la colonne NUE, sans fonction DATE(), pour que
+            // MySQL puisse utiliser l'index HMvtProduit7 (avec DATE(), la table etait balayee entierement).
+            predicates.add(cb.and(cb.between(root.get(HMvtProduit_.mvtDate), params.getDtStart(), params.getDtEnd())));
+            if (params.getCategorieId() != null && !"".equals(params.getCategorieId())) {
+                predicates.add(
+                        cb.and(cb.equal(fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID),
+                                params.getCategorieId())));
+            }
+            if (params.getSearch() != null && !"".equals(params.getSearch())) {
+                predicates.add(cb.and(cb.or(cb.like(fa.get(TFamille_.intCIP), params.getSearch() + "%"),
+                        cb.like(fa.get(TFamille_.strNAME), params.getSearch() + "%"))));
+            }
+            if (params.getRayonId() != null && !"".equals(params.getRayonId())) {
+                predicates.add(cb.and(cb.equal(fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID),
+                        params.getRayonId())));
+            }
+            if (params.getFabricantId() != null && !"".equals(params.getFabricantId())) {
+                predicates.add(cb.and(cb.equal(fa.get(TFamille_.lgFABRIQUANTID).get(TFabriquant_.lgFABRIQUANTID),
+                        params.getFabricantId())));
+            }
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            return getEntityManager().createQuery(cq).getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    /** Familles avec au moins un mouvement de reserve sur la periode, pour l'emplacement demande. */
+    private List<Object[]> famillesMvtReserve(MvtArticleParams params) {
+        try {
+            StringBuilder jpql = new StringBuilder("SELECT DISTINCT f.lgFAMILLEID, f.strNAME "
+                    + "FROM TMouvementReserve t JOIN t.lgFAMILLEID f "
+                    + "WHERE t.lgEMPLACEMENTID.lgEMPLACEMENTID = :empl AND t.dtCREATED >= :d1 AND t.dtCREATED < :d2");
+            boolean hasCategorie = params.getCategorieId() != null && !"".equals(params.getCategorieId());
+            boolean hasSearch = params.getSearch() != null && !"".equals(params.getSearch());
+            boolean hasRayon = params.getRayonId() != null && !"".equals(params.getRayonId());
+            boolean hasFabricant = params.getFabricantId() != null && !"".equals(params.getFabricantId());
+            if (hasCategorie) {
+                jpql.append(" AND f.lgFAMILLEARTICLEID.lgFAMILLEARTICLEID = :categorie");
+            }
+            if (hasSearch) {
+                jpql.append(" AND (f.intCIP LIKE :search OR f.strNAME LIKE :search)");
+            }
+            if (hasRayon) {
+                jpql.append(" AND f.lgZONEGEOID.lgZONEGEOID = :rayon");
+            }
+            if (hasFabricant) {
+                jpql.append(" AND f.lgFABRIQUANTID.lgFABRIQUANTID = :fabricant");
+            }
+            TypedQuery<Object[]> q = getEntityManager().createQuery(jpql.toString(), Object[].class);
+            q.setParameter("empl", params.getMagasinId());
+            q.setParameter("d1", java.sql.Timestamp.valueOf(params.getDtStart().atStartOfDay()));
+            // Borne superieure EXCLUSIVE au lendemain : couvre la fin de journee sans bricolage de 23:59:59.
+            q.setParameter("d2", java.sql.Timestamp.valueOf(params.getDtEnd().plusDays(1).atStartOfDay()));
+            if (hasCategorie) {
+                q.setParameter("categorie", params.getCategorieId());
+            }
+            if (hasSearch) {
+                q.setParameter("search", params.getSearch() + "%");
+            }
+            if (hasRayon) {
+                q.setParameter("rayon", params.getRayonId());
+            }
+            if (hasFabricant) {
+                q.setParameter("fabricant", params.getFabricantId());
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    /** Construit les lignes du suivi complet pour une page de familles [id, nom]. */
+    private List<MvtProduitCompletDTO> lignesSuiviComplet(List<Object[]> familles, MvtArticleParams params) {
+        List<String> ids = new ArrayList<>();
+        for (Object[] r : familles) {
+            ids.add((String) r[0]);
+        }
+        Map<String, int[]> interne = agregatsMouvementsReserve(ids, params);
+        Map<String, Integer> stocksReserve = stocksReserve(ids, params.getMagasinId());
+        List<MvtProduitCompletDTO> out = new ArrayList<>();
+        for (Object[] r : familles) {
+            String id = (String) r[0];
+            TFamille famille = getEntityManager().find(TFamille.class, id);
+            if (famille == null) {
+                continue;
+            }
+            MvtProduitCompletDTO dto = new MvtProduitCompletDTO();
+            dto.setCip(famille.getIntCIP());
+            dto.setProduitId(id);
+            dto.setProduitName(famille.getStrNAME());
+            dto.setCurrentStock(getFamilleStockByProduitId(id, params.getMagasinId()));
+            remplirQuantitesGenerales(dto, params);
+            int[] mi = interne.get(id);
+            if (mi != null) {
+                dto.setQtyVersReserve(mi[0]);
+                dto.setQtyVersRayon(mi[1]);
+                dto.setQtyAjustReserve(mi[2]);
+            }
+            int reserve = stocksReserve.getOrDefault(id, 0);
+            dto.setCurrentStockReserve(reserve);
+            dto.setCurrentStockTotal(dto.getCurrentStock() + reserve);
+            out.add(dto);
+        }
+        return out;
+    }
+
+    /**
+     * Agregats des mouvements de reserve par famille sur la periode, en UNE requete pour toute la page (pas de N+1).
+     * Retour : familleId -> {somme ASSORT, somme REASSORT, delta signe des AJUSTEMENT}. Le delta d'un ajustement se lit
+     * dans (stock reserve apres - avant) car int_QTE n'en stocke que la valeur absolue. Les mouvements d'annulation,
+     * enregistres comme mouvements inverses, se compensent naturellement dans ces sommes.
+     */
+    private Map<String, int[]> agregatsMouvementsReserve(List<String> familleIds, MvtArticleParams params) {
+        Map<String, int[]> out = new HashMap<>();
+        if (familleIds.isEmpty()) {
+            return out;
+        }
+        try {
+            TypedQuery<Object[]> q = getEntityManager().createQuery("SELECT t.lgFAMILLEID.lgFAMILLEID, t.strTYPE, "
+                    + "SUM(t.intQTE), SUM(t.intSTOCKRESERVEAPRES - t.intSTOCKRESERVEAVANT) "
+                    + "FROM TMouvementReserve t WHERE t.lgEMPLACEMENTID.lgEMPLACEMENTID = :empl "
+                    + "AND t.lgFAMILLEID.lgFAMILLEID IN :ids AND t.dtCREATED >= :d1 AND t.dtCREATED < :d2 "
+                    + "GROUP BY t.lgFAMILLEID.lgFAMILLEID, t.strTYPE", Object[].class);
+            q.setParameter("empl", params.getMagasinId());
+            q.setParameter("ids", familleIds);
+            q.setParameter("d1", java.sql.Timestamp.valueOf(params.getDtStart().atStartOfDay()));
+            q.setParameter("d2", java.sql.Timestamp.valueOf(params.getDtEnd().plusDays(1).atStartOfDay()));
+            out.putAll(cumulerAgregatsReserve(q.getResultList()));
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return out;
+    }
+
+    /**
+     * Cumule les lignes groupees [familleId, type, somme(qte), delta reserve signe] en agregats par famille :
+     * {versReserve, versRayon, ajustReserve}. Un type inconnu (ex. DESTOCKAGE historique) est ignore plutot que compte
+     * a tort dans une colonne. Statique et sans etat : couverte par les tests unitaires.
+     */
+    static Map<String, int[]> cumulerAgregatsReserve(List<Object[]> rows) {
+        Map<String, int[]> out = new HashMap<>();
+        for (Object[] r : rows) {
+            String id = (String) r[0];
+            String type = (String) r[1];
+            int somme = r[2] == null ? 0 : ((Number) r[2]).intValue();
+            int delta = r[3] == null ? 0 : ((Number) r[3]).intValue();
+            int[] agg = out.computeIfAbsent(id, k -> new int[3]);
+            if (TMouvementReserve.TYPE_ASSORT.equals(type)) {
+                agg[0] += somme;
+            } else if (TMouvementReserve.TYPE_REASSORT.equals(type)) {
+                agg[1] += somme;
+            } else if (TMouvementReserve.TYPE_AJUSTEMENT.equals(type)) {
+                agg[2] += delta;
+            }
+        }
+        return out;
+    }
+
+    /** Stock reserve courant de chaque famille de la page, en une requete. */
+    private Map<String, Integer> stocksReserve(List<String> familleIds, String empl) {
+        Map<String, Integer> out = new HashMap<>();
+        if (familleIds.isEmpty()) {
+            return out;
+        }
+        try {
+            StringBuilder in = new StringBuilder();
+            for (int i = 0; i < familleIds.size(); i++) {
+                in.append(i == 0 ? "?" : ",?").append(i + 2);
+            }
+            Query q = getEntityManager().createNativeQuery("SELECT tsf.lg_FAMILLE_ID, COALESCE(MAX(tsf.int_NUMBER), 0) "
+                    + "FROM t_type_stock_famille tsf WHERE tsf.lg_EMPLACEMENT_ID = ?1 " + "AND tsf.lg_TYPE_STOCK_ID = '"
+                    + TYPE_STOCK_RESERVE + "' AND tsf.lg_FAMILLE_ID IN (" + in + ") GROUP BY tsf.lg_FAMILLE_ID");
+            q.setParameter(1, empl);
+            for (int i = 0; i < familleIds.size(); i++) {
+                q.setParameter(i + 2, familleIds.get(i));
+            }
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = q.getResultList();
+            for (Object[] r : rows) {
+                out.put(String.valueOf(r[0]), r[1] == null ? 0 : ((Number) r[1]).intValue());
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return out;
     }
 
     Comparator<VenteDetailsDTO> venteComparator = Comparator.comparing(VenteDetailsDTO::getDateOperation);

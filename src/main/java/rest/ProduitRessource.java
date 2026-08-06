@@ -182,6 +182,150 @@ public class ProduitRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
+    /**
+     * Suivi mouvement article COMPLET : suivi general + mouvements internes rayon/reserve + stocks rayon/reserve/total.
+     * Ecran separe, l'endpoint "monitoring" du suivi 2 reste inchange.
+     */
+    @GET
+    @Path("monitoring-complet")
+    public Response suivitMvtArticlesComplet(@QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "search") String search,
+            @QueryParam(value = "categorieId") String categorieId,
+            @QueryParam(value = "fabricantId") String fabricantId, @QueryParam(value = "rayonId") String rayonId)
+            throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        MvtArticleParams params = new MvtArticleParams();
+        params.setAll(false);
+        params.setCategorieId(categorieId);
+        params.setFabricantId(fabricantId);
+        params.setSearch(search);
+        params.setRayonId(rayonId);
+        params.setLimit(limit);
+        params.setStart(start);
+        params.setDtEnd(LocalDate.parse(dtEnd));
+        params.setDtStart(LocalDate.parse(dtStart));
+        params.setMagasinId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitMvtArticleCompletViewDatas(params);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    /** Export Excel du suivi complet, sur l'ensemble des lignes filtrees. */
+    @GET
+    @Path("monitoring-complet/excel")
+    @Produces("application/vnd.ms-excel")
+    public Response suivitMvtArticlesCompletExcel(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "search") String search,
+            @QueryParam(value = "categorieId") String categorieId,
+            @QueryParam(value = "fabricantId") String fabricantId, @QueryParam(value = "rayonId") String rayonId)
+            throws Exception {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        MvtArticleParams params = new MvtArticleParams();
+        params.setAll(true);
+        params.setCategorieId(categorieId);
+        params.setFabricantId(fabricantId);
+        params.setSearch(search);
+        params.setRayonId(rayonId);
+        params.setDtEnd(LocalDate.parse(dtEnd));
+        params.setDtStart(LocalDate.parse(dtStart));
+        params.setMagasinId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        byte[] data = produitService.exportSuiviMvtArticleComplet(params);
+        return Response.ok(data).header("Content-Disposition", "attachment; filename=\"suivi_mvt_article_complet.xls\"")
+                .build();
+    }
+
+    /** Detail jour par jour du suivi complet : mouvements generaux + mouvements internes reserve. */
+    @GET
+    @Path("monitoringproduct-complet")
+    public Response detailMvtComplet(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject jsono = produitService.suivitEclateCompletViewDatas(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    /** Impression PDF du suivi complet, A4 paysage, ouverte dans le navigateur. */
+    @GET
+    @Path("monitoring-complet/pdf")
+    @Produces("application/pdf")
+    public Response suivitMvtArticlesCompletPdf(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "search") String search,
+            @QueryParam(value = "categorieId") String categorieId,
+            @QueryParam(value = "fabricantId") String fabricantId, @QueryParam(value = "rayonId") String rayonId)
+            throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        MvtArticleParams params = new MvtArticleParams();
+        params.setAll(true);
+        params.setCategorieId(categorieId);
+        params.setFabricantId(fabricantId);
+        params.setSearch(search);
+        params.setRayonId(rayonId);
+        params.setDtEnd(LocalDate.parse(dtEnd));
+        params.setDtStart(LocalDate.parse(dtStart));
+        params.setMagasinId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        byte[] data = produitService.exportSuiviMvtArticleCompletPdf(params, tu);
+        return Response.ok(data).header("Content-Disposition", "inline; filename=\"suivi_mvt_article_complet.pdf\"")
+                .build();
+    }
+
+    /** Fiche PDF A4 paysage des mouvements d'un article, reserve comprise (detail jour par jour). */
+    @GET
+    @Path("monitoringproduct-complet/pdf")
+    @Produces("application/pdf")
+    public Response ficheMvtArticleCompletPdf(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId)
+            throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        MvtArticleParams params = new MvtArticleParams();
+        params.setProduitId(produitId);
+        params.setDtEnd(LocalDate.parse(dtEnd));
+        params.setDtStart(LocalDate.parse(dtStart));
+        params.setMagasinId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        byte[] data = produitService.exportFicheArticleCompletPdf(params, tu);
+        return Response.ok(data).header("Content-Disposition", "inline; filename=\"fiche_mvt_article_complet.pdf\"")
+                .build();
+    }
+
+    /**
+     * Detail des mouvements internes rayon/reserve d'un article, pour la fenetre de detail du suivi complet.
+     * L'emplacement applique est TOUJOURS celui de l'utilisateur connecte, jamais un parametre du navigateur.
+     */
+    @GET
+    @Path("monitoring-reserve")
+    public Response monitoringReserve(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject jsono = reserveService.mouvementsSuivi(tu, produitId, dtStart, dtEnd, start, limit);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
     @GET
     @Path("monitoringproduct")
     public Response detailMvt(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
