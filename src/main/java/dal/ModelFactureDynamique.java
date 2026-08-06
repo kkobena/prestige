@@ -2,6 +2,7 @@ package dal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -47,6 +48,18 @@ public class ModelFactureDynamique implements Serializable {
     @Column(name = "str_STATUT", length = 20)
     private String statut = "enable";
 
+    /** Afficher le bloc d'en-tete (nom de l'officine, bloc tiers payant, numero de facture). */
+    @Column(name = "b_AFFICHER_ENTETE")
+    private Boolean afficherEntete = Boolean.TRUE;
+
+    /** Afficher le pied de page (filet et numerotation des pages). */
+    @Column(name = "b_AFFICHER_PIED_PAGE")
+    private Boolean afficherPiedPage = Boolean.TRUE;
+
+    /** Detailler les produits de chaque bon : les lignes de vente sont affichees sous la ligne du bon. */
+    @Column(name = "b_DETAILLER_PRODUITS")
+    private Boolean detaillerProduits = Boolean.FALSE;
+
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtCreated;
@@ -73,6 +86,55 @@ public class ModelFactureDynamique implements Serializable {
 
     public void setNom(String nom) {
         this.nom = nom;
+    }
+
+    /** Vrai par defaut : un modele cree avant l'ajout de l'option garde l'en-tete complet. */
+    public boolean isAfficherEntete() {
+        return afficherEntete == null || afficherEntete;
+    }
+
+    public void setAfficherEntete(boolean afficherEntete) {
+        this.afficherEntete = afficherEntete;
+    }
+
+    /** Vrai par defaut : un modele cree avant l'ajout de l'option garde le pied de page. */
+    public boolean isAfficherPiedPage() {
+        return afficherPiedPage == null || afficherPiedPage;
+    }
+
+    public void setAfficherPiedPage(boolean afficherPiedPage) {
+        this.afficherPiedPage = afficherPiedPage;
+    }
+
+    /** Faux par defaut : un modele cree avant l'option garde une ligne par bon, sans detail des produits. */
+    public boolean isDetaillerProduits() {
+        return detaillerProduits != null && detaillerProduits;
+    }
+
+    public void setDetaillerProduits(boolean detaillerProduits) {
+        this.detaillerProduits = detaillerProduits;
+    }
+
+    /** Colonnes du niveau BON (une ligne par dossier), dans l'ordre choisi. */
+    public List<ModelFactureDynamiqueColonne> getColonnesBon() {
+        return colonnesDuNiveau(ModelFactureDynamiqueColonne.NIVEAU_BON);
+    }
+
+    /** Colonnes du niveau PRODUIT (lignes de vente sous chaque bon), dans l'ordre choisi. */
+    public List<ModelFactureDynamiqueColonne> getColonnesProduit() {
+        return colonnesDuNiveau(ModelFactureDynamiqueColonne.NIVEAU_PRODUIT);
+    }
+
+    private List<ModelFactureDynamiqueColonne> colonnesDuNiveau(String niveau) {
+        List<ModelFactureDynamiqueColonne> retenues = new ArrayList<>();
+        for (ModelFactureDynamiqueColonne c : colonnes) {
+            if (niveau.equals(c.getNiveau())) {
+                retenues.add(c);
+            }
+        }
+        retenues.sort(Comparator.comparing(ModelFactureDynamiqueColonne::getOrdre,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+        return retenues;
     }
 
     public String getDescription() {

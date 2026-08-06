@@ -30,6 +30,10 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                 {name: 'nom', type: 'string'},
                 {name: 'description', type: 'string'},
                 {name: 'modeTri', type: 'string'},
+                {name: 'afficherEntete', type: 'boolean'},
+                {name: 'afficherPiedPage', type: 'boolean'},
+                {name: 'detaillerProduits', type: 'boolean'},
+                {name: 'colonnesProduit'},
                 {name: 'nbColonnes', type: 'int'},
                 {name: 'nbTiersPayants', type: 'int'},
                 {name: 'colonnes'}
@@ -132,6 +136,19 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                             sortable: false,
                             menuDisabled: true,
                             items: [{
+                                    icon: 'resources/images/icons/fam/page_copy.png',
+                                    tooltip: 'Exporter la mise en page au format .jrxml',
+                                    handler: function (grid, rowIndex) {
+                                        me.onExportJrxml(grid.getStore().getAt(rowIndex));
+                                    }
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
                                     icon: 'resources/images/icons/fam/delete.png',
                                     tooltip: 'Supprimer le mod&egrave;le',
                                     handler: function (grid, rowIndex) {
@@ -143,6 +160,12 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                 }]
         });
         this.callParent();
+    },
+
+    // Telechargement du fichier de mise en page Jasper : le navigateur enregistre le .jrxml,
+    // modifiable ensuite dans Jaspersoft Studio puis deposable dans le dossier des etats du serveur.
+    onExportJrxml: function (rec) {
+        window.open(url_rest_model_facture_dynamique + 'jrxml/' + rec.get('id'));
     },
 
     onDeleteModel: function (rec) {
@@ -185,6 +208,42 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
             ],
             proxy: {type: 'memory'}
         });
+        // second selecteur : colonnes des produits d'un bon (visible seulement si le detail est actif)
+        var produitsStore = Ext.create('Ext.data.Store', {
+            fields: [
+                {name: 'champ', type: 'string'},
+                {name: 'libelleDefaut', type: 'string'},
+                {name: 'libelle', type: 'string'},
+                {name: 'inclure', type: 'boolean'},
+                {name: 'ordre', type: 'int'}
+            ],
+            proxy: {type: 'memory'}
+        });
+
+        // Construit les lignes d'un selecteur : colonnes disponibles renvoyees par le serveur,
+        // pre-cochees et ordonnees selon le modele en cours de modification.
+        var construireLignes = function (disponibles, choisiesDuModele) {
+            var existantes = {};
+            Ext.each(choisiesDuModele || [], function (c) {
+                existantes[c.champ] = c;
+            });
+            var rows = [];
+            var prochainOrdre = 100;
+            Ext.each(disponibles || [], function (c) {
+                var choisie = existantes[c.champ];
+                rows.push({
+                    champ: c.champ,
+                    libelleDefaut: c.libelle,
+                    libelle: choisie ? choisie.libelle : c.libelle,
+                    inclure: !!choisie,
+                    ordre: choisie ? choisie.ordre : prochainOrdre++
+                });
+            });
+            rows.sort(function (a, b) {
+                return a.ordre - b.ordre;
+            });
+            return rows;
+        };
 
         // colonnes disponibles depuis le serveur, puis pre-cochage avec celles du modele edite
         Ext.Ajax.request({
@@ -192,36 +251,107 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
             method: 'GET',
             success: function (response) {
                 var object = Ext.JSON.decode(response.responseText, false);
-                var existantes = {};
-                if (rec) {
-                    Ext.each(rec.get('colonnes') || [], function (c) {
-                        existantes[c.champ] = c;
-                    });
-                }
-                var rows = [];
-                var prochainOrdre = 100;
-                Ext.each(object.data, function (c) {
-                    var choisie = existantes[c.champ];
-                    rows.push({
-                        champ: c.champ,
-                        libelleDefaut: c.libelle,
-                        libelle: choisie ? choisie.libelle : c.libelle,
-                        inclure: !!choisie,
-                        ordre: choisie ? choisie.ordre : prochainOrdre++
-                    });
-                });
-                colonnesStore.loadData(rows);
-                colonnesStore.sort('ordre', 'ASC');
+                colonnesStore.loadData(construireLignes(object.data, rec ? rec.get('colonnes') : null));
+                produitsStore.loadData(construireLignes(object.produit, rec ? rec.get('colonnesProduit') : null));
             }
         });
 
-        var cellEditing = Ext.create('Ext.grid.plugin.CellEditing', {clicksToEdit: 1});
+        // Fabrique d'un selecteur de colonnes : cases a cocher, libelle modifiable,
+        // position calculee et reordonnancement au glisser-deposer.
+        var selecteurColonnes = function (config) {
+            var magasin = config.store;
+            return {
+                xtype: 'gridpanel',
+                title: config.titre,
+                itemId: config.itemId,
+                height: config.height,
+                hidden: config.hidden === true,
+                margin: '10 0 0 0',
+                store: magasin,
+                plugins: [Ext.create('Ext.grid.plugin.CellEditing', {clicksToEdit: 1})],
+                viewConfig: {
+                    plugins: {
+                        ptype: 'gridviewdragdrop',
+                        dragText: 'D&eacute;placer pour changer la position sur la facture'
+                    },
+                    listeners: {
+                        drop: function () {
+                            magasin.each(function (r, index) {
+                                r.set('ordre', index);
+                            });
+                            magasin.commitChanges();
+                            this.refresh();
+                        }
+                    }
+                },
+                columns: [
+                    {
+                        xtype: 'checkcolumn',
+                        header: 'Afficher',
+                        dataIndex: 'inclure',
+                        width: 70,
+                        listeners: {
+                            checkchange: function (col) {
+                                col.up('gridpanel').getView().refresh();
+                            }
+                        }
+                    },
+                    {
+                        header: 'Information',
+                        dataIndex: 'libelleDefaut',
+                        flex: 1.2
+                    },
+                    {
+                        header: 'Libell&eacute; sur la facture',
+                        dataIndex: 'libelle',
+                        flex: 1.2,
+                        editor: {xtype: 'textfield', allowBlank: false}
+                    },
+                    {
+                        header: 'Position',
+                        dataIndex: 'ordre',
+                        width: 70,
+                        align: 'center',
+                        sortable: false,
+                        menuDisabled: true,
+                        renderer: function (value, meta, record, rowIndex) {
+                            if (!record.get('inclure')) {
+                                return '';
+                            }
+                            var rang = 0;
+                            magasin.each(function (r, i) {
+                                if (i <= rowIndex && r.get('inclure')) {
+                                    rang++;
+                                }
+                            });
+                            return rang;
+                        }
+                    }
+                ]
+            };
+        };
+
+        // colonnes cochees d'un selecteur, dans l'ordre des lignes de la grille
+        var colonnesChoisies = function (magasin) {
+            var choisies = [];
+            magasin.each(function (r) {
+                if (r.get('inclure')) {
+                    choisies.push({
+                        champ: r.get('champ'),
+                        libelle: r.get('libelle') || r.get('libelleDefaut'),
+                        ordre: choisies.length
+                    });
+                }
+            });
+            return choisies;
+        };
         var win = Ext.create('Ext.window.Window', {
             autoShow: true,
             modal: true,
             title: rec ? 'Modifier le mod&egrave;le [' + rec.get('nom') + ']' : 'Cr&eacute;er un mod&egrave;le de facture',
-            width: 760,
-            height: 620,
+            width: 900,
+            height: 660,
+            maximizable: true,
             layout: 'fit',
             items: [{
                     xtype: 'form',
@@ -263,40 +393,57 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                             value: rec ? rec.get('modeTri') : 'TIERS_PAYANT'
                         },
                         {
-                            xtype: 'gridpanel',
-                            title: 'Colonnes de la facture (cochez, renommez et ordonnez)',
-                            itemId: 'mfdColonnes',
-                            height: 380,
-                            margin: '10 0 0 0',
-                            store: colonnesStore,
-                            plugins: [cellEditing],
-                            columns: [
+                            xtype: 'fieldcontainer',
+                            fieldLabel: 'Pr&eacute;sentation',
+                            layout: 'hbox',
+                            anchor: '100%',
+                            items: [
                                 {
-                                    xtype: 'checkcolumn',
-                                    header: 'Afficher',
-                                    dataIndex: 'inclure',
-                                    width: 70
+                                    xtype: 'checkbox',
+                                    itemId: 'mfdEntete',
+                                    boxLabel: 'Afficher l\'en-t&ecirc;te (officine, tiers payant, n&deg; de facture)',
+                                    margin: '0 20 0 0',
+                                    // modele existant : on reprend son reglage ; nouveau modele : en-tete affiche
+                                    checked: rec ? rec.get('afficherEntete') !== false : true
                                 },
                                 {
-                                    header: 'Information',
-                                    dataIndex: 'libelleDefaut',
-                                    flex: 1.2
-                                },
-                                {
-                                    header: 'Libell&eacute; sur la facture',
-                                    dataIndex: 'libelle',
-                                    flex: 1.2,
-                                    editor: {xtype: 'textfield', allowBlank: false}
-                                },
-                                {
-                                    header: 'Ordre',
-                                    dataIndex: 'ordre',
-                                    width: 70,
-                                    align: 'center',
-                                    editor: {xtype: 'numberfield', minValue: 0, allowDecimals: false}
+                                    xtype: 'checkbox',
+                                    itemId: 'mfdPiedPage',
+                                    boxLabel: 'Afficher le pied de page (num&eacute;ro de page)',
+                                    checked: rec ? rec.get('afficherPiedPage') !== false : true
                                 }
                             ]
-                        }
+                        },
+                        {
+                            xtype: 'checkbox',
+                            itemId: 'mfdDetailProduits',
+                            fieldLabel: 'D&eacute;tail des ventes',
+                            boxLabel: 'D&eacute;tailler les produits de chaque bon (les lignes de vente '
+                                    + 's\'affichent sous la ligne du bon)',
+                            anchor: '100%',
+                            checked: rec ? rec.get('detaillerProduits') === true : false,
+                            listeners: {
+                                change: function (cmp, valeur) {
+                                    var grille = cmp.up('form').down('#mfdColonnesProduit');
+                                    grille.setVisible(valeur);
+                                    cmp.up('form').down('#mfdColonnes').setHeight(valeur ? 200 : 380);
+                                }
+                            }
+                        },
+                        selecteurColonnes({
+                            titre: 'Colonnes du BON : cochez, renommez, et faites GLISSER les lignes pour changer '
+                                    + 'l\'ordre des colonnes',
+                            itemId: 'mfdColonnes',
+                            store: colonnesStore,
+                            height: (rec && rec.get('detaillerProduits')) ? 200 : 380
+                        }),
+                        selecteurColonnes({
+                            titre: 'Colonnes des PRODUITS affich&eacute;s sous chaque bon',
+                            itemId: 'mfdColonnesProduit',
+                            store: produitsStore,
+                            height: 200,
+                            hidden: !(rec && rec.get('detaillerProduits'))
+                        })
                     ]
                 }],
             buttons: [
@@ -307,24 +454,21 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                         if (!formulaire.isValid()) {
                             return;
                         }
-                        var colonnes = [];
-                        colonnesStore.each(function (r) {
-                            if (r.get('inclure')) {
-                                colonnes.push({
-                                    champ: r.get('champ'),
-                                    libelle: r.get('libelle') || r.get('libelleDefaut'),
-                                    ordre: r.get('ordre')
-                                });
-                            }
-                        });
+                        // l'ordre envoye au serveur est celui des lignes des grilles (glisser-deposer)
+                        var colonnes = colonnesChoisies(colonnesStore);
                         if (colonnes.length === 0) {
                             Ext.MessageBox.alert('Avertissement',
-                                    'Choisissez au moins une colonne &agrave; afficher sur la facture');
+                                    'Choisissez au moins une colonne du bon &agrave; afficher sur la facture');
                             return;
                         }
-                        colonnes.sort(function (a, b) {
-                            return a.ordre - b.ordre;
-                        });
+                        var detailProduits = formulaire.down('#mfdDetailProduits').getValue();
+                        var colonnesProduit = colonnesChoisies(produitsStore);
+                        if (detailProduits && colonnesProduit.length === 0) {
+                            Ext.MessageBox.alert('Avertissement',
+                                    'Le d&eacute;tail des produits est activ&eacute; : choisissez au moins une '
+                                    + 'colonne de produit &agrave; afficher');
+                            return;
+                        }
                         Ext.Ajax.request({
                             url: url_rest_model_facture_dynamique + 'save',
                             method: 'POST',
@@ -333,7 +477,11 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                                 nom: formulaire.down('#mfdNom').getValue(),
                                 description: formulaire.down('#mfdDescription').getValue(),
                                 modeTri: formulaire.down('#mfdModeTri').getValue(),
-                                colonnes: Ext.encode(colonnes)
+                                afficherEntete: formulaire.down('#mfdEntete').getValue(),
+                                afficherPiedPage: formulaire.down('#mfdPiedPage').getValue(),
+                                detaillerProduits: detailProduits,
+                                colonnes: Ext.encode(colonnes),
+                                colonnesProduit: Ext.encode(colonnesProduit)
                             },
                             success: function (response) {
                                 var object = Ext.JSON.decode(response.responseText, false);
@@ -452,8 +600,9 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
             autoShow: true,
             modal: true,
             title: 'Affecter le mod&egrave;le [' + rec.get('nom') + '] &agrave; des tiers payants',
-            width: 820,
-            height: 620,
+            width: 1040,
+            height: 660,
+            maximizable: true,
             layout: {type: 'vbox', align: 'stretch'},
             items: [
                 {
@@ -461,62 +610,87 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                     title: '1. Rechercher des tiers payants et cocher ceux &agrave; affecter',
                     flex: 1,
                     store: rechercheStore,
-                    tbar: [
+                    // Deux barres : la recherche occupe toute la largeur sur la premiere,
+                    // les actions sont sur la seconde (le champ etait ecrase par les boutons).
+                    dockedItems: [
                         {
-                            xtype: 'textfield',
-                            itemId: 'mfdRecherche',
-                            flex: 1,
-                            emptyText: 'Nom du tiers payant (laisser vide pour tout lister)...',
-                            enableKeyEvents: true,
-                            listeners: {
-                                specialKey: function (field, e) {
-                                    if (e.getKey() === e.ENTER) {
-                                        rechercheStore.load({params: {query: field.getValue() || ''}});
+                            xtype: 'toolbar',
+                            dock: 'top',
+                            items: [
+                                {
+                                    xtype: 'textfield',
+                                    itemId: 'mfdRecherche',
+                                    flex: 1,
+                                    minWidth: 400,
+                                    height: 28,
+                                    fieldStyle: 'font-size:13px;',
+                                    emptyText: 'Nom du tiers payant (laisser vide pour tout lister), puis Entr\u00e9e...',
+                                    enableKeyEvents: true,
+                                    listeners: {
+                                        specialKey: function (field, e) {
+                                            if (e.getKey() === e.ENTER) {
+                                                rechercheStore.load({params: {query: field.getValue() || ''}});
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    text: 'Rechercher',
+                                    iconCls: 'searchicon',
+                                    handler: function (btn) {
+                                        lancerRecherche(btn.up('gridpanel'));
+                                    }
+                                },
+                                {
+                                    text: 'Effacer',
+                                    handler: function (btn) {
+                                        var champ = btn.up('window').down('#mfdRecherche');
+                                        champ.setValue('');
+                                        champ.focus();
+                                        rechercheStore.load({params: {query: ''}});
                                     }
                                 }
-                            }
+                            ]
                         },
                         {
-                            text: 'Rechercher',
-                            iconCls: 'searchicon',
-                            handler: function (btn) {
-                                lancerRecherche(btn.up('gridpanel'));
-                            }
-                        },
-                        '-',
-                        {
-                            text: 'Tout cocher',
-                            handler: function () {
-                                rechercheStore.each(function (r) {
-                                    r.set('isChecked', true);
-                                });
-                                rechercheStore.commitChanges();
-                            }
-                        },
-                        {
-                            text: 'Tout d&eacute;cocher',
-                            handler: function () {
-                                rechercheStore.each(function (r) {
-                                    r.set('isChecked', false);
-                                });
-                                rechercheStore.commitChanges();
-                            }
-                        },
-                        '->',
-                        {
-                            text: 'Affecter ce mod&egrave;le',
-                            iconCls: 'addicon',
-                            handler: function () {
-                                affecter(idsCoches(), modelId, 'Affecter le mod\u00e8le "' + rec.get('nom') + '"');
-                            }
-                        },
-                        {
-                            text: 'Retirer le mod&egrave;le',
-                            iconCls: 'cancelicon',
-                            tooltip: 'Remettre le mod&egrave;le de facture par d&eacute;faut',
-                            handler: function () {
-                                affecter(idsCoches(), 0, 'Remettre le mod\u00e8le par d\u00e9faut');
-                            }
+                            xtype: 'toolbar',
+                            dock: 'top',
+                            items: [
+                                {
+                                    text: 'Tout cocher',
+                                    handler: function () {
+                                        rechercheStore.each(function (r) {
+                                            r.set('isChecked', true);
+                                        });
+                                        rechercheStore.commitChanges();
+                                    }
+                                },
+                                {
+                                    text: 'Tout d&eacute;cocher',
+                                    handler: function () {
+                                        rechercheStore.each(function (r) {
+                                            r.set('isChecked', false);
+                                        });
+                                        rechercheStore.commitChanges();
+                                    }
+                                },
+                                '->',
+                                {
+                                    text: 'Affecter ce mod&egrave;le',
+                                    iconCls: 'addicon',
+                                    handler: function () {
+                                        affecter(idsCoches(), modelId, 'Affecter le mod\u00e8le "' + rec.get('nom') + '"');
+                                    }
+                                },
+                                {
+                                    text: 'Retirer le mod&egrave;le',
+                                    iconCls: 'cancelicon',
+                                    tooltip: 'Remettre le mod&egrave;le de facture par d&eacute;faut',
+                                    handler: function () {
+                                        affecter(idsCoches(), 0, 'Remettre le mod\u00e8le par d\u00e9faut');
+                                    }
+                                }
+                            ]
                         }
                     ],
                     columns: [

@@ -96,7 +96,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_typefacture,
+                // URL en dur : la globale url_services_data_typefacture pointait vers une JSP
+                // inexistante, le combo restait vide
+                url: '../api/v1/reglement-facture/types-facture',
                 reader: {
                     type: 'json',
                     root: 'results',

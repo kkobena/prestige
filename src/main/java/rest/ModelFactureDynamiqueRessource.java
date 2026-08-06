@@ -6,17 +6,23 @@ import com.itextpdf.text.Font;
 import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import dal.ModelFactureDynamique;
 import dal.ModelFactureDynamiqueColonne;
 import dal.TFacture;
+import dal.TFamille;
 import dal.TFactureDetail;
 import dal.TOfficine;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
+import dal.TPreenregistrementDetail;
 import dal.TModelFacture;
 import dal.TTiersPayant;
 import dal.TUser;
@@ -46,6 +52,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import rest.report.JrxmlFactureBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
@@ -84,6 +91,18 @@ public class ModelFactureDynamiqueRessource {
         COLONNES_DISPONIBLES.put("PART_TIERS_PAYANT", new Object[] { "Part tiers payant", true });
     }
 
+    /** Registre des colonnes disponibles pour le DETAIL DES PRODUITS d'un bon (lignes de vente). */
+    private static final Map<String, Object[]> COLONNES_PRODUIT_DISPONIBLES = new LinkedHashMap<>();
+
+    static {
+        COLONNES_PRODUIT_DISPONIBLES.put("PROD_CIP", new Object[] { "CIP", false });
+        COLONNES_PRODUIT_DISPONIBLES.put("PROD_DESIGNATION", new Object[] { "Désignation", false });
+        COLONNES_PRODUIT_DISPONIBLES.put("PROD_QUANTITE", new Object[] { "Quantité", false });
+        COLONNES_PRODUIT_DISPONIBLES.put("PROD_PRIX_UNITAIRE", new Object[] { "Prix unitaire", true });
+        COLONNES_PRODUIT_DISPONIBLES.put("PROD_MONTANT", new Object[] { "Montant", true });
+        COLONNES_PRODUIT_DISPONIBLES.put("PROD_REMISE", new Object[] { "Remise", true });
+    }
+
     @Inject
     private HttpServletRequest servletRequest;
 
@@ -109,7 +128,12 @@ public class ModelFactureDynamiqueRessource {
             data.put(new JSONObject().put("champ", e.getKey()).put("libelle", (String) e.getValue()[0]).put("numerique",
                     (Boolean) e.getValue()[1]));
         }
-        return reponseJson(new JSONObject().put("data", data).put("total", data.length()));
+        JSONArray produit = new JSONArray();
+        for (Map.Entry<String, Object[]> e : COLONNES_PRODUIT_DISPONIBLES.entrySet()) {
+            produit.put(new JSONObject().put("champ", e.getKey()).put("libelle", (String) e.getValue()[0])
+                    .put("numerique", (Boolean) e.getValue()[1]));
+        }
+        return reponseJson(new JSONObject().put("data", data).put("total", data.length()).put("produit", produit));
     }
 
     /** Liste des modeles dynamiques avec leurs colonnes et le nombre de tiers payants rattaches. */
@@ -133,13 +157,21 @@ public class ModelFactureDynamiqueRessource {
                         "SELECT COUNT(t) FROM TTiersPayant t WHERE t.lgMODELFACTUREID.modelFactureDynamiqueId = ?1",
                         Long.class).setParameter(1, m.getId()).getSingleResult();
                 JSONArray cols = new JSONArray();
-                for (ModelFactureDynamiqueColonne c : m.getColonnes()) {
+                for (ModelFactureDynamiqueColonne c : m.getColonnesBon()) {
                     cols.put(new JSONObject().put("champ", c.getChamp()).put("libelle", c.getLibelle()).put("ordre",
                             c.getOrdre()));
                 }
+                JSONArray colsProduit = new JSONArray();
+                for (ModelFactureDynamiqueColonne c : m.getColonnesProduit()) {
+                    colsProduit.put(new JSONObject().put("champ", c.getChamp()).put("libelle", c.getLibelle())
+                            .put("ordre", c.getOrdre()));
+                }
                 data.put(new JSONObject().put("id", m.getId()).put("nom", m.getNom())
                         .put("description", StringUtils.defaultString(m.getDescription()))
-                        .put("modeTri", m.getModeTri()).put("colonnes", cols).put("nbColonnes", cols.length())
+                        .put("modeTri", m.getModeTri()).put("afficherEntete", m.isAfficherEntete())
+                        .put("afficherPiedPage", m.isAfficherPiedPage())
+                        .put("detaillerProduits", m.isDetaillerProduits()).put("colonnes", cols)
+                        .put("colonnesProduit", colsProduit).put("nbColonnes", cols.length())
                         .put("nbTiersPayants", nbTp));
             }
             return reponseJson(new JSONObject().put("data", data).put("total", data.length()));
@@ -213,7 +245,11 @@ public class ModelFactureDynamiqueRessource {
             @DefaultValue("") @FormParam("nom") String nom,
             @DefaultValue("") @FormParam("description") String description,
             @DefaultValue("TIERS_PAYANT") @FormParam("modeTri") String modeTri,
-            @DefaultValue("[]") @FormParam("colonnes") String colonnesParam) {
+            @DefaultValue("true") @FormParam("afficherEntete") boolean afficherEntete,
+            @DefaultValue("true") @FormParam("afficherPiedPage") boolean afficherPiedPage,
+            @DefaultValue("false") @FormParam("detaillerProduits") boolean detaillerProduits,
+            @DefaultValue("[]") @FormParam("colonnes") String colonnesParam,
+            @DefaultValue("[]") @FormParam("colonnesProduit") String colonnesProduitParam) {
         if (utilisateurSession() == null) {
             return reponseDeconnecte();
         }
@@ -230,6 +266,18 @@ public class ModelFactureDynamiqueRessource {
             if (!COLONNES_DISPONIBLES.containsKey(champ)) {
                 return reponseJson(new JSONObject().put("success", "0").put("errors", "Colonne inconnue : " + champ));
             }
+        }
+        JSONArray colonnesProduit = new JSONArray(colonnesProduitParam);
+        for (int i = 0; i < colonnesProduit.length(); i++) {
+            String champ = colonnesProduit.getJSONObject(i).optString("champ");
+            if (!COLONNES_PRODUIT_DISPONIBLES.containsKey(champ)) {
+                return reponseJson(
+                        new JSONObject().put("success", "0").put("errors", "Colonne produit inconnue : " + champ));
+            }
+        }
+        if (detaillerProduits && colonnesProduit.length() == 0) {
+            return reponseJson(new JSONObject().put("success", "0").put("errors",
+                    "Le détail des produits est activé : choisissez au moins une colonne de produit à afficher"));
         }
         dataManager odm = new dataManager();
         try {
@@ -252,15 +300,35 @@ public class ModelFactureDynamiqueRessource {
             modele.setNom(nom.trim());
             modele.setDescription(StringUtils.trimToNull(description));
             modele.setModeTri(normaliserModeTri(modeTri));
+            modele.setAfficherEntete(afficherEntete);
+            modele.setAfficherPiedPage(afficherPiedPage);
+            modele.setDetaillerProduits(detaillerProduits);
             for (int i = 0; i < colonnes.length(); i++) {
                 JSONObject o = colonnes.getJSONObject(i);
                 ModelFactureDynamiqueColonne col = new ModelFactureDynamiqueColonne();
                 col.setModele(modele);
+                col.setNiveau(ModelFactureDynamiqueColonne.NIVEAU_BON);
                 col.setChamp(o.getString("champ"));
                 String libelle = StringUtils.trimToNull(o.optString("libelle"));
                 col.setLibelle(libelle != null ? libelle : (String) COLONNES_DISPONIBLES.get(o.getString("champ"))[0]);
                 col.setOrdre(o.optInt("ordre", i));
                 modele.getColonnes().add(col);
+            }
+            // Les colonnes de produit ne sont conservees que si le detail est active : desactiver
+            // l'option remet le modele exactement dans son etat "une ligne par bon".
+            if (detaillerProduits) {
+                for (int i = 0; i < colonnesProduit.length(); i++) {
+                    JSONObject o = colonnesProduit.getJSONObject(i);
+                    ModelFactureDynamiqueColonne col = new ModelFactureDynamiqueColonne();
+                    col.setModele(modele);
+                    col.setNiveau(ModelFactureDynamiqueColonne.NIVEAU_PRODUIT);
+                    col.setChamp(o.getString("champ"));
+                    String libelle = StringUtils.trimToNull(o.optString("libelle"));
+                    col.setLibelle(libelle != null ? libelle
+                            : (String) COLONNES_PRODUIT_DISPONIBLES.get(o.getString("champ"))[0]);
+                    col.setOrdre(o.optInt("ordre", i));
+                    modele.getColonnes().add(col);
+                }
             }
             if (modele.getId() == null) {
                 em.persist(modele);
@@ -438,6 +506,42 @@ public class ModelFactureDynamiqueRessource {
         }
     }
 
+    /**
+     * Export du modele au format JasperReports (.jrxml).
+     *
+     * Le fichier produit reprend la presentation du modele de reference de l'officine (en-tete, bandeau de colonnes
+     * gris, lignes encadrees, pied de page numerote, bloc de synthese) et embarque sa requete SQL : il peut donc etre
+     * ouvert et retouche dans Jaspersoft Studio, puis depose dans le dossier des etats du serveur.
+     */
+    @GET
+    @Path("jrxml/{id}")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response exporterJrxml(@PathParam("id") int id) {
+        if (utilisateurSession() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            odm.initEntityManager();
+            ModelFactureDynamique modele = odm.getEm().find(ModelFactureDynamique.class, id);
+            if (modele == null) {
+                return Response.status(Response.Status.NOT_FOUND).entity("Modèle introuvable").type("text/plain")
+                        .build();
+            }
+            String xml = JrxmlFactureBuilder.construire(modele, modele.isAfficherEntete(), modele.isAfficherPiedPage());
+            return Response.ok(xml, MediaType.APPLICATION_XML).header("Content-Disposition",
+                    "attachment; filename=" + JrxmlFactureBuilder.nomRapport(modele) + ".jrxml").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type("text/plain").build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "export jrxml modele dynamique", e);
+            return Response.serverError().entity("Impossible de générer le fichier de mise en page").type("text/plain")
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
     // =============================================================================================
     // Generation PDF (iText) : memes donnees que le bordereau historique (TFactureDetail +
     // TPreenregistrementCompteClientTiersPayent), colonnes/libelles/ordre/tri pilotes par le modele.
@@ -468,110 +572,341 @@ public class ModelFactureDynamiqueRessource {
         }
         lignes.sort(comparateur(modeTriEffectif(modele, tiersPayant)));
 
-        List<ModelFactureDynamiqueColonne> colonnes = new ArrayList<>(modele.getColonnes());
-        colonnes.sort(Comparator.comparing(ModelFactureDynamiqueColonne::getOrdre,
-                Comparator.nullsLast(Comparator.naturalOrder())));
+        List<ModelFactureDynamiqueColonne> colonnes = modele.getColonnesBon();
+        List<ModelFactureDynamiqueColonne> colonnesProduit = modele.isDetaillerProduits() ? modele.getColonnesProduit()
+                : new ArrayList<>();
 
         TOfficine officine = em.find(TOfficine.class, "1");
 
-        Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-        Font fontEntete = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
+        // Polices calquees sur le modele de reference de l'officine (rp_facture) : titre en grand,
+        // bandeau de colonnes en 7 gras, lignes en 8.
+        Font fontInstitution = FontFactory.getFont(FontFactory.HELVETICA_BOLDOBLIQUE, 18);
+        Font fontSousTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
+        Font fontEnteteColonne = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7);
         Font fontCellule = FontFactory.getFont(FontFactory.HELVETICA, 8);
-        Font fontInfo = FontFactory.getFont(FontFactory.HELVETICA, 9);
-        Font fontInfoGras = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
-        Font fontPied = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 7);
+        Font fontTotal = FontFactory.getFont(FontFactory.HELVETICA_BOLDOBLIQUE, 8);
+        Font fontBloc = FontFactory.getFont(FontFactory.HELVETICA, 8);
+        Font fontBlocGras = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
+        Font fontFacture = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+        Font fontSignature = FontFactory.getFont(FontFactory.COURIER_BOLD, 8);
+        fontSignature.setStyle(Font.UNDERLINE);
+        BaseColor gris = new BaseColor(204, 204, 204);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document document = new Document(PageSize.A4, 28, 28, 28, 40);
-        PdfWriter.getInstance(document, out);
+        // Marges du modele de reference : 5 pt lateralement, 20 pt en haut et en bas.
+        Document document = new Document(PageSize.A4, 5, 5, 20, modele.isAfficherPiedPage() ? 40 : 20);
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+        if (modele.isAfficherPiedPage()) {
+            writer.setPageEvent(new PiedDePage(gris));
+        }
         document.open();
 
-        if (officine != null) {
-            Paragraph institution = new Paragraph(StringUtils.defaultString(officine.getStrNOMABREGE()), fontInfoGras);
-            document.add(institution);
-            if (StringUtils.isNotBlank(officine.getStrADRESSSEPOSTALE())) {
-                document.add(new Paragraph(officine.getStrADRESSSEPOSTALE(), fontInfo));
-            }
+        if (modele.isAfficherEntete()) {
+            ajouterEntete(document, facture, tiersPayant, officine, fontInstitution, fontSousTitre, fontBloc,
+                    fontBlocGras, fontFacture, gris);
         }
-        Paragraph titre = new Paragraph("FACTURE N° " + StringUtils.defaultString(facture.getStrCODEFACTURE()),
-                fontTitre);
-        titre.setAlignment(Element.ALIGN_CENTER);
-        titre.setSpacingBefore(10);
-        document.add(titre);
-        Paragraph infoTp = new Paragraph(
-                (tiersPayant != null ? StringUtils.defaultString(tiersPayant.getStrFULLNAME()) : "") + " — PERIODE DU "
-                        + date.formatterShort.format(facture.getDtDEBUTFACTURE()) + " AU "
-                        + date.formatterShort.format(facture.getDtFINFACTURE()),
-                fontInfoGras);
-        infoTp.setAlignment(Element.ALIGN_CENTER);
-        infoTp.setSpacingAfter(10);
-        document.add(infoTp);
 
-        PdfPTable table = new PdfPTable(colonnes.size());
+        float[] largeurs = new float[colonnes.size()];
+        for (int i = 0; i < colonnes.size(); i++) {
+            largeurs[i] = JrxmlFactureBuilder.largeurRelative(colonnes.get(i).getChamp());
+        }
+        PdfPTable table = new PdfPTable(largeurs);
         table.setWidthPercentage(100);
+        table.setHeaderRows(1);
         for (ModelFactureDynamiqueColonne c : colonnes) {
-            PdfPCell cell = new PdfPCell(new Phrase(c.getLibelle(), fontEntete));
-            cell.setHorizontalAlignment(estNumerique(c.getChamp()) ? Element.ALIGN_RIGHT : Element.ALIGN_CENTER);
-            cell.setBackgroundColor(new com.itextpdf.text.BaseColor(230, 230, 230));
+            PdfPCell cell = new PdfPCell(new Phrase(StringUtils.upperCase(c.getLibelle()), fontEnteteColonne));
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setBackgroundColor(gris);
+            cell.setBorderWidth(0.25f);
+            cell.setMinimumHeight(18f);
+            cell.setPadding(2f);
             table.addCell(cell);
         }
+
         Map<String, Long> totaux = new LinkedHashMap<>();
         int numero = 1;
         for (LigneFacture l : lignes) {
             for (ModelFactureDynamiqueColonne c : colonnes) {
                 String champ = c.getChamp();
-                String valeur = valeurChamp(champ, l, numero);
-                PdfPCell cell = new PdfPCell(new Phrase(valeur, fontCellule));
+                PdfPCell cell = new PdfPCell(new Phrase(valeurChamp(champ, l, numero), fontCellule));
+                cell.setHorizontalAlignment(alignement(champ));
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setBorderWidth(0.25f);
+                cell.setMinimumHeight(14f);
+                cell.setPadding(2f);
                 if (estNumerique(champ)) {
-                    cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
                     totaux.merge(champ, valeurNumerique(champ, l), Long::sum);
                 }
                 table.addCell(cell);
             }
-            numero++;
-        }
-        // ligne des totaux (uniquement si au moins une colonne numerique est presente)
-        boolean auMoinsUneNumerique = colonnes.stream().anyMatch(c -> estNumerique(c.getChamp()));
-        if (auMoinsUneNumerique) {
-            for (int i = 0; i < colonnes.size(); i++) {
-                ModelFactureDynamiqueColonne c = colonnes.get(i);
-                String texte = "";
-                if (i == 0 && !estNumerique(c.getChamp())) {
-                    texte = "TOTAUX";
-                } else if (estNumerique(c.getChamp())) {
-                    texte = conversion.AmountFormat(totaux.getOrDefault(c.getChamp(), 0L).intValue());
+            // Detail des produits : les lignes de vente du bon s'inserent JUSTE SOUS sa ligne,
+            // dans un tableau imbrique en retrait, pour rester rattachees visuellement au bon.
+            if (!colonnesProduit.isEmpty()) {
+                PdfPTable sousTable = tableauProduits(em, l, colonnesProduit, gris);
+                if (sousTable != null) {
+                    PdfPCell porteur = new PdfPCell(sousTable);
+                    porteur.setColspan(colonnes.size());
+                    porteur.setBorderWidth(0.25f);
+                    porteur.setPaddingLeft(14f);
+                    porteur.setPaddingTop(1f);
+                    porteur.setPaddingBottom(3f);
+                    table.addCell(porteur);
                 }
-                PdfPCell cell = new PdfPCell(new Phrase(texte, fontEntete));
-                cell.setHorizontalAlignment(estNumerique(c.getChamp()) ? Element.ALIGN_RIGHT : Element.ALIGN_LEFT);
-                table.addCell(cell);
             }
+            numero++;
         }
         document.add(table);
 
-        double montantNet = facture.getDblMONTANTCMDE() != null ? facture.getDblMONTANTCMDE() : 0d;
-        Paragraph arrete = new Paragraph(
-                "Arrêtée la présente facture à la somme de " + conversion.GetNumberTowords(montantNet).toUpperCase()
-                        + " (" + conversion.AmountFormat((int) montantNet) + " FCFA)",
-                fontInfoGras);
-        arrete.setSpacingBefore(12);
-        document.add(arrete);
-        document.add(new Paragraph("Nombre de dossiers : " + lignes.size(), fontInfo));
-
-        if (officine != null) {
-            StringBuilder pied = new StringBuilder();
-            if (officine.getStrREGISTRECOMMERCE() != null) {
-                pied.append("RC N° ").append(officine.getStrREGISTRECOMMERCE());
+        // Ligne des totaux, alignee sur les memes colonnes : le libelle TOTAUX occupe les colonnes
+        // non numeriques de gauche, chaque colonne numerique porte sa somme.
+        if (colonnes.stream().anyMatch(c -> estNumerique(c.getChamp()))) {
+            PdfPTable totalTable = new PdfPTable(largeurs);
+            totalTable.setWidthPercentage(100);
+            totalTable.setSpacingBefore(4f);
+            boolean libellePose = false;
+            int i = 0;
+            while (i < colonnes.size()) {
+                ModelFactureDynamiqueColonne c = colonnes.get(i);
+                if (estNumerique(c.getChamp())) {
+                    PdfPCell cell = new PdfPCell(new Phrase(
+                            conversion.AmountFormat(totaux.getOrDefault(c.getChamp(), 0L).intValue()), fontTotal));
+                    cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    cell.setBorderWidth(0.5f);
+                    cell.setPadding(3f);
+                    totalTable.addCell(cell);
+                    i++;
+                } else {
+                    int fusion = 0;
+                    while (i + fusion < colonnes.size() && !estNumerique(colonnes.get(i + fusion).getChamp())) {
+                        fusion++;
+                    }
+                    PdfPCell cell = new PdfPCell(new Phrase(libellePose ? "" : "TOTAUX", fontTotal));
+                    cell.setColspan(fusion);
+                    cell.setBorderWidth(0.5f);
+                    cell.setPadding(3f);
+                    totalTable.addCell(cell);
+                    libellePose = true;
+                    i += fusion;
+                }
             }
-            if (officine.getStrCOMPTECONTRIBUABLE() != null) {
-                pied.append(" - CC N° ").append(officine.getStrCOMPTECONTRIBUABLE());
-            }
-            Paragraph piedParagraphe = new Paragraph(pied.toString(), fontPied);
-            piedParagraphe.setSpacingBefore(15);
-            document.add(piedParagraphe);
+            document.add(totalTable);
         }
+
+        double montantNet = facture.getDblMONTANTCMDE() != null ? facture.getDblMONTANTCMDE() : 0d;
+        Paragraph totalGeneral = new Paragraph(
+                "TOTAL GENERAL " + (tiersPayant != null ? StringUtils.defaultString(tiersPayant.getStrNAME()) : "")
+                        + " ( NOMBRE DE BONS=" + lignes.size() + " )",
+                fontBlocGras);
+        totalGeneral.setSpacingBefore(12);
+        document.add(totalGeneral);
+        Paragraph libelleLettres = new Paragraph("ARRETE LA PRESENTE FACTURE A LA SOMME DE (en lettres) :",
+                fontBlocGras);
+        libelleLettres.setSpacingBefore(8);
+        document.add(libelleLettres);
+        document.add(new Paragraph(conversion.GetNumberTowords(montantNet).toUpperCase() + " ("
+                + conversion.AmountFormat((int) montantNet) + " FCFA)", fontBlocGras));
+
+        Paragraph signature = new Paragraph("LE PHARMACIEN", fontSignature);
+        signature.setAlignment(Element.ALIGN_RIGHT);
+        signature.setSpacingBefore(20);
+        document.add(signature);
 
         document.close();
         return out.toByteArray();
+    }
+
+    /**
+     * Lignes de vente (produits) d'un bon, sous forme de tableau imbrique place sous la ligne du bon.
+     *
+     * Renvoie null quand le bon n'a aucune ligne de vente : aucune bande vide n'est alors inseree.
+     */
+    private PdfPTable tableauProduits(EntityManager em, LigneFacture ligne,
+            List<ModelFactureDynamiqueColonne> colonnesProduit, BaseColor gris) {
+        TPreenregistrement vente = ligne.dossier.getLgPREENREGISTREMENTID();
+        if (vente == null) {
+            return null;
+        }
+        List<TPreenregistrementDetail> produits = em
+                .createQuery(
+                        "SELECT d FROM TPreenregistrementDetail d "
+                                + "WHERE d.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 ORDER BY d.dtCREATED",
+                        TPreenregistrementDetail.class)
+                .setParameter(1, vente.getLgPREENREGISTREMENTID()).getResultList();
+        if (produits.isEmpty()) {
+            return null;
+        }
+        float[] largeurs = new float[colonnesProduit.size()];
+        for (int i = 0; i < colonnesProduit.size(); i++) {
+            largeurs[i] = largeurRelativeProduit(colonnesProduit.get(i).getChamp());
+        }
+        PdfPTable sousTable = new PdfPTable(largeurs);
+        sousTable.setWidthPercentage(100);
+        Font fontEnteteProduit = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 6.5f);
+        for (ModelFactureDynamiqueColonne c : colonnesProduit) {
+            PdfPCell cell = new PdfPCell(new Phrase(c.getLibelle(), fontEnteteProduit));
+            cell.setHorizontalAlignment(alignementProduit(c.getChamp()));
+            cell.setBackgroundColor(gris);
+            cell.setBorderWidth(0.25f);
+            cell.setPadding(1.5f);
+            sousTable.addCell(cell);
+        }
+        Font fontProduit = FontFactory.getFont(FontFactory.HELVETICA, 7);
+        for (TPreenregistrementDetail d : produits) {
+            for (ModelFactureDynamiqueColonne c : colonnesProduit) {
+                PdfPCell cell = new PdfPCell(new Phrase(valeurChampProduit(c.getChamp(), d), fontProduit));
+                cell.setHorizontalAlignment(alignementProduit(c.getChamp()));
+                cell.setBorderWidth(0.25f);
+                cell.setPadding(1.5f);
+                sousTable.addCell(cell);
+            }
+        }
+        return sousTable;
+    }
+
+    /** Largeur relative d'une colonne de produit (proportions du sous-tableau). */
+    private static float largeurRelativeProduit(String champ) {
+        switch (champ) {
+        case "PROD_CIP":
+            return 55f;
+        case "PROD_DESIGNATION":
+            return 160f;
+        case "PROD_QUANTITE":
+            return 35f;
+        default:
+            return 60f;
+        }
+    }
+
+    private static int alignementProduit(String champ) {
+        switch (champ) {
+        case "PROD_DESIGNATION":
+            return Element.ALIGN_LEFT;
+        case "PROD_CIP":
+        case "PROD_QUANTITE":
+            return Element.ALIGN_CENTER;
+        default:
+            return Element.ALIGN_RIGHT;
+        }
+    }
+
+    private static String valeurChampProduit(String champ, TPreenregistrementDetail d) {
+        TFamille produit = d.getLgFAMILLEID();
+        switch (champ) {
+        case "PROD_CIP":
+            return produit != null ? StringUtils.defaultString(produit.getIntCIP()) : "";
+        case "PROD_DESIGNATION":
+            return produit != null ? StringUtils.defaultString(produit.getStrDESCRIPTION()) : "";
+        case "PROD_QUANTITE":
+            return d.getIntQUANTITY() != null ? String.valueOf(d.getIntQUANTITY()) : "";
+        case "PROD_PRIX_UNITAIRE":
+            return conversion.AmountFormat(d.getIntPRICEUNITAIR() != null ? d.getIntPRICEUNITAIR() : 0);
+        case "PROD_MONTANT":
+            return conversion.AmountFormat(d.getIntPRICE() != null ? d.getIntPRICE() : 0);
+        case "PROD_REMISE":
+            return conversion.AmountFormat(d.getIntPRICEREMISE() != null ? d.getIntPRICEREMISE() : 0);
+        default:
+            return "";
+        }
+    }
+
+    /**
+     * Bloc d'en-tete du modele de reference : nom de l'officine centre, sous-titre, filet gris, puis sur une meme ligne
+     * le numero de facture et la periode a gauche, l'identification du tiers payant a droite.
+     */
+    private void ajouterEntete(Document document, TFacture facture, TTiersPayant tiersPayant, TOfficine officine,
+            Font fontInstitution, Font fontSousTitre, Font fontBloc, Font fontBlocGras, Font fontFacture,
+            BaseColor gris) throws Exception {
+        if (officine != null) {
+            Paragraph institution = new Paragraph(StringUtils.defaultString(officine.getStrNOMABREGE()),
+                    fontInstitution);
+            institution.setAlignment(Element.ALIGN_CENTER);
+            document.add(institution);
+            String sousTitre = (StringUtils.defaultString(officine.getStrFIRSTNAME()) + " "
+                    + StringUtils.defaultString(officine.getStrLASTNAME())).trim();
+            if (StringUtils.isNotBlank(sousTitre)) {
+                Paragraph p = new Paragraph(sousTitre, fontSousTitre);
+                p.setAlignment(Element.ALIGN_CENTER);
+                document.add(p);
+            }
+        }
+        // filet gris de separation
+        PdfPTable filet = new PdfPTable(1);
+        filet.setWidthPercentage(100);
+        PdfPCell celluleFilet = new PdfPCell(new Phrase(" ", fontBloc));
+        celluleFilet.setFixedHeight(2f);
+        celluleFilet.setBorder(0);
+        celluleFilet.setBackgroundColor(gris);
+        filet.addCell(celluleFilet);
+        filet.setSpacingBefore(4f);
+        filet.setSpacingAfter(6f);
+        document.add(filet);
+
+        // date de la facture, alignee a droite
+        if (facture.getDtCREATED() != null) {
+            Paragraph dateFacture = new Paragraph(date.FULDATE.format(facture.getDtCREATED()), fontBloc);
+            dateFacture.setAlignment(Element.ALIGN_RIGHT);
+            document.add(dateFacture);
+        }
+
+        PdfPTable bandeau = new PdfPTable(new float[] { 55f, 45f });
+        bandeau.setWidthPercentage(100);
+        bandeau.setSpacingBefore(6f);
+        bandeau.setSpacingAfter(8f);
+
+        Paragraph gauche = new Paragraph();
+        gauche.add(
+                new Phrase("FACTURE N° " + StringUtils.defaultString(facture.getStrCODEFACTURE()) + "\n", fontFacture));
+        if (facture.getDtDEBUTFACTURE() != null && facture.getDtFINFACTURE() != null) {
+            gauche.add(new Phrase("PERIODE DU " + date.formatterShort.format(facture.getDtDEBUTFACTURE()) + " AU "
+                    + date.formatterShort.format(facture.getDtFINFACTURE()), fontBlocGras));
+        }
+        PdfPCell celluleGauche = new PdfPCell(gauche);
+        celluleGauche.setBorder(0);
+        bandeau.addCell(celluleGauche);
+
+        Paragraph droite = new Paragraph();
+        if (tiersPayant != null) {
+            droite.add(new Phrase(StringUtils.defaultString(tiersPayant.getStrFULLNAME()) + "\n", fontBlocGras));
+            ajouterLigneBloc(droite, tiersPayant.getStrADRESSE(), fontBloc);
+            ajouterLigneBloc(droite, tiersPayant.getStrCOMPTECONTRIBUABLE(), fontBloc);
+            ajouterLigneBloc(droite, tiersPayant.getStrCODEOFFICINE(), fontBloc);
+            ajouterLigneBloc(droite, tiersPayant.getStrREGISTRECOMMERCE(), fontBloc);
+        }
+        PdfPCell celluleDroite = new PdfPCell(droite);
+        celluleDroite.setBorder(0);
+        bandeau.addCell(celluleDroite);
+        document.add(bandeau);
+    }
+
+    private static void ajouterLigneBloc(Paragraph bloc, String valeur, Font police) {
+        if (StringUtils.isNotBlank(valeur)) {
+            bloc.add(new Phrase(valeur + "\n", police));
+        }
+    }
+
+    /** Pied de page numerote, comme le pageFooter du modele de reference. */
+    private static final class PiedDePage extends PdfPageEventHelper {
+        private final BaseColor gris;
+
+        private PiedDePage(BaseColor gris) {
+            this.gris = gris;
+        }
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            Font police = FontFactory.getFont(FontFactory.HELVETICA, 8);
+            PdfContentByte toile = writer.getDirectContent();
+            float y = document.bottom() - 14;
+            toile.saveState();
+            toile.setColorFill(gris);
+            toile.rectangle(document.left(), y + 14, document.right() - document.left(), 2);
+            toile.fill();
+            toile.restoreState();
+            ColumnText.showTextAligned(toile, Element.ALIGN_CENTER,
+                    new Phrase("Page " + writer.getPageNumber(), police), (document.left() + document.right()) / 2, y,
+                    0);
+        }
     }
 
     private static String normaliserModeTri(String modeTri) {
@@ -606,6 +941,24 @@ public class ModelFactureDynamiqueRessource {
         String nom = (StringUtils.defaultString(pre.getStrFIRSTNAMECUSTOMER()) + " "
                 + StringUtils.defaultString(pre.getStrLASTNAMECUSTOMER())).trim();
         return Normalizer.normalize(nom, Normalizer.Form.NFD).replaceAll("\\p{M}", "").toUpperCase();
+    }
+
+    /** Alignement d'une colonne : montants a droite, references et dates centrees, textes a gauche. */
+    private static int alignement(String champ) {
+        if (estNumerique(champ)) {
+            return Element.ALIGN_RIGHT;
+        }
+        switch (champ) {
+        case "NUMERO":
+        case "DATE_BON":
+        case "REF_BON":
+        case "MATRICULE":
+        case "REF_VENTE":
+        case "TAUX":
+            return Element.ALIGN_CENTER;
+        default:
+            return Element.ALIGN_LEFT;
+        }
     }
 
     private static boolean estNumerique(String champ) {

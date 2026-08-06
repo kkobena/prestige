@@ -85,7 +85,9 @@ Ext.define('testextjs.view.sm_user.editbordereau.action.addBordereau', {
             // autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_type_facture,
+                // URL en dur : la globale url_services_data_type_facture pointait vers une JSP
+                // inexistante, le combo restait vide
+                url: '../api/v1/reglement-facture/types-facture',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -102,7 +104,9 @@ Ext.define('testextjs.view.sm_user.editbordereau.action.addBordereau', {
             remoteFilter: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_tiers_payant,
+                // URL en dur : la globale url_services_data_tiers_payant est redefinie par d'autres
+                // ecrans selon l'ordre de chargement et pointait vers une JSP inexistante
+                url: '../api/v1/reglement-facture/tierspayants',
                 reader: {
                     type: 'json',
                     root: 'results',

@@ -55,7 +55,9 @@ Ext.define('testextjs.view.sm_user.factureregle.FactureRegleManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_tiers_payant,
+                // URL en dur : la globale url_services_data_tiers_payant est redefinie par d'autres
+                // ecrans selon l'ordre de chargement et pointait vers une JSP inexistante
+                url: '../api/v1/reglement-facture/tierspayants',
                 reader: {
                     type: 'json',
                     root: 'results',

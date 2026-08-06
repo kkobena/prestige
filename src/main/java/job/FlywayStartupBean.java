@@ -39,7 +39,7 @@ public class FlywayStartupBean {
             // repair() la retire au demarrage : le script corrige est alors rejoue normalement,
             // sans intervention manuelle en base. Les migrations deja reussies ne sont pas
             // touchees, et tous nos scripts sont ecrits pour etre rejouables sans effet de bord.
-            //flyway.repair();
+            // flyway.repair();
             flyway.migrate();
             LOG.info("Flyway migration completed");
         } catch (FlywayException e) {

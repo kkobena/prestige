@@ -1,16 +1,23 @@
 package rest;
 
 import bll.bllBase;
+import bll.common.Parameter;
+import bll.configManagement.grossisteManagement;
 import bll.entity.EntityData;
 import bll.report.StatisticsFamilleArticle;
+import bll.facture.factureManagement;
 import bll.facture.reglementManager;
 import bll.teller.tellerManagement;
 import bll.tierspayantManagement.tierspayantManagement;
+import bll.userManagement.privilege;
+import dal.TClient;
 import dal.TDossierReglement;
 import dal.TFactureDetail;
+import dal.TGrossiste;
 import dal.TModeReglement;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TTiersPayant;
+import dal.TTypeFacture;
 import dal.TTypeReglement;
 import dal.TTypeTiersPayant;
 import dal.TUser;
@@ -798,6 +805,185 @@ public class ReglementFactureRessource {
             LOG.log(Level.SEVERE, "types tiers payant", e);
             return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
                     .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Types de facture du combo "Type de facture" des ecrans de facturation.
+     *
+     * Les ecrans pointaient vers webservices/sm_user/typefacture/ws_data.jsp, un fichier qui n'existe pas sur le
+     * serveur : le combo restait donc toujours vide. Les cles JSON sont celles attendues par le modele d'ecran
+     * (lg_TYPE_FACTURE_ID, str_LIBELLE, str_STATUT, dt_CREATED, dt_UPDATED).
+     */
+    @GET
+    @Path("types-facture")
+    public Response typesFacture(@DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("query") String query,
+            @DefaultValue("") @QueryParam("lg_TYPE_FACTURE_ID") String lgTypeFactureId,
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("20") @QueryParam("limit") int limit) {
+        if (utilisateurSession() == null) {
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String id = "%%";
+            if (StringUtils.isNotEmpty(lgTypeFactureId) && !"ALL".equals(lgTypeFactureId)) {
+                id = lgTypeFactureId;
+            }
+            String recherche = StringUtils.isNotEmpty(query) ? query : searchValue;
+            String search = "%" + StringUtils.defaultString(recherche) + "%";
+            odm.initEntityManager();
+            List<TTypeFacture> lst = odm.getEm()
+                    .createQuery(
+                            "SELECT t FROM TTypeFacture t WHERE t.lgTYPEFACTUREID LIKE ?1 "
+                                    + "AND t.strLIBELLE LIKE ?2 AND t.strSTATUT LIKE ?3 ORDER BY t.strLIBELLE ASC",
+                            TTypeFacture.class)
+                    .setParameter(1, id).setParameter(2, search).setParameter(3, commonparameter.statut_enable)
+                    .getResultList();
+            date key = new date();
+            JSONArray arrayObj = new JSONArray();
+            for (int i = PaginationUtil.debut(start, lst.size()); i < PaginationUtil.fin(start, limit,
+                    lst.size()); i++) {
+                TTypeFacture t = lst.get(i);
+                JSONObject json = new JSONObject();
+                json.put("lg_TYPE_FACTURE_ID", t.getLgTYPEFACTUREID());
+                json.put("str_LIBELLE", t.getStrLIBELLE());
+                json.put("str_STATUT", t.getStrSTATUT());
+                if (t.getDtCREATED() != null) {
+                    json.put("dt_CREATED", key.DateToString(t.getDtCREATED(), key.formatterOrange));
+                }
+                if (t.getDtUPDATED() != null) {
+                    json.put("dt_UPDATED", key.DateToString(t.getDtUPDATED(), key.formatterOrange));
+                }
+                arrayObj.put(json);
+            }
+            return Response.ok().entity(new JSONObject().put("total", lst.size()).put("results", arrayObj).toString())
+                    .build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "types de facture", e);
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Grossistes (fournisseurs) du combo des ecrans de facturation : port de configmanagement/grossiste/ws_data.jsp.
+     *
+     * Delegue a la MEME methode metier que la JSP (grossisteManagement.getListeGrossiste), memes cles JSON, y compris
+     * le drapeau BTNDELETE calcule par le meme controle de privilege.
+     */
+    @GET
+    @Path("grossistes")
+    public Response grossistes(@DefaultValue("") @QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("query") String query,
+            @DefaultValue("") @QueryParam("lg_GROSSISTE_ID") String lgGrossisteId,
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("20") @QueryParam("limit") int limit) {
+        TUser user = utilisateurSession();
+        if (user == null) {
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String id = StringUtils.isNotEmpty(lgGrossisteId) ? lgGrossisteId : "%%";
+            String recherche = StringUtils.isNotEmpty(query) ? query : searchValue;
+            odm.initEntityManager();
+            grossisteManagement ogm = new grossisteManagement(odm);
+            List<TGrossiste> lst = ogm.getListeGrossiste(StringUtils.defaultString(recherche), id);
+            boolean btnDelete = new privilege(odm, user).isColonneStockMachineIsAuthorize(Parameter.P_BT_DELETE);
+            date key = new date();
+            JSONArray arrayObj = new JSONArray();
+            for (int i = PaginationUtil.debut(start, lst.size()); i < PaginationUtil.fin(start, limit,
+                    lst.size()); i++) {
+                TGrossiste g = lst.get(i);
+                JSONObject json = new JSONObject();
+                json.put("lg_GROSSISTE_ID", g.getLgGROSSISTEID());
+                json.put("str_LIBELLE", g.getStrLIBELLE());
+                json.put("str_DESCRIPTION", g.getStrDESCRIPTION());
+                json.put("str_ADRESSE_RUE_1", g.getStrADRESSERUE1());
+                json.put("str_ADRESSE_RUE_2", g.getStrADRESSERUE2());
+                json.put("str_CODE_POSTAL", g.getStrCODEPOSTAL());
+                json.put("str_BUREAU_DISTRIBUTEUR", g.getStrBUREAUDISTRIBUTEUR());
+                json.put("str_MOBILE", g.getStrMOBILE());
+                json.put("str_TELEPHONE", g.getStrTELEPHONE());
+                json.put("int_DELAI_REGLEMENT_AUTORISE", g.getIntDELAIREGLEMENTAUTORISE());
+                json.put("str_CODE", g.getStrCODE());
+                if (g.getGroupeId() != null) {
+                    json.put("groupeId", g.getGroupeId().getId() + "");
+                }
+                json.put("idrepartiteur", g.getIdRepartiteur());
+                json.put("str_URL_PHARMAML", g.getStrURLPHARMAML());
+                json.put("str_CODE_RECEPTEUR_PHARMA", g.getStrCODERECEPTEURPHARMA());
+                json.put("str_ID_RECEPTEUR_PHARMA", g.getStrIDRECEPTEURPHARMA());
+                json.put("str_OFFICINE_ID", g.getStrOFFICINEID());
+                json.put("dbl_CHIFFRE_DAFFAIRE", g.getDblCHIFFREDAFFAIRE());
+                json.put("lg_CUSTOMER_ID", g.getLgGROSSISTEID());
+                if (g.getLgTYPEREGLEMENTID() != null) {
+                    json.put("lg_TYPE_REGLEMENT_ID", g.getLgTYPEREGLEMENTID().getStrNAME());
+                }
+                if (g.getLgVILLEID() != null) {
+                    json.put("lg_VILLE_ID", g.getLgVILLEID().getStrName());
+                }
+                json.put("str_STATUT", g.getStrSTATUT());
+                json.put("int_DELAI_REAPPROVISIONNEMENT", g.getIntDELAIREAPPROVISIONNEMENT());
+                json.put("int_COEF_SECURITY", g.getIntCOEFSECURITY());
+                json.put("int_DATE_BUTOIR_ARTICLE", g.getIntDATEBUTOIRARTICLE());
+                if (g.getDtCREATED() != null) {
+                    json.put("dt_CREATED", key.DateToString(g.getDtCREATED(), key.formatterShort));
+                }
+                if (g.getDtUPDATED() != null) {
+                    json.put("dt_UPDATED", key.DateToString(g.getDtUPDATED(), key.formatterShort));
+                }
+                json.put("BTNDELETE", btnDelete);
+                arrayObj.put(json);
+            }
+            return Response.ok().entity(new JSONObject().put("total", lst.size()).put("results", arrayObj).toString())
+                    .build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "liste grossistes facturation", e);
+            return Response.ok().entity(new JSONObject().put("total", 0).put("results", new JSONArray()).toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /**
+     * Clients rattaches a un tiers payant : port de tierspayantmanagement/tierspayant/ws_clients_data_tierspayants.jsp
+     * (MEME methode metier, memes cles JSON, meme enveloppe "data").
+     */
+    @GET
+    @Path("clients-tierspayant")
+    public Response clientsTierspayant(@DefaultValue("") @QueryParam("lg_TIERS_PAYANT_ID") String lgTiersPayantId,
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("0") @QueryParam("limit") int limit) {
+        TUser user = utilisateurSession();
+        if (user == null) {
+            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).toString()).build();
+        }
+        dataManager odm = new dataManager();
+        try {
+            String tpId = StringUtils.isNotEmpty(lgTiersPayantId) ? lgTiersPayantId : "%%";
+            odm.initEntityManager();
+            List<TClient> lst = new factureManagement(odm, user).getAllClients(tpId);
+            JSONArray arrayObj = new JSONArray();
+            for (int i = PaginationUtil.debut(start, lst.size()); i < PaginationUtil.fin(start, limit,
+                    lst.size()); i++) {
+                TClient c = lst.get(i);
+                JSONObject json = new JSONObject();
+                json.put("lg_CLIENT_ID", c.getLgCLIENTID());
+                json.put("str_FIRST_NAME_LAST_NAME", StringUtils.defaultString(c.getStrFIRSTNAME()) + " "
+                        + StringUtils.defaultString(c.getStrLASTNAME()));
+                arrayObj.put(json);
+            }
+            return Response.ok().entity(new JSONObject().put("data", arrayObj).toString()).build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "clients d'un tiers payant", e);
+            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).toString()).build();
         } finally {
             odm.closeEntityManager();
         }

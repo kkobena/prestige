@@ -75,7 +75,9 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_type_facture,
+                // URL en dur : la globale url_services_data_type_facture pointait vers une JSP
+                // inexistante, le combo restait vide
+                url: '../api/v1/reglement-facture/types-facture',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -92,7 +94,8 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             remoteFilter: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_fournisseur,
+                // URL en dur : grossistes en REST (la globale est redefinie par d'autres ecrans)
+                url: '../api/v1/reglement-facture/grossistes',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -247,13 +250,13 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                         store_detail_tiers_payant.removeAll();
 
                                                         //store_detail_tiers_payant.removeAll();
-                                                        LaborexWorkFlow_facture.RedirectUrl('lg_TYPE_FACTURE_ID', 'cmb_CUSTOMER_ID', url_services_data_tiers_payant);
+                                                        LaborexWorkFlow_facture.RedirectUrl('lg_TYPE_FACTURE_ID', 'cmb_CUSTOMER_ID', '../api/v1/reglement-facture/tierspayants');
                                                     } else {
                                                         OdetailfactureFournisseur.show();
                                                         Ocmb_TYPE_TIERS_PAYANT.hide();
                                                         Odetailfacturevente.hide();
                                                         store_detail_facture_fournisseur.removeAll();
-                                                        LaborexWorkFlow_facture.RedirectUrl('lg_TYPE_FACTURE_ID', 'cmb_CUSTOMER_ID', url_services_data_fournisseur);
+                                                        LaborexWorkFlow_facture.RedirectUrl('lg_TYPE_FACTURE_ID', 'cmb_CUSTOMER_ID', '../api/v1/reglement-facture/grossistes');
                                                     }
 
                                                 }
@@ -282,13 +285,11 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                      */
                                                     if (cmp_val == 1) {
 
-                                                        url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
-                                                        LaborexWorkFlow_facture.RedirectUrl('cmb_TYPE_TIERS_PAYANT', 'cmb_CUSTOMER_ID', url_services_data_tiers_payant);
+                                                        LaborexWorkFlow_facture.RedirectUrl('cmb_TYPE_TIERS_PAYANT', 'cmb_CUSTOMER_ID', '../api/v1/reglement-facture/tierspayants');
 
                                                     } else if (cmp_val == 2) {
 
-                                                        url_services_data_tiers_payant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
-                                                        LaborexWorkFlow_facture.RedirectUrl('cmb_TYPE_TIERS_PAYANT', 'cmb_CUSTOMER_ID', url_services_data_tiers_payant);
+                                                        LaborexWorkFlow_facture.RedirectUrl('cmb_TYPE_TIERS_PAYANT', 'cmb_CUSTOMER_ID', '../api/v1/reglement-facture/tierspayants');
 
 
                                                     } else {
@@ -839,7 +840,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             }
         });
 
-    },
+    }
 });
 
 

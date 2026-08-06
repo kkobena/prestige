@@ -118,7 +118,8 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_tiers_payant,
+                // URL en dur : ce store de types de tiers payant pointait vers une JSP inexistante
+                url: '../api/v1/reglement-facture/types-tierspayant',
                 reader: {
                     type: 'json',
                     root: 'results',
