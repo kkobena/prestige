@@ -29,6 +29,36 @@ function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
 }
 
+/**
+ * Verifie qu'au moins un dossier est coche (ou "Tous selectionner" actif) avant de lancer une
+ * generation. Compte directement les lignes cochees de la grille : plus fiable que la seule liste
+ * interne, qui peut ne pas refleter l'etat affiche.
+ *
+ * Fonction autonome et NON methode de la vue : appelee depuis des gestionnaires de boutons, elle
+ * ne doit dependre d'aucune portee (un bouton declare sans "scope" recevrait le bouton comme
+ * "this" et l'appel echouerait).
+ */
+function verifierSelectionDossiersAvantGeneration(grille, caseToutSelectionner) {
+    if (caseToutSelectionner && caseToutSelectionner.getValue()) {
+        return true;
+    }
+    var nbCoches = 0;
+    if (grille && grille.getStore()) {
+        grille.getStore().each(function (rec) {
+            if (rec.get('isChecked')) {
+                nbCoches++;
+            }
+        });
+    }
+    if (nbCoches === 0 && (!listProductSelected || listProductSelected.length === 0)) {
+        Ext.MessageBox.alert('Information',
+                'Aucun dossier n\'est coch\u00e9.<br/>Cochez au moins un dossier, ou cochez '
+                + '"Tous s\u00e9lectionner" pour tout facturer, avant de g\u00e9n\u00e9rer la facture.');
+        return false;
+    }
+    return true;
+}
+
 Ext.define('testextjs.view.sm_user.editfacture.action.add', {
     extend: 'Ext.form.Panel',
     requires: [
@@ -724,6 +754,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                 /* iconCls: 'invoice',*/iconCls: 'icon-clear-group',
                                                 tooltip: 'Générer',
 
+                                                scope: this,
                                                 handler: this.onGenerateInvoice
                                             }, {
                                                 text: 'RETOUR',
@@ -888,6 +919,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
                                                 /* iconCls: 'invoice',*/iconCls: 'icon-clear-group',
                                                 tooltip: 'Générer',
 
+                                                scope: this,
                                                 handler: this.onGenerateSelectedBonsInvoice
                                             }, {
                                                 text: 'RETOUR',
@@ -1293,39 +1325,13 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
     },
 
-    /**
-     * Verifie qu'au moins un dossier est coche (ou "Tous selectionner" actif) avant de lancer
-     * une generation. Compte directement les lignes cochees de la grille : plus fiable que la
-     * seule liste interne, qui peut ne pas refleter l'etat affiche.
-     */
-    verifierSelectionAvantGeneration: function (grille, caseToutSelectionner) {
-        if (caseToutSelectionner && caseToutSelectionner.getValue()) {
-            return true;
-        }
-        var nbCoches = 0;
-        if (grille && grille.getStore()) {
-            grille.getStore().each(function (rec) {
-                if (rec.get('isChecked')) {
-                    nbCoches++;
-                }
-            });
-        }
-        if (nbCoches === 0 && (!listProductSelected || listProductSelected.length === 0)) {
-            Ext.MessageBox.alert('Information',
-                    'Aucun dossier n\'est coch\u00e9.<br/>Cochez au moins un dossier, ou cochez '
-                    + '"Tous s\u00e9lectionner" pour tout facturer, avant de g\u00e9n\u00e9rer la facture.');
-            return false;
-        }
-        return true;
-    },
-
     onGenerateInvoice: function () {
         if (Ext.getCmp('INGridGROUPE').getStore().getCount() === 0) {
             return;
         }
         // Aucun dossier coche : on n'engage pas la generation (evite de facturer par megarde
         // tout le groupe alors que l'utilisateur n'a rien choisi)
-        if (!this.verifierSelectionAvantGeneration(Ext.getCmp('INGridGROUPE'),
+        if (!verifierSelectionDossiersAvantGeneration(Ext.getCmp('INGridGROUPE'),
                 Ext.getCmp('selectGROUPSELECT'))) {
             return;
         }
@@ -1420,7 +1426,7 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
             return;
         }
         // Meme regle que la generation par groupe : au moins un bon coche
-        if (!this.verifierSelectionAvantGeneration(Ext.getCmp('notINGridSELECT'),
+        if (!verifierSelectionDossiersAvantGeneration(Ext.getCmp('notINGridSELECT'),
                 Ext.getCmp('selectALLSELECT'))) {
             return;
         }

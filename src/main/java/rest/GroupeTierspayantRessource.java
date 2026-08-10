@@ -307,7 +307,8 @@ public class GroupeTierspayantRessource {
     @Path("invoices-reglement")
     public Response invoicesReglement(@DefaultValue("") @QueryParam("lgTP") String lgTP,
             @DefaultValue("") @QueryParam("CODEFACTURE") String codeFacture,
-            @DefaultValue("") @QueryParam("query") String query) {
+            @DefaultValue("") @QueryParam("query") String query, @DefaultValue("0") @QueryParam("start") int start,
+            @DefaultValue("0") @QueryParam("limit") int limit) {
         TUser sessionUser = utilisateurSession();
         if (sessionUser == null) {
             return reponseDeconnecte();
@@ -316,8 +317,14 @@ public class GroupeTierspayantRessource {
         try {
             odm.initEntityManager();
             GroupeTierspayantController groupeCtl = new GroupeTierspayantController(odm.getEmf());
-            List<TFacture> tps = groupeCtl.getGroupeInvoiceDetails(query, codeFacture);
+            List<TFacture> toutes = groupeCtl.getGroupeInvoiceDetails(query, codeFacture);
             int count = groupeCtl.getGroupeInvoiceDetailsCount(query, codeFacture);
+            // Le decoupage demande par l'ecran (start / limit) etait ignore : toutes les lignes
+            // etaient renvoyees a chaque appel. La barre de pagination annoncait donc plusieurs
+            // pages qui affichaient toutes le meme contenu. limit <= 0 : aucune limite demandee,
+            // on renvoie tout. Le total reste le nombre TOTAL de factures, pas la tranche.
+            List<TFacture> tps = toutes.subList(PaginationUtil.debut(start, toutes.size()),
+                    PaginationUtil.fin(start, limit, toutes.size()));
             Map<String, TTiersPayant> tiersPayants = chargerTiersPayants(odm, tps);
             JSONArray arrayObj = new JSONArray();
             for (TFacture f : tps) {

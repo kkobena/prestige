@@ -556,11 +556,17 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                     dejaOuvert.destroy();
                 }
             }
+            // Titre : numero de facture ET nom du groupe, pour savoir d'un coup d'oeil
+            // quel organisme on est en train de regler
+            const nomGroupe = rec.get('str_LIB');
             Ext.create('Ext.window.Window', {
-                title: 'Faire un r&eacute;glement [' + rec.get('CODEFACTURE') + ']',
+                title: 'Faire un r&eacute;glement de la facture ' + rec.get('CODEFACTURE')
+                        + (nomGroupe ? ' &mdash; ' + nomGroupe : ''),
                 modal: true,
                 width: '95%',
-                height: 620,
+                // hauteur adaptee a l'ecran, bornee pour rester lisible sur un petit poste :
+                // le bloc REGLEMENT et la barre de boutons doivent tenir sans rien tronquer
+                height: Math.max(620, Math.min(Ext.Element.getViewportHeight() - 60, 800)),
                 maximizable: true,
                 autoScroll: true,
                 layout: 'fit',

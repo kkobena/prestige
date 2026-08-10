@@ -569,3 +569,32 @@ body.x-body,
 .facture-non-supprimable .x-grid-row-checker {
     visibility: hidden;
 }
+
+/* Bouton d'action principale en vert (ex. « Régler la facture ») : le bouton ExtJS est
+   compose de plusieurs elements, la couleur doit donc porter sur le conteneur ET le fond
+   interne, d'ou les !important. */
+.btn-valider-vert,
+.btn-valider-vert .x-btn-inner,
+.btn-valider-vert .x-btn-button {
+    background-color: #2e7d32 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border-color: #1b5e20 !important;
+    font-weight: bold;
+}
+
+.btn-valider-vert-over,
+.btn-valider-vert-over .x-btn-inner,
+.btn-valider-vert-over .x-btn-button {
+    background-color: #388e3c !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+.btn-valider-vert-pressed,
+.btn-valider-vert-pressed .x-btn-inner,
+.btn-valider-vert-pressed .x-btn-button {
+    background-color: #1b5e20 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}

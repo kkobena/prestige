@@ -2,6 +2,12 @@
 
 
 
+// Nombre de factures de groupe affichees par page sur l'ecran de reglement. Volontairement
+// eleve : on regle le groupe en entier, toutes ses factures doivent etre sous les yeux et les
+// totaux portent sur l'ensemble. Au-dela, la pagination fonctionne normalement (le service
+// honore start / limit) : baisser cette valeur suffit a repaginer l'ecran.
+var TAILLE_PAGE_REGLEMENT_GROUPE = 200;
+
 var url_services_data_modereglement_dovente = '../api/v1/reglement-facture/modes-reglement';
 
 
@@ -127,9 +133,18 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
             }
 
         });
-        var store_detail_bordereau = Ext.data.Store({
+        // "new" indispensable : sans lui, Ext.data.Store(...) ne renvoie PAS un magasin mais un
+        // simple objet. Ext le traite alors comme une configuration et construit un magasin
+        // DISTINCT pour la grille et pour la barre de pagination : deux requetes identiques a
+        // l'ouverture, et une barre branchee sur un magasin qui n'est jamais charge, d'ou le
+        // "Page 0 sur 0 / Aucune donnee a afficher" alors que la grille affiche ses lignes.
+        var store_detail_bordereau = new Ext.data.Store({
             model: 'testextjs.model.Facture',
-            pageSize: 15,
+            // Toutes les factures du groupe sur une seule page : on regle le groupe en entier,
+            // les montants affiches et les coches portent sur l'ensemble. La barre indique donc
+            // "Page 1 sur 1". Reduire cette valeur suffit a repaginer l'ecran : le service
+            // honore desormais start / limit et renvoie bien une tranche differente par page.
+            pageSize: TAILLE_PAGE_REGLEMENT_GROUPE,
             // pas d'autoLoad : loadStore (afterlayout) charge deja la grille, l'autoLoad
             // ne faisait que doubler la requete invoices-reglement a l'ouverture
             autoLoad: false,
@@ -205,7 +220,34 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
 
         Ext.apply(this, {
             width: '96%',
-            minHeight: 580,
+            // Barre d'actions ancree au panneau (et non enfouie dans un conteneur interne) :
+            // les boutons restent visibles sans avoir a agrandir la fenetre a la main.
+            dockedItems: [{
+                    xtype: 'toolbar',
+                    ui: 'footer',
+                    dock: 'bottom',
+                    border: '0',
+                    items: ['->',
+                        {
+                            text: 'R&eacute;gler la facture',
+                            id: 'btn_create_facture',
+                            cls: 'btn-valider-vert',
+                            overCls: 'btn-valider-vert-over',
+                            pressedCls: 'btn-valider-vert-pressed',
+                            iconCls: 'icon-clear-group',
+                            scope: this,
+                            handler: this.Doreglement
+                        }, {
+                            text: 'RETOUR',
+                            id: 'btn_cancel',
+                            iconCls: 'icon-clear-group',
+                            scope: this,
+                            hidden: false,
+                            handler: this.onbtncancel
+                        }
+                    ]
+                }],
+            autoScroll: true,
 //            cls: 'custompanel',
 
             fieldDefaults: {
@@ -413,16 +455,19 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                     flex: 2.8,
                     margin: '1 0 0 1',
                     defaultType: 'textfield',
-                    layout: 'anchor',
-                    defaults: {
-                        anchor: '100%'
+                    // vbox : le bloc REGLEMENT garde sa hauteur naturelle (il etait tronque en
+                    // bas de fenetre), la grille absorbe la place restante.
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
                     },
                     items: [
 
                         {
-                            columnWidth: 0.65,
                             xtype: 'grid',
                             id: 'reglementGROUPID',
+                            flex: 1,
+                            minHeight: 180,
 //                          
                             plugins: [
                                 {
@@ -433,7 +478,6 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                                 }],
 
                             store: store_detail_bordereau,
-                            height: 300,
                             columns: [
                                 {
                                     text: '#',
@@ -614,7 +658,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                             },
                             bbar: {
                                 xtype: 'pagingtoolbar',
-                                pageSize: 15,
+                                pageSize: TAILLE_PAGE_REGLEMENT_GROUPE,
                                 store: store_detail_bordereau,
                                 displayInfo: true,
                                 plugins: new Ext.ux.ProgressBarPager()
@@ -852,31 +896,6 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                                             value: 0
                                         }]}
                             ]
-                        },
-                        {
-                            xtype: 'toolbar',
-                            ui: 'footer',
-                            dock: 'bottom',
-                            margin: '-5 0 0 0 ',
-                            border: '0',
-                            items: ['->',
-                                {
-                                    text: 'R&eacute;gler La facture',
-                                    id: 'btn_create_facture',
-                                    iconCls: 'icon-clear-group',
-                                    scope: this,
-
-                                    handler: this.Doreglement
-                                }, {
-                                    text: 'RETOUR',
-                                    id: 'btn_cancel',
-                                    iconCls: 'icon-clear-group',
-                                    scope: this,
-                                    hidden: false,
-                                    //disabled: true,
-                                    handler: this.onbtncancel
-                                }
-                            ]
                         }
                     ]
 
@@ -966,6 +985,15 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
     },
     onStoreLoad: function () {
         var grid = Ext.getCmp('reglementGROUPID');
+        // La grille n'est chargee qu'une fois (afterlayout, sans autoLoad pour ne pas doubler
+        // la requete). La barre de pagination peut donc avoir ete liee au magasin APRES ce
+        // chargement : elle ne recoit jamais l'evenement et reste figee sur "Page 0 sur 0 /
+        // Aucune donnee a afficher" alors que la grille affiche bien les lignes. On lui demande
+        // de recalculer son affichage a partir du magasin deja charge.
+        var barrePagination = grid.down('pagingtoolbar');
+        if (barrePagination) {
+            barrePagination.onLoad();
+        }
 
         var naturepaiment = Ext.getCmp('lg_NATURE_PAIEMENT').getValue();
         if (grid.getStore().getCount() > 0) {
