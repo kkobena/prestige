@@ -644,3 +644,13 @@ body.x-body,
     content: "\25D0";               /* pastille a moitie pleine : reglement partiel */
     color: #2e74b5;
 }
+
+/* Boites de message : filet de securite contre les messages tronques.
+   ExtJS calcule la hauteur de la boite en mesurant le texte dans un element temporaire ;
+   selon la police et le zoom du poste, la mesure peut etre inferieure au rendu reel et les
+   dernieres lignes sont alors coupees. On ne touche PAS au dimensionnement (forcer height:auto
+   fait s'effondrer la boite, verifie) : on rend simplement le corps defilable, de sorte que le
+   texte reste lisible en toutes circonstances. */
+.x-message-box .x-window-body {
+    overflow-y: auto !important;
+}
