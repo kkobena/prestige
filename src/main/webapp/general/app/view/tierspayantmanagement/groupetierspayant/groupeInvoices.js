@@ -187,10 +187,16 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                     scope: this,
                                     handler: function (grid, rowIndex) {
                                         var rec = grid.getStore().getAt(rowIndex);
-                                        Ext.MessageBox.alert('Facture d&eacute;j&agrave; certifi&eacute;e',
-                                                'Les ' + rec.get('NBFACTURES') + ' facture(s) de ce groupe portent '
-                                                + 'd&eacute;j&agrave; une certification FNE valide.<br/>Elles ne '
-                                                + 'peuvent pas &ecirc;tre certifi&eacute;es une seconde fois.');
+                                        Ext.MessageBox.show({
+                                            title: 'Facture d&eacute;j&agrave; certifi&eacute;e',
+                                            msg: 'Les ' + rec.get('NBFACTURES') + ' facture(s) de ce groupe portent '
+                                                    + 'd&eacute;j&agrave; une certification FNE valide. Elles ne '
+                                                    + 'peuvent pas &ecirc;tre certifi&eacute;es une seconde fois.',
+                                            minWidth: 420,
+                                            maxWidth: 560,
+                                            buttons: Ext.MessageBox.OK,
+                                            icon: Ext.MessageBox.INFO
+                                        });
                                     }
                                 }]
                         },
@@ -342,9 +348,15 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                     handler: function (grid, rowIndex) {
                                         var rec = grid.getStore().getAt(rowIndex);
                                         if (rec.get('STATUT') === "paid") {
-                                            Ext.MessageBox.alert('Information',
-                                                    'Cette facture de groupe est sold&eacute;e : elle ne peut plus '
-                                                    + '&ecirc;tre supprim&eacute;e.');
+                                            Ext.MessageBox.show({
+                                                title: 'Information',
+                                                msg: 'Cette facture de groupe est sold&eacute;e : elle ne peut '
+                                                        + 'plus &ecirc;tre supprim&eacute;e.',
+                                                minWidth: 420,
+                                                maxWidth: 560,
+                                                buttons: Ext.MessageBox.OK,
+                                                icon: Ext.MessageBox.INFO
+                                            });
                                             return;
                                         }
                                         var nomGroupe = rec.get('str_LIB') || '';
@@ -372,16 +384,23 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                                     var object = Ext.JSON.decode(response.responseText, false);
                                                     grid.getStore().load();
                                                     if (object.status === 1) {
-                                                        Ext.MessageBox.alert('Information',
-                                                                'La facture du groupe ' + nomGroupe
-                                                                + ' a &eacute;t&eacute; supprim&eacute;e.');
+                                                        Ext.MessageBox.show({
+                                                            title: 'Information',
+                                                            msg: 'La facture du groupe ' + nomGroupe
+                                                                    + ' a &eacute;t&eacute; supprim&eacute;e.',
+                                                            minWidth: 420,
+                                                            maxWidth: 560,
+                                                            buttons: Ext.MessageBox.OK,
+                                                            icon: Ext.MessageBox.INFO
+                                                        });
                                                         return;
                                                     }
                                                     // motif reel du refus (reglement deja fait, facture certifiee...)
                                                     // au lieu d'un "Erreur de suppression" sans explication
                                                     Ext.MessageBox.show({
                                                         title: 'Suppression impossible',
-                                                        width: 420,
+                                                        minWidth: 420,
+                                                        maxWidth: 560,
                                                         msg: object.message
                                                                 || 'La suppression n\'a pas pu &ecirc;tre '
                                                                 + 'effectu&eacute;e. Consultez le Centre de Support '
@@ -813,7 +832,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             moi.getStore().load();
                             Ext.MessageBox.show({
                                 title: object.success ? 'Avoirs FNE' : 'Aucun avoir &eacute;mis',
-                                width: 440,
+                                minWidth: 420,
+                                maxWidth: 560,
                                 msg: object.message || 'Op&eacute;ration effectu&eacute;e',
                                 buttons: Ext.MessageBox.OK,
                                 icon: object.success ? Ext.MessageBox.INFO : Ext.MessageBox.WARNING
@@ -829,7 +849,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             }
                             Ext.MessageBox.show({
                                 title: 'Avoirs FNE',
-                                width: 440,
+                                minWidth: 420,
+                                maxWidth: 560,
                                 msg: motif || 'L\'op&eacute;ration n\'a pas abouti. Si vous n\'avez pas le '
                                         + 'privil&egrave;ge d\'&eacute;mission d\'avoir, demandez-le au '
                                         + 'responsable.',
@@ -860,7 +881,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                 moi.getStore().load();
                 Ext.MessageBox.show({
                     title: object.success ? 'Certification' : 'Certification non effectuée',
-                    width: 420,
+                    minWidth: 420,
+                    maxWidth: 560,
                     msg: object.message || 'Opération effectuée',
                     buttons: Ext.MessageBox.OK,
                     icon: object.success ? Ext.MessageBox.INFO : Ext.MessageBox.WARNING

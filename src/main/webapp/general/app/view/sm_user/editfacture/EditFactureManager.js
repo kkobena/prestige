@@ -531,17 +531,29 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         handler: function (grid, rowIndex) {
                             var rec = grid.getStore().getAt(rowIndex);
                             if (rec.get('fneAvoirReference')) {
-                                Ext.MessageBox.alert('Avoir d&eacute;j&agrave; certifi&eacute;',
-                                        'Un avoir FNE valide (r&eacute;f&eacute;rence '
-                                        + rec.get('fneAvoirReference') + ') a d&eacute;j&agrave; &eacute;t&eacute; '
-                                        + '&eacute;mis pour la facture n&deg; ' + rec.get('str_CODE_FACTURE')
-                                        + '.<br/>Elle ne peut plus &ecirc;tre certifi&eacute;e.');
+                                Ext.MessageBox.show({
+                                    title: 'Avoir d&eacute;j&agrave; certifi&eacute;',
+                                    msg: 'Facture n&deg; ' + rec.get('str_CODE_FACTURE')
+                                            + ' : un avoir FNE valide existe d&eacute;j&agrave; '
+                                            + '(r&eacute;f&eacute;rence ' + rec.get('fneAvoirReference')
+                                            + '). Elle ne peut plus &ecirc;tre certifi&eacute;e.',
+                                    minWidth: 420,
+                                    maxWidth: 560,
+                                    buttons: Ext.MessageBox.OK,
+                                    icon: Ext.MessageBox.INFO
+                                });
                                 return;
                             }
-                            Ext.MessageBox.alert('Facture d&eacute;j&agrave; certifi&eacute;e',
-                                    'La facture n&deg; ' + rec.get('str_CODE_FACTURE') + ' porte d&eacute;j&agrave; '
-                                    + 'une certification FNE valide.<br/>Elle ne peut pas &ecirc;tre '
-                                    + 'certifi&eacute;e une seconde fois.');
+                            Ext.MessageBox.show({
+                                title: 'Facture d&eacute;j&agrave; certifi&eacute;e',
+                                msg: 'La facture n&deg; ' + rec.get('str_CODE_FACTURE')
+                                        + ' porte d&eacute;j&agrave; une certification FNE valide. Elle ne peut pas '
+                                        + '&ecirc;tre certifi&eacute;e une seconde fois.',
+                                minWidth: 420,
+                                maxWidth: 560,
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.INFO
+                            });
                         }
                     }]
             },
@@ -768,7 +780,15 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                     }
                 } catch (e) {
                 }
-                Ext.MessageBox.alert('Info', message);
+                // boite dimensionnee : un message de 2 ou 3 lignes etait tronque sur certains postes
+                Ext.MessageBox.show({
+                    title: 'Avoir FNE',
+                    msg: message,
+                    minWidth: 420,
+                    maxWidth: 560,
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.INFO
+                });
                 grid.getStore().reload();
             },
             failure: function (response) {
@@ -781,7 +801,14 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                     }
                 } catch (e) {
                 }
-                Ext.MessageBox.alert('Avoir FNE impossible', message);
+                Ext.MessageBox.show({
+                    title: 'Avoir FNE impossible',
+                    msg: message,
+                    minWidth: 420,
+                    maxWidth: 560,
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.WARNING
+                });
             }
         });
 
@@ -905,7 +932,14 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 progress.hide();
                 win.destroy();
                 grid.getStore().reload();
-                Ext.MessageBox.alert('Certification', 'Facture certifi&eacute;e.');
+                Ext.MessageBox.show({
+                    title: 'Certification',
+                    msg: 'Facture certifi&eacute;e.',
+                    minWidth: 420,
+                    maxWidth: 560,
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.INFO
+                });
             },
             failure: function (response)
             {
@@ -920,7 +954,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 }
                 Ext.MessageBox.show({
                     title: 'Certification non effectu&eacute;e',
-                    width: 420,
+                    minWidth: 420,
+                    maxWidth: 560,
                     msg: motif || 'La certification n\'a pas abouti. Consultez le Centre de Support pour le '
                             + 'd&eacute;tail.',
                     buttons: Ext.MessageBox.OK,
