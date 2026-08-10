@@ -503,8 +503,11 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 sortable: false,
                 menuDisabled: true,
                 items: [{
+                        // masque des que la facture porte une certification ou un avoir FNE valide :
+                        // une seconde certification cree un doublon officiel non rattrapable
                         getClass: function (v, meta, rec) {
-                            if (rec.get('str_STATUT') === 'avoir') {
+                            if (rec.get('str_STATUT') === 'avoir' || rec.get('fneUrl')
+                                    || rec.get('fneAvoirReference')) {
                                 return 'x-hide-display';
                             }
                             return 'x-display-hide';
@@ -513,6 +516,33 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         tooltip: 'Certification',
                         scope: this,
                         handler: this.shwoChoiceModal
+                    }, {
+                        // a la place : une information, pour eviter un clic par erreur
+                        getClass: function (v, meta, rec) {
+                            return (rec.get('fneUrl') || rec.get('fneAvoirReference')) ? 'x-display-hide'
+                                    : 'x-hide-display';
+                        },
+                        getTip: function (v, meta, rec) {
+                            return rec.get('fneAvoirReference') ? 'Avoir d&eacute;j&agrave; certifi&eacute;'
+                                    : 'Facture d&eacute;j&agrave; certifi&eacute;e';
+                        },
+                        icon: 'resources/images/icons/fam/passed.png',
+                        scope: this,
+                        handler: function (grid, rowIndex) {
+                            var rec = grid.getStore().getAt(rowIndex);
+                            if (rec.get('fneAvoirReference')) {
+                                Ext.MessageBox.alert('Avoir d&eacute;j&agrave; certifi&eacute;',
+                                        'Un avoir FNE valide (r&eacute;f&eacute;rence '
+                                        + rec.get('fneAvoirReference') + ') a d&eacute;j&agrave; &eacute;t&eacute; '
+                                        + '&eacute;mis pour la facture n&deg; ' + rec.get('str_CODE_FACTURE')
+                                        + '.<br/>Elle ne peut plus &ecirc;tre certifi&eacute;e.');
+                                return;
+                            }
+                            Ext.MessageBox.alert('Facture d&eacute;j&agrave; certifi&eacute;e',
+                                    'La facture n&deg; ' + rec.get('str_CODE_FACTURE') + ' porte d&eacute;j&agrave; '
+                                    + 'une certification FNE valide.<br/>Elle ne peut pas &ecirc;tre '
+                                    + 'certifi&eacute;e une seconde fois.');
+                        }
                     }]
             },
             {
@@ -874,14 +904,28 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             {
                 progress.hide();
                 win.destroy();
-                Ext.MessageBox.alert('Info', 'Opération effectuée ');
                 grid.getStore().reload();
-
+                Ext.MessageBox.alert('Certification', 'Facture certifi&eacute;e.');
             },
             failure: function (response)
             {
                 progress.hide();
-                Ext.MessageBox.alert('Error Message', response.responseText);
+                win.destroy();
+                grid.getStore().reload();
+                // motif du refus renvoye par le serveur (facture deja certifiee, avoir deja emis...)
+                var motif = '';
+                try {
+                    motif = Ext.JSON.decode(response.responseText, false).message || '';
+                } catch (e) {
+                }
+                Ext.MessageBox.show({
+                    title: 'Certification non effectu&eacute;e',
+                    width: 420,
+                    msg: motif || 'La certification n\'a pas abouti. Consultez le Centre de Support pour le '
+                            + 'd&eacute;tail.',
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.WARNING
+                });
             }
         });
 

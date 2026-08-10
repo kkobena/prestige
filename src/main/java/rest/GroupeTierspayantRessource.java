@@ -286,6 +286,9 @@ public class GroupeTierspayantRessource {
                 json.put("MONTANTREMISE", f.getDblMONTANTREMISE());
                 json.put("MONTANTFORFETAIRE", f.getDblMONTANTFOFETAIRE());
                 json.put("MONTANTBRUT", f.getDblMONTANTBrut());
+                // etat de certification FNE, affiche en clair dans la fenetre des factures du groupe
+                json.put("fneUrl", StringUtils.defaultString(f.getFneUrl()));
+                json.put("fneAvoirReference", StringUtils.defaultString(f.getFneAvoirReference()));
                 json.put("isChecked", false);
                 arrayObj.put(json);
             }
@@ -429,15 +432,36 @@ public class GroupeTierspayantRessource {
                 data = groupeCtl.removeSelection2Groupe(lgGroupeId, search);
                 break;
             case 7:
-                boolean okDeleted = true;
                 factureManagement ofm = new factureManagement(odm, user);
                 List<TGroupeFactures> factureses = groupeCtl.getgroupeFacturesByCodeFacture(codeFacture, lgGroupeId);
+                // CONTROLE PREALABLE, avant toute suppression : si une seule facture du groupe a
+                // deja fait l'objet d'un reglement, on refuse l'operation ENTIERE et on ne touche
+                // a rien. Sans ce controle, les factures deja parcourues etaient supprimees puis
+                // la suivante refusee : le groupe restait a moitie supprime.
+                int dejaReglees = 0;
+                for (TGroupeFactures obj : factureses) {
+                    if (ofm.factureDejaReglee(obj.getLgFACTURESID().getLgFACTUREID())) {
+                        dejaReglees++;
+                    }
+                }
+                if (dejaReglees > 0) {
+                    data.put("status", 0);
+                    data.put("message",
+                            "Suppression impossible : " + dejaReglees + " facture(s) de ce groupe ont déjà fait "
+                                    + "l'objet d'un règlement. Annulez d'abord le ou les règlements concernés, "
+                                    + "puis relancez la suppression. Aucune facture du groupe n'a été supprimée.");
+                    break;
+                }
+                boolean okDeleted = true;
                 for (TGroupeFactures obj : factureses) {
                     if (!ofm.deleteInvoice(obj.getLgFACTURESID().getLgFACTUREID(), user)) {
                         okDeleted = false;
                     }
                 }
                 data.put("status", okDeleted ? 1 : 0);
+                if (!okDeleted && StringUtils.isNotBlank(ofm.getDetailmessage())) {
+                    data.put("message", ofm.getDetailmessage());
+                }
                 break;
             case 8:
                 boolean okUpdated = groupeCtl.updateGroupFactureAmount(lgFacture, montantRestant);

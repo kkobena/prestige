@@ -150,10 +150,70 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             sortable: false,
                             menuDisabled: true,
                             items: [{
+                                    // Le bouton reste disponible tant qu'il RESTE des factures a
+                                    // certifier : relancer ne recertifie pas celles qui le sont deja,
+                                    // le serveur les ignore une par une.
+                                    getClass: function (v, meta, rec) {
+                                        var certifiees = Number(rec.get('NB_CERTIFIEES') || 0);
+                                        var total = Number(rec.get('NBFACTURES') || 0);
+                                        return (total > 0 && certifiees >= total) ? 'x-hide-display'
+                                                : 'x-display-hide';
+                                    },
+                                    getTip: function (v, meta, rec) {
+                                        var certifiees = Number(rec.get('NB_CERTIFIEES') || 0);
+                                        var total = Number(rec.get('NBFACTURES') || 0);
+                                        if (certifiees > 0) {
+                                            return 'Certifier les ' + (total - certifiees) + ' facture(s) restante(s) '
+                                                    + '(' + certifiees + ' d&eacute;j&agrave; certifi&eacute;e(s))';
+                                        }
+                                        return 'Certification';
+                                    },
                                     icon: 'resources/images/icons/certication.png',
-                                    tooltip: 'Certification',
                                     scope: this,
                                     handler: this.shwoChoiceModal
+                                }, {
+                                    // Groupe entierement certifie : plus rien a envoyer, on remplace le
+                                    // bouton par une information pour eviter un clic par erreur.
+                                    getClass: function (v, meta, rec) {
+                                        var certifiees = Number(rec.get('NB_CERTIFIEES') || 0);
+                                        var total = Number(rec.get('NBFACTURES') || 0);
+                                        return (total > 0 && certifiees >= total) ? 'x-display-hide'
+                                                : 'x-hide-display';
+                                    },
+                                    getTip: function (v, meta, rec) {
+                                        return 'Facture d&eacute;j&agrave; certifi&eacute;e';
+                                    },
+                                    icon: 'resources/images/icons/fam/passed.png',
+                                    scope: this,
+                                    handler: function (grid, rowIndex) {
+                                        var rec = grid.getStore().getAt(rowIndex);
+                                        Ext.MessageBox.alert('Facture d&eacute;j&agrave; certifi&eacute;e',
+                                                'Les ' + rec.get('NBFACTURES') + ' facture(s) de ce groupe portent '
+                                                + 'd&eacute;j&agrave; une certification FNE valide.<br/>Elles ne '
+                                                + 'peuvent pas &ecirc;tre certifi&eacute;es une seconde fois.');
+                                    }
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    // Avoirs du groupe : proposes des qu'au moins une facture est
+                                    // certifiee. Les factures qui portent deja un avoir ne sont jamais
+                                    // renvoyees, celles non certifiees sont ignorees (controle serveur).
+                                    getClass: function (v, meta, rec) {
+                                        return Number(rec.get('NB_CERTIFIEES') || 0) > 0 ? 'x-display-hide'
+                                                : 'x-hide-display';
+                                    },
+                                    getTip: function (v, meta, rec) {
+                                        return '&Eacute;mettre les avoirs FNE des factures certifi&eacute;es '
+                                                + 'de ce groupe';
+                                    },
+                                    icon: 'resources/images/icons/fam/retour.png',
+                                    scope: this,
+                                    handler: this.onAvoirGroupeClick
                                 }]
                         },
                         {
@@ -282,38 +342,64 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                     handler: function (grid, rowIndex) {
                                         var rec = grid.getStore().getAt(rowIndex);
                                         if (rec.get('STATUT') === "paid") {
-                                            Ext.MessageBox.alert('INFO', 'Deja subi un reglement');
+                                            Ext.MessageBox.alert('Information',
+                                                    'Cette facture de groupe est sold&eacute;e : elle ne peut plus '
+                                                    + '&ecirc;tre supprim&eacute;e.');
                                             return;
                                         }
-                                        testextjs.app.getController('App').ShowWaitingProcess();
-                                        Ext.Ajax.request({
-                                            url: '../api/v1/groupe-tierspayant/transaction',
-                                            params: {
-                                                mode: 7,
-                                                CODEFACTURE: rec.get('CODEFACTURE'),
-                                                lg_GROUPE_ID: rec.get('lg_GROUPE_ID')
-
-
-                                            },
-                                            success: function (response)
-                                            {
-                                                testextjs.app.getController('App').StopWaitingProcess();
-
-                                                var object = Ext.JSON.decode(response.responseText, false);
-                                                if (object.status === 1) {
-                                                    grid.getStore().load();
-                                                    Ext.MessageBox.alert('INFO', 'Groupe Supprimé');
-
-                                                } else {
-                                                    Ext.MessageBox.alert('ERROR', 'Erreur de suppression');
-                                                }
-
-                                            },
-                                            failure: function (response)
-                                            {
-                                                testextjs.app.getController('App').StopWaitingProcess();
-
+                                        var nomGroupe = rec.get('str_LIB') || '';
+                                        var question = 'Voulez-vous supprimer la facture du groupe <b>'
+                                                + nomGroupe + '</b> (n&deg; ' + rec.get('CODEFACTURE') + ') ?'
+                                                + '<br/><br/>Toutes les factures de ce groupe seront supprim&eacute;es '
+                                                + 'et leurs bons redeviendront facturables.';
+                                        Ext.MessageBox.confirm('Confirmation', question, function (btn) {
+                                            // Non : on ne supprime rien et on rafraichit la liste
+                                            if (btn !== 'yes') {
+                                                grid.getStore().load();
+                                                return;
                                             }
+                                            testextjs.app.getController('App').ShowWaitingProcess();
+                                            Ext.Ajax.request({
+                                                url: '../api/v1/groupe-tierspayant/transaction',
+                                                params: {
+                                                    mode: 7,
+                                                    CODEFACTURE: rec.get('CODEFACTURE'),
+                                                    lg_GROUPE_ID: rec.get('lg_GROUPE_ID')
+                                                },
+                                                success: function (response)
+                                                {
+                                                    testextjs.app.getController('App').StopWaitingProcess();
+                                                    var object = Ext.JSON.decode(response.responseText, false);
+                                                    grid.getStore().load();
+                                                    if (object.status === 1) {
+                                                        Ext.MessageBox.alert('Information',
+                                                                'La facture du groupe ' + nomGroupe
+                                                                + ' a &eacute;t&eacute; supprim&eacute;e.');
+                                                        return;
+                                                    }
+                                                    // motif reel du refus (reglement deja fait, facture certifiee...)
+                                                    // au lieu d'un "Erreur de suppression" sans explication
+                                                    Ext.MessageBox.show({
+                                                        title: 'Suppression impossible',
+                                                        width: 420,
+                                                        msg: object.message
+                                                                || 'La suppression n\'a pas pu &ecirc;tre '
+                                                                + 'effectu&eacute;e. Consultez le Centre de Support '
+                                                                + 'pour le d&eacute;tail.',
+                                                        buttons: Ext.MessageBox.OK,
+                                                        icon: Ext.MessageBox.WARNING
+                                                    });
+                                                },
+                                                failure: function (response)
+                                                {
+                                                    testextjs.app.getController('App').StopWaitingProcess();
+                                                    grid.getStore().load();
+                                                    Ext.MessageBox.alert('Erreur',
+                                                            'Le serveur n\'a pas r&eacute;pondu &agrave; la demande '
+                                                            + 'de suppression. R&eacute;essayez ; si le probl&egrave;me '
+                                                            + 'persiste, contactez le support.');
+                                                }
+                                            });
                                         });
                                     }
                                 }]
@@ -696,7 +782,66 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
         );
 
     },
+    /**
+     * Avoirs FNE de toutes les factures certifiees d'un groupe, emis une par une cote serveur.
+     *
+     * Un avoir est un document fiscal definitif : la confirmation est explicite et rappelle ce qui sera
+     * fait. Les factures deja avoirees ne sont jamais renvoyees, les non certifiees sont ignorees.
+     */
+    onAvoirGroupeClick: function (grid, rowIndex) {
+        const moi = this;
+        const rec = grid.getStore().getAt(rowIndex);
+        const certifiees = Number(rec.get('NB_CERTIFIEES') || 0);
+        Ext.MessageBox.confirm('Avoirs FNE',
+                '&Eacute;mettre un avoir FNE total pour les <b>' + certifiees + '</b> facture(s) certifi&eacute;e(s) '
+                + 'du groupe <b>' + (rec.get('str_LIB') || '') + '</b> (n&deg; ' + rec.get('CODEFACTURE') + ') ?'
+                + '<br/><br/>Les factures qui portent d&eacute;j&agrave; un avoir ne seront pas renvoy&eacute;es. '
+                + 'Un avoir est un document d&eacute;finitif : il ne peut pas &ecirc;tre annul&eacute; depuis le '
+                + 'logiciel.',
+                function (btn) {
+                    if (btn !== 'yes') {
+                        return;
+                    }
+                    const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'Avoirs FNE en cours!');
+                    Ext.Ajax.request({
+                        url: '../api/v1/fne/invoices/avoir-group',
+                        method: 'POST',
+                        params: {ids: rec.get('ids')},
+                        success: function (response) {
+                            progress.hide();
+                            var object = Ext.JSON.decode(response.responseText, false);
+                            moi.getStore().load();
+                            Ext.MessageBox.show({
+                                title: object.success ? 'Avoirs FNE' : 'Aucun avoir &eacute;mis',
+                                width: 440,
+                                msg: object.message || 'Op&eacute;ration effectu&eacute;e',
+                                buttons: Ext.MessageBox.OK,
+                                icon: object.success ? Ext.MessageBox.INFO : Ext.MessageBox.WARNING
+                            });
+                        },
+                        failure: function (response) {
+                            progress.hide();
+                            moi.getStore().load();
+                            var motif = '';
+                            try {
+                                motif = Ext.JSON.decode(response.responseText, false).message || '';
+                            } catch (e) {
+                            }
+                            Ext.MessageBox.show({
+                                title: 'Avoirs FNE',
+                                width: 440,
+                                msg: motif || 'L\'op&eacute;ration n\'a pas abouti. Si vous n\'avez pas le '
+                                        + 'privil&egrave;ge d\'&eacute;mission d\'avoir, demandez-le au '
+                                        + 'responsable.',
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.WARNING
+                            });
+                        }
+                    });
+                });
+    },
     certify: function (ids, typeInvoice, win) {
+        const moi = this;
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             url: '../api/v1/fne/invoices/sign-group',
@@ -710,8 +855,16 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
             {
                 progress.hide();
                 win.destroy();
-                Ext.MessageBox.alert('Info', 'Opération effectuée ');
-
+                var object = Ext.JSON.decode(response.responseText, false);
+                // la liste doit refleter le nouvel etat de certification
+                moi.getStore().load();
+                Ext.MessageBox.show({
+                    title: object.success ? 'Certification' : 'Certification non effectuée',
+                    width: 420,
+                    msg: object.message || 'Opération effectuée',
+                    buttons: Ext.MessageBox.OK,
+                    icon: object.success ? Ext.MessageBox.INFO : Ext.MessageBox.WARNING
+                });
             },
             failure: function (response)
             {

@@ -69,21 +69,53 @@ public class FneServiceImpl implements FneService {
     }
 
     @Override
-    public void createGroupeInvoice(String idGroupeFactures, TypeInvoice typeInvoice) {
+    public JSONObject createGroupeInvoice(String idGroupeFactures, TypeInvoice typeInvoice) {
+        int certifiees = 0, dejaCertifiees = 0, echecs = 0;
+        String dernierEchec = null;
+        for (TFacture facture : fetchGroupeFactures(
+                Arrays.stream(idGroupeFactures.split("_")).map(Integer::valueOf).collect(Collectors.toSet()))) {
+            boolean deja = StringUtils.isNotEmpty(facture.getFneUrl())
+                    || StringUtils.isNotEmpty(facture.getFneAvoirReference());
+            try {
+                createInvoice(facture, typeInvoice);
+                certifiees++;
+            } catch (Exception e) {
+                // comportement historique du groupe : une facture en echec n'empeche pas les autres
+                if (deja) {
+                    dejaCertifiees++;
+                } else {
+                    echecs++;
+                    dernierEchec = e.getMessage();
+                    LOG.log(Level.SEVERE, "createGroupeInvoice: facture " + facture.getLgFACTUREID(), e);
+                }
+            }
+        }
+        return new JSONObject().put("certifiees", certifiees).put("dejaCertifiees", dejaCertifiees)
+                .put("echecs", echecs).put("message", messageGroupe(certifiees, dejaCertifiees, echecs, dernierEchec));
+    }
 
-        fetchGroupeFactures(
-                Arrays.stream(idGroupeFactures.split("_")).map(Integer::valueOf).collect(Collectors.toSet()))
-                        .forEach(facture -> {
-                            try {
-                                createInvoice(facture, typeInvoice);
-                            } catch (Exception e) {
-                                // comportement historique du groupe : une facture en echec n'empeche pas les autres
-                                LOG.log(Level.SEVERE, "createGroupeInvoice: facture " + facture.getLgFACTUREID(), e);
-                            }
-                        });
+    /** Compte rendu en langage simple de la certification d'une facture de groupe. */
+    private static String messageGroupe(int certifiees, int dejaCertifiees, int echecs, String dernierEchec) {
+        if (certifiees == 0 && echecs == 0 && dejaCertifiees > 0) {
+            return "Facture déjà certifiée : les " + dejaCertifiees
+                    + " facture(s) de ce groupe portent déjà une certification FNE valide. Rien n'a été renvoyé.";
+        }
+        StringBuilder m = new StringBuilder();
+        m.append(certifiees).append(" facture(s) certifiée(s)");
+        if (dejaCertifiees > 0) {
+            m.append(", ").append(dejaCertifiees).append(" déjà certifiée(s) et donc ignorée(s)");
+        }
+        if (echecs > 0) {
+            m.append(", ").append(echecs).append(" en échec");
+            if (StringUtils.isNotEmpty(dernierEchec)) {
+                m.append(" (").append(dernierEchec).append(")");
+            }
+        }
+        return m.append('.').toString();
     }
 
     private void createInvoice(TFacture facture, TypeInvoice typeInvoice) throws FneExeception {
+        verifierNonDejaCertifiee(facture);
         TOfficine officine = getOfficine();
         Client client = getHttpClient();
         JSONObject payload = new JSONObject(resolveFneInvoice(facture, officine, typeInvoice));
@@ -103,6 +135,29 @@ public class FneServiceImpl implements FneService {
         saveResponse(fneResponse, facture);
         persistSignResponse(raw, facture);
 
+    }
+
+    /**
+     * Refuse une nouvelle certification quand la facture porte deja une certification valide, ou un avoir valide.
+     *
+     * Une double certification cree un second document officiel pour la meme facture chez l'administration fiscale :
+     * elle n'est pas rattrapable depuis le logiciel. Le controle est fait ICI, au plus pres de l'envoi, pour couvrir
+     * aussi bien la certification unitaire que celle d'une facture de groupe.
+     */
+    private void verifierNonDejaCertifiee(TFacture facture) throws FneExeception {
+        if (Objects.isNull(facture)) {
+            throw new FneExeception("Facture introuvable");
+        }
+        String numero = StringUtils.defaultString(facture.getStrCODEFACTURE());
+        if (StringUtils.isNotEmpty(facture.getFneUrl())) {
+            throw new FneExeception("Facture déjà certifiée : la facture n° " + numero
+                    + " porte déjà une certification FNE valide. Elle ne peut pas être certifiée une seconde fois.");
+        }
+        if (StringUtils.isNotEmpty(facture.getFneAvoirReference())) {
+            throw new FneExeception(
+                    "Avoir déjà certifié : un avoir FNE valide (référence " + facture.getFneAvoirReference()
+                            + ") a déjà été émis pour la facture n° " + numero + ". Elle ne peut plus être certifiée.");
+        }
     }
 
     private TOfficine getOfficine() {
@@ -268,6 +323,64 @@ public class FneServiceImpl implements FneService {
                     "Aucune ligne exploitable dans la reponse de certification enregistree pour cette facture");
         }
         return doRefund(sale, items);
+    }
+
+    @Override
+    public JSONObject createGroupeAvoir(String idGroupeFactures) {
+        int emis = 0, dejaAvoir = 0, nonCertifiees = 0, echecs = 0;
+        String dernierEchec = null;
+        for (TFacture facture : fetchGroupeFactures(
+                Arrays.stream(idGroupeFactures.split("_")).map(Integer::valueOf).collect(Collectors.toSet()))) {
+            // Un avoir deja emis n'est jamais renvoye, et une facture non certifiee n'a rien a
+            // avoirer : ces deux cas sont comptes, pas traites comme des echecs.
+            if (StringUtils.isNotEmpty(facture.getFneAvoirReference())) {
+                dejaAvoir++;
+                continue;
+            }
+            if (StringUtils.isEmpty(facture.getFneUrl())) {
+                nonCertifiees++;
+                continue;
+            }
+            try {
+                createAvoirTotal(facture.getLgFACTUREID());
+                emis++;
+            } catch (Exception e) {
+                echecs++;
+                dernierEchec = e.getMessage();
+                LOG.log(Level.SEVERE, "createGroupeAvoir: facture " + facture.getLgFACTUREID(), e);
+            }
+        }
+        return new JSONObject().put("emis", emis).put("dejaAvoir", dejaAvoir).put("nonCertifiees", nonCertifiees)
+                .put("echecs", echecs)
+                .put("message", messageAvoirGroupe(emis, dejaAvoir, nonCertifiees, echecs, dernierEchec));
+    }
+
+    /** Compte rendu en langage simple de l'emission des avoirs d'une facture de groupe. */
+    private static String messageAvoirGroupe(int emis, int dejaAvoir, int nonCertifiees, int echecs,
+            String dernierEchec) {
+        if (emis == 0 && echecs == 0 && dejaAvoir > 0 && nonCertifiees == 0) {
+            return "Avoir déjà émis : les " + dejaAvoir
+                    + " facture(s) de ce groupe portent déjà un avoir FNE valide. Rien n'a été renvoyé.";
+        }
+        if (emis == 0 && echecs == 0 && dejaAvoir == 0) {
+            return "Aucun avoir émis : les " + nonCertifiees
+                    + " facture(s) de ce groupe ne sont pas certifiées à la FNE. Certifiez-les d'abord.";
+        }
+        StringBuilder m = new StringBuilder();
+        m.append(emis).append(" avoir(s) émis");
+        if (dejaAvoir > 0) {
+            m.append(", ").append(dejaAvoir).append(" facture(s) avaient déjà un avoir et ont été ignorée(s)");
+        }
+        if (nonCertifiees > 0) {
+            m.append(", ").append(nonCertifiees).append(" non certifiée(s) et donc ignorée(s)");
+        }
+        if (echecs > 0) {
+            m.append(", ").append(echecs).append(" en échec");
+            if (StringUtils.isNotEmpty(dernierEchec)) {
+                m.append(" (").append(dernierEchec).append(")");
+            }
+        }
+        return m.append('.').toString();
     }
 
     @Override

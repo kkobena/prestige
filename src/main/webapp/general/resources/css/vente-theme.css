@@ -609,3 +609,38 @@ body.x-body,
     background-repeat: no-repeat !important;
     background-position: center center !important;
 }
+
+/* Indicateurs d'etat des factures d'un groupe (fenetre "Les factures du groupe").
+   Colonnes d'action sans en-tete : l'icone seule porte l'information, l'infobulle la detaille.
+   Le fond est dessine en CSS plutot que par une image, pour eviter tout chemin casse. */
+.certifiee-oui,
+.avoir-oui,
+.reglee-totale,
+.reglee-partielle {
+    background-image: none !important;
+    cursor: default;
+    font-weight: bold;
+    font-size: 13px;
+    line-height: 16px;
+    text-align: center;
+}
+
+.certifiee-oui:before {
+    content: "\2713";               /* coche : certifiee a la FNE */
+    color: #2e7d32;
+}
+
+.avoir-oui:before {
+    content: "\21BA";               /* fleche de retour : avoir emis */
+    color: #b8860b;
+}
+
+.reglee-totale:before {
+    content: "\25CF";               /* pastille pleine : facture soldee */
+    color: #2e7d32;
+}
+
+.reglee-partielle:before {
+    content: "\25D0";               /* pastille a moitie pleine : reglement partiel */
+    color: #2e74b5;
+}

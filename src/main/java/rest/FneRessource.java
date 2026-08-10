@@ -42,18 +42,25 @@ public class FneRessource {
 
     @GET
     @Path("invoices/sign/{id}/{typeInvoice}")
-    public Response getSign(@PathParam("id") String id, @PathParam("typeInvoice") TypeInvoice typeInvoice)
-            throws FneExeception {
-        fneService.createInvoice(id, typeInvoice);
-        return Response.ok().build();
+    public Response getSign(@PathParam("id") String id, @PathParam("typeInvoice") TypeInvoice typeInvoice) {
+        try {
+            fneService.createInvoice(id, typeInvoice);
+            return Response.ok(new JSONObject().put("success", true).toString()).build();
+        } catch (FneExeception e) {
+            // motif du refus remonte a l'ecran (facture deja certifiee, avoir deja emis...)
+            // au lieu d'une erreur technique sans explication
+            return badRequest(e);
+        }
     }
 
     @GET
     @Path("invoices/sign-group")
     public Response getSignGroupInvoice(@QueryParam(value = "ids") String ids,
-            @QueryParam(value = "typeInvoice") TypeInvoice typeInvoice) throws FneExeception {
-        fneService.createGroupeInvoice(ids, typeInvoice);
-        return Response.ok().build();
+            @QueryParam(value = "typeInvoice") TypeInvoice typeInvoice) {
+        JSONObject compteRendu = fneService.createGroupeInvoice(ids, typeInvoice);
+        // aucune facture certifiee et aucun echec technique : toutes etaient deja certifiees
+        boolean succes = compteRendu.optInt("certifiees", 0) > 0;
+        return Response.ok(compteRendu.put("success", succes).toString()).build();
     }
 
     /**
@@ -70,6 +77,22 @@ public class FneRessource {
         } catch (FneExeception e) {
             return badRequest(e);
         }
+    }
+
+    /**
+     * Avoirs totaux sur toutes les factures certifiees d'une facture de GROUPE, emis une par une.
+     *
+     * Meme principe que la certification de groupe : une facture qui porte deja un avoir n'est jamais renvoyee, une
+     * facture non certifiee est ignoree, et le compte rendu detaille ce qui a ete fait.
+     */
+    @POST
+    @Path("invoices/avoir-group")
+    public Response createAvoirGroupe(@QueryParam(value = "ids") String ids) {
+        if (!hasAvoirPrivilege()) {
+            return forbidden();
+        }
+        JSONObject compteRendu = fneService.createGroupeAvoir(ids);
+        return Response.ok(compteRendu.put("success", compteRendu.optInt("emis", 0) > 0).toString()).build();
     }
 
     /**

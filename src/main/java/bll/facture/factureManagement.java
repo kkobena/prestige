@@ -981,25 +981,30 @@ public class factureManagement extends bll.bllBase {
     }
 
     private boolean factureCanBeDeleted(String lg_FACTURE_ID) {
-        boolean canBeDeleted = false;
-        List<TDossierReglement> list = new ArrayList<>();
+        return !factureDejaReglee(lg_FACTURE_ID);
+    }
 
+    /**
+     * Vrai si la facture a deja fait l'objet d'un reglement (total ou partiel) : elle n'est alors plus supprimable.
+     *
+     * Publique pour permettre de CONTROLER AVANT d'engager une suppression multiple (facture de groupe) : sans ce
+     * controle prealable, les factures deja parcourues sont supprimees puis la suivante est refusee, ce qui laisse le
+     * groupe a moitie supprime.
+     */
+    public boolean factureDejaReglee(String lg_FACTURE_ID) {
         try {
-            list = this.getOdataManager().getEm()
+            List<TDossierReglement> list = this.getOdataManager().getEm()
                     .createQuery("SELECT o FROM TDossierReglement o WHERE o.lgFACTUREID.lgFACTUREID=?1")
                     .setParameter(1, lg_FACTURE_ID).getResultList();
             for (TDossierReglement tDossierReglement : list) {
                 this.refresh(tDossierReglement);
             }
-            if (list.isEmpty()) {
-                canBeDeleted = true;
-            }
-
+            return !list.isEmpty();
         } catch (Exception e) {
             e.printStackTrace();
+            // en cas de doute, on considere la facture comme reglee : on ne supprime pas a l'aveugle
+            return true;
         }
-        return canBeDeleted;
-
     }
 
     public boolean deleteInvoice(String lg_FACTURE_ID, TUser user) {

@@ -46,6 +46,11 @@ Ext.define('testextjs.model.groupFactureModel', {
          {
             name: 'ACTION_REGLER_FACTURE',
             type: 'boolean'
+        },
+        {
+            // nombre de factures du groupe deja certifiees a la FNE (certification ou avoir)
+            name: 'NB_CERTIFIEES',
+            type: 'int'
         }
     ]
 });

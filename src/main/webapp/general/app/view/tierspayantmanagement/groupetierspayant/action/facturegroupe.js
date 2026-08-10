@@ -83,8 +83,8 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
    win = new Ext.window.Window({
             autoShow: true, title: this.getTitre(),
             maximizable: true,
-            width: '80%',
-            height: 600,
+            width: '95%',
+            height: 620,
             minWidth: 300,
             minHeight: 200,
             layout: 'fit',
@@ -171,7 +171,65 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
                     flex: 1
 
                 },
-                
+
+                // Trois indicateurs d'un seul coup d'oeil, sans en-tete pour ne pas manger la largeur :
+                // certification FNE, avoir FNE, et reglement. Purement informatifs (aucune action).
+                {
+                    xtype: 'actioncolumn',
+                    width: 28,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            getClass: function (v, meta, rec) {
+                                return rec.get('fneUrl') ? 'certifiee-oui' : 'x-hide-display';
+                            },
+                            getTip: function (v, meta, rec) {
+                                return 'Certifi&eacute;e &agrave; la FNE : ne sera pas renvoy&eacute;e';
+                            },
+                            handler: function () {
+                            }
+                        }]
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width: 28,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            getClass: function (v, meta, rec) {
+                                return rec.get('fneAvoirReference') ? 'avoir-oui' : 'x-hide-display';
+                            },
+                            getTip: function (v, meta, rec) {
+                                return 'Avoir FNE &eacute;mis : ' + rec.get('fneAvoirReference');
+                            },
+                            handler: function () {
+                            }
+                        }]
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width: 28,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            // rappel visuel : facture soldee, ou partiellement reglee
+                            getClass: function (v, meta, rec) {
+                                if (rec.get('str_STATUT') === 'paid') {
+                                    return 'reglee-totale';
+                                }
+                                return Number(rec.get('dbl_MONTANT_PAYE') || 0) > 0 ? 'reglee-partielle'
+                                        : 'x-hide-display';
+                            },
+                            getTip: function (v, meta, rec) {
+                                if (rec.get('str_STATUT') === 'paid') {
+                                    return 'Facture sold&eacute;e';
+                                }
+                                return 'R&eacute;glement partiel effectu&eacute;';
+                            },
+                            handler: function () {
+                            }
+                        }]
+                },
                         {
                     xtype: 'actioncolumn',
                     width: 30,

@@ -14,7 +14,10 @@ public interface FneService {
 
     void createInvoice(String idFacture, TypeInvoice typeInvoice) throws FneExeception;
 
-    void createGroupeInvoice(String idFactures, TypeInvoice typeInvoice);
+    org.json.JSONObject createGroupeInvoice(String idFactures, TypeInvoice typeInvoice);
+
+    /** Avoirs totaux sur toutes les factures certifiees d'une facture de groupe, une par une. */
+    org.json.JSONObject createGroupeAvoir(String idFactures);
 
     /**
      * Certification d'un avoir total (API FNE #2 /refund) : toutes les lignes de la facture certifiee sont retournees
