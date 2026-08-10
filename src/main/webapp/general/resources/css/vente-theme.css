@@ -598,3 +598,14 @@ body.x-body,
     background-image: none !important;
     color: #ffffff !important;
 }
+
+/* Icone du recapitulatif de reglement (factures de groupe).
+   Le theme KitchenSink declare bien une classe .recu, mais elle pointe vers
+   images/icons/fam/recu.png RELATIVEMENT a son propre dossier, ou le fichier n'existe pas,
+   et sans !important : l'icone se chargeait donc vide et le bouton restait invisible.
+   vente-theme.css est charge apres bootstrap.css, cette regle prime. */
+.recu {
+    background-image: url(../images/icons/fam/recu.png) !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+}

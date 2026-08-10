@@ -233,9 +233,16 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             menuDisabled: true,
                             items: [{
                                     // reedition du recapitulatif de reglement : uniquement si un
-                                    // reglement (partiel ou total) a ete fait sur la ligne
+                                    // reglement (partiel ou total) a ete fait sur la ligne.
+                                    // Deux indices, car les lignes reglees par l'ancien circuit
+                                    // peuvent avoir un montant paye non renseigne : le montant
+                                    // paye cumule, ou un reste a payer inferieur au montant total.
                                     getClass: function (v, meta, rec) {
-                                        return (Number(rec.get('AMOUNTPAYE') || 0) > 0) ? 'recu' : 'x-hide-display';
+                                        var paye = Number(rec.get('AMOUNTPAYE') || 0);
+                                        var total = Number(rec.get('AMOUNT') || 0);
+                                        var reste = Number(rec.get('MONTANTRESTANT') || 0);
+                                        var regle = paye > 0 || (total > 0 && reste < total);
+                                        return regle ? 'recu' : 'x-hide-display';
                                     },
                                     getTip: function (v, meta, rec) {
                                         return 'R&eacute;capitulatif de r&egrave;glement';
