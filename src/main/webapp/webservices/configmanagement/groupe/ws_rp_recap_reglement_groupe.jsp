@@ -50,13 +50,13 @@
     String P_H_LOGO = jdom.scr_report_file_logo;
     String P_FOOTER_RC = "";
     if (oTOfficine.getStrREGISTRECOMMERCE() != null) {
-        P_FOOTER_RC += "RC N " + oTOfficine.getStrREGISTRECOMMERCE();
+        P_FOOTER_RC += "RC N\u00b0 " + oTOfficine.getStrREGISTRECOMMERCE();
     }
     if (oTOfficine.getStrCOMPTECONTRIBUABLE() != null) {
-        P_FOOTER_RC += " - CC N " + oTOfficine.getStrCOMPTECONTRIBUABLE();
+        P_FOOTER_RC += " - CC N\u00b0 " + oTOfficine.getStrCOMPTECONTRIBUABLE();
     }
     if (oTOfficine.getStrPHONE() != null) {
-        P_INSTITUTION_ADRESSE += " - Tel: " + util.DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE());
+        P_INSTITUTION_ADRESSE += " - T\u00e9l : " + util.DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE());
     }
 
     TGroupeTierspayant g = controller.findById(lg_GROUPE_ID);
@@ -77,7 +77,7 @@
     parameters.put("P_FOOTER_RC", P_FOOTER_RC);
     parameters.put("P_PRINTED_BY", " LE PHARMACIEN ");
     parameters.put("P_AUTRE_DESC", oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
-    parameters.put("P_H_CLT_INFOS", "RECAPITULATIF DE REGLEMENT - FACTURE N " + CODEFACTURE);
+    parameters.put("P_H_CLT_INFOS", "R\u00c9CAPITULATIF DE R\u00c8GLEMENT - FACTURE N\u00b0 " + CODEFACTURE);
     parameters.put("P_CODEREGROUPEMENT", g.getStrLIBELLE());
     parameters.put("P_ADRESSE", g.getStrADRESSE());
     parameters.put("P_GROUPETELEPHONE", g.getStrTELEPHONE());
