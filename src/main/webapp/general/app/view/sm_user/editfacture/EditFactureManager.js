@@ -261,13 +261,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         });
         this.callParent();
 
-        // l'ecran occupe la place disponible : avec sa hauteur fixe de 580 px, une recherche
-        // qui ramene beaucoup de factures faisait defiler la page entiere - l'entete
-        // "Gestion des facturations" et la barre de recherche partaient vers le haut et le
-        // fond de l'application apparaissait sur les cotes (cf. correctifs-affichage.js)
-        if (window.PrestigeAffichage) {
-            window.PrestigeAffichage.collerAuConteneur(this);
-        }
     },
     buildDocked: function () {
         // _this etait declare dans initComponent : il n'existait pas dans cette

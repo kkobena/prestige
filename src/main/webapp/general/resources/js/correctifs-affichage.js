@@ -135,6 +135,11 @@ window.PrestigeAffichage.collerAuConteneur = function (panneau, options) {
         if (!panneau.rendered || panneau.isDestroyed) {
             return false;
         }
+        // une hauteur maximale declaree par l'ecran (maxHeight: 800 par exemple) l'emporterait
+        // sur la taille demandee et laisserait reapparaitre une bande de fond en bas
+        if (panneau.maxHeight) {
+            panneau.maxHeight = Math.max(panneau.maxHeight, placeDisponible().height);
+        }
         // alignTo() a pu laisser un positionnement absolu derriere lui (ouverture d'un menu
         // avant que le marqueur ne soit lu, ou surcharge tierce) : on le neutralise, faute de
         // quoi l'ecran resterait decale de la moitie de la place perdue.
@@ -171,6 +176,58 @@ window.PrestigeAffichage.collerAuConteneur = function (panneau, options) {
     });
     if (panneau.rendered) {
         ajusterPuisVerifier();
+    }
+};
+
+/**
+ * Ecrans concernes, par leur xtype.
+ *
+ * La liste est ici, en un seul endroit, plutot que dispersee dans chaque fichier de vue :
+ * ajouter un ecran a la presentation "collee" tient alors en une ligne, et on voit d'un coup
+ * d'oeil lesquels sont concernes. App.onLoadNewComponent la consulte a l'ouverture d'un menu.
+ */
+window.PrestigeAffichage.ECRANS_COLLES = [
+    // facturation
+    'facturemanager', 'facturesubrogatoireother', 'groupeInvoices', 'factureprovisoire',
+    // parametrage et administration
+    'parametermanager', 'kobysky', 'zonegeographiquemanager', 'usermanager',
+    // caisse
+    'listecaissemanager', 'visualisercaissemanager',
+    // articles
+    'famillemanager', 'produitsxx', 'articlevendumanager', 'articlevendurecapitulatif',
+    // commandes et approvisionnement
+    'reservesuggestionsgrid', 'i_sugg_manager', //'suggerercdemanager',
+  'i_order_manager', //'ordermanagerlist',
+  'bonlivraisonmanager','retourfrsmanager', //'bonlivraisondetail', 
+    // stock
+    'ajustementmanager', 'etatstock', 'inventaire',
+    'monitoringproduct', 'suivientreevente', 'monitoringarticlecomplet',
+    // etats et tableaux de bord
+    'etatscontrolemanager', 'etatannuel', 'achatgrossistemensuel',
+    'tableauPhama', 'tableauPhamaCarnet', 'statistiqueTVA',
+    // divers
+    'diffmanager'
+];
+
+/**
+ * Applique la presentation "collee" a un ecran s'il figure dans la liste ci-dessus.
+ *
+ * Appele par App.onLoadNewComponent APRES la creation de l'ecran et AVANT son ajout au
+ * panneau central : header:false doit etre pose avant le rendu.
+ *
+ * @param {Ext.Component} ecran ecran qui vient d'etre cree
+ */
+window.PrestigeAffichage.appliquerSiConcerne = function (ecran) {
+    'use strict';
+
+    if (!ecran || !ecran.isXType) {
+        return;
+    }
+    var concerne = Ext.Array.some(window.PrestigeAffichage.ECRANS_COLLES, function (xtype) {
+        return ecran.isXType(xtype);
+    });
+    if (concerne) {
+        window.PrestigeAffichage.collerAuConteneur(ecran);
     }
 };
 

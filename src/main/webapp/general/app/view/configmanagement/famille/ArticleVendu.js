@@ -599,13 +599,16 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVendu', {
                     }
                 ]
             },
-            listeners: {
-                afterrender: function () {
-                    if (lg_EMPLACEMENT_ID != "1") {
-                        Ext.getCmp('btn_export_suggestion').show();
-                    }
-                }
-            }
+            /* Un ecouteur afterrender rendait visible un bouton "btn_export_suggestion" sur les
+             * emplacements autres que le premier. Ce bouton n'existe NULLE PART dans
+             * l'application : la recherche de son identifiant ne ramene que la ligne qui
+             * tentait de l'afficher, et l'historique du depot montre qu'il n'a jamais existe.
+             * Ext.getCmp renvoyait donc undefined et .show() levait une erreur JavaScript a
+             * l'ouverture de l'ecran - sur toutes les officines dont l'emplacement n'est pas
+             * "1", c'est-a-dire des qu'il y a plusieurs emplacements. L'erreur interrompait
+             * l'affichage en cours de route.
+             * L'ecouteur est retire : le bouton "Suggerer" de la barre d'outils, lui, est
+             * present et visible pour tout le monde, sans condition d'emplacement. */
         });
 
         this.callParent();

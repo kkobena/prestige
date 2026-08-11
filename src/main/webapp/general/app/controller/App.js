@@ -241,6 +241,13 @@ Ext.define('testextjs.controller.App', {
                     nameintern: name_ressource,
                     titre: text
                 });
+
+        // Ecrans "colles" a la barre de titre du panneau central : la liste est dans
+        // resources/js/correctifs-affichage.js. A poser AVANT contentPanel.add(), car
+        // l'entete de l'ecran est masquee et cela doit etre decide avant le rendu.
+        if (window.PrestigeAffichage) {
+            window.PrestigeAffichage.appliquerSiConcerne(cmp);
+        }
         contentPanel.add(cmp);
         if (cmp.floating) {
             cmp.show();
@@ -316,6 +323,13 @@ Ext.define('testextjs.controller.App', {
                     odatasource: ODatatasource
 
                 });
+
+        // Ecrans "colles" a la barre de titre du panneau central : la liste est dans
+        // resources/js/correctifs-affichage.js. A poser AVANT contentPanel.add(), car
+        // l'entete de l'ecran est masquee et cela doit etre decide avant le rendu.
+        if (window.PrestigeAffichage) {
+            window.PrestigeAffichage.appliquerSiConcerne(cmp);
+        }
         contentPanel.add(cmp);
         if (cmp.floating) {
             cmp.show();
