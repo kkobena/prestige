@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <title>Telecharger la facture certifiee</title>
+  <!-- Bac de reception : dos gris, corps gris clair avec le pli en V -->
+  <rect x="6.8" y="9.4" width="34.4" height="23.2" rx="2.4" fill="#C6C6C6"/>
+  <path d="M6.8 15.2 L24 21.4 L41.2 15.2 V30.2 a2.4 2.4 0 0 1 -2.4 2.4 H9.2
+           a2.4 2.4 0 0 1 -2.4 -2.4 Z" fill="#DCDCDC"/>
+  <!-- Fleche verte : le document qui descend dans le bac -->
+  <path d="M21.6 2.6 h4.8 a2.4 2.4 0 0 1 2.4 2.4 v10.2 h2.6 a1.5 1.5 0 0 1 1.1 2.5
+           l-6.6 7.2 a2 2 0 0 1 -2.9 0 l-6.6 -7.2 a1.5 1.5 0 0 1 1.1 -2.5 h2.6 V5
+           a2.4 2.4 0 0 1 2.4 -2.4 Z" fill="#7FBF7F"/>
+  <!-- Fente du bac -->
+  <rect x="15.6" y="27.7" width="16.8" height="4.4" rx="1" fill="#CC5500"/>
+  <!-- Facade orange du bac -->
+  <path d="M4.3 30 h39.4 a2.4 2.4 0 0 1 2.4 2.4 v9.6 a2.4 2.4 0 0 1 -2.4 2.4 H4.3
+           a2.4 2.4 0 0 1 -2.4 -2.4 v-9.6 a2.4 2.4 0 0 1 2.4 -2.4 Z" fill="#FBAF5D"/>
+  <path d="M1.9 38.2 h44.2 v3.8 a2.4 2.4 0 0 1 -2.4 2.4 H4.3 a2.4 2.4 0 0 1 -2.4 -2.4 Z"
+        fill="#F5904A"/>
+</svg>

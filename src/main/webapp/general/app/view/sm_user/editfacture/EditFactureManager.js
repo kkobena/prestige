@@ -19,6 +19,91 @@ var searchstore;
 function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
 }
+
+/**
+ * Complement de date pour les info-bulles FNE : " le 10/08/2026 14:32:05" quand la date de
+ * l'appel FNE est connue.
+ *
+ * Quand elle ne l'est pas, l'info-bulle le DIT au lieu de se taire : sans mention, l'utilisateur
+ * ne peut pas distinguer une date manquante d'un oubli du logiciel. La date vient de la trace
+ * fne_invoice, alimentee a chaque appel FNE ; les factures certifiees AVANT la mise en place de
+ * cette trace n'en ont pas, et n'en auront jamais - c'est aussi pour cette raison qu'elles ne
+ * peuvent pas faire l'objet d'un avoir sans rattachement manuel.
+ *
+ * @param {String} prefixe texte de liaison, par exemple " le "
+ * @param {String} valeur date deja formatee renvoyee par l'API, vide si inconnue
+ * @param {String} mentionSiInconnue texte affiche a la place de la date, quand elle est inconnue
+ */
+function complementDateFne(prefixe, valeur, mentionSiInconnue) {
+    if (valeur) {
+        return prefixe + valeur;
+    }
+    return mentionSiInconnue || ' (date inconnue)';
+}
+
+/** Mention affichee quand la date de certification n'a pas ete conservee. */
+var DATE_CERTIFICATION_INCONNUE = ' (date inconnue : certification ant&eacute;rieure &agrave; la version actuelle)';
+
+/**
+ * Etat FNE d'une facture, une ligne par evenement : la certification, puis l'avoir s'il existe.
+ *
+ * Une facture qui a fait l'objet d'un avoir reste une facture certifiee : afficher le seul avoir
+ * faisait disparaitre la certification et sa date, alors que les deux informations sont utiles.
+ * Les deux lignes sont construites a partir des champs deja presents sur la ligne de la grille
+ * (fneUrl, fneAvoirReference et leurs dates) : aucun appel supplementaire au serveur.
+ *
+ * @return {String[]} les lignes a afficher, dans l'ordre chronologique
+ */
+function lignesEtatFne(rec) {
+    var lignes = [];
+    if (rec.get('fneUrl')) {
+        lignes.push('Facture certifi&eacute;e'
+                + complementDateFne(' le ', rec.get('fneDateCertification'), DATE_CERTIFICATION_INCONNUE));
+    }
+    if (rec.get('fneAvoirReference')) {
+        lignes.push('Avoir FNE ' + rec.get('fneAvoirReference')
+                + complementDateFne(', effectu&eacute; le ', rec.get('fneDateAvoir')));
+    }
+    return lignes;
+}
+
+/**
+ * Traduit les entites HTML d'un texte ("Annul&eacute;e" -> "Annulée").
+ * Ext.util.Format.htmlDecode ne connait que &amp; &lt; &gt; &quot; et &#39; : il laisserait
+ * "&eacute;" tel quel dans l'info-bulle. Le contenu est place dans un textarea, dont la
+ * propriete value rend le texte deja decode (et ou aucun balisage n'est interprete).
+ */
+function decoderEntitesHtml(texte) {
+    var zone = decoderEntitesHtml.zone;
+    if (!zone) {
+        zone = decoderEntitesHtml.zone = document.createElement('textarea');
+    }
+    zone.innerHTML = texte;
+    return zone.value;
+}
+
+/**
+ * Renderer qui pose une info-bulle rappelant le libelle de la colonne et la valeur affichee.
+ * Sur les petits ecrans la colonne est trop etroite pour tout montrer : l'info-bulle redonne
+ * l'information complete au survol, sans changer l'affichage de la cellule.
+ *
+ * @param {String} libelle libelle de la colonne, repris en tete de l'info-bulle
+ * @param {Function} formateur formatage optionnel de la valeur (ex : amountformat)
+ */
+function renduAvecInfobulle(libelle, formateur) {
+    return function (value, meta, rec) {
+        var affiche = formateur ? formateur(value, meta, rec) : value;
+        var texte = (affiche === null || affiche === undefined) ? '' : String(affiche);
+        // stripTags : la cellule "Code Facture" peut contenir du HTML (mention "Annulee - avoir") ;
+        // decoderEntitesHtml : sans quoi l'info-bulle afficherait "Annul&eacute;e" en toutes lettres ;
+        // htmlEncode : la valeur part dans un attribut HTML entre guillemets (organismes avec
+        // apostrophe, guillemets ou esperluette dans leur raison sociale).
+        meta.tdAttr = 'data-qtip="'
+                + Ext.String.htmlEncode(libelle + ' : ' + decoderEntitesHtml(Ext.util.Format.stripTags(texte)))
+                + '"';
+        return affiche;
+    };
+}
 Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     extend: 'Ext.grid.Panel',
     xtype: 'facturemanager',
@@ -38,6 +123,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     ],
     title: 'Gestion des facturations ',
     frame: true,
+    // repere les info-bulles issues de cet ecran, cf. marquerInfobullesDeLaListe()
+    cls: 'facture-liste',
     width: "98%",
     height: 580,
     // Mise en evidence de la ligne survolee (uniquement cette grille)
@@ -62,10 +149,48 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             this.onRechClick();
         }
     },
+    /**
+     * Marque l'info-bulle quand elle est declenchee depuis CET ecran, pour la mettre en bleu gras
+     * (regle .tip-facture de vente-theme.css).
+     *
+     * ExtJS n'a qu'UNE info-bulle pour toute l'application : lui poser la regle directement
+     * repeindrait aussi celles des autres ecrans. On regarde donc, juste avant l'affichage, si
+     * l'element survole se trouve dans la grille des factures (classe facture-liste), et on pose
+     * ou retire la classe en consequence. Le test porte sur le DOM et non sur une instance
+     * memorisee : l'ecran peut etre ferme puis rouvert sans laisser de reference morte.
+     */
+    marquerInfobullesDeLaListe: function () {
+        if (!Ext.tip || !Ext.tip.QuickTipManager) {
+            return;
+        }
+        var infobulle = Ext.tip.QuickTipManager.getQuickTip();
+        if (!infobulle || infobulle.marquageFactureInstalle) {
+            return;
+        }
+        infobulle.marquageFactureInstalle = true;
+        // Intercepteur sur showAt, et NON ecouteur de "beforeshow" : quand on passe d'un bouton a
+        // l'autre sans que l'info-bulle disparaisse entre-temps, elle n'est pas re-affichee et
+        // "beforeshow" ne se declenche pas - le bleu gras serait alors reste colle a l'info-bulle
+        // d'un autre ecran (constate au navigateur). showAt, lui, est appele a chaque changement
+        // de cible. Un intercepteur agit AVANT la mise en page : la largeur de l'info-bulle est
+        // donc calculee avec le texte deja en gras, qui est plus large.
+        infobulle.showAt = Ext.Function.createInterceptor(infobulle.showAt, function () {
+            var cible = this.activeTarget && this.activeTarget.el;
+            var dansLaListe = cible && cible.nodeType === 1 && cible.closest
+                    && cible.closest('.facture-liste');
+            if (dansLaListe) {
+                this.addCls('tip-facture');
+            } else {
+                this.removeCls('tip-facture');
+            }
+        });
+    },
     initComponent: function () {
 
         Me = this;
         var _this = this;
+
+        this.marquerInfobullesDeLaListe();
 
         myAppController = Ext.create('testextjs.controller.App', {});
 
@@ -140,6 +265,11 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
     },
     buildDocked: function () {
+        // _this etait declare dans initComponent : il n'existait pas dans cette
+        // methode-ci, et la touche Entree sur la recherche levait
+        // "ReferenceError: _this is not defined". On le redeclare ici, ou il est
+        // utilise par les ecouteurs de la barre d'outils.
+        var _this = this;
         return [
             {xtype: 'toolbar',
                 dock: 'top',
@@ -384,52 +514,55 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 header: 'Code Facture',
                 dataIndex: 'str_CODE_FACTURE',
                 flex: 0.5,
-                renderer: function (value, meta, rec) {
+                renderer: renduAvecInfobulle('Code facture', function (value, meta, rec) {
                     if (rec.get('str_STATUT') === 'avoir') {
                         return '<span style="color:#c0392b;font-weight:bold;">' + value + ' (Annul&eacute;e - avoir)</span>';
                     }
                     return value;
-                }
+                })
 
             }, {
                 header: 'Organisme',
                 dataIndex: 'str_CUSTOMER_NAME',
-                flex: 1
+                flex: 1,
+                renderer: renduAvecInfobulle('Organisme')
             }, {
                 header: 'P&eacute;riode',
                 dataIndex: 'str_PERIODE',
-                flex: 1.5
+                flex: 1.5,
+                renderer: renduAvecInfobulle('Période')
 
             }, {
                 header: 'Nombre de Dossiers',
                 dataIndex: 'int_NB_DOSSIER',
                 flex: 0.5,
-                align: 'right'
+                align: 'right',
+                renderer: renduAvecInfobulle('Nombre de dossiers')
             }
             , {
                 header: 'Montant Brut',
                 dataIndex: 'MONTANTBRUT',
                 flex: 1,
-                renderer: amountformat,
+                renderer: renduAvecInfobulle('Montant brut', amountformat),
                 align: 'right'
             }
             , {
                 header: 'Montant Remise',
                 dataIndex: 'MONTANTREMISE',
                 flex: 1,
-                renderer: amountformat,
+                renderer: renduAvecInfobulle('Montant remise', amountformat),
                 align: 'right'
             }, {
                 header: 'Montant Forfaitaire',
                 dataIndex: 'MONTANTFORFETAIRE',
                 flex: 1,
-                renderer: amountformat,
+                renderer: renduAvecInfobulle('Montant forfaitaire', amountformat),
                 align: 'right'
             }, {
                 header: 'Montant.Net',
                 dataIndex: 'dbl_MONTANT_CMDE',
                 flex: 1,
-                renderer: amountformat,
+                renderer: renduAvecInfobulle('Montant net', amountformat),
                 align: 'right'
             }
 
@@ -437,19 +570,20 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 header: 'Montant Pay&eacute;',
                 dataIndex: 'dbl_MONTANT_PAYE',
                 flex: 1,
-                renderer: amountformat,
+                renderer: renduAvecInfobulle('Montant payé', amountformat),
                 align: 'right'
             }, {
                 header: 'Montant Restant',
                 dataIndex: 'dbl_MONTANT_RESTANT',
                 flex: 1,
-                renderer: amountformat,
+                renderer: renduAvecInfobulle('Montant restant', amountformat),
                 align: 'right'
             },
             {
                 header: 'Date',
                 dataIndex: 'dt_CREATED',
-                flex: 1
+                flex: 1,
+                renderer: renduAvecInfobulle('Date de facture')
 
             }, {
                 xtype: 'actioncolumn',
@@ -523,32 +657,24 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                                     : 'x-hide-display';
                         },
                         getTip: function (v, meta, rec) {
-                            return rec.get('fneAvoirReference') ? 'Avoir d&eacute;j&agrave; certifi&eacute;'
-                                    : 'Facture d&eacute;j&agrave; certifi&eacute;e';
+                            // une ligne par evenement : certification, puis avoir s'il existe
+                            return lignesEtatFne(rec).join('<br/>');
                         },
-                        icon: 'resources/images/icons/fam/passed.png',
+                        icon: 'resources/images/icons/facture-certifiee.svg',
                         scope: this,
                         handler: function (grid, rowIndex) {
                             var rec = grid.getStore().getAt(rowIndex);
-                            if (rec.get('fneAvoirReference')) {
-                                Ext.MessageBox.show({
-                                    title: 'Avoir d&eacute;j&agrave; certifi&eacute;',
-                                    msg: 'Facture n&deg; ' + rec.get('str_CODE_FACTURE')
-                                            + ' : un avoir FNE valide existe d&eacute;j&agrave; '
-                                            + '(r&eacute;f&eacute;rence ' + rec.get('fneAvoirReference')
-                                            + '). Elle ne peut plus &ecirc;tre certifi&eacute;e.',
-                                    minWidth: 420,
-                                    maxWidth: 560,
-                                    buttons: Ext.MessageBox.OK,
-                                    icon: Ext.MessageBox.INFO
-                                });
-                                return;
-                            }
+                            var avoir = rec.get('fneAvoirReference');
                             Ext.MessageBox.show({
-                                title: 'Facture d&eacute;j&agrave; certifi&eacute;e',
-                                msg: 'La facture n&deg; ' + rec.get('str_CODE_FACTURE')
-                                        + ' porte d&eacute;j&agrave; une certification FNE valide. Elle ne peut pas '
-                                        + '&ecirc;tre certifi&eacute;e une seconde fois.',
+                                title: avoir ? 'Avoir d&eacute;j&agrave; certifi&eacute;'
+                                        : 'Facture d&eacute;j&agrave; certifi&eacute;e',
+                                msg: 'Facture n&deg; ' + rec.get('str_CODE_FACTURE') + '<br/><br/>'
+                                        + lignesEtatFne(rec).join('<br/>') + '<br/><br/>'
+                                        + (avoir ? 'Un avoir FNE valide existe d&eacute;j&agrave; : cette facture '
+                                                + 'ne peut plus &ecirc;tre certifi&eacute;e.'
+                                                : 'Cette facture porte d&eacute;j&agrave; une certification FNE '
+                                                + 'valide : elle ne peut pas &ecirc;tre certifi&eacute;e une '
+                                                + 'seconde fois.'),
                                 minWidth: 420,
                                 maxWidth: 560,
                                 buttons: Ext.MessageBox.OK,
@@ -574,8 +700,12 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             }
                         },
 
-                        icon: 'resources/images/download.png',
-                        tooltip: 'Télécharger',
+                        // format SVG : net en 16 px comme sur les ecrans a forte densite
+                        icon: 'resources/images/icons/telecharger-facture-fne.svg',
+                        getTip: function (v, meta, rec) {
+                            return 'T&eacute;l&eacute;charger la facture certifi&eacute;e'
+                                    + complementDateFne(' le ', rec.get('fneDateCertification'), DATE_CERTIFICATION_INCONNUE);
+                        },
                         scope: this,
                         handler: this.onOpenFneLink
                     }]
@@ -595,7 +725,10 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             }
                         },
                         icon: 'resources/images/icons/fam/retour.png',
-                        tooltip: 'Émettre un avoir FNE (total)',
+                        getTip: function (v, meta, rec) {
+                            return '&Eacute;mettre un avoir FNE (total) : facture certifi&eacute;e'
+                                    + complementDateFne(' le ', rec.get('fneDateCertification'), DATE_CERTIFICATION_INCONNUE);
+                        },
                         scope: this,
                         handler: this.onAvoirFneClick
                     }, {
@@ -607,7 +740,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             }
                         },
                         getTip: function (v, meta, rec) {
-                            return 'Avoir FNE : ' + rec.get('fneAvoirReference');
+                            return 'Avoir FNE : ' + rec.get('fneAvoirReference')
+                                    + complementDateFne(', effectu&eacute; le ', rec.get('fneDateAvoir'));
                         },
                         icon: 'resources/images/icons/fam/recu.png',
                         scope: this,
@@ -996,6 +1130,13 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 layout: 'fit',
                 items: [{
                         xtype: 'doreglementmanager',
+                        // La fenetre porte deja son titre : sans ceci, l'ecran de reglement
+                        // ajoutait le sien ("Faire Reglement") juste en dessous, soit deux
+                        // bandeaux l'un sur l'autre. On masque le bandeau interne ICI seulement :
+                        // ouvert depuis les autres ecrans (liste des reglements, detail
+                        // bordereau), ce meme composant s'affiche sans fenetre et son titre
+                        // reste son seul reperage.
+                        header: false,
                         odatasource: rec.data,
                         parentview: moi,
                         nameintern: rec.get('lg_FACTURE_ID'),

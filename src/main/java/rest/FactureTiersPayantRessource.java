@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
@@ -114,6 +115,14 @@ public class FactureTiersPayantRessource {
             boolean actionReglerFacture = DateConverter.hasAuthorityById(lstTPrivilege, Util.ACTION_REGLER_FACTURE);
             boolean autorisationAvoirFne = DateConverter.hasAuthorityByName(lstTPrivilege, "AUTORISATION_AVOIR_FNE");
 
+            // Dates des appels FNE de la page courante, en une seule requete : elles alimentent les
+            // info-bulles "Facture certifiee le ..." / "Avoir FNE effectue le ...".
+            List<String> idsFacture = new ArrayList<>();
+            for (TFacture of : lstTFacture) {
+                idsFacture.add(of.getLgFACTUREID());
+            }
+            Map<String, Date[]> datesFne = ofm.getDatesFne(idsFacture);
+
             JSONArray arrayObj = new JSONArray();
             for (TFacture of : lstTFacture) {
                 TTiersPayant otp = (TTiersPayant) ofm.getgetOrganisme(of.getLgTYPEFACTUREID().getLgTYPEFACTUREID(),
@@ -122,6 +131,11 @@ public class FactureTiersPayantRessource {
                 json.put("fneUrl", of.getFneUrl());
                 json.put("fneAvoirReference", of.getFneAvoirReference());
                 json.put("fneAvoirUrl", of.getFneAvoirUrl());
+                Date[] datesFneFacture = datesFne.get(of.getLgFACTUREID());
+                json.put("fneDateCertification", datesFneFacture != null && datesFneFacture[0] != null
+                        ? key.DateToString(datesFneFacture[0], key.backabaseUiFormat1) : "");
+                json.put("fneDateAvoir", datesFneFacture != null && datesFneFacture[1] != null
+                        ? key.DateToString(datesFneFacture[1], key.backabaseUiFormat1) : "");
                 json.put("AUTORISATION_AVOIR_FNE", autorisationAvoirFne);
                 json.put("lg_FACTURE_ID", of.getLgFACTUREID());
                 json.put("str_CODE_FACTURE", of.getStrCODEFACTURE());

@@ -184,7 +184,14 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
                                 return rec.get('fneUrl') ? 'certifiee-oui' : 'x-hide-display';
                             },
                             getTip: function (v, meta, rec) {
-                                return 'Certifi&eacute;e &agrave; la FNE : ne sera pas renvoy&eacute;e';
+                                // date inconnue = certification anterieure a la trace fne_invoice ;
+                                // on le dit, sinon l'absence de date passe pour un oubli du logiciel
+                                var quand = rec.get('fneDateCertification');
+                                return 'Certifi&eacute;e &agrave; la FNE'
+                                        + (quand ? ' le ' + quand
+                                                : ' (date inconnue : certification ant&eacute;rieure &agrave; la'
+                                                + ' version actuelle)')
+                                        + ' : ne sera pas renvoy&eacute;e';
                             },
                             handler: function () {
                             }
@@ -200,7 +207,9 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.action.factur
                                 return rec.get('fneAvoirReference') ? 'avoir-oui' : 'x-hide-display';
                             },
                             getTip: function (v, meta, rec) {
-                                return 'Avoir FNE &eacute;mis : ' + rec.get('fneAvoirReference');
+                                var quand = rec.get('fneDateAvoir');
+                                return 'Avoir FNE &eacute;mis : ' + rec.get('fneAvoirReference')
+                                        + (quand ? ', effectu&eacute; le ' + quand : '');
                             },
                             handler: function () {
                             }

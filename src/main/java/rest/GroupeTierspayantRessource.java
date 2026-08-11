@@ -10,6 +10,7 @@ import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TTiersPayant;
 import dal.TUser;
 import dal.dataManager;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -265,6 +266,13 @@ public class GroupeTierspayantRessource {
                     limit);
             int count = groupeCtl.getGroupeInvoiceDetails(query, lgTP, codeFacture, lgGroupeId);
             Map<String, TTiersPayant> tiersPayants = chargerTiersPayants(odm, tps);
+            // Dates des appels FNE de la page, en une seule requete : elles alimentent les info-bulles
+            // "Certifiee le ..." / "Avoir FNE emis le ..." des indicateurs d'etat.
+            List<String> idsFacture = new ArrayList<>();
+            for (TFacture f : tps) {
+                idsFacture.add(f.getLgFACTUREID());
+            }
+            Map<String, Date[]> datesFne = new factureManagement(odm, sessionUser).getDatesFne(idsFacture);
             JSONArray arrayObj = new JSONArray();
             for (TFacture f : tps) {
                 TTiersPayant otp = tiersPayants.get(f.getStrCUSTOMER());
@@ -289,6 +297,11 @@ public class GroupeTierspayantRessource {
                 // etat de certification FNE, affiche en clair dans la fenetre des factures du groupe
                 json.put("fneUrl", StringUtils.defaultString(f.getFneUrl()));
                 json.put("fneAvoirReference", StringUtils.defaultString(f.getFneAvoirReference()));
+                Date[] datesFneFacture = datesFne.get(f.getLgFACTUREID());
+                json.put("fneDateCertification", datesFneFacture != null && datesFneFacture[0] != null
+                        ? date.backabaseUiFormat1.format(datesFneFacture[0]) : "");
+                json.put("fneDateAvoir", datesFneFacture != null && datesFneFacture[1] != null
+                        ? date.backabaseUiFormat1.format(datesFneFacture[1]) : "");
                 json.put("isChecked", false);
                 arrayObj.put(json);
             }

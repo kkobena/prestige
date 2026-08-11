@@ -8,9 +8,11 @@ package bll.facture;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -33,6 +35,7 @@ import dal.TBordereauDetail;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TDossierFacture;
+import dal.FneInvoiceEntity;
 import dal.TDossierReglement;
 import dal.TEventLog;
 import dal.TFacture;
@@ -73,6 +76,9 @@ import util.DateConverter;
  * @author FCARDIOULA
  */
 public class factureManagement extends bll.bllBase {
+
+    private static final java.util.logging.Logger LOG_FNE = java.util.logging.Logger
+            .getLogger(factureManagement.class.getName());
 
     public factureManagement(dataManager OdataManager, TUser OTuser) {
         super.setOTUser(OTuser);
@@ -1005,6 +1011,49 @@ public class factureManagement extends bll.bllBase {
             // en cas de doute, on considere la facture comme reglee : on ne supprime pas a l'aveugle
             return true;
         }
+    }
+
+    /**
+     * Dates du dernier appel FNE (certification de vente et avoir) pour un lot de factures.
+     *
+     * En une seule requete : la liste affiche jusqu'a 20 lignes, interroger fne_invoice ligne par ligne ferait autant
+     * d'allers-retours en base pour une simple info-bulle.
+     *
+     * @param lgFactureIds
+     *            identifiants des factures affichees
+     *
+     * @return pour chaque identifiant de facture, un tableau [date de certification, date d'avoir] ; une case vaut null
+     *         quand l'appel correspondant n'a pas eu lieu. Les factures sans aucun appel FNE sont absentes de la Map.
+     */
+    public Map<String, Date[]> getDatesFne(List<String> lgFactureIds) {
+        Map<String, Date[]> dates = new HashMap<>();
+        if (lgFactureIds == null || lgFactureIds.isEmpty()) {
+            return dates;
+        }
+        try {
+            // Parametre NOMME : c'est la forme utilisee partout ailleurs dans le depot pour un IN
+            // (chargerTiersPayants...), la seule dont on sait qu'elle passe avec ce fournisseur JPA.
+            List<Object[]> lignes = this.getOdataManager().getEm()
+                    .createQuery("SELECT o.facture.lgFACTUREID, o.type, MAX(o.mvtDate) FROM FneInvoiceEntity o"
+                            + " WHERE o.facture.lgFACTUREID IN :ids GROUP BY o.facture.lgFACTUREID, o.type")
+                    .setParameter("ids", lgFactureIds).getResultList();
+            for (Object[] ligne : lignes) {
+                String idFacture = (String) ligne[0];
+                Date[] paire = dates.get(idFacture);
+                if (paire == null) {
+                    paire = new Date[2];
+                    dates.put(idFacture, paire);
+                }
+                paire[FneInvoiceEntity.TYPE_AVOIR.equals(ligne[1]) ? 1 : 0] = (Date) ligne[2];
+            }
+        } catch (Exception e) {
+            // Confort d'affichage uniquement (info-bulle) : une base sans la table fne_invoice ou une
+            // requete en echec ne doit surtout pas empecher la liste des factures de s'afficher.
+            // En revanche la cause doit apparaitre dans le journal : sans trace, l'absence de date
+            // dans les info-bulles serait impossible a distinguer d'une facture sans certification.
+            LOG_FNE.log(java.util.logging.Level.WARNING, "getDatesFne : dates de certification FNE indisponibles", e);
+        }
+        return dates;
     }
 
     public boolean deleteInvoice(String lg_FACTURE_ID, TUser user) {

@@ -7,10 +7,13 @@ package rest;
 
 import dal.TPrivilege;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -18,7 +21,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.exception.FneExeception;
 import rest.service.fne.FneService;
@@ -34,6 +39,8 @@ import util.Constant;
 @Produces("application/json")
 @Consumes("application/json")
 public class FneRessource {
+
+    private static final Logger LOG = Logger.getLogger(FneRessource.class.getName());
 
     @EJB
     private FneService fneService;
@@ -87,12 +94,39 @@ public class FneRessource {
      */
     @POST
     @Path("invoices/avoir-group")
-    public Response createAvoirGroupe(@QueryParam(value = "ids") String ids) {
+    // Un POST d'ExtJS transmet ses parametres dans le CORPS de la requete, pas dans l'URL : avec le
+    // seul @QueryParam, ids arrivait toujours vide et l'appel echouait en erreur technique. On lit
+    // donc le corps (@FormParam) en priorite, et l'URL en secours pour un appel construit a la main.
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response createAvoirGroupe(@FormParam(value = "ids") String idsCorps,
+            @QueryParam(value = "ids") String idsUrl) {
         if (!hasAvoirPrivilege()) {
             return forbidden();
         }
-        JSONObject compteRendu = fneService.createGroupeAvoir(ids);
-        return Response.ok(compteRendu.put("success", compteRendu.optInt("emis", 0) > 0).toString()).build();
+        String ids = StringUtils.defaultIfEmpty(idsCorps, idsUrl);
+        if (StringUtils.isEmpty(ids)) {
+            LOG.log(Level.WARNING, "avoir-group appele sans identifiants de factures");
+            return Response.status(Response.Status.BAD_REQUEST).entity(new JSONObject().put("success", false).put(
+                    "message",
+                    "Aucune facture transmise : rouvrez la liste des factures de groupe " + "et relancez l'opération.")
+                    .toString()).build();
+        }
+        try {
+            JSONObject compteRendu = fneService.createGroupeAvoir(ids);
+            return Response.ok(compteRendu.put("success", compteRendu.optInt("emis", 0) > 0).toString()).build();
+        } catch (Exception e) {
+            // sans ce filet, une erreur technique remontait en HTTP 500 sans message : l'ecran
+            // affichait alors son texte par defaut, qui accusait le privilege a tort
+            LOG.log(Level.SEVERE, "avoir-group : echec pour les factures " + ids, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JSONObject().put("success", false)
+                            .put("message",
+                                    "L'émission des avoirs a échoué pour une raison technique : "
+                                            + StringUtils.defaultIfEmpty(e.getMessage(), e.getClass().getSimpleName())
+                                            + ". Le détail figure dans le journal du serveur.")
+                            .toString())
+                    .build();
+        }
     }
 
     /**

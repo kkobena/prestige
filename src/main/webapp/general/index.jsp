@@ -75,10 +75,10 @@
         <!-- Refonte ecran de vente (direction A) : surcharge visuelle uniquement -->
         <link rel="stylesheet" type="text/css" href="resources/css/vente-theme.css" />
         <script src="ext/ext-all.js"></script>
-        <!-- Info-bulles : empeche ExtJS de couper la fin du texte des info-bulles
-             (on lisait "Avoir deja" au lieu de "Avoir deja certifie"). A charger
+        <!-- Empeche ExtJS de couper la fin du texte des info-bulles et des boites de
+             message (on lisait "Avoir deja" au lieu de "Avoir deja certifie"). A charger
              apres ext-all.js. -->
-        <script src="resources/js/infobulles.js"></script>
+        <script src="resources/js/correctifs-affichage.js"></script>
 
         <script src="bootstrap.js"></script>
 

@@ -183,7 +183,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                     getTip: function (v, meta, rec) {
                                         return 'Facture d&eacute;j&agrave; certifi&eacute;e';
                                     },
-                                    icon: 'resources/images/icons/fam/passed.png',
+                                    icon: 'resources/images/icons/facture-certifiee.svg',
                                     scope: this,
                                     handler: function (grid, rowIndex) {
                                         var rec = grid.getStore().getAt(rowIndex);
@@ -684,6 +684,11 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                 layout: 'fit',
                 items: [{
                         xtype: 'reglementGroupeFacture',
+                        // La fenetre porte deja son titre : sans ceci, l'ecran ajoutait le sien
+                        // ("Faire Reglement") juste en dessous, soit deux bandeaux l'un sur
+                        // l'autre. Masque ICI seulement : ouvert depuis un autre ecran, ce meme
+                        // composant s'affiche sans fenetre et son titre reste son seul reperage.
+                        header: false,
                         odatasource: rec.data,
                         parentview: moi,
                         nameintern: rec.get('lg_GROUPE_ID'),
@@ -847,13 +852,21 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                 motif = Ext.JSON.decode(response.responseText, false).message || '';
                             } catch (e) {
                             }
+                            if (!motif) {
+                                // Ne plus accuser le privilege par defaut : le refus de privilege est un 403,
+                                // tout le reste est une erreur technique dont le detail est dans le journal.
+                                motif = response.status === 403
+                                        ? 'Vous n\'avez pas le privil&egrave;ge d\'&eacute;mission d\'avoir. '
+                                        + 'Demandez-le au responsable.'
+                                        : 'L\'op&eacute;ration n\'a pas abouti (erreur technique '
+                                        + response.status + '). Le d&eacute;tail figure dans le journal du '
+                                        + 'serveur : transmettez-le au support.';
+                            }
                             Ext.MessageBox.show({
                                 title: 'Avoirs FNE',
                                 minWidth: 420,
                                 maxWidth: 560,
-                                msg: motif || 'L\'op&eacute;ration n\'a pas abouti. Si vous n\'avez pas le '
-                                        + 'privil&egrave;ge d\'&eacute;mission d\'avoir, demandez-le au '
-                                        + 'responsable.',
+                                msg: motif,
                                 buttons: Ext.MessageBox.OK,
                                 icon: Ext.MessageBox.WARNING
                             });

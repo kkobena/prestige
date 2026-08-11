@@ -15,6 +15,8 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,10 +72,10 @@ public class FneServiceImpl implements FneService {
 
     @Override
     public JSONObject createGroupeInvoice(String idGroupeFactures, TypeInvoice typeInvoice) {
-        int certifiees = 0, dejaCertifiees = 0, echecs = 0;
-        String dernierEchec = null;
-        for (TFacture facture : fetchGroupeFactures(
-                Arrays.stream(idGroupeFactures.split("_")).map(Integer::valueOf).collect(Collectors.toSet()))) {
+        int certifiees = 0, dejaCertifiees = 0;
+        // Meme regle que pour les avoirs : un motif par cause, avec les numeros de facture concernes.
+        Map<String, List<String>> motifs = new LinkedHashMap<>();
+        for (TFacture facture : fetchGroupeFactures(identifiantsDeGroupe(idGroupeFactures))) {
             boolean deja = StringUtils.isNotEmpty(facture.getFneUrl())
                     || StringUtils.isNotEmpty(facture.getFneAvoirReference());
             try {
@@ -84,19 +86,35 @@ public class FneServiceImpl implements FneService {
                 if (deja) {
                     dejaCertifiees++;
                 } else {
-                    echecs++;
-                    dernierEchec = e.getMessage();
+                    motifs.computeIfAbsent(StringUtils.defaultIfEmpty(e.getMessage(), "Erreur technique"),
+                            cle -> new ArrayList<>()).add(StringUtils.defaultString(facture.getStrCODEFACTURE()));
                     LOG.log(Level.SEVERE, "createGroupeInvoice: facture " + facture.getLgFACTUREID(), e);
                 }
             }
         }
+        int echecs = compterFactures(motifs);
         return new JSONObject().put("certifiees", certifiees).put("dejaCertifiees", dejaCertifiees)
-                .put("echecs", echecs).put("message", messageGroupe(certifiees, dejaCertifiees, echecs, dernierEchec));
+                .put("echecs", echecs).put("message", messageGroupe(certifiees, dejaCertifiees, motifs));
     }
 
-    /** Compte rendu en langage simple de la certification d'une facture de groupe. */
-    private static String messageGroupe(int certifiees, int dejaCertifiees, int echecs, String dernierEchec) {
-        if (certifiees == 0 && echecs == 0 && dejaCertifiees > 0) {
+    /**
+     * Compte rendu en langage simple de la certification d'une facture de groupe.
+     *
+     * Meme regle d'ecriture que pour les avoirs : quand RIEN n'a abouti, la CAUSE vient en tete.
+     *
+     * Visible du paquet pour etre testee sans monter l'EJB.
+     */
+    static String messageGroupe(int certifiees, int dejaCertifiees, Map<String, List<String>> motifs) {
+        int echecs = compterFactures(motifs);
+        if (certifiees == 0 && echecs > 0) {
+            StringBuilder m = new StringBuilder("Aucune facture certifiée. ").append(detailMotifs(motifs));
+            if (dejaCertifiees > 0) {
+                m.append(' ').append(dejaCertifiees)
+                        .append(" facture(s) portaient déjà une certification et ont été ignorée(s).");
+            }
+            return m.toString();
+        }
+        if (certifiees == 0 && dejaCertifiees > 0) {
             return "Facture déjà certifiée : les " + dejaCertifiees
                     + " facture(s) de ce groupe portent déjà une certification FNE valide. Rien n'a été renvoyé.";
         }
@@ -105,13 +123,20 @@ public class FneServiceImpl implements FneService {
         if (dejaCertifiees > 0) {
             m.append(", ").append(dejaCertifiees).append(" déjà certifiée(s) et donc ignorée(s)");
         }
+        m.append('.');
         if (echecs > 0) {
-            m.append(", ").append(echecs).append(" en échec");
-            if (StringUtils.isNotEmpty(dernierEchec)) {
-                m.append(" (").append(dernierEchec).append(")");
-            }
+            m.append(' ').append(detailMotifs(motifs));
         }
-        return m.append('.').toString();
+        return m.toString();
+    }
+
+    /** Nombre total de factures en echec, tous motifs confondus. */
+    private static int compterFactures(Map<String, List<String>> motifs) {
+        int total = 0;
+        for (List<String> factures : motifs.values()) {
+            total += factures.size();
+        }
+        return total;
     }
 
     private void createInvoice(TFacture facture, TypeInvoice typeInvoice) throws FneExeception {
@@ -319,8 +344,9 @@ public class FneServiceImpl implements FneService {
         FneInvoiceEntity sale = requireSaleRecord(idFacture);
         List<FneAvoirItem> items = extractAvoirItems(sale.getResponse());
         if (items.isEmpty()) {
-            throw new FneExeception(
-                    "Aucune ligne exploitable dans la reponse de certification enregistree pour cette facture");
+            throw new FneExeception("Avoir impossible : aucune ligne exploitable dans la certification enregistrée "
+                    + "pour la facture n° " + numeroFacture(idFacture) + ". Le rattachement manuel, avec le JSON "
+                    + "complet de la facture, permet de la corriger.");
         }
         return doRefund(sale, items);
     }
@@ -328,9 +354,11 @@ public class FneServiceImpl implements FneService {
     @Override
     public JSONObject createGroupeAvoir(String idGroupeFactures) {
         int emis = 0, dejaAvoir = 0, nonCertifiees = 0, echecs = 0;
-        String dernierEchec = null;
-        for (TFacture facture : fetchGroupeFactures(
-                Arrays.stream(idGroupeFactures.split("_")).map(Integer::valueOf).collect(Collectors.toSet()))) {
+        // Les motifs sont regroupes PAR CAUSE, avec les numeros de facture concernes : ne garder que
+        // le dernier motif masquait les autres quand les factures echouaient pour des raisons
+        // differentes, et ne disait pas laquelle avait echoue.
+        Map<String, List<String>> motifs = new LinkedHashMap<>();
+        for (TFacture facture : fetchGroupeFactures(identifiantsDeGroupe(idGroupeFactures))) {
             // Un avoir deja emis n'est jamais renvoye, et une facture non certifiee n'a rien a
             // avoirer : ces deux cas sont comptes, pas traites comme des echecs.
             if (StringUtils.isNotEmpty(facture.getFneAvoirReference())) {
@@ -346,23 +374,47 @@ public class FneServiceImpl implements FneService {
                 emis++;
             } catch (Exception e) {
                 echecs++;
-                dernierEchec = e.getMessage();
+                motifs.computeIfAbsent(StringUtils.defaultIfEmpty(e.getMessage(), "Erreur technique"),
+                        cle -> new ArrayList<>()).add(StringUtils.defaultString(facture.getStrCODEFACTURE()));
                 LOG.log(Level.SEVERE, "createGroupeAvoir: facture " + facture.getLgFACTUREID(), e);
             }
         }
         return new JSONObject().put("emis", emis).put("dejaAvoir", dejaAvoir).put("nonCertifiees", nonCertifiees)
-                .put("echecs", echecs)
-                .put("message", messageAvoirGroupe(emis, dejaAvoir, nonCertifiees, echecs, dernierEchec));
+                .put("echecs", echecs).put("message", messageAvoirGroupe(emis, dejaAvoir, nonCertifiees, motifs));
     }
 
-    /** Compte rendu en langage simple de l'emission des avoirs d'une facture de groupe. */
-    private static String messageAvoirGroupe(int emis, int dejaAvoir, int nonCertifiees, int echecs,
-            String dernierEchec) {
-        if (emis == 0 && echecs == 0 && dejaAvoir > 0 && nonCertifiees == 0) {
+    /**
+     * Numero lisible d'une facture (celui que l'utilisateur voit a l'ecran), pour les messages d'erreur : afficher
+     * l'identifiant technique ne lui apprend rien et l'empeche de retrouver la ligne concernee.
+     */
+    private String numeroFacture(String idFacture) {
+        TFacture facture = em.find(TFacture.class, idFacture);
+        return Objects.nonNull(facture) ? StringUtils.defaultString(facture.getStrCODEFACTURE()) : "";
+    }
+
+    /**
+     * Compte rendu en langage simple de l'emission des avoirs d'une facture de groupe.
+     *
+     * Regle d'ecriture, commune a tous les messages FNE : quand RIEN n'a abouti, le message commence par la CAUSE et
+     * dit quoi faire ensuite - et non par un decompte a zero, qui n'apprend rien. Quand une partie a abouti, le
+     * decompte vient d'abord, puis le detail de ce qui a ete ignore ou a echoue.
+     *
+     * Visible du paquet pour etre testee sans monter l'EJB.
+     *
+     * @param motifs
+     *            motif d'echec -> numeros des factures concernees
+     */
+    static String messageAvoirGroupe(int emis, int dejaAvoir, int nonCertifiees, Map<String, List<String>> motifs) {
+        int echecs = compterFactures(motifs);
+        // Rien n'a abouti : on met la cause en tete, c'est la seule information utile.
+        if (emis == 0 && echecs > 0) {
+            return "Aucun avoir émis. " + detailMotifs(motifs) + complementIgnorees(dejaAvoir, nonCertifiees);
+        }
+        if (emis == 0 && dejaAvoir > 0 && nonCertifiees == 0) {
             return "Avoir déjà émis : les " + dejaAvoir
                     + " facture(s) de ce groupe portent déjà un avoir FNE valide. Rien n'a été renvoyé.";
         }
-        if (emis == 0 && echecs == 0 && dejaAvoir == 0) {
+        if (emis == 0 && dejaAvoir == 0) {
             return "Aucun avoir émis : les " + nonCertifiees
                     + " facture(s) de ce groupe ne sont pas certifiées à la FNE. Certifiez-les d'abord.";
         }
@@ -374,23 +426,55 @@ public class FneServiceImpl implements FneService {
         if (nonCertifiees > 0) {
             m.append(", ").append(nonCertifiees).append(" non certifiée(s) et donc ignorée(s)");
         }
+        m.append('.');
         if (echecs > 0) {
-            m.append(", ").append(echecs).append(" en échec");
-            if (StringUtils.isNotEmpty(dernierEchec)) {
-                m.append(" (").append(dernierEchec).append(")");
-            }
+            m.append(' ').append(detailMotifs(motifs));
         }
-        return m.append('.').toString();
+        return m.toString();
+    }
+
+    /** "Motif (facture n° A, B). Autre motif (facture n° C)." - un motif par cause, jamais tronque au dernier. */
+    private static String detailMotifs(Map<String, List<String>> motifs) {
+        StringBuilder m = new StringBuilder();
+        for (Map.Entry<String, List<String>> motif : motifs.entrySet()) {
+            if (m.length() > 0) {
+                m.append(' ');
+            }
+            m.append(StringUtils.removeEnd(motif.getKey().trim(), "."));
+            List<String> numeros = motif.getValue().stream().filter(StringUtils::isNotEmpty)
+                    .collect(Collectors.toList());
+            if (!numeros.isEmpty()) {
+                m.append(" (facture").append(numeros.size() > 1 ? "s n° " : " n° ").append(String.join(", ", numeros))
+                        .append(')');
+            }
+            m.append('.');
+        }
+        return m.toString();
+    }
+
+    /** Rappel des factures volontairement laissees de cote, ajoute apres la cause d'un echec total. */
+    private static String complementIgnorees(int dejaAvoir, int nonCertifiees) {
+        StringBuilder m = new StringBuilder();
+        if (dejaAvoir > 0) {
+            m.append(' ').append(dejaAvoir).append(" facture(s) portaient déjà un avoir et ont été ignorée(s).");
+        }
+        if (nonCertifiees > 0) {
+            m.append(' ').append(nonCertifiees)
+                    .append(" facture(s) ne sont pas certifiées à la FNE et ont été ignorée(s).");
+        }
+        return m.toString();
     }
 
     @Override
     public JSONObject createAvoirPartiel(String idFacture, List<FneAvoirItem> items) throws FneExeception {
         if (Objects.isNull(items) || items.isEmpty()) {
-            throw new FneExeception("Aucune ligne fournie pour l'avoir partiel");
+            throw new FneExeception("Avoir partiel impossible : aucune ligne n'a été sélectionnée. "
+                    + "Choisissez au moins une ligne à retourner.");
         }
         for (FneAvoirItem item : items) {
             if (StringUtils.isEmpty(item.getId()) || item.getQuantity() <= 0) {
-                throw new FneExeception("Ligne d'avoir invalide : identifiant FNE et quantite positive obligatoires");
+                throw new FneExeception("Avoir partiel impossible : une ligne est incomplète. Chaque ligne retournée "
+                        + "doit porter son identifiant FNE et une quantité supérieure à zéro.");
             }
         }
         FneInvoiceEntity sale = requireSaleRecord(idFacture);
@@ -404,14 +488,19 @@ public class FneServiceImpl implements FneService {
     private FneInvoiceEntity requireSaleRecord(String idFacture) throws FneExeception {
         TFacture facture = em.find(TFacture.class, idFacture);
         if (Objects.isNull(facture)) {
-            throw new FneExeception("Facture introuvable : " + idFacture);
+            throw new FneExeception("Facture introuvable : elle a peut-être été supprimée depuis "
+                    + "l'affichage de la liste. Actualisez la liste et recommencez (référence technique " + idFacture
+                    + ").");
         }
+        String numero = StringUtils.defaultString(facture.getStrCODEFACTURE());
         if (StringUtils.isEmpty(facture.getFneUrl())) {
-            throw new FneExeception("Cette facture n'a pas encore ete certifiee a la FNE");
+            throw new FneExeception("Avoir impossible : la facture n° " + numero + " n'est pas certifiée à la FNE. "
+                    + "Un avoir ne peut porter que sur une facture certifiée.");
         }
         if (StringUtils.isNotEmpty(facture.getFneAvoirReference())) {
-            throw new FneExeception("Un avoir FNE a deja ete emis pour cette facture (reference "
-                    + facture.getFneAvoirReference() + ")");
+            throw new FneExeception("Avoir déjà émis : un avoir FNE valide (référence " + facture.getFneAvoirReference()
+                    + ") existe déjà pour la facture n° " + numero
+                    + ". Elle ne peut pas faire l'objet d'un second avoir.");
         }
         // Meme regle que la suppression de facture : pas d'avoir sur une facture ayant fait l'objet d'un reglement
         // (le cas facture reglee + avoir/trop-percu est un chantier ulterieur).
@@ -420,8 +509,8 @@ public class FneServiceImpl implements FneService {
                         Long.class)
                 .setParameter(1, idFacture).getSingleResult();
         if (nbReglements > 0) {
-            throw new FneExeception(
-                    "Avoir impossible : cette facture a deja fait l'objet d'un reglement. Annulez d'abord le reglement");
+            throw new FneExeception("Avoir impossible : la facture n° " + numero
+                    + " a déjà fait l'objet d'un règlement. Annulez d'abord le règlement, puis relancez l'avoir.");
         }
         FneInvoiceEntity sale = findLastRecordByType(idFacture, FneInvoiceEntity.TYPE_SALE);
         if (Objects.isNull(sale)) {
@@ -432,8 +521,12 @@ public class FneServiceImpl implements FneService {
             sale = findLastRecordByType(idFacture, FneInvoiceEntity.TYPE_SALE);
         }
         if (Objects.isNull(sale)) {
-            throw new FneExeception("Identifiants FNE introuvables pour cette facture (certification anterieure a la "
-                    + "gestion des avoirs). Utilisez la recuperation automatique ou le rattachement manuel, puis relancez l'avoir.");
+            // La recuperation automatique ci-dessus n'a pas leve d'exception mais n'a rien enregistre : ne pas
+            // reproposer la recuperation automatique, elle vient d'echouer.
+            throw new FneExeception("Avoir impossible : les identifiants FNE de la facture n° " + numero
+                    + " sont introuvables, cette facture n'a pas été générée avec la version actuelle. "
+                    + "Il faut passer par le rattachement manuel, avec le JSON de la facture (espace FNE ou "
+                    + "support.fne@dgi.gouv.ci).");
         }
         return sale;
     }
@@ -616,7 +709,8 @@ public class FneServiceImpl implements FneService {
     private String buildRefundUrl(String fneInvoiceId) throws FneExeception {
         String base = StringUtils.trimToEmpty(sp.fneUrl);
         if (StringUtils.isEmpty(base)) {
-            throw new FneExeception("URL FNE non configuree (propriete fneUrl)");
+            throw new FneExeception("Opération FNE impossible : l'adresse de la plateforme FNE n'est pas "
+                    + "renseignée dans le paramétrage de l'officine (propriété fneUrl).");
         }
         base = StringUtils.removeEnd(base, "/");
         base = StringUtils.removeEnd(base, "/sign");
@@ -627,27 +721,31 @@ public class FneServiceImpl implements FneService {
     public JSONObject rattacherFacture(String idFacture, String signResponseJson) throws FneExeception {
         TFacture facture = em.find(TFacture.class, idFacture);
         if (Objects.isNull(facture)) {
-            throw new FneExeception("Facture introuvable : " + idFacture);
+            throw new FneExeception("Facture introuvable : elle a peut-être été supprimée depuis "
+                    + "l'affichage de la liste. Actualisez la liste et recommencez (référence technique " + idFacture
+                    + ").");
         }
         if (StringUtils.isEmpty(signResponseJson)) {
-            throw new FneExeception("Le JSON de la facture FNE est obligatoire pour le rattachement");
+            throw new FneExeception("Rattachement impossible : le JSON de la facture FNE est obligatoire. "
+                    + "Récupérez-le depuis l'espace FNE, puis collez-le ici.");
         }
         JSONObject json;
         try {
             json = new JSONObject(signResponseJson);
         } catch (Exception e) {
-            throw new FneExeception("Le contenu fourni n'est pas un JSON valide");
+            throw new FneExeception("Rattachement impossible : le contenu collé n'est pas un JSON valide. "
+                    + "Copiez la réponse complète de la FNE, accolade ouvrante comprise.");
         }
         JSONObject invoice = resolveInvoiceObject(json);
         if (Objects.isNull(invoice)) {
-            throw new FneExeception(
-                    "JSON incomplet : l'objet facture FNE avec son id et ses lignes (items) est obligatoire");
+            throw new FneExeception("Rattachement impossible : le JSON est incomplet. Il doit contenir l'objet "
+                    + "facture FNE avec son identifiant (id) et ses lignes (items).");
         }
         String fneInvoiceId = invoice.optString("id", null);
         JSONArray items = invoice.optJSONArray("items");
         if (StringUtils.isEmpty(fneInvoiceId) || Objects.isNull(items) || items.length() == 0) {
-            throw new FneExeception(
-                    "JSON incomplet : l'objet facture FNE avec son id et ses lignes (items) est obligatoire");
+            throw new FneExeception("Rattachement impossible : le JSON est incomplet. Il doit contenir l'objet "
+                    + "facture FNE avec son identifiant (id) et ses lignes (items).");
         }
         // L'endpoint public de la page QR renvoie aussi un bloc "company" contenant des donnees sensibles de
         // l'entreprise (dont la cle API) : on ne le stocke jamais en base.
@@ -668,7 +766,9 @@ public class FneServiceImpl implements FneService {
     public JSONObject recupererDepuisToken(String idFacture) throws FneExeception {
         TFacture facture = em.find(TFacture.class, idFacture);
         if (Objects.isNull(facture)) {
-            throw new FneExeception("Facture introuvable : " + idFacture);
+            throw new FneExeception("Facture introuvable : elle a peut-être été supprimée depuis "
+                    + "l'affichage de la liste. Actualisez la liste et recommencez (référence technique " + idFacture
+                    + ").");
         }
         FneInvoiceEntity existant = findLastRecordByType(idFacture, FneInvoiceEntity.TYPE_SALE);
         if (Objects.nonNull(existant)) {
@@ -677,7 +777,9 @@ public class FneServiceImpl implements FneService {
         }
         String tokenUuid = extractTokenUuid(facture.getFneUrl());
         if (StringUtils.isEmpty(tokenUuid)) {
-            throw new FneExeception("Aucune URL de verification FNE n'est enregistree pour cette facture");
+            throw new FneExeception("Récupération impossible : aucune URL de vérification FNE n'est enregistrée "
+                    + "pour la facture n° " + StringUtils.defaultString(facture.getStrCODEFACTURE())
+                    + ". Elle n'a jamais été certifiée.");
         }
 
         String base = StringUtils.removeEnd(StringUtils.removeEnd(StringUtils.trimToEmpty(sp.fneUrl), "/"), "/sign");
@@ -698,6 +800,15 @@ public class FneServiceImpl implements FneService {
                 if (status < 200 || status >= 300) {
                     continue;
                 }
+                // La plateforme repond parfois la PAGE HTML de verification au lieu du JSON de la
+                // facture. Tenter de la parser levait un JSONException ("A JSONObject text must begin
+                // with '{'") et remplissait le journal d'une trace complete pour un cas normal :
+                // on reconnait le cas et on passe simplement a l'URL suivante.
+                String debut = StringUtils.stripStart(StringUtils.trimToEmpty(raw), "﻿");
+                if (!debut.startsWith("{")) {
+                    LOG.log(Level.INFO, "FNE recuperation {0} : reponse non JSON, essai suivant", url);
+                    continue;
+                }
                 JSONObject invoice = resolveInvoiceObject(new JSONObject(raw));
                 if (Objects.isNull(invoice) || StringUtils.isEmpty(invoice.optString("id", null))
                         || Objects.isNull(invoice.optJSONArray("items"))) {
@@ -710,8 +821,9 @@ public class FneServiceImpl implements FneService {
                 LOG.log(Level.WARNING, "recupererDepuisToken: tentative " + url, e);
             }
         }
-        throw new FneExeception("Recuperation automatique impossible : la plateforme FNE n'expose pas le detail de la "
-                + "facture pour ce token. Utilisez le rattachement manuel avec le JSON de la facture (espace FNE ou "
+        throw new FneExeception("Cette facture n'a pas été générée avec la version actuelle : la récupération "
+                + "automatique est donc impossible, la plateforme FNE n'expose pas le détail de la facture pour ce "
+                + "token. Il faut passer par le rattachement manuel, avec le JSON de la facture (espace FNE ou "
                 + "support.fne@dgi.gouv.ci).");
     }
 
@@ -845,8 +957,37 @@ public class FneServiceImpl implements FneService {
 
     }
 
-    private List<TFacture> fetchGroupeFactures(Set<Integer> idGroupeFactures) {
+    /**
+     * Identifiants numeriques d'une facture de groupe, transmis sous la forme "12_13_14".
+     *
+     * Tolerant par construction : une chaine vide, nulle, ou comportant un identifiant non numerique ne doit pas faire
+     * echouer l'operation par une exception technique sans message (constate : un parametre vide arrivait jusqu'ici et
+     * levait un NullPointerException, l'ecran affichait alors un motif de refus faux).
+     */
+    static Set<Integer> identifiantsDeGroupe(String idGroupeFactures) {
+        Set<Integer> ids = new LinkedHashSet<>();
+        if (StringUtils.isEmpty(idGroupeFactures)) {
+            return ids;
+        }
+        for (String morceau : idGroupeFactures.split("_")) {
+            String valeur = StringUtils.trimToEmpty(morceau);
+            if (valeur.isEmpty()) {
+                continue;
+            }
+            try {
+                ids.add(Integer.valueOf(valeur));
+            } catch (NumberFormatException e) {
+                LOG.log(Level.WARNING, "identifiant de facture de groupe ignore : {0}", valeur);
+            }
+        }
+        return ids;
+    }
 
+    private List<TFacture> fetchGroupeFactures(Set<Integer> idGroupeFactures) {
+        // Un IN () vide n'est pas du SQL valide : on s'arrete avant la requete.
+        if (Objects.isNull(idGroupeFactures) || idGroupeFactures.isEmpty()) {
+            return new ArrayList<>();
+        }
         TypedQuery<TFacture> typedQuery = em.createQuery(
                 "SELECT o FROM  TFacture o WHERE o.lgFACTUREID IN ( SELECT g.lgFACTURESID FROM TGroupeFactures g WHERE g.id IN ?1 ) ",
                 TFacture.class);

@@ -612,45 +612,60 @@ body.x-body,
 
 /* Indicateurs d'etat des factures d'un groupe (fenetre "Les factures du groupe").
    Colonnes d'action sans en-tete : l'icone seule porte l'information, l'infobulle la detaille.
-   Le fond est dessine en CSS plutot que par une image, pour eviter tout chemin casse. */
+
+   Ces indicateurs etaient dessines par un pseudo-element :before portant un caractere
+   (coche, fleche, pastille). Or ExtJS rend l'icone d'une colonne d'action dans une balise
+   <img> : un <img> est un element REMPLACE, ses pseudo-elements ne sont jamais rendus par
+   le navigateur (verifie : content etait bien calcule, mais rien ne s'affichait). Les
+   indicateurs restaient donc invisibles. On passe par une image de fond, seule technique
+   qui fonctionne sur un <img>. Format SVG pour rester net en 16 px comme sur les ecrans a
+   forte densite. */
 .certifiee-oui,
 .avoir-oui,
 .reglee-totale,
 .reglee-partielle {
-    background-image: none !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: 16px 16px !important;
     cursor: default;
+}
+
+.certifiee-oui {
+    background-image: url(../images/icons/facture-certifiee.svg) !important;
+}
+
+.avoir-oui {
+    background-image: url(../images/icons/avoir-emis.svg) !important;
+}
+
+.reglee-totale {
+    background-image: url(../images/icons/facture-soldee.svg) !important;
+}
+
+.reglee-partielle {
+    background-image: url(../images/icons/facture-partielle.svg) !important;
+}
+
+/* Info-bulles de la LISTE DES FACTURES : bleu marine et gras, pour qu'elles se detachent
+   nettement du fond clair de l'info-bulle. La classe tip-facture est posee sur l'info-bulle
+   juste avant son affichage par EditFactureManager.marquerInfobullesDeLaListe(), et retiree
+   des qu'on survole un autre ecran : ExtJS n'ayant qu'une seule info-bulle pour toute
+   l'application, c'est le seul moyen de ne repeindre que celles de cet ecran-la. */
+.tip-facture .x-tip-body,
+.tip-facture .x-tip-body * {
+    color: #1e3a5f;
     font-weight: bold;
-    font-size: 13px;
-    line-height: 16px;
-    text-align: center;
 }
 
-.certifiee-oui:before {
-    content: "\2713";               /* coche : certifiee a la FNE */
-    color: #2e7d32;
-}
-
-.avoir-oui:before {
-    content: "\21BA";               /* fleche de retour : avoir emis */
-    color: #b8860b;
-}
-
-.reglee-totale:before {
-    content: "\25CF";               /* pastille pleine : facture soldee */
-    color: #2e7d32;
-}
-
-.reglee-partielle:before {
-    content: "\25D0";               /* pastille a moitie pleine : reglement partiel */
-    color: #2e74b5;
-}
-
-/* Boites de message : filet de securite contre les messages tronques.
-   ExtJS calcule la hauteur de la boite en mesurant le texte dans un element temporaire ;
-   selon la police et le zoom du poste, la mesure peut etre inferieure au rendu reel et les
-   dernieres lignes sont alors coupees. On ne touche PAS au dimensionnement (forcer height:auto
-   fait s'effondrer la boite, verifie) : on rend simplement le corps defilable, de sorte que le
-   texte reste lisible en toutes circonstances. */
+/* Boites de message : dernier filet de securite contre les messages tronques.
+   ExtJS calcule la hauteur de la boite en mesurant le texte ; selon la police et le zoom du
+   poste, la mesure peut etre inferieure au rendu reel et les dernieres lignes sont coupees.
+   Le correctif reel est dans resources/js/correctifs-affichage.js : il agrandit la boite de
+   ce qui manque. Cette regle ne suffit PAS a elle seule (mesure faite au navigateur : c'est
+   le conteneur interne .x-box-inner, en overflow:hidden, qui rogne le texte, et le corps de
+   la fenetre ne deborde donc jamais) ; elle est conservee pour que le texte reste au pire
+   atteignable par defilement si le correctif JS ne s'appliquait pas.
+   On ne touche PAS au dimensionnement : forcer height:auto fait s'effondrer la boite (verifie). */
 .x-message-box .x-window-body {
     overflow-y: auto !important;
 }

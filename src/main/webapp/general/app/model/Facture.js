@@ -192,6 +192,15 @@ Ext.define('testextjs.model.Facture', {
             type: 'string'
         },
         {
+            // date et heure du dernier appel FNE, pour les info-bulles
+            name: 'fneDateCertification',
+            type: 'string'
+        },
+        {
+            name: 'fneDateAvoir',
+            type: 'string'
+        },
+        {
             name: 'AUTORISATION_AVOIR_FNE',
             type: 'boolean'
         },
