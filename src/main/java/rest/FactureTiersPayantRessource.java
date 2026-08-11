@@ -6,6 +6,8 @@ import bll.entity.EntityData;
 import bll.facture.factureManagement;
 import bll.preenregistrement.Preenregistrement;
 import dal.TFacture;
+import dal.TFactureDetail;
+import dal.TOfficine;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementDetail;
@@ -13,7 +15,9 @@ import dal.TPrivilege;
 import dal.TTiersPayant;
 import dal.TUser;
 import dal.dataManager;
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -29,6 +33,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -36,6 +41,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import rest.report.excel.FactureExcelBuilder;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.date;
 import toolkits.utils.jdom;
@@ -176,6 +182,122 @@ public class FactureTiersPayantRessource {
         } finally {
             odm.closeEntityManager();
         }
+    }
+
+    /**
+     * Export tableur d'une facture : un VRAI classeur, construit a partir des donnees.
+     *
+     * Remplace l'export precedent (invoiceServlet?action=exls), qui passait le PDF deja mis en page a JRXlsxExporter :
+     * le fichier reproduisait le dessin de la facture en cellules fusionnees, et les montants, deja transformes en
+     * texte par le modele Jasper, n'etaient pas des nombres pour Excel - donc ni modifiables, ni sommables, ni
+     * triables.
+     *
+     * Les montants sont lus par les MEMES accesseurs que l'edition PDF : les chiffres du classeur et ceux de la facture
+     * ne peuvent pas diverger.
+     */
+    @GET
+    @Path("export-excel/{id}")
+    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public Response exportExcel(@PathParam("id") String lgFactureId) {
+        TUser sessionUser = utilisateurSession();
+        if (sessionUser == null) {
+            return reponseDeconnecte();
+        }
+        dataManager odm = new dataManager();
+        try {
+            odm.initEntityManager();
+            TFacture facture = odm.getEm().find(TFacture.class, lgFactureId);
+            if (facture == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(new JSONObject().put("success", false)
+                                .put("message",
+                                        "Facture introuvable : elle a peut-être été supprimée. "
+                                                + "Actualisez la liste et recommencez.")
+                                .toString())
+                        .type(MediaType.APPLICATION_JSON).build();
+            }
+            byte[] classeur = FactureExcelBuilder.construire(enteteExcel(odm, facture), lignesExcel(odm, facture));
+            String nom = "facture_" + StringUtils.defaultIfEmpty(facture.getStrCODEFACTURE(), lgFactureId) + ".xlsx";
+            return Response.ok(classeur).header("Content-Disposition", "attachment; filename=\"" + nom + "\"").build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "export excel facture " + lgFactureId, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JSONObject().put("success", false)
+                            .put("message",
+                                    "L'export tableur a échoué : "
+                                            + StringUtils.defaultIfEmpty(e.getMessage(), e.getClass().getSimpleName())
+                                            + ". Le détail figure dans le journal du serveur.")
+                            .toString())
+                    .type(MediaType.APPLICATION_JSON).build();
+        } finally {
+            odm.closeEntityManager();
+        }
+    }
+
+    /** Identification de la facture, reprise en tete du classeur. */
+    private FactureExcelBuilder.Entete enteteExcel(dataManager odm, TFacture facture) {
+        date key = new date();
+        FactureExcelBuilder.Entete entete = new FactureExcelBuilder.Entete();
+        TOfficine officine = odm.getEm().find(TOfficine.class, "1");
+        entete.officine = officine != null ? StringUtils.defaultString(officine.getStrNOMABREGE()) : "";
+        entete.codeFacture = StringUtils.defaultString(facture.getStrCODEFACTURE());
+        TTiersPayant tiersPayant = odm.getEm().find(TTiersPayant.class, facture.getStrCUSTOMER());
+        entete.tiersPayant = tiersPayant != null ? StringUtils.defaultString(tiersPayant.getStrFULLNAME()) : "";
+        entete.periode = "Période du " + key.DateToString(facture.getDtDEBUTFACTURE(), key.formatterShort) + " au "
+                + key.DateToString(facture.getDtFINFACTURE(), key.formatterShort);
+        if ("avoir".equals(facture.getStrSTATUT())) {
+            entete.mentionAvoir = "*** FACTURE ANNULÉE PAR AVOIR FNE"
+                    + (facture.getFneAvoirReference() != null ? " (" + facture.getFneAvoirReference() + ")" : "")
+                    + " ***";
+        }
+        return entete;
+    }
+
+    /**
+     * Une ligne par bon. Les montants sont pris aux MEMES endroits que l'edition PDF (part tiers payant et remise sur
+     * le detail de facture, brut et part client sur la vente), pour que les deux documents ne puissent pas differer.
+     */
+    private List<FactureExcelBuilder.Ligne> lignesExcel(dataManager odm, TFacture facture) {
+        List<FactureExcelBuilder.Ligne> lignes = new ArrayList<>();
+        List<TFactureDetail> details = odm.getEm()
+                .createQuery("SELECT t FROM TFactureDetail t WHERE t.lgFACTUREID.lgFACTUREID = ?1",
+                        TFactureDetail.class)
+                .setParameter(1, facture.getLgFACTUREID()).getResultList();
+        for (TFactureDetail detail : details) {
+            TPreenregistrementCompteClientTiersPayent dossier = odm.getEm()
+                    .find(TPreenregistrementCompteClientTiersPayent.class, detail.getStrREF());
+            if (dossier == null) {
+                continue;
+            }
+            TPreenregistrement vente = dossier.getLgPREENREGISTREMENTID();
+            FactureExcelBuilder.Ligne ligne = new FactureExcelBuilder.Ligne();
+            ligne.dateBon = dossier.getDtCREATED();
+            ligne.refBon = StringUtils.defaultString(dossier.getStrREFBON());
+            ligne.nomComplet = (StringUtils.defaultString(vente.getStrFIRSTNAMECUSTOMER()) + " "
+                    + StringUtils.defaultString(vente.getStrLASTNAMECUSTOMER())).trim();
+            ligne.matricule = StringUtils.defaultString(vente.getStrNUMEROSECURITESOCIAL());
+            ligne.refVente = StringUtils.defaultString(vente.getStrREF());
+            ligne.taux = dossier.getIntPERCENT();
+            ligne.montantBrut = vente.getIntPRICE() != null ? vente.getIntPRICE() : 0L;
+            long remise = detail.getDblMONTANTREMISE() != null ? detail.getDblMONTANTREMISE().longValue() : 0L;
+            if (remise == 0 && vente.getIntPRICEREMISE() != null) {
+                remise = vente.getIntPRICEREMISE();
+            }
+            ligne.remise = remise;
+            ligne.partClient = vente.getIntCUSTPART() != null ? vente.getIntCUSTPART() : 0L;
+            ligne.partTiersPayant = detail.getDblMONTANT() != null ? detail.getDblMONTANT().longValue() : 0L;
+            lignes.add(ligne);
+        }
+        // Meme ordre que l'edition PDF : nom du client, ou date du bon selon la fiche du tiers payant.
+        TTiersPayant tiersPayant = odm.getEm().find(TTiersPayant.class, facture.getStrCUSTOMER());
+        boolean parDate = tiersPayant != null
+                && "DATE_BON".equalsIgnoreCase(StringUtils.trimToEmpty(tiersPayant.getStrMODETRIFACTURE()));
+        lignes.sort(parDate
+                ? Comparator.comparing((FactureExcelBuilder.Ligne l) -> l.dateBon,
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                : Comparator.comparing(l -> Normalizer.normalize(l.nomComplet, Normalizer.Form.NFD)
+                        .replaceAll("\\p{M}", "").toUpperCase()));
+        return lignes;
     }
 
     /**

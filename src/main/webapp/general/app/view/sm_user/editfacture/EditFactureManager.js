@@ -261,8 +261,13 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         });
         this.callParent();
 
-
-
+        // l'ecran occupe la place disponible : avec sa hauteur fixe de 580 px, une recherche
+        // qui ramene beaucoup de factures faisait defiler la page entiere - l'entete
+        // "Gestion des facturations" et la barre de recherche partaient vers le haut et le
+        // fond de l'application apparaissait sur les cotes (cf. correctifs-affichage.js)
+        if (window.PrestigeAffichage) {
+            window.PrestigeAffichage.collerAuConteneur(this);
+        }
     },
     buildDocked: function () {
         // _this etait declare dans initComponent : il n'existait pas dans cette
@@ -787,7 +792,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                             return 'excel';
                         },
                         getTip: function (v, meta, rec) {
-                            return 'Imprimer au format Excel';
+                            return 'Exporter au format Excel (montants modifiables, total en formule)';
                         },
                         scope: this,
                         handler: this.onExel
@@ -1353,8 +1358,11 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     },
     onExel: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-        var lg_FACTURE_ID = rec.get('lg_FACTURE_ID');
-        window.location = '../invoiceServlet?action=exls&lg_FACTURE_ID=' + lg_FACTURE_ID;
+        // Vrai classeur construit a partir des donnees. L'ancien export
+        // (invoiceServlet?action=exls) passait le PDF deja mis en page a Jasper : le fichier
+        // reproduisait le dessin de la facture, et les montants, deja transformes en texte,
+        // n'etaient pas des nombres pour Excel - donc ni modifiables, ni sommables.
+        window.location = '../api/v1/facture-tiers-payant/export-excel/' + rec.get('lg_FACTURE_ID');
     },
     onword: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);

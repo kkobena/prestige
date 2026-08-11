@@ -86,8 +86,18 @@
     parameters.put("P_TOTAL_INGROUPE_LETTERS", conversion.GetNumberTowords(Double.parseDouble(totalVerse + "")).toUpperCase()
             + " (" + conversion.AmountFormat((int) totalVerse) + " FCFA)");
 
-    String footerid = key.GetNumberRandom();
-    String str_file = "rp_recap_reglement_groupe" + footerid + ".pdf";
+    // Nom de fichier lisible : Recap_reglement_<groupe>_<facture>-<jour>-<heure>.pdf. Un dossier
+    // de recapitulatifs edites dans la journee ne se relit pas avec un simple numero aleatoire.
+    String nomGroupeFichier = java.text.Normalizer
+            .normalize(org.apache.commons.lang3.StringUtils.defaultString(g.getStrLIBELLE()), java.text.Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "").replaceAll("[^A-Za-z0-9]+", "_");
+    nomGroupeFichier = org.apache.commons.lang3.StringUtils.strip(nomGroupeFichier, "_");
+    String str_file = "Recap_reglement_" + nomGroupeFichier + "_"
+            + org.apache.commons.lang3.StringUtils.strip(
+                    org.apache.commons.lang3.StringUtils.defaultString(CODEFACTURE)
+                            .replaceAll("[^A-Za-z0-9]+", "_"), "_")
+            + "-" + new java.text.SimpleDateFormat("ddMMyyyy").format(new java.util.Date())
+            + "-" + new java.text.SimpleDateFormat("HHmmss").format(new java.util.Date()) + ".pdf";
     OreportManager.setPath_report_src(Ojdom.scr_report_file + "rp_recap_reglement_groupe.jrxml");
     OreportManager.setPath_report_pdf(Ojdom.scr_report_pdf + str_file);
     OreportManager.BuildReport(parameters, Ojconnexion);

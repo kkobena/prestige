@@ -54,7 +54,126 @@
  * contenu, la fenetre est agrandie d'autant puis recentree. ExtJS efface la hauteur a
  * chaque nouvel appel (delete me.height dans reconfigure) : la hauteur forcee ne reste
  * jamais collee a la boite suivante.
+ *
+ * =====================================================================================
+ * 3) ECRANS DECOLLES DE LEUR ENTETE, ET QUI "DESCENDENT" APRES UNE RECHERCHE
+ *
+ * Symptome constate : sur la liste des bons par organisme et sur la liste des factures,
+ * une large bande de fond d'application separe la barre de titre du panneau central
+ * ("Factures") de l'entete de l'ecran ("Gestion des facturations"). Et quand une recherche
+ * ramene beaucoup de lignes, il faut faire defiler toute la page pour revoir le titre et la
+ * barre de recherche.
+ *
+ * Cause, verifiee dans le code : a l'ouverture d'un menu, App.centerContent() appelle
+ * item.alignTo(corps, 'c-c'). L'ecran est donc positionne en ABSOLU et CENTRE dans le corps
+ * du panneau central. Sur un ecran plein page, toute la place inutilisee se repartit moitie
+ * au-dessus, moitie en dessous : c'est la bande de fond. Et comme la hauteur de l'ecran est
+ * figee (580 px pour la liste des factures) ou automatique, une grille plus haute que cette
+ * valeur fait defiler la PAGE ENTIERE - entete et barre de recherche compris - au lieu des
+ * seules lignes.
+ *
+ * Correctif : PrestigeAffichage.collerAuConteneur(panneau)
+ *   1. marque l'ecran (collerEnHaut) : App.centerContent() ne le centre plus, il reste en
+ *      haut a gauche, colle a la barre de titre du panneau central ;
+ *   2. lui donne exactement la place disponible, ni plus ni moins : aucune barre de
+ *      defilement de page, ni verticale ni horizontale ; ce sont les lignes de la grille qui
+ *      defilent, dans leur propre ascenseur ;
+ *   3. masque l'entete de l'ecran : une fois les deux barres collees l'une a l'autre, le
+ *      titre etait ecrit deux fois de suite.
  */
+/* global Ext */
+window.PrestigeAffichage = window.PrestigeAffichage || {};
+
+/**
+ * Colle un ecran plein page a la barre de titre du panneau central.
+ *
+ * L'ecran n'est plus centre (cf. App.centerContent), il occupe exactement la place
+ * disponible et son propre entete est masque : la barre de titre du panneau central le
+ * porte deja. Resultat : plus de bande de fond au-dessus, plus de barre de defilement de
+ * page ni verticale ni horizontale. Les lignes de la grille, elles, defilent normalement
+ * dans leur ascenseur interne.
+ *
+ * La taille est recalculee a chaque redimensionnement de la fenetre du navigateur, et le
+ * calcul est refait une fois apres coup : quand l'ecran cesse de deborder, l'ascenseur du
+ * conteneur disparait et rend une quinzaine de pixels de large.
+ *
+ * @param {Ext.panel.Panel} panneau ecran a ajuster
+ * @param {Object} [options] marge (defaut 0 px), hauteurMini (defaut 260 px, en dessous de
+ *        laquelle on prefere laisser la page defiler plutot qu'ecraser l'ecran) et
+ *        garderEntete (defaut false : l'entete de l'ecran est masque)
+ */
+window.PrestigeAffichage.collerAuConteneur = function (panneau, options) {
+    'use strict';
+
+    var reglages = options || {},
+        marge = reglages.marge === undefined ? 0 : reglages.marge,
+        hauteurMini = reglages.hauteurMini === undefined ? 260 : reglages.hauteurMini;
+
+    // Lu par App.centerContent(), qui centrerait sinon l'ecran en absolu dans le corps du
+    // panneau central et laisserait la moitie de la place perdue au-dessus.
+    panneau.collerEnHaut = true;
+
+    if (!reglages.garderEntete) {
+        // Le titre de l'ecran serait affiche juste sous celui du panneau central, qui dit
+        // deja la meme chose. header:false doit etre pose AVANT le rendu.
+        panneau.header = false;
+        panneau.title = undefined;
+    }
+
+    function placeDisponible() {
+        var conteneur = panneau.ownerCt,
+            zone = conteneur && conteneur.body ? conteneur.body.getViewSize()
+                    : Ext.getBody().getViewSize();
+        return {
+            width: Math.max(zone.width - marge, 200),
+            height: Math.max(zone.height - marge, hauteurMini)
+        };
+    }
+
+    function ajuster() {
+        var cible, actuelle, element;
+        if (!panneau.rendered || panneau.isDestroyed) {
+            return false;
+        }
+        // alignTo() a pu laisser un positionnement absolu derriere lui (ouverture d'un menu
+        // avant que le marqueur ne soit lu, ou surcharge tierce) : on le neutralise, faute de
+        // quoi l'ecran resterait decale de la moitie de la place perdue.
+        element = panneau.getEl();
+        if (element && element.dom.style.position === 'absolute') {
+            element.dom.style.top = '';
+            element.dom.style.left = '';
+            element.dom.style.position = '';
+        }
+        cible = placeDisponible();
+        actuelle = panneau.getSize();
+        // la hauteur mini de l'ecran l'emporterait sur la taille demandee : on la ramene
+        // a la notre, sinon le panneau resterait plus grand que la place disponible
+        panneau.minHeight = Math.min(panneau.minHeight || hauteurMini, hauteurMini);
+        if (Math.abs(actuelle.height - cible.height) < 2 && Math.abs(actuelle.width - cible.width) < 2) {
+            return false;
+        }
+        panneau.setSize(cible.width, cible.height);
+        return true;
+    }
+
+    function ajusterPuisVerifier() {
+        if (ajuster()) {
+            Ext.Function.defer(ajuster, 50);
+        }
+    }
+
+    panneau.on('afterrender', function () {
+        Ext.Function.defer(ajusterPuisVerifier, 1);
+    });
+    Ext.EventManager.onWindowResize(ajusterPuisVerifier);
+    panneau.on('destroy', function () {
+        Ext.EventManager.removeResizeListener(ajusterPuisVerifier);
+    });
+    if (panneau.rendered) {
+        ajusterPuisVerifier();
+    }
+};
+
 Ext.onReady(function () {
     'use strict';
 

@@ -509,11 +509,57 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
     },
 
     // ============================ Fenetre d'affectation des tiers payants ====================
-    // Deux grilles : en haut la recherche (affectation selective ou de masse aux resultats
-    // coches), en bas les tiers payants deja rattaches au modele.
+    // Trois zones :
+    //   - a GAUCHE la recherche, paginee (une recherche large depassait les 25 lignes affichees
+    //     par defaut et le reste etait perdu) ;
+    //   - a DROITE le panier des tiers payants coches. Le panier vit EN DEHORS du magasin de
+    //     recherche : on peut donc enchainer plusieurs recherches sans perdre les coches deja
+    //     faites, ce que l'ancien ecran ne permettait pas (chaque recherche remplacait les lignes,
+    //     donc les coches) ;
+    //   - en BAS les tiers payants deja rattaches au modele.
     openAssignWindow: function (rec) {
         var me = this;
         var modelId = rec.get('id');
+        var derniereRecherche = '';
+        // groupe de tiers payants retenu : 0 = tous les groupes
+        var derniereGroupe = 0;
+        // 100 lignes par page (25 auparavant) : sur une recherche large, on voit quatre fois
+        // plus de tiers payants sans changer de page.
+        var LIGNES_PAR_PAGE = 100;
+
+        var groupeStore = Ext.create('Ext.data.Store', {
+            fields: [
+                {name: 'lg_GROUPE_ID', type: 'int'},
+                {name: 'str_LIBELLE', type: 'string'}
+            ],
+            autoLoad: true,
+            proxy: {
+                type: 'ajax',
+                // meme service que l'ecran "Generer facture" : liste des groupes sans controle
+                // de privilege de reglement, qui n'a pas de sens ici
+                url: '../api/v1/groupe-tierspayant/facture-data',
+                extraParams: {limit: 1000, start: 0},
+                reader: {type: 'json', root: 'data', totalProperty: 'total'}
+            },
+            listeners: {
+                load: function (magasin, enregistrements, ok) {
+                    if (!ok) {
+                        return;
+                    }
+                    // Le service ajoute deja sa propre ligne "Tous les groupes" (identifiant -1)
+                    // et seulement quand il y a au moins un groupe. On la remplace par la notre,
+                    // toujours presente et toujours en tete, pour que le retour a "tous les
+                    // groupes" existe meme sur une officine sans aucun groupe declare.
+                    var i = magasin.findExact('lg_GROUPE_ID', -1);
+                    if (i >= 0) {
+                        magasin.removeAt(i);
+                    }
+                    if (magasin.findExact('lg_GROUPE_ID', 0) < 0) {
+                        magasin.insert(0, {lg_GROUPE_ID: 0, str_LIBELLE: 'Tous les groupes'});
+                    }
+                }
+            }
+        });
 
         var assignedStore = Ext.create('Ext.data.Store', {
             fields: [
@@ -528,33 +574,140 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
             }
         });
 
+        var champsTiersPayant = [
+            {name: 'lg_TIERS_PAYANT_ID', type: 'string'},
+            {name: 'str_FULLNAME', type: 'string'},
+            {name: 'MODELE_ACTUEL', type: 'string'},
+            {name: 'EST_DYNAMIQUE', type: 'boolean'},
+            {name: 'isChecked', type: 'boolean'}
+        ];
+
+        // Panier : les tiers payants retenus, quelle que soit la recherche qui les a fait apparaitre.
+        var panierStore = Ext.create('Ext.data.Store', {
+            fields: champsTiersPayant,
+            sorters: [{property: 'str_FULLNAME', direction: 'ASC'}]
+        });
+
         var rechercheStore = Ext.create('Ext.data.Store', {
-            fields: [
-                {name: 'lg_TIERS_PAYANT_ID', type: 'string'},
-                {name: 'str_FULLNAME', type: 'string'},
-                {name: 'MODELE_ACTUEL', type: 'string'},
-                {name: 'EST_DYNAMIQUE', type: 'boolean'},
-                {name: 'isChecked', type: 'boolean'}
-            ],
+            fields: champsTiersPayant,
+            pageSize: LIGNES_PAR_PAGE,
             autoLoad: false,
+            remoteSort: false,
             proxy: {
                 type: 'ajax',
                 url: url_rest_model_facture_dynamique + 'rechercher-tiers-payants',
-                reader: {type: 'json', root: 'data', totalProperty: 'total'}
+                reader: {type: 'json', root: 'data', totalProperty: 'total'},
+                // le critere de recherche et le groupe accompagnent chaque page
+                extraParams: {query: '', groupeId: 0}
+            },
+            listeners: {
+                load: function (magasin) {
+                    // Une page qui arrive doit montrer les coches deja faites : la verite est
+                    // dans le panier, pas dans la page.
+                    magasin.each(function (r) {
+                        r.set('isChecked', panierStore.findExact('lg_TIERS_PAYANT_ID',
+                                r.get('lg_TIERS_PAYANT_ID')) >= 0);
+                    });
+                    magasin.commitChanges();
+                }
             }
         });
 
-        var lancerRecherche = function (grille) {
-            var champ = grille.up('window').down('#mfdRecherche');
-            rechercheStore.load({params: {query: champ ? (champ.getValue() || '') : ''}});
+        var majCompteur = function () {
+            var champ = Ext.getCmp('mfdCompteurPanier');
+            if (champ) {
+                var n = panierStore.getCount();
+                champ.setText(n === 0 ? 'Aucun tiers payant coch&eacute;'
+                        : '<b>' + n + '</b> tiers payant' + (n > 1 ? 's' : '') + ' coch&eacute;'
+                        + (n > 1 ? 's' : ''));
+            }
+        };
+        panierStore.on('datachanged', majCompteur);
+        panierStore.on('add', majCompteur);
+        panierStore.on('remove', majCompteur);
+
+        var ajouterAuPanier = function (r) {
+            if (panierStore.findExact('lg_TIERS_PAYANT_ID', r.get('lg_TIERS_PAYANT_ID')) < 0) {
+                panierStore.add(r.copy());
+            }
         };
 
-        var idsCoches = function () {
-            var ids = [];
+        var retirerDuPanier = function (idTp) {
+            var idx = panierStore.findExact('lg_TIERS_PAYANT_ID', idTp);
+            if (idx >= 0) {
+                panierStore.removeAt(idx);
+            }
+            var ligne = rechercheStore.findExact('lg_TIERS_PAYANT_ID', idTp);
+            if (ligne >= 0) {
+                rechercheStore.getAt(ligne).set('isChecked', false);
+                rechercheStore.commitChanges();
+            }
+        };
+
+        var viderPanier = function () {
+            panierStore.removeAll();
             rechercheStore.each(function (r) {
-                if (r.get('isChecked')) {
-                    ids.push(r.get('lg_TIERS_PAYANT_ID'));
+                r.set('isChecked', false);
+            });
+            rechercheStore.commitChanges();
+        };
+
+        var lancerRecherche = function (fenetre) {
+            var champ = fenetre.down('#mfdRecherche');
+            var combo = fenetre.down('#mfdGroupe');
+            derniereRecherche = champ ? (champ.getValue() || '') : '';
+            derniereGroupe = combo && combo.getValue() ? combo.getValue() : 0;
+            rechercheStore.getProxy().extraParams.query = derniereRecherche;
+            rechercheStore.getProxy().extraParams.groupeId = derniereGroupe;
+            rechercheStore.loadPage(1);
+        };
+
+        // "Tout cocher" : coche le resultat COMPLET de la recherche en cours, toutes pages
+        // confondues. Cocher page par page etait le seul moyen auparavant, et sur 45 tiers
+        // payants trouves il fallait passer sur chaque page sans en oublier une.
+        var toutCocher = function (bouton) {
+            bouton.disable();
+            Ext.Ajax.request({
+                url: url_rest_model_facture_dynamique + 'rechercher-tiers-payants',
+                method: 'GET',
+                params: {query: derniereRecherche, groupeId: derniereGroupe, tout: true},
+                callback: function () {
+                    bouton.enable();
+                },
+                success: function (response) {
+                    var objet = Ext.JSON.decode(response.responseText, true);
+                    if (!objet || !objet.data) {
+                        Ext.MessageBox.alert('Information',
+                                'La liste complète des tiers payants n\'a pas pu être récupérée. '
+                                + 'Relancez la recherche puis réessayez.');
+                        return;
+                    }
+                    var nouveaux = [];
+                    Ext.Array.each(objet.data, function (ligne) {
+                        if (panierStore.findExact('lg_TIERS_PAYANT_ID', ligne.lg_TIERS_PAYANT_ID) < 0) {
+                            nouveaux.push(ligne);
+                        }
+                    });
+                    if (nouveaux.length) {
+                        // un seul add : le compteur et la grille ne sont repeints qu'une fois
+                        panierStore.add(nouveaux);
+                    }
+                    // la page affichee doit refleter les coches qui viennent d'etre posees
+                    rechercheStore.each(function (r) {
+                        r.set('isChecked', true);
+                    });
+                    rechercheStore.commitChanges();
+                },
+                failure: function (response) {
+                    Ext.MessageBox.alert('Error Message', response.responseText);
                 }
+            });
+        };
+
+        var idsDuPanier = function () {
+            var ids = [];
+            panierStore.each(function (r) {
+                ids.push(r.get('lg_TIERS_PAYANT_ID'));
             });
             return ids;
         };
@@ -562,7 +715,7 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
         var affecter = function (ids, idModele, libelleAction) {
             if (!ids.length) {
                 Ext.MessageBox.alert('Information',
-                        'Cochez au moins un tiers payant dans les r\u00e9sultats de recherche.');
+                        'Cochez au moins un tiers payant dans les résultats de recherche.');
                 return;
             }
             Ext.MessageBox.confirm('Confirmation',
@@ -582,10 +735,13 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                                     return;
                                 }
                                 Ext.MessageBox.alert('Information', object.errors);
-                                rechercheStore.each(function (r) {
-                                    r.set('isChecked', false);
-                                });
-                                rechercheStore.commitChanges();
+                                // L'affectation a change le modele de ces tiers payants : on
+                                // relance la MEME recherche pour que la colonne "Modele
+                                // actuellement affecte" dise la verite, et on vide le panier.
+                                viderPanier();
+                                if (rechercheStore.getCount() > 0 || derniereRecherche !== '') {
+                                    rechercheStore.loadPage(rechercheStore.currentPage || 1);
+                                }
                                 assignedStore.reload();
                                 me.modelStore.reload();
                             },
@@ -600,127 +756,239 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
             autoShow: true,
             modal: true,
             title: 'Affecter le mod&egrave;le [' + rec.get('nom') + '] &agrave; des tiers payants',
-            width: 1040,
-            height: 660,
+            width: Math.max(1040, Math.min(Ext.Element.getViewportWidth() - 60, 1400)),
+            height: Math.max(620, Math.min(Ext.Element.getViewportHeight() - 60, 800)),
             maximizable: true,
             layout: {type: 'vbox', align: 'stretch'},
             items: [
                 {
-                    xtype: 'gridpanel',
-                    title: '1. Rechercher des tiers payants et cocher ceux &agrave; affecter',
-                    flex: 1,
-                    store: rechercheStore,
-                    // Deux barres : la recherche occupe toute la largeur sur la premiere,
-                    // les actions sont sur la seconde (le champ etait ecrase par les boutons).
-                    dockedItems: [
+                    // Recherche a GAUCHE, panier a DROITE : les deux listes restent visibles en
+                    // meme temps, et chacune dispose de toute la hauteur.
+                    xtype: 'container',
+                    flex: 2,
+                    layout: {type: 'hbox', align: 'stretch'},
+                    items: [
                         {
-                            xtype: 'toolbar',
-                            dock: 'top',
-                            items: [
+                            xtype: 'gridpanel',
+                            title: '1. Rechercher des tiers payants et cocher ceux &agrave; affecter',
+                            flex: 1,
+                            store: rechercheStore,
+                            dockedItems: [
                                 {
-                                    xtype: 'textfield',
-                                    itemId: 'mfdRecherche',
-                                    flex: 1,
-                                    minWidth: 400,
-                                    height: 28,
-                                    fieldStyle: 'font-size:13px;',
-                                    emptyText: 'Nom du tiers payant (laisser vide pour tout lister), puis Entr\u00e9e...',
-                                    enableKeyEvents: true,
+                                    xtype: 'toolbar',
+                                    dock: 'top',
+                                    items: [
+                                        {
+                                            xtype: 'textfield',
+                                            itemId: 'mfdRecherche',
+                                            flex: 1,
+                                            minWidth: 220,
+                                            height: 28,
+                                            fieldStyle: 'font-size:13px;',
+                                            emptyText: 'Nom du tiers payant (vide = tout lister), puis Entrée...',
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                specialKey: function (field, e) {
+                                                    if (e.getKey() === e.ENTER) {
+                                                        lancerRecherche(field.up('window'));
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            text: 'Rechercher',
+                                            iconCls: 'searchicon',
+                                            handler: function (btn) {
+                                                lancerRecherche(btn.up('window'));
+                                            }
+                                        },
+                                        {
+                                            text: 'Effacer',
+                                            handler: function (btn) {
+                                                var fenetre = btn.up('window');
+                                                var champ = fenetre.down('#mfdRecherche');
+                                                var combo = fenetre.down('#mfdGroupe');
+                                                champ.setValue('');
+                                                if (combo) {
+                                                    combo.setValue(0);
+                                                }
+                                                champ.focus();
+                                                lancerRecherche(fenetre);
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'top',
+                                    items: [
+                                        {
+                                            xtype: 'combobox',
+                                            itemId: 'mfdGroupe',
+                                            fieldLabel: 'Groupe',
+                                            labelWidth: 50,
+                                            flex: 1,
+                                            minWidth: 240,
+                                            store: groupeStore,
+                                            valueField: 'lg_GROUPE_ID',
+                                            displayField: 'str_LIBELLE',
+                                            queryMode: 'local',
+                                            editable: false,
+                                            value: 0,
+                                            emptyText: 'Tous les groupes',
+                                            listeners: {
+                                                // choisir un groupe relance la recherche : on ne
+                                                // demande pas a l'utilisateur de recliquer sur
+                                                // "Rechercher" apres avoir filtre
+                                                select: function (combo) {
+                                                    lancerRecherche(combo.up('window'));
+                                                }
+                                            }
+                                        },
+                                        {
+                                            text: 'Tout cocher',
+                                            iconCls: 'addicon',
+                                            tooltip: 'Coche TOUS les tiers payants trouv&eacute;s par la recherche '
+                                                    + 'en cours, y compris ceux des pages suivantes',
+                                            handler: function (btn) {
+                                                toutCocher(btn);
+                                            }
+                                        },
+                                        {
+                                            text: 'Tout d&eacute;cocher',
+                                            iconCls: 'retiremodeleicon',
+                                            tooltip: 'D&eacute;coche tout : vide la liste des tiers payants '
+                                                    + 's&eacute;lectionn&eacute;s',
+                                            handler: viderPanier
+                                        },
+                                        {
+                                            xtype: 'tbtext',
+                                            id: 'mfdCompteurPanier',
+                                            text: 'Aucun tiers payant coch&eacute;'
+                                        }
+                                    ]
+                                },
+                                {
+                                    xtype: 'pagingtoolbar',
+                                    dock: 'bottom',
+                                    store: rechercheStore,
+                                    displayInfo: true,
+                                    displayMsg: '{0} - {1} sur {2} tiers payant(s)',
+                                    emptyMsg: 'Aucun résultat'
+                                }
+                            ],
+                            columns: [
+                                {
+                                    xtype: 'checkcolumn',
+                                    dataIndex: 'isChecked',
+                                    width: 40,
                                     listeners: {
-                                        specialKey: function (field, e) {
-                                            if (e.getKey() === e.ENTER) {
-                                                rechercheStore.load({params: {query: field.getValue() || ''}});
+                                        checkchange: function (colonne, rowIndex, coche) {
+                                            var r = rechercheStore.getAt(rowIndex);
+                                            if (coche) {
+                                                ajouterAuPanier(r);
+                                            } else {
+                                                retirerDuPanier(r.get('lg_TIERS_PAYANT_ID'));
                                             }
                                         }
                                     }
                                 },
                                 {
-                                    text: 'Rechercher',
-                                    iconCls: 'searchicon',
-                                    handler: function (btn) {
-                                        lancerRecherche(btn.up('gridpanel'));
-                                    }
+                                    header: 'Tiers payant',
+                                    dataIndex: 'str_FULLNAME',
+                                    flex: 1.6
                                 },
                                 {
-                                    text: 'Effacer',
-                                    handler: function (btn) {
-                                        var champ = btn.up('window').down('#mfdRecherche');
-                                        champ.setValue('');
-                                        champ.focus();
-                                        rechercheStore.load({params: {query: ''}});
+                                    header: 'Mod&egrave;le actuellement affect&eacute;',
+                                    dataIndex: 'MODELE_ACTUEL',
+                                    flex: 1.4,
+                                    // Vert = modele dynamique (cree ici), bleu = modele classique
+                                    // (fichier Jasper). La couleur dit d'un coup d'oeil ce qui va
+                                    // reellement changer avant de valider une affectation.
+                                    renderer: function (value, meta, r) {
+                                        if (!value) {
+                                            return '';
+                                        }
+                                        var couleur = r.get('EST_DYNAMIQUE') ? '#2e7d32' : '#1e5fa9';
+                                        return '<span style="color:' + couleur + ';font-weight:bold;">'
+                                                + value + '</span>';
                                     }
                                 }
                             ]
                         },
                         {
-                            xtype: 'toolbar',
-                            dock: 'top',
-                            items: [
+                            xtype: 'gridpanel',
+                            title: '2. Tiers payants coch&eacute;s (le panier)',
+                            flex: 1,
+                            margin: '0 0 0 6',
+                            store: panierStore,
+                            viewConfig: {
+                                emptyText: '<div style="padding:12px;color:#888;">Cochez des tiers payants '
+                                        + '&agrave; gauche : ils s\'ajoutent ici et y restent d\'une recherche '
+                                        + '&agrave; l\'autre.</div>',
+                                deferEmptyText: false
+                            },
+                            dockedItems: [{
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    items: [
+                                        '->',
+                                        {
+                                            text: 'Affecter ce mod&egrave;le',
+                                            iconCls: 'addicon',
+                                            cls: 'btn-valider-vert',
+                                            overCls: 'btn-valider-vert-over',
+                                            pressedCls: 'btn-valider-vert-pressed',
+                                            handler: function () {
+                                                affecter(idsDuPanier(), modelId,
+                                                        'Affecter le modèle "' + rec.get('nom') + '"');
+                                            }
+                                        },
+                                        {
+                                            text: 'Retirer le mod&egrave;le',
+                                            // iconCls "cancelicon" n'existe dans aucune feuille du
+                                            // theme : le bouton s'affichait sans pictogramme et en
+                                            // gris, a cote d'un "Affecter" vert et illustre.
+                                            iconCls: 'retiremodeleicon',
+                                            cls: 'btn-retirer-orange',
+                                            overCls: 'btn-retirer-orange-over',
+                                            pressedCls: 'btn-retirer-orange-pressed',
+                                            tooltip: 'Remettre le mod&egrave;le de facture standard',
+                                            handler: function () {
+                                                affecter(idsDuPanier(), 0, 'Remettre le modèle standard');
+                                            }
+                                        }
+                                    ]
+                                }],
+                            columns: [
                                 {
-                                    text: 'Tout cocher',
-                                    handler: function () {
-                                        rechercheStore.each(function (r) {
-                                            r.set('isChecked', true);
-                                        });
-                                        rechercheStore.commitChanges();
-                                    }
+                                    header: 'Tiers payant',
+                                    dataIndex: 'str_FULLNAME',
+                                    flex: 1
                                 },
                                 {
-                                    text: 'Tout d&eacute;cocher',
-                                    handler: function () {
-                                        rechercheStore.each(function (r) {
-                                            r.set('isChecked', false);
-                                        });
-                                        rechercheStore.commitChanges();
-                                    }
-                                },
-                                '->',
-                                {
-                                    text: 'Affecter ce mod&egrave;le',
-                                    iconCls: 'addicon',
-                                    handler: function () {
-                                        affecter(idsCoches(), modelId, 'Affecter le mod\u00e8le "' + rec.get('nom') + '"');
-                                    }
-                                },
-                                {
-                                    text: 'Retirer le mod&egrave;le',
-                                    iconCls: 'cancelicon',
-                                    tooltip: 'Remettre le mod&egrave;le de facture par d&eacute;faut',
-                                    handler: function () {
-                                        affecter(idsCoches(), 0, 'Remettre le mod\u00e8le par d\u00e9faut');
-                                    }
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [{
+                                            icon: 'resources/images/icons/fam/delete.png',
+                                            tooltip: 'Retirer du panier',
+                                            handler: function (grid, rowIndex) {
+                                                retirerDuPanier(grid.getStore().getAt(rowIndex)
+                                                        .get('lg_TIERS_PAYANT_ID'));
+                                            }
+                                        }]
                                 }
                             ]
-                        }
-                    ],
-                    columns: [
-                        {
-                            xtype: 'checkcolumn',
-                            dataIndex: 'isChecked',
-                            width: 40
-                        },
-                        {
-                            header: 'Tiers payant',
-                            dataIndex: 'str_FULLNAME',
-                            flex: 1.6
-                        },
-                        {
-                            header: 'Mod&egrave;le actuellement affect&eacute;',
-                            dataIndex: 'MODELE_ACTUEL',
-                            flex: 1.4,
-                            renderer: function (value, meta, r) {
-                                if (r.get('EST_DYNAMIQUE')) {
-                                    return '<span style="color:green;">' + (value || '') + '</span>';
-                                }
-                                return value || '';
-                            }
                         }
                     ]
                 },
                 {
                     xtype: 'gridpanel',
-                    title: '2. Tiers payants actuellement factur&eacute;s avec ce mod&egrave;le',
+                    title: '3. Tiers payants actuellement factur&eacute;s avec ce mod&egrave;le',
                     flex: 1,
+                    margin: '6 0 0 0',
                     store: assignedStore,
                     columns: [
                         {
@@ -735,29 +1003,45 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                             menuDisabled: true,
                             items: [{
                                     icon: 'resources/images/icons/fam/delete.png',
-                                    tooltip: 'D&eacute;tacher du mod&egrave;le (retour au mod&egrave;le par d&eacute;faut)',
+                                    tooltip: 'Retirer ce tiers payant du mod&egrave;le '
+                                            + '(retour au mod&egrave;le de facture standard)',
                                     handler: function (grid, rowIndex) {
                                         var tpRec = grid.getStore().getAt(rowIndex);
-                                        Ext.Ajax.request({
-                                            url: url_rest_model_facture_dynamique + 'assigner',
-                                            method: 'POST',
-                                            params: {
-                                                lg_TIERS_PAYANT_ID: tpRec.get('lg_TIERS_PAYANT_ID'),
-                                                modelId: ''
-                                            },
-                                            success: function (response) {
-                                                var object = Ext.JSON.decode(response.responseText, false);
-                                                if (object.success === "0") {
-                                                    Ext.MessageBox.alert('Message d\'erreur', object.errors);
-                                                    return;
-                                                }
-                                                assignedStore.reload();
-                                                me.modelStore.reload();
-                                            },
-                                            failure: function (response) {
-                                                Ext.MessageBox.alert('Error Message', response.responseText);
-                                            }
-                                        });
+                                        Ext.MessageBox.confirm('Confirmation',
+                                                'Retirer <b>' + tpRec.get('str_FULLNAME') + '</b> de ce mod&egrave;le ?'
+                                                + '<br/>Ses prochaines factures sortiront au format standard.',
+                                                function (btn) {
+                                                    if (btn !== 'yes') {
+                                                        return;
+                                                    }
+                                                    Ext.Ajax.request({
+                                                        url: url_rest_model_facture_dynamique + 'assigner',
+                                                        method: 'POST',
+                                                        params: {
+                                                            lg_TIERS_PAYANT_ID: tpRec.get('lg_TIERS_PAYANT_ID'),
+                                                            modelId: ''
+                                                        },
+                                                        success: function (response) {
+                                                            var object = Ext.JSON.decode(response.responseText, false);
+                                                            if (object.success === "0") {
+                                                                Ext.MessageBox.alert('Message d\'erreur',
+                                                                        object.errors);
+                                                                return;
+                                                            }
+                                                            assignedStore.reload();
+                                                            me.modelStore.reload();
+                                                            if (derniereRecherche !== ''
+                                                                    || rechercheStore.getCount() > 0) {
+                                                                rechercheStore.loadPage(
+                                                                        rechercheStore.currentPage || 1);
+                                                            }
+                                                        },
+                                                        failure: function (response) {
+                                                            Ext.MessageBox.alert('Error Message',
+                                                                    response.responseText);
+                                                        }
+                                                    });
+                                                });
                                     }
                                 }]
                         }
@@ -771,5 +1055,6 @@ Ext.define('testextjs.view.facturation.ModelFactureDynamique', {
                     }
                 }]
         });
+        majCompteur();
     }
 });

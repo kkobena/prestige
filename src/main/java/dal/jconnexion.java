@@ -74,17 +74,40 @@ public class jconnexion {
     }
     // fermeture de la connexion
 
+    /**
+     * Ferme le resultat de requete puis la connexion.
+     *
+     * Trois defauts corriges ici, tous visibles a l'edition d'un etat :
+     *
+     * 1. resultat n'est renseigne que par set_Request(). Un etat Jasper est rempli directement a partir de la connexion
+     * : resultat restait null, resultat.close() levait un NullPointerException, et le journal affichait "Impossible de
+     * fermer null" - un message alarmant qui ne designait rien.
+     *
+     * 2. les trois fermetures etaient dans UN SEUL try : la premiere qui echouait empechait les suivantes. Chaque
+     * ressource est desormais fermee independamment.
+     *
+     * 3. la troisieme ligne, jdbConnexion.getConnection().close(), OUVRAIT une nouvelle connexion a la base (ce
+     * getConnection fait un DriverManager.getConnection a chaque appel, ce n'est pas un pool) uniquement pour la
+     * refermer aussitot. Elle est supprimee : il n'y a rien a fermer de plus que la connexion de cet objet.
+     *
+     * L'ordre compte : le resultat se ferme AVANT la connexion dont il depend.
+     */
     public void CloseConnexion() {
+        fermer(resultat, "le resultat de la requete");
+        resultat = null;
+        fermer(StringConnexion, "la connexion a la base");
+        StringConnexion = null;
+    }
+
+    private void fermer(AutoCloseable ressource, String libelle) {
+        if (ressource == null) {
+            return;
+        }
         try {
-
-            this.StringConnexion.close();
-
-            resultat.close();
-
-            jdbConnexion.getConnection().close();
-        } catch (Exception MysqlEx) {
-            message = "Impossible de fermer " + MysqlEx.getMessage();
-            // ars_logger.oCategory.warn(date.GetDateNow(date.formatterUI)+ " "+message);
+            ressource.close();
+        } catch (Exception ex) {
+            message = "Impossible de fermer " + libelle + " : "
+                    + (ex.getMessage() != null ? ex.getMessage() : ex.getClass().getName());
             System.out.println(message);
         }
     }

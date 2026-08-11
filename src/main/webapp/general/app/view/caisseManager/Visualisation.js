@@ -18,12 +18,6 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
     minHeight: 550,
     cls: 'custompanel',
     layout: 'anchor',
-    fitToContentPanel: function () {
-        var content = Ext.getCmp('content-panel');
-        if (this.rendered && content && content.body) {
-            this.setHeight(content.body.getHeight(true));
-        }
-    },
     initComponent: function () {
 
         var store_typereglement = new Ext.data.Store({
@@ -172,11 +166,12 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
 
         });
         me.callParent(arguments);
-        me.on('afterrender', me.fitToContentPanel, me, {delay: 50});
-        Ext.EventManager.onWindowResize(me.fitToContentPanel, me, {buffer: 100});
-        me.on('destroy', function () {
-            Ext.EventManager.removeResizeListener(me.fitToContentPanel, me);
-        });
+        // Ecran colle a la barre de titre du panneau central : sans cela, App.centerContent()
+        // le centre dans la zone et laisse une bande de fond au-dessus et en dessous
+        // (cf. resources/js/correctifs-affichage.js).
+        if (window.PrestigeAffichage) {
+            window.PrestigeAffichage.collerAuConteneur(me);
+        }
     }
 });
 

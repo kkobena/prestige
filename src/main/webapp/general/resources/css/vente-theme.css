@@ -669,3 +669,39 @@ body.x-body,
 .x-message-box .x-window-body {
     overflow-y: auto !important;
 }
+
+/* Bouton "Retirer le modele" de la fenetre d'affectation des tiers payants.
+   Il etait gris et sans icone (sa classe iconCls "cancelicon" n'existe dans aucune feuille
+   du theme : le bouton s'affichait donc sans pictogramme), alors que "Affecter ce modele"
+   est vert et illustre. Meme traitement visuel, mais en orange : l'action est l'inverse de
+   l'affectation, elle ne doit pas se confondre avec elle au moment de cliquer. */
+.btn-retirer-orange,
+.btn-retirer-orange .x-btn-inner,
+.btn-retirer-orange .x-btn-button {
+    background-color: #d84315 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border-color: #a33009 !important;
+    font-weight: bold;
+}
+
+.btn-retirer-orange-over,
+.btn-retirer-orange-over .x-btn-inner,
+.btn-retirer-orange-over .x-btn-button {
+    background-color: #e64a19 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+.btn-retirer-orange-pressed,
+.btn-retirer-orange-pressed .x-btn-inner,
+.btn-retirer-orange-pressed .x-btn-button {
+    background-color: #a33009 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+/* Pictogramme du bouton ci-dessus : la croix rouge du jeu d'icones de l'application. */
+.retiremodeleicon {
+    background-image: url(../images/icons/fam/delete.png) !important;
+}

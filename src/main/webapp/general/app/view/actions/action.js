@@ -59,6 +59,12 @@ Ext.define('testextjs.view.actions.action', {
         this.items = this.buildItems();
         this.callParent(arguments);
         this.getCa();
+        // Ecran colle a la barre de titre du panneau central : sans cela, App.centerContent()
+        // le centre dans la zone et laisse une bande de fond au-dessus et en dessous
+        // (cf. resources/js/correctifs-affichage.js).
+        if (window.PrestigeAffichage) {
+            window.PrestigeAffichage.collerAuConteneur(this);
+        }
 
     },
     getCa: function () {

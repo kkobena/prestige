@@ -253,7 +253,8 @@ requires: [
                             renderer: function (v) {
                                 return Ext.util.Format.number(v, '0,000.');
                             },
-                            fieldStyle: "color:blue;font-weight:800;",
+                            // meme couleur que la colonne "Montant Attendu" : c'est le meme chiffre
+                            fieldStyle: "color:#1e7e34;font-weight:800;",
                             value: 0
 
                         }, {
@@ -287,9 +288,15 @@ requires: [
                         }],
                     columns: [
                         {
-                            header: 'Date',
+                            // date et heure reunies : deux colonnes pour un seul instant
+                            // faisaient perdre de la largeur aux noms des assures
+                            header: 'Date et heure',
                             dataIndex: 'dtUPDATED',
-                            flex: 1,
+                            flex: 1.2,
+                            renderer: function (value, meta, rec) {
+                                const heure = rec.get('heure');
+                                return Ext.isEmpty(heure) ? value : value + ' ' + heure;
+                            },
                             summaryType: "count",
                             summaryRenderer: function (value) {
                                 if (value > 0) {
@@ -298,11 +305,6 @@ requires: [
                                     return '';
                                 }
                             }
-                        },
-                        {
-                            header: 'Heure',
-                            dataIndex: 'heure',
-                            flex: 0.7
                         },
                         {
                             header: 'Ticket',
@@ -356,10 +358,13 @@ requires: [
                             flex: 1,
                             align: 'right',
                             summaryType: "sum",
-                            renderer: amountformat,
+                            // montant attendu en vert : c'est le chiffre que l'organisme doit rembourser
+                            renderer: function (value) {
+                                return "<span style='color:#1e7e34;font-weight:bold;'>" + amountformat(value) + "</span>";
+                            },
                             summaryRenderer: function (value) {
                                 if (value > 0) {
-                                    return "<b><span style='color:blue;'>" + Ext.util.Format.number(value, '0,000') + "</span></b>";
+                                    return "<b><span style='color:#1e7e34;'>" + Ext.util.Format.number(value, '0,000') + "</span></b>";
                                 } else {
                                     return '';
                                 }
@@ -418,6 +423,12 @@ requires: [
 
         me.callParent(arguments);
 
+        // l'ecran occupe la place disponible : sans cela, une recherche qui ramene beaucoup
+        // de bons fait defiler la page entiere et l'entete "Liste des Bons par Organismes"
+        // disparait vers le haut (cf. correctifs-affichage.js)
+        if (window.PrestigeAffichage) {
+            window.PrestigeAffichage.collerAuConteneur(me);
+        }
     },
 
 /* fonction appel ecran modification */

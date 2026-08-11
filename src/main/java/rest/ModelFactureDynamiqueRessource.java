@@ -368,13 +368,29 @@ public class ModelFactureDynamiqueRessource {
                 em.getTransaction().rollback();
                 return reponseJson(new JSONObject().put("success", "0").put("errors", "Modèle introuvable"));
             }
-            // Les tiers payants rattaches reviennent au modele Jasper par defaut, puis la ligne
-            // t_model_facture representant ce modele dynamique est supprimee.
             TModelFacture ligne = modelFactureDe(em, id);
             if (ligne != null) {
-                TModelFacture defaut = em.find(TModelFacture.class, commonparameter.PROCESS_SUCCESS);
-                em.createQuery("UPDATE TTiersPayant t SET t.lgMODELFACTUREID = ?1 WHERE t.lgMODELFACTUREID = ?2")
-                        .setParameter(1, defaut).setParameter(2, ligne).executeUpdate();
+                // Un modele encore affecte ne se supprime pas : les tiers payants concernes
+                // basculeraient sans preavis sur le modele standard, et leurs prochaines factures
+                // partiraient chez l'organisme dans une presentation qu'il n'attend pas. On refuse,
+                // en NOMMANT les tiers payants a retirer d'abord.
+                List<TTiersPayant> rattaches = em.createQuery(
+                        "SELECT t FROM TTiersPayant t WHERE t.lgMODELFACTUREID = ?1 " + "ORDER BY t.strFULLNAME",
+                        TTiersPayant.class).setParameter(1, ligne).getResultList();
+                if (!rattaches.isEmpty()) {
+                    em.getTransaction().rollback();
+                    StringBuilder noms = new StringBuilder();
+                    for (int i = 0; i < rattaches.size() && i < 5; i++) {
+                        noms.append(i > 0 ? ", " : "")
+                                .append(StringUtils.defaultString(rattaches.get(i).getStrFULLNAME()));
+                    }
+                    if (rattaches.size() > 5) {
+                        noms.append("... et ").append(rattaches.size() - 5).append(" autre(s)");
+                    }
+                    return reponseJson(new JSONObject().put("success", "0").put("errors",
+                            "Suppression impossible : ce modèle est encore affecté à " + rattaches.size()
+                                    + " tiers payant(s) (" + noms + "). Retirez-les du modèle avant de le supprimer."));
+                }
                 em.remove(em.contains(ligne) ? ligne : em.merge(ligne));
             }
             em.remove(modele);
@@ -442,7 +458,10 @@ public class ModelFactureDynamiqueRessource {
             em.getTransaction().begin();
             // L'affectation passe par le modele de facture de la fiche tiers payant (un seul
             // endroit d'affectation, comme pour les modeles Jasper historiques).
-            if (modelId > 0) {
+            // modelId est NULL au detachement (bouton "retirer") : le tester avant de le comparer,
+            // sinon Java le deballe et leve un NullPointerException - la transaction restait alors
+            // ouverte et le retrait n'a jamais fonctionne.
+            if (modelId != null && modelId > 0) {
                 TModelFacture ligne = modelFactureDe(em, modelId);
                 if (ligne == null) {
                     em.getTransaction().rollback();
@@ -451,12 +470,21 @@ public class ModelFactureDynamiqueRessource {
                 }
                 tp.setLgMODELFACTUREID(ligne);
             } else {
-                tp.setLgMODELFACTUREID(em.find(TModelFacture.class, commonparameter.PROCESS_SUCCESS));
+                // retrait : retour au modele de facture standard
+                TModelFacture standard = em.find(TModelFacture.class, commonparameter.PROCESS_SUCCESS);
+                if (standard == null) {
+                    em.getTransaction().rollback();
+                    return reponseJson(new JSONObject().put("success", "0").put("errors",
+                            "Retrait impossible : le modèle de facture standard (n° 1) est introuvable "
+                                    + "dans la liste des modèles de facture."));
+                }
+                tp.setLgMODELFACTUREID(standard);
             }
             em.merge(tp);
             em.getTransaction().commit();
             return reponseJson(new JSONObject().put("success", "1").put("errors",
-                    modelId != null ? "Tiers payant rattaché au modèle" : "Tiers payant détaché du modèle"));
+                    modelId != null && modelId > 0 ? "Tiers payant rattaché au modèle"
+                            : "Tiers payant retiré du modèle : il revient au modèle de facture standard."));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "assignation modele dynamique", e);
             return reponseJson(new JSONObject().put("success", "0").put("errors", "Opération impossible"));
@@ -494,9 +522,14 @@ public class ModelFactureDynamiqueRessource {
                         .entity("Aucun modèle de facture dynamique pour ce tiers payant").type("text/plain").build();
             }
             byte[] pdf = genererPdf(em, facture, tiersPayant, modele);
-            return Response.ok(pdf, "application/pdf").header("Content-Disposition", "inline; filename=Facture_"
-                    + StringUtils.defaultString(facture.getStrCODEFACTURE()).replaceAll("[^A-Za-z0-9_-]", "_") + ".pdf")
-                    .build();
+            // Nom de fichier : Facture_<tiers payant>_<numero>.pdf. Sans le nom de l'organisme, un
+            // dossier de factures editees dans la journee ne se relit pas.
+            String nomFichier = nomFichierFacture(
+                    tiersPayant != null
+                            ? StringUtils.defaultIfBlank(tiersPayant.getStrNAME(), tiersPayant.getStrFULLNAME()) : null,
+                    facture.getStrCODEFACTURE());
+            return Response.ok(pdf, "application/pdf")
+                    .header("Content-Disposition", "inline; filename=\"" + nomFichier + "\"").build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "pdf modele dynamique", e);
             return Response.serverError().entity("Erreur lors de la génération de la facture").type("text/plain")
@@ -909,6 +942,34 @@ public class ModelFactureDynamiqueRessource {
         }
     }
 
+    /**
+     * Rend un libelle utilisable dans un nom de fichier : accents retires, et tout ce qui n'est ni lettre ni chiffre
+     * remplace par un souligne. Un nom d'organisme comporte souvent des espaces, des apostrophes ou des points, que
+     * certains navigateurs et systemes de fichiers refusent.
+     */
+    /**
+     * Nom du fichier PDF d'une facture : "Facture_ASCOMA_COTE_D_IVOIRE_FA0012.pdf".
+     *
+     * Les parties vides sont ecartees : un tiers payant sans libelle ne produit pas de "__" au milieu du nom, et une
+     * facture sans numero ne laisse pas le nom se terminer par un blanc.
+     */
+    static String nomFichierFacture(String tiersPayant, String numeroFacture) {
+        StringBuilder nom = new StringBuilder("Facture");
+        for (String partie : new String[] { nettoyerPourNomDeFichier(tiersPayant),
+                nettoyerPourNomDeFichier(numeroFacture) }) {
+            if (!partie.isEmpty()) {
+                nom.append('_').append(partie);
+            }
+        }
+        return nom.append(".pdf").toString();
+    }
+
+    static String nettoyerPourNomDeFichier(String libelle) {
+        String sansAccent = Normalizer.normalize(StringUtils.defaultString(libelle), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return StringUtils.strip(sansAccent.replaceAll("[^A-Za-z0-9]+", "_"), "_");
+    }
+
     private static String normaliserModeTri(String modeTri) {
         if (ModelFactureDynamique.TRI_ALPHABETIQUE.equalsIgnoreCase(StringUtils.trimToEmpty(modeTri))) {
             return ModelFactureDynamique.TRI_ALPHABETIQUE;
@@ -1016,11 +1077,23 @@ public class ModelFactureDynamiqueRessource {
     /**
      * Recherche de tiers payants pour l'ecran d'affectation : renvoie le modele actuellement affecte a chacun, pour
      * voir d'un coup d'oeil ce qui va changer avant de valider une affectation de masse.
+     *
+     * <p>
+     * Trois parametres facultatifs completent le critere de nom :
+     * <ul>
+     * <li><b>groupeId</b> : ne garder que les tiers payants d'un groupe (0 ou absent = tous les groupes) ;
+     * <li><b>limit</b> : taille de page, 100 par defaut ;
+     * <li><b>tout</b> : ignorer la pagination et renvoyer TOUTES les correspondances. C'est ce que demande le bouton
+     * "Tout cocher" de l'ecran d'affectation, qui doit cocher le resultat complet de la recherche et pas seulement la
+     * page affichee.
+     * </ul>
      */
     @GET
     @Path("rechercher-tiers-payants")
     public Response rechercherTiersPayants(@DefaultValue("") @QueryParam("query") String query,
-            @DefaultValue("200") @QueryParam("limit") int limit) {
+            @DefaultValue("0") @QueryParam("start") int start, @DefaultValue("100") @QueryParam("limit") int limit,
+            @DefaultValue("0") @QueryParam("groupeId") int groupeId,
+            @DefaultValue("false") @QueryParam("tout") boolean tout) {
         if (utilisateurSession() == null) {
             return reponseDeconnecte();
         }
@@ -1029,11 +1102,31 @@ public class ModelFactureDynamiqueRessource {
             odm.initEntityManager();
             EntityManager em = odm.getEm();
             String recherche = "%" + StringUtils.defaultString(query).trim() + "%";
-            List<TTiersPayant> tps = em
-                    .createQuery("SELECT t FROM TTiersPayant t WHERE (t.strFULLNAME LIKE ?1 OR t.strNAME LIKE ?1) "
-                            + "AND t.strSTATUT = ?2 ORDER BY t.strFULLNAME", TTiersPayant.class)
-                    .setParameter(1, recherche).setParameter(2, commonparameter.statut_enable)
-                    .setMaxResults(limit > 0 ? limit : 200).getResultList();
+            String filtre = "FROM TTiersPayant t WHERE (t.strFULLNAME LIKE ?1 OR t.strNAME LIKE ?1) "
+                    + "AND t.strSTATUT = ?2";
+            // groupeId <= 0 : aucun filtre de groupe. La valeur -1 est celle de la ligne
+            // "Tous les groupes" des autres ecrans, on la traite donc comme une absence de filtre.
+            boolean parGroupe = groupeId > 0;
+            if (parGroupe) {
+                filtre += " AND t.lgGROUPEID.lgGROUPEID = ?3";
+            }
+            // Le nombre TOTAL de correspondances, et non le nombre de lignes de la page : sans lui,
+            // l'ecran affichait "25 sur 25" alors que la recherche en trouvait 45, et les 20 autres
+            // etaient inatteignables.
+            javax.persistence.TypedQuery<Long> requeteTotal = em.createQuery("SELECT COUNT(t) " + filtre, Long.class)
+                    .setParameter(1, recherche).setParameter(2, commonparameter.statut_enable);
+            javax.persistence.TypedQuery<TTiersPayant> requeteLignes = em
+                    .createQuery("SELECT t " + filtre + " ORDER BY t.strFULLNAME", TTiersPayant.class)
+                    .setParameter(1, recherche).setParameter(2, commonparameter.statut_enable);
+            if (parGroupe) {
+                requeteTotal.setParameter(3, groupeId);
+                requeteLignes.setParameter(3, groupeId);
+            }
+            long total = requeteTotal.getSingleResult();
+            if (!tout) {
+                requeteLignes.setFirstResult(Math.max(0, start)).setMaxResults(limit > 0 ? limit : 100);
+            }
+            List<TTiersPayant> tps = requeteLignes.getResultList();
             JSONArray data = new JSONArray();
             for (TTiersPayant tp : tps) {
                 JSONObject json = new JSONObject();
@@ -1053,7 +1146,7 @@ public class ModelFactureDynamiqueRessource {
                 json.put("isChecked", false);
                 data.put(json);
             }
-            return reponseJson(new JSONObject().put("data", data).put("total", data.length()));
+            return reponseJson(new JSONObject().put("data", data).put("total", total));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "recherche tiers payants pour affectation", e);
             return reponseJson(new JSONObject().put("data", new JSONArray()).put("total", 0));

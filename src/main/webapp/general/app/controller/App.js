@@ -702,6 +702,16 @@ Ext.define('testextjs.controller.App', {
             return;
         }
 
+        // Ecrans colles a l'entete (PrestigeAffichage.collerAuConteneur, cf.
+        // resources/js/correctifs-affichage.js). alignTo() positionne l'ecran en ABSOLU et le
+        // CENTRE dans le corps du panneau : sur un ecran plein page, la moitie de la place
+        // perdue passait au-dessus, d'ou la grande bande de fond entre la barre de titre du
+        // panneau central et l'entete de l'ecran. Ces ecrans-la se placent eux-memes en haut
+        // a gauche et prennent toute la place : les centrer les decalerait a nouveau.
+        if (item && item.collerEnHaut) {
+            return;
+        }
+
         if (item) {
             overflowX = (body.getWidth() < (item.getWidth() + 40));
             overflowY = (body.getHeight() < (item.getHeight() + 40));

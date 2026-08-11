@@ -66,7 +66,14 @@ public class ListBonsServlet extends HttpServlet {
         String tiersPayantId = request.getParameter("tiersPayantId");
         String hEnd = request.getParameter("hEnd");
         String hStart = request.getParameter("hStart");
-        String search = request.getParameter("search");
+        // L'ecran envoie le texte de recherche sous le nom "query" (c'est aussi celui que
+        // recoit l'API de la grille). Ce servlet ne lisait que "search" : le PDF ignorait
+        // donc le filtre saisi et sortait TOUS les bons de la periode, alors que l'ecran,
+        // lui, n'en montrait qu'une partie. On accepte les deux noms.
+        String search = request.getParameter("query");
+        if (search == null || search.trim().isEmpty()) {
+            search = request.getParameter("search");
+        }
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
         Map<String, Object> parameters = reportUtil.officineData(user);
