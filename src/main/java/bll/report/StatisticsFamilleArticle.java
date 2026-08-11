@@ -985,28 +985,35 @@ public class StatisticsFamilleArticle extends bll.bllBase {
         return datas;
     }
 
+    /**
+     * Recapitulatif par compte d'organisme.
+     *
+     * L'exception n'est plus avalee. Elle l'etait (printStackTrace puis liste vide), et l'ecran affichait alors un
+     * tableau vide sans le moindre message : l'utilisateur croyait qu'il n'y avait aucun reglement sur la periode,
+     * alors que la requete avait echoue. Le service web renvoyait un succes, donc le Centre de Support n'en gardait
+     * aucune trace non plus. L'appelant decide desormais quoi en faire.
+     *
+     * @throws RuntimeException
+     *             quand la procedure stockee echoue, avec la cause d'origine attachee
+     */
     public List<EntityData> getRecapReglementByOrganismeData(String dt_start, String dt_end, String lg_tiers_payant_id,
             String search_value) {
         List<EntityData> datas = new ArrayList<>();
         String req = "CALL proc_recaptulatif_organisme(?1,?2,?3,?4)";
-        try {
-            List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(req).setParameter(1, dt_start)
-                    .setParameter(2, dt_end).setParameter(3, search_value + "%").setParameter(4, lg_tiers_payant_id)
-                    .getResultList();
-            for (Object[] objects : list) {
-                EntityData entityData = new EntityData();
-                entityData.setStr_value1(objects[0] + "");// organisme
-                entityData.setStr_value2(objects[1] + "");// libelle type tiers payant
-                entityData.setStr_value3(objects[2] + "");// code organisme
-                entityData.setStr_value4(objects[3] + "");// code comptable
-                entityData.setStr_value5(objects[4] + "");// num compte
-                entityData.setStr_value6(objects[5] + "");// Montantop
-                entityData.setStr_value7(objects[6] + "");// Montant credit
-                entityData.setStr_value8(objects[7] + "");// solde
-                datas.add(entityData);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        List<Object[]> list = this.getOdataManager().getEm().createNativeQuery(req).setParameter(1, dt_start)
+                .setParameter(2, dt_end).setParameter(3, search_value + "%").setParameter(4, lg_tiers_payant_id)
+                .getResultList();
+        for (Object[] objects : list) {
+            EntityData entityData = new EntityData();
+            entityData.setStr_value1(objects[0] + "");// organisme
+            entityData.setStr_value2(objects[1] + "");// libelle type tiers payant
+            entityData.setStr_value3(objects[2] + "");// code organisme
+            entityData.setStr_value4(objects[3] + "");// code comptable
+            entityData.setStr_value5(objects[4] + "");// num compte
+            entityData.setStr_value6(objects[5] + "");// Montantop
+            entityData.setStr_value7(objects[6] + "");// Montant credit
+            entityData.setStr_value8(objects[7] + "");// solde
+            datas.add(entityData);
         }
         return datas;
     }

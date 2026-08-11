@@ -89,7 +89,17 @@ if (request.getParameter("lg_TIERS_PAYANT_ID") != null && !"".equals(request.get
         search_value = request.getParameter("query");
     }
   
-    lstdetails = familleArticle.getRecapReglementByOrganismeData(dt_start, dt_end,lg_TIERS_PAYANT_ID, search_value);
+    /* La methode metier ne masque plus les erreurs de la procedure stockee : l'ecran actuel
+       (api/v1/reglement-facture/recap-organisme/list) les affiche et les remonte au support.
+       Cette JSP n'est plus appelee par l'application, elle n'est conservee que comme voie de
+       repli ; on garde donc ici son comportement d'origine - une liste vide plutot qu'une
+       page d'erreur - en tracant tout de meme la cause dans le journal du serveur. */
+    try {
+        lstdetails = familleArticle.getRecapReglementByOrganismeData(dt_start, dt_end, lg_TIERS_PAYANT_ID, search_value);
+    } catch (Exception erreurRecap) {
+        java.util.logging.Logger.getLogger("RecapOrganisme").log(java.util.logging.Level.SEVERE,
+                "recapitulatif par compte organisme", erreurRecap);
+    }
 
 %>
 

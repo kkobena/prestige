@@ -88,7 +88,16 @@ public class ReglementFactureRessource {
         }
         String causeSimple;
         String causeMin = causeTechnique.toLowerCase();
-        if (causeMin.contains("unknown column")) {
+        // Troncature MySQL (code 1406) : une valeur depasse la taille prevue en base. Le message
+        // technique nomme le champ ; sans ce cas, l'utilisateur recevait la phrase brute de MySQL,
+        // en anglais et incomprehensible. Teste sur TOUTE la chaine d'exceptions : JPA emboite la
+        // vraie erreur SQL plusieurs niveaux plus bas.
+        String champTronque = champTropLong(texteDeLaChaine(e));
+        if (champTronque != null) {
+            causeSimple = "la valeur du champ « " + champTronque + " » dépasse la taille prévue en base pour ce"
+                    + " traitement. Corrigez ce champ sur la ou les fiches concernées (il est plus long que ce que la"
+                    + " base autorise), puis relancez l'opération.";
+        } else if (causeMin.contains("unknown column")) {
             causeSimple = "la base de données n'est pas à jour (colonne manquante). Les mises à jour de la base "
                     + "(migrations) doivent être exécutées.";
         } else if (causeMin.contains("doesn't exist") || causeMin.contains("table")) {
@@ -124,6 +133,37 @@ public class ReglementFactureRessource {
             // centre de support indisponible : la trace serveur reste
         }
         return causeSimple;
+    }
+
+    /**
+     * Concatene les messages de toute la chaine d'exceptions.
+     *
+     * Une erreur SQL remonte emballee : PersistenceException -> DatabaseException -> MysqlDataTruncation. Ne regarder
+     * que le premier niveau ferait manquer la vraie cause.
+     */
+    static String texteDeLaChaine(Throwable e) {
+        StringBuilder texte = new StringBuilder();
+        Throwable courante = e;
+        int garde = 0;
+        while (courante != null && garde++ < 20) {
+            if (courante.getMessage() != null) {
+                texte.append(courante.getMessage()).append(' ');
+            }
+            courante = courante.getCause() != courante ? courante.getCause() : null;
+        }
+        return texte.toString();
+    }
+
+    /** Nom du champ cite par MySQL dans "Data too long for column 'X'", ou null si l'erreur est d'une autre nature. */
+    static String champTropLong(String message) {
+        String repere = "Data too long for column '";
+        int debut = StringUtils.indexOf(message, repere);
+        if (debut < 0) {
+            return null;
+        }
+        debut += repere.length();
+        int fin = StringUtils.indexOf(message, "'", debut);
+        return fin > debut ? message.substring(debut, fin) : null;
     }
 
     /** Reproduit la "logic de gestion des page" des JSP historiques : start -> numero de page. */
@@ -693,8 +733,16 @@ public class ReglementFactureRessource {
             return Response.ok()
                     .entity(new JSONObject().put("data", arrayObj).put("total", lstdetails.size()).toString()).build();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "recap organisme", e);
-            return Response.ok().entity(new JSONObject().put("data", new JSONArray()).put("total", 0).toString())
+            // Un tableau vide renvoye en succes faisait croire a l'utilisateur qu'aucun reglement
+            // n'existait sur la periode, et le Centre de Support ne recevait rien : il n'enregistre
+            // que les appels en erreur. On repond donc en erreur, avec la cause en clair.
+            LOG.log(Level.SEVERE, "recapitulatif par compte organisme", e);
+            // signalerAuSupport enregistre l'incident dans le Centre de Support ET renvoie la cause en
+            // langage clair. La reponse part en ERREUR : c'est aussi ce qui declenche la remontee cote
+            // navigateur (Ext.Ajax requestexception), muette tant qu'on repondait "succes".
+            String cause = signalerAuSupport("du recapitulatif par compte organisme", e);
+            return Response.serverError().entity(new JSONObject().put("success", "0").put("data", new JSONArray())
+                    .put("total", 0).put("errors", "Le récapitulatif n'a pas pu être calculé : " + cause).toString())
                     .build();
         } finally {
             odm.closeEntityManager();
