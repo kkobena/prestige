@@ -103,7 +103,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
         const store_dci = new Ext.data.Store({
             model: 'testextjs.model.Dci',
-            pageSize: itemsPerPage,
+            // C'est le pageSize du STORE qui fixe la limite envoyee au serveur (celui du
+            // combo ne pilote que la barre de pagination) : liste chargee en entier, comme
+            // le combo rayon.
+            pageSize: 9999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
@@ -707,12 +710,28 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         },
                         '-',
                         {
-                            text: 'Importer',
-                            tooltip: 'Importer',
-                            id: 'btn_import',
+                            // Regroupe 'Importer' et 'Verifier l'importation' sous un seul menu,
+                            // controle par le privilege P_BTN_IMPORT_ARTICLE
+                            text: 'Importation',
+                            tooltip: 'Importer des articles / Verifier l\'importation',
+                            id: 'btn_import_menu',
                             iconCls: 'importicon',
-                            scope: this,
-                            handler: this.onbtnimport
+                            menu: [
+                                {
+                                    text: 'Importer',
+                                    tooltip: 'Importer',
+                                    iconCls: 'importicon',
+                                    scope: this,
+                                    handler: this.onbtnimport
+                                },
+                                {
+                                    text: 'Verifier l\'importation',
+                                    tooltip: 'Verifier l\'importation',
+                                    iconCls: 'check_icon',
+                                    scope: this,
+                                    handler: this.onbtncheckimport
+                                }
+                            ]
                         },
                         '-',
                         {
@@ -731,15 +750,6 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             iconCls: 'configuration',
                             scope: this,
                             handler: this.onMajSeuil
-                        },
-                        '-',
-                        {
-                            text: 'Verifier l\'importation',
-                            tooltip: 'Verifier l\'importation',
-                            id: 'btn_checkimport',
-                            iconCls: 'check_icon',
-                            scope: this,
-                            handler: this.onbtncheckimport
                         },
                         '-',
                         {
@@ -776,17 +786,6 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                         Me_Workflow.onRechClick();
                                     }
                                 }
-                            }
-                        },
-                        {
-                            text: 'Effacer stock',
-                            tooltip: 'Effacer le filtre stock',
-                            iconCls: 'cancelicon',
-                            scope: this,
-                            handler: function () {
-                                Me_Workflow.fmField('stock_operator').clearValue();
-                                Me_Workflow.fmField('stock_value').setValue('');
-                                Me_Workflow.onRechClick();
                             }
                         },
                         '-',
@@ -910,9 +909,15 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             id: 'lg_DCI_PRINCIPAL_ID',
                             store: store_dci,
                             valueField: 'lg_DCI_ID',
-                            pageSize: 20,
+                            // Meme pattern que le combo rayon de cet ecran : liste chargee en
+                            // entier (pas de pagination). L'enregistrement selectionne reste
+                            // toujours dans le store, ExtJS affiche donc le libelle et plus
+                            // jamais l'id brut au reclic sur la fleche.
+                            pageSize: 9999,
                             displayField: 'str_NAME',
-                            typeAhead: true,
+                            // typeAhead retire : il pre-completait le champ avec le premier
+                            // resultat ('beta' -> 'BETA ALANINE') et la liste se retrouvait
+                            // filtree sur ce seul produit au lieu de tous les 'beta'.
                             width: 350,
                             minChars: 2,
                             queryMode: 'remote',
@@ -969,16 +974,6 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 }
                             }
                         },
-                        {
-                            text: 'Effacer rayon',
-                            tooltip: 'Effacer le filtre rayon',
-                            iconCls: 'cancelicon',
-                            scope: this,
-                            handler: function () {
-                                Me_Workflow.fmField('lg_ZONE_GEO_ID').clearValue();
-                                Me_Workflow.onRechClick();
-                            }
-                        },
                         '-',
                         {
                             xtype: 'combobox',
@@ -997,16 +992,6 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 select: function () {
                                     Me_Workflow.onRechClick();
                                 }
-                            }
-                        },
-                        {
-                            text: 'Effacer TVA',
-                            tooltip: 'Effacer le filtre TVA',
-                            iconCls: 'cancelicon',
-                            scope: this,
-                            handler: function () {
-                                Me_Workflow.fmField('lg_CODE_TVA_ID_FILTRE').clearValue();
-                                Me_Workflow.onRechClick();
                             }
                         }
                     ]
@@ -1046,9 +1031,9 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     Me_Workflow.fmField('rechecher').focus();
                     if (lg_EMPLACEMENT_ID == "1") {
                         Ext.getCmp('btn_add').show();
-                        Ext.getCmp('btn_import').show();
-                        Ext.getCmp('btn_checkimport').show();
+                        Ext.getCmp('btn_import_menu').show();
                     }
+                    Me_Workflow.chargerPrivilegesBoutons();
                 }
             }
         });
@@ -1098,6 +1083,29 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
     },
     onStoreLoad: function () {
 
+    },
+
+    /* Privileges des boutons de l'ecran, lus UNE SEULE FOIS par ouverture :
+     * un bouton dont le privilege n'est pas attribue a l'utilisateur est masque
+     * (le meme controle est applique cote serveur sur les operations). */
+    chargerPrivilegesBoutons: function () {
+        Ext.Ajax.request({
+            url: '../api/v1/fichearticle/privileges-boutons',
+            method: 'GET',
+            success: function (response) {
+                var o = Ext.JSON.decode(response.responseText, true) || {};
+                var masquerSiRefuse = function (idBouton, cle) {
+                    var btn = Ext.getCmp(idBouton);
+                    if (btn && o[cle] === false) {
+                        btn.hide();
+                    }
+                };
+                masquerSiRefuse('btn_add', 'P_BTN_CREER_ARTICLE');
+                masquerSiRefuse('btn_recalc_seuils', 'P_BTN_RECALCULER_SEUILS');
+                masquerSiRefuse('btn_maj_seuil', 'P_BTN_MAJ_SEUIL');
+                masquerSiRefuse('btn_import_menu', 'P_BTN_IMPORT_ARTICLE');
+            }
+        });
     },
 
     onMajSeuil: function () {
@@ -1658,9 +1666,16 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
     },
 
     showPeriodeForm: function (id, str_NAME) {
+        // Une seule fenetre a la fois : le formulaire porte un id fixe
+        // ('periodeform'), une seconde instance corromprait le registre ExtJS.
+        var winPeriodePrecedente = Ext.getCmp('periodeform');
+        if (winPeriodePrecedente) {
+            var conteneurPeriode = winPeriodePrecedente.up('window');
+            (conteneurPeriode || winPeriodePrecedente).destroy();
+        }
         var win = Ext.create("Ext.window.Window", {
             title: "Choisir une periode",
-
+            modal: true,
             width: 520,
             layout: {
                 type: 'fit'
@@ -2115,6 +2130,13 @@ addPeremptiondate: function (grid, rowIndex) {
         return;
     }
 
+    // Une seule fenetre a la fois : le formulaire porte un id fixe
+    // ('peremptionform'), une seconde instance corromprait le registre ExtJS.
+    const winPeremptionPrecedente = Ext.getCmp('peremptionform');
+    if (winPeremptionPrecedente) {
+        const conteneur = winPeremptionPrecedente.up('window');
+        (conteneur || winPeremptionPrecedente).destroy();
+    }
     const win = Ext.create("Ext.window.Window", {
         title: "[ " + rec.get('str_NAME') + " ]",
         modal: true,

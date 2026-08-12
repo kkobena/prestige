@@ -309,9 +309,12 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                             valueField: 'str_DESCRIPTION',
                                             pageSize: 20, //ajout la barre de pagination
                                             displayField: 'str_DESCRIPTION',
-                                            typeAhead: true,
+                                            // typeAhead retire : pre-completait le champ avec le
+                                            // premier resultat et la liste se filtrait sur ce seul produit
                                             width: 450,
                                             queryMode: 'remote',
+                                            // recherche des 2 caracteres saisis (4 par defaut en remote)
+                                            minChars: 2,
                                             disabled: true,
                                             emptyText: 'Choisir un article par Nom ou Cip...',
                                             listConfig: {
@@ -348,9 +351,11 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                             store: storetypemotif,
                                             valueField: 'lgMOTIFRETOUR',
                                             displayField: 'strLIBELLE',
-                                            typeAhead: true,
+                                            // typeAhead retire : pre-completait avec le premier resultat
                                             pageSize: 20,
                                             queryMode: 'remote',
+                                            // recherche des 2 caracteres saisis (4 par defaut en remote)
+                                            minChars: 2,
                                             flex: 1,
                                             emptyText: 'Choisir un Motif...',
                                             listeners: {

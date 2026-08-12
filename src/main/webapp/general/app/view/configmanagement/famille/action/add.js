@@ -1,3 +1,4 @@
+var winModifArticleOuverte = null;
 /* global Ext */
 
 // Affiche uniquement la lettre de la classe ABC (ex: "ABC_CLASSE_C" -> "C").
@@ -110,14 +111,14 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             model: 'testextjs.model.Dci_famille',
             pageSize: itemsPerPage,
             autoLoad: true,
-            proxy: { type: 'ajax', url: url_services_data_dci_famille + '?lg_FAMILLE_ID=' + ref, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
+            proxy: { type: 'ajax', url: '../api/v1/referentiel-article/dci-famille?lg_FAMILLE_ID=' + ref, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
         });
 
         var store_dci = new Ext.data.Store({
             model: 'testextjs.model.Dci',
             pageSize: itemsPerPage,
             autoLoad: false,
-            proxy: { type: 'ajax', url: url_services_data_dci, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
+            proxy: { type: 'ajax', url: '../api/v1/referentiel-article/dcis-initial', reader: { type: 'json', root: 'results', totalProperty: 'total' } }
         });
 
         var store_etiquette = new Ext.data.Store({
@@ -125,7 +126,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             pageSize: itemsPerPage,
             storeId: 'store_etiquette',
             autoLoad: true,
-            proxy: { type: 'ajax', url: url_services_data_typeetiquette, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
+            proxy: { type: 'ajax', url: '../api/v1/referentiel-article/typeetiquettes', reader: { type: 'json', root: 'results', totalProperty: 'total' } }
         });
 
         var store_remise = new Ext.data.Store({
@@ -157,7 +158,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             model: 'testextjs.model.FamilleArticle',
             pageSize: itemsPerPage,
             autoLoad: false,
-            proxy: { type: 'ajax', url: url_services_data_famaillearticle_famille, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
+            proxy: { type: 'ajax', url: '../api/v1/common/famille-articles', reader: { type: 'json', root: 'results', totalProperty: 'total' } }
         });
 
         var store_grossiste_famille = new Ext.data.Store({
@@ -171,7 +172,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             model: 'testextjs.model.ZoneGeographique',
             pageSize: itemsPerPage,
             autoLoad: false,
-            proxy: { type: 'ajax', url: url_services_data_zonegeo_famille, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
+            proxy: { type: 'ajax', url: '../api/v1/referentiel-article/zones-geographiques', reader: { type: 'json', root: 'results', totalProperty: 'total' } }
         });
 
         var store_codegestion_famille = new Ext.data.Store({
@@ -185,7 +186,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             model: 'testextjs.model.CodeActe',
             pageSize: itemsPerPage,
             autoLoad: true,
-            proxy: { type: 'ajax', url: url_services_data_codeacte_famille, reader: { type: 'json', root: 'results', totalProperty: 'total' } }
+            proxy: { type: 'ajax', url: '../api/v1/referentiel-article/codeactes', reader: { type: 'json', root: 'results', totalProperty: 'total' } }
         });
 
         // FORM
@@ -226,8 +227,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                             defaultType: 'textfield',
                             margin: '0 0 5 0',
                             items: [
-                                { xtype: 'combobox', fieldLabel: 'Emplacement', name: 'lg_ZONE_GEO_ID', width: 400, itemId: 'lg_ZONE_GEO_ID', store: store_zonegeo_famille, valueField: 'lg_ZONE_GEO_ID', displayField: 'str_LIBELLEE', pageSize: 20, typeAhead: true, minChars: 2, allowBlank: false, queryMode: 'remote', emptyText: 'Choisir un emplacement...' },
-                                { xtype: 'combobox', fieldLabel: 'Famille', name: 'lg_FAMILLEARTICLE_ID', width: 400, itemId: 'lg_FAMILLEARTICLE_ID', store: store_famillearticle_famille, valueField: 'lg_FAMILLEARTICLE_ID', displayField: 'str_LIBELLE', pageSize: 20, typeAhead: true, queryMode: 'remote', allowBlank: false, emptyText: 'Choisir une famille...' },
+                                { xtype: 'combobox', fieldLabel: 'Emplacement', name: 'lg_ZONE_GEO_ID', width: 400, itemId: 'lg_ZONE_GEO_ID', store: store_zonegeo_famille, valueField: 'lg_ZONE_GEO_ID', displayField: 'str_LIBELLEE', pageSize: 20, minChars: 2, allowBlank: false, queryMode: 'remote', emptyText: 'Choisir un emplacement...' },
+                                { xtype: 'combobox', fieldLabel: 'Famille', name: 'lg_FAMILLEARTICLE_ID', width: 400, itemId: 'lg_FAMILLEARTICLE_ID', store: store_famillearticle_famille, valueField: 'lg_FAMILLEARTICLE_ID', displayField: 'str_LIBELLE', pageSize: 20, minChars: 2, queryMode: 'remote', allowBlank: false, emptyText: 'Choisir une famille...' },
                                 {
                                     fieldLabel: 'Prix.Vente', xtype: 'textfield', maskRe: /[0-9.]/, width: 350, emptyText: 'PRIX VENTE', name: 'int_PRICE', itemId: 'int_PRICE',
                                     fieldStyle: 'color:blue;font-weight:bold;font-size:1.3em', selectOnFocus: true, allowBlank: false, enableKeyEvents: true,
@@ -269,7 +270,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                         margin: '0 0 5 0',
                         items: [
                             { xtype: 'combobox', fieldLabel: 'Code TVA', name: 'lg_CODE_TVA_ID', width: 350, labelWidth: 110, itemId: 'lg_CODE_TVA_ID', store: store_codetva, valueField: 'lg_CODE_TVA_ID', displayField: 'str_NAME', typeAhead: true, allowBlank: false, queryMode: 'remote', emptyText: 'Choisir un code TVA...' },
-                            { xtype: 'combobox', fieldLabel: 'Grossiste', name: 'lg_GROSSISTE_ID', width: 350, labelWidth: 100, itemId: 'lg_GROSSISTE_ID', store: store_grossiste_famille, valueField: 'lg_GROSSISTE_ID', pageSize: 20, displayField: 'str_LIBELLE', typeAhead: true, allowBlank: false, queryMode: 'remote', emptyText: 'Choisir un grossiste...' },
+                            { xtype: 'combobox', fieldLabel: 'Grossiste', name: 'lg_GROSSISTE_ID', width: 350, labelWidth: 100, itemId: 'lg_GROSSISTE_ID', store: store_grossiste_famille, valueField: 'lg_GROSSISTE_ID', pageSize: 20, displayField: 'str_LIBELLE', minChars: 2, allowBlank: false, queryMode: 'remote', emptyText: 'Choisir un grossiste...' },
                             { fieldLabel: 'Code EAN 13', xtype: 'textfield', labelWidth: 110, maskRe: /[0-9.]/, width: 350, emptyText: 'Code EAN 13', name: 'int_EAN13', itemId: 'int_EAN13' }
                         ]
                     }]
@@ -371,9 +372,9 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                     collapsible: true,
                     layout: 'hbox',
                     items: [
-                        { xtype: 'combobox', margin: '0 0 5 0', fieldLabel: 'Gamme', name: 'gammeId', itemId: 'gammeId', store: gammeStore, forceselection: true, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true, flex: 1, triggerAction: 'all', queryMode: 'remote', enableKeyEvents: true, emptyText: 'Choisir une gamme..' },
+                        { xtype: 'combobox', margin: '0 0 5 0', fieldLabel: 'Gamme', name: 'gammeId', itemId: 'gammeId', store: gammeStore, forceselection: true, pageSize: 999, valueField: 'id', displayField: 'libelle', minChars: 2, flex: 1, triggerAction: 'all', queryMode: 'remote', enableKeyEvents: true, emptyText: 'Choisir une gamme..' },
                         { xtype: 'splitter' },
-                        { xtype: 'combobox', margin: '0 0 5 0', fieldLabel: 'Laboratoire', name: 'laboratoireId', itemId: 'laboratoireId', store: laboratoireStore, forceselection: true, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true, flex: 1, triggerAction: 'all', queryMode: 'remote', enableKeyEvents: true, emptyText: 'Choisir un laboratoire..' }
+                        { xtype: 'combobox', margin: '0 0 5 0', fieldLabel: 'Laboratoire', name: 'laboratoireId', itemId: 'laboratoireId', store: laboratoireStore, forceselection: true, pageSize: 999, valueField: 'id', displayField: 'libelle', minChars: 2, flex: 1, triggerAction: 'all', queryMode: 'remote', enableKeyEvents: true, emptyText: 'Choisir un laboratoire..' }
                     ]
                 },
 
@@ -528,8 +529,20 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                   listeners: { 'render': function (cmp) { cmp.getEl().on('keypress', function (e) { if (e.getKey() === e.ENTER) { Me.onRechClickDCI(); } }); } } },
                                 '-',
                                 { xtype: 'combobox', name: 'lg_DCI_ID', margins: '0 0 0 10', itemId: 'lg_DCI_ID', store: store_dci, valueField: 'str_NAME', displayField: 'str_NAME',
-                                  typeAhead: true, pageSize: 20, queryMode: 'remote', width: 400, emptyText: 'Selectionner un DCI...',
-                                  listeners: { select: function () { Me.onRechClickDCI(); }, change: function () { Me.onfiltercheck(); } } },
+                                  pageSize: 20, minChars: 2, queryMode: 'remote', width: 400, emptyText: 'Selectionner un DCI...',
+                                  listeners: {
+                                      // L'identifiant REEL du DCI est memorise a la selection : le combo
+                                      // porte historiquement le NOM (valueField str_NAME) et la recherche
+                                      // par nom echoue des qu'un nom est en doublon ou inactif en base.
+                                      select: function (cmp, records) {
+                                          cmp._dciId = (records && records.length) ? records[0].get('lg_DCI_ID') : null;
+                                          Me.onRechClickDCI();
+                                      },
+                                      change: function (cmp) {
+                                          cmp._dciId = null;
+                                          Me.onfiltercheck();
+                                      }
+                                  } },
                                 '-',
                                 { text: 'Associer', tooltip: 'Associer le code DCI a cet article', scope: this, itemId: 'associate', handler: this.onbtndciadd }
                             ],
@@ -544,6 +557,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
         // Helper local pour le form
         var g = function (qid) { return form.down('#' + qid); };
         this._g = g;
+        // Reference directe au formulaire : la fenetre reellement affichee est creee a part
+        // (var win), la vue elle-meme n'est jamais rendue et this.down('form') plante
+        // ("items is undefined") dans les handlers.
+        this._form = form;
 
         // Masquer bouton assoc si update + déjà déconditionné (optionnel)
         if (Omode === 'update' && bool_DECONDITIONNE == '1') {
@@ -663,7 +680,11 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
         }
 
         // WINDOW
-        var win = new Ext.window.Window({
+        // Une seule fenetre a la fois : un nouveau clic remplace la precedente.
+        if (winModifArticleOuverte && !winModifArticleOuverte.isDestroyed) {
+            winModifArticleOuverte.destroy();
+        }
+        var win = winModifArticleOuverte = new Ext.window.Window({
             autoShow: true,
             title: this.getTitre(),
             width: '90%',
@@ -723,10 +744,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             var qtyVal = qtyField ? qtyField.getValue() : null;
 
             if (Omode === 'create') {
-                internal_url = url_services_transaction_famille + 'create';
+                internal_url = '../api/v1/fichearticle/enregistrer?mode=create';
                 g('int_PAT').setValue(g('int_PAF').getValue());
             } else if (Omode === 'update') {
-                internal_url = url_services_transaction_famille + 'update&lg_FAMILLE_ID=' + ref;
+                internal_url = '../api/v1/fichearticle/enregistrer?mode=update&lg_FAMILLE_ID=' + ref;
             }
 
             // int_NUMBERDETAIL requis uniquement en création de détail
@@ -776,7 +797,13 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 str_CODE_REMISE = g('str_CODE_REMISE').getValue() || 0,
                 int_PRICE = g('int_PRICE').getValue() || 0;
 
-            var str_DESCRIPTION = g('str_DESCRIPTION').getValue();
+            // Suppression des espaces avant/apres la designation a l'enregistrement
+            var str_DESCRIPTION = (g('str_DESCRIPTION').getValue() || '').trim();
+            g('str_DESCRIPTION').setValue(str_DESCRIPTION);
+            if (!str_DESCRIPTION) {
+                Ext.MessageBox.alert('Message', 'La designation de l\'article est obligatoire');
+                return;
+            }
 
             testextjs.app.getController('App').ShowWaitingProcess();
 
@@ -811,7 +838,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 lg_FAMILLEARTICLE_ID: g('lg_FAMILLEARTICLE_ID').getValue(),
                 lg_ZONE_GEO_ID: g('lg_ZONE_GEO_ID').getValue(),
                 lg_FABRIQUANT_ID: g('lg_FABRIQUANT_ID').getValue(),
-                str_DESCRIPTION: g('str_DESCRIPTION').getValue(),
+                str_DESCRIPTION: str_DESCRIPTION,
                 int_CIP: g('int_CIP').getValue(),
                 int_EAN13: g('int_EAN13').getValue(),
                 lg_CODE_TVA_ID: g('lg_CODE_TVA_ID').getValue(),
@@ -856,90 +883,10 @@ Ext.Ajax.request({
                 testextjs.app.getController('App').StopWaitingProcess();
                 var object = Ext.JSON.decode(response.responseText, false);
 
-                // --- Post-traitement de fiabilisation des flags ---
-                // 1) Marquer le parent comme "a un détail" (compat snake/camel)
-                if (ref) {
-                    Ext.Ajax.request({
-                        url: url_services_transaction_famille + 'update&lg_FAMILLE_ID=' + ref,
-                        params: { bool_DECONDITIONNE_EXIST: 1, boolDeconditionneExist: 1 },
-                        callback: function(){ /* ignore */ }
-                    });
-                }
-                // 2) Marquer l'enfant (détail) avec un payload complet attendu par le JSP update
-                try {
-                    var childId = (object && (
-                        object.lgFamilleId || object.lg_FAMILLE_ID ||
-                        (object.data && (object.data.lgFamilleId || object.data.lg_FAMILLE_ID || object.data.id)) ||
-                        object.id || object.familleId
-                    ));
-                    if (childId) {
-                        var p = object || {};
-                        var updateParams = {
-                            // flags sous toutes les formes (et valeurs string si besoin côté JSP)
-                            bool_DECONDITIONNE: 1,
-                            boolDeconditionne: 1,
-                            bool_DECONDITIONNE_EXIST: 1,
-                            boolDeconditionneExist: 1,
-                            bool_DECONDITIONNE_str: '1',
-                            bool_DECONDITIONNE_EXIST_str: '1',
-                            // mapping API -> JSP (best-effort, champs souvent requis par l'update)
-                            str_DESCRIPTION: p.strDescription || '',
-                            int_CIP: p.intCip || '',
-                            int_EAN13: p.intEan13 || '',
-                            int_PAT: p.intPat || '',
-                            int_PAF: p.intPaf || '',
-                            int_PRICE_TIPS: p.intPriceTips || 0,
-                            int_PRICE: p.intPrice || 0,
-                            lg_FAMILLEARTICLE_ID: p.lgFamilleArticleId || '',
-                            lg_ZONE_GEO_ID: p.lgZoneGeoId || '',
-                            lg_FABRIQUANT_ID: p.lgFabriquantId || '',
-                            lg_CODE_TVA_ID: p.lgCodeTvaId || '',
-                            lg_CODE_GESTION_ID: p.lgCodeGestionId || '',
-                            lg_GROSSISTE_ID: p.lgGrossisteId || '',
-                            lg_TYPEETIQUETTE_ID: p.lgTypeEtiquetteId || '',
-                            lg_CODE_ACTE_ID: p.lgCodeActeId || '',
-                            str_CODE_TAUX_REMBOURSEMENT: p.strCodeTauxRemboursement || 0,
-                            int_T: p.intT || '',
-                            int_STOCK_REAPROVISONEMENT: p.intStockReaprovisonement || 0,
-                            int_QTE_REAPPROVISIONNEMENT: p.intQteReapprovisionnement || 0,
-                            int_SEUIL_RESERVE: p.intSeuilReserve || 0,
-                            bool_RESERVE: p.boolReserve || false,
-                            laboratoireId: p.laboratoireId || null,
-                            gammeId: p.gammeId || null,
-                            int_NUMBERDETAIL: p.intNumberDetail || p.intQteDetail || null,
-                            cmu_price: p.cmuPrice || 0
-                        };
-                        Ext.Ajax.request({
-                            url: url_services_transaction_famille + 'update&lg_FAMILLE_ID=' + childId,
-                            params: updateParams,
-                            callback: function(){ /* ignore */ }
-                        });
-                    }
-                } catch(e) { /* noop */ }
-
-                // Filet de sécurité (enfant) : si l'API n'a pas valorisé bool_DECONDITIONNE_EXIST sur le DÉTAIL,
-                // on force à 0 (un détail n'a pas lui-même de sous-détails)
-                try {
-                    var childId = (object && (
-                    object.lgFamilleId || object.lg_FAMILLE_ID ||
-                    (object.data && (object.data.lgFamilleId || object.data.lg_FAMILLE_ID || object.data.id)) ||
-                    object.id || object.familleId
-                ));
-                    if (childId) {
-                        Ext.Ajax.request({
-                            url: url_services_transaction_famille + 'update&lg_FAMILLE_ID=' + childId,
-                            params: { bool_DECONDITIONNE_EXIST: 1, boolDeconditionneExist: 1, bool_DECONDITIONNE: 1, boolDeconditionne: 1 }, callback: function(){ /* ignore */ }
-                        });
-                    }
-                } catch(e) { /* noop */ }
-
-                // Filet de sécurité : marquer le parent comme "a un détail" si l'API ne l'a pas fait
-                if (ref) {
-                    Ext.Ajax.request({
-                        url: url_services_transaction_famille + 'update&lg_FAMILLE_ID=' + ref,
-                        params: { bool_DECONDITIONNE_EXIST: 1, boolDeconditionneExist: 1 }, callback: function(){ /* ignore */ }
-                    });
-                }
+                // Les anciens 'filets de securite' re-postaient deux fois mode=update avec des
+                // drapeaux de deconditionnement a chaque enregistrement (trois requetes visibles
+                // pour un clic) : ils dataient du flux create-detail, qui passe desormais par
+                // l'API v1/produit/create-detail et n'emprunte plus ce chemin. Supprimes.
                     if (object.success == '0') {
                         // Differe pour eviter la course hide()/show() du MessageBox singleton
                         // (StopWaitingProcess vient de masquer ce meme singleton).
@@ -992,20 +939,59 @@ Ext.Ajax.request({
         }
     },
 
+    // Association d'un DCI a l'article (bouton 'Associer') : API REST.
+    onbtndciadd: function () {
+        var form = this._form, g = this._g;
+        if (!form || !g) {
+            return;
+        }
+        // L'id reel prime sur le nom : la resolution par nom echoue si le nom est
+        // duplique ou inactif en base (le serveur accepte id, code ou nom).
+        var comboDci = g('lg_DCI_ID');
+        var dci = comboDci && (comboDci._dciId || comboDci.getValue());
+        if (!dci) {
+            Ext.MessageBox.alert('Message', 'Veuillez selectionner un DCI a associer.');
+            return;
+        }
+        Ext.Ajax.request({
+            url: '../api/v1/referentiel-article/dci-famille/associer',
+            method: 'POST',
+            params: { lg_DCI_ID: dci, lg_FAMILLE_ID: ref },
+            success: function (response) {
+                var object = Ext.JSON.decode(response.responseText, true) || {};
+                if (object.success === '0' || object.success === 0) {
+                    Ext.MessageBox.alert('Message', object.errors || "Echec de l'association");
+                    return;
+                }
+                g('lg_DCI_ID').clearValue();
+                var grid = form.down('#gridpanelDciID');
+                if (grid) {
+                    grid.getStore().reload();
+                }
+            },
+            failure: function (response) {
+                Ext.MessageBox.alert('Message', "Echec de l'association du DCI");
+            }
+        });
+    },
+
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message', 'Confirmer la suppresssion', function (btn) {
             if (btn === 'yes') {
                 var rec = grid.getStore().getAt(rowIndex);
                 Ext.Ajax.request({
-                    url: url_services_transaction_dci_famille + 'delete',
-                    params: { lg_FAMILLE_DCI_ID: rec.get('lg_FAMILLE_DCI_ID') },
+                    url: '../api/v1/referentiel-article/dci-famille/' + rec.get('lg_FAMILLE_DCI_ID'),
+                    method: 'DELETE',
                     success: function (response) {
                         var object = Ext.JSON.decode(response.responseText, false);
                         if (object.success === 0) {
                             Ext.MessageBox.alert('Error Message', object.errors);
                             return;
                         } else {
-                            Ext.MessageBox.alert('Suppression ' + '[' + rec.get('str_NAME') + ']', 'Suppression effectuee avec succes');
+                            // La ligne porte le nom du DCI dans dci_str_NAME (str_NAME n'existe
+                            // pas sur ce modele : le titre affichait [undefined])
+                            Ext.MessageBox.alert('Suppression [' + (rec.get('dci_str_NAME') || rec.get('str_CODE') || '') + ']',
+                                    'Suppression effectuee avec succes');
                         }
                         grid.getStore().reload();
                     },
@@ -1018,27 +1004,39 @@ Ext.Ajax.request({
     },
 
     onfiltercheck: function () {
-        var form = this.down('form'), g = this._g || function(q){ return form.down('#'+q); };
+        var g = this._g;
+        if (!g) {
+            return;
+        }
         var lg_DCI_ID = g('lg_DCI_ID') && g('lg_DCI_ID').getValue();
         var OGrid = g('lg_DCI_ID');
+        if (!OGrid) {
+            return;
+        }
         if (lg_DCI_ID !== null && lg_DCI_ID !== '' && lg_DCI_ID !== undefined) {
             var len = lg_DCI_ID.length;
-            var url_final = url_services_data_dci + '?search_value=' + lg_DCI_ID;
+            var url_final = '../api/v1/referentiel-article/dcis-initial?search_value=' + encodeURIComponent(lg_DCI_ID);
             if (len >= 3) { OGrid.getStore().getProxy().url = url_final; OGrid.getStore().reload(); }
         } else {
-            OGrid.getStore().getProxy().url = url_services_data_dci;
+            OGrid.getStore().getProxy().url = '../api/v1/referentiel-article/dcis-initial';
             OGrid.getStore().reload();
         }
     },
 
     onRechClickDCI: function () {
-        var form = this.down('form'), g = this._g || function(q){ return form.down('#'+q); };
+        var form = this._form, g = this._g;
+        if (!form || !g) {
+            return;
+        }
         var rechecher_dci = g('rechecher_dci').getValue();
-        var lg_DCI_ID = g('lg_DCI_ID').getValue() || '';
+        // Filtre par l'ID reel du DCI : la valeur du combo est le NOM, qui ne matche
+        // jamais la colonne id (la grille se vidait apres chaque selection).
+        var lg_DCI_ID = g('lg_DCI_ID')._dciId || '';
         var grid = form.down('#gridpanelDciID');
-        grid.getStore().getProxy().url = url_services_data_dci_famille + '?search_value=' + rechecher_dci + '&lg_FAMILLE_ID=' + ref + '&lg_DCI_ID=' + lg_DCI_ID;
+        grid.getStore().getProxy().url = '../api/v1/referentiel-article/dci-famille?search_value='
+                + encodeURIComponent(rechecher_dci) + '&lg_FAMILLE_ID=' + ref + '&lg_DCI_ID=' + encodeURIComponent(lg_DCI_ID);
         grid.getStore().reload();
-        grid.getStore().getProxy().url = url_services_data_dci_famille + '?lg_FAMILLE_ID=' + ref;
+        grid.getStore().getProxy().url = '../api/v1/referentiel-article/dci-famille?lg_FAMILLE_ID=' + ref;
     },
 
     // Recalcul des prix UNIQUEMENT quand setQtyDetailState('required')

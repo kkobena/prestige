@@ -403,7 +403,12 @@ public class SalesStatsRessource {
     @GET
     @Path("avoirs-ouverts/count")
     public Response openAvoirsCount() {
-        JSONObject jsono = salesService.getOpenAvoirsCount();
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
+        JSONObject jsono = salesService.getOpenAvoirsCount(tu, asAuthority, allActivitis);
         return Response.ok().entity(jsono.toString()).build();
     }
 

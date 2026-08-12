@@ -26,7 +26,8 @@ Ext.define('testextjs.view.vente.SuppressionsVente', {
         me.selectedRows = {};
 
         var today = new Date();
-        var defautDebut = Ext.Date.add(today, Ext.Date.DAY, -30);
+        // Periode par defaut : la journee en cours
+        var defautDebut = today;
 
         me.suppressionStore = new Ext.data.Store({
             fields: ['id', 'typeSuppression', 'venteId', 'venteRef', 'produitId',
@@ -160,6 +161,10 @@ Ext.define('testextjs.view.vente.SuppressionsVente', {
                             scope: me,
                             handler: me.doPrint
                         }, {
+                            text: 'Exporter (Excel)',
+                            scope: me,
+                            handler: me.onExportExcel
+                        }, {
                             text: 'Creer inventaire',
                             iconCls: 'addicon',
                             scope: me,
@@ -178,8 +183,12 @@ Ext.define('testextjs.view.vente.SuppressionsVente', {
                     columnLines: true,
                     viewConfig: {forceFit: true},
                     columns: [
-                        {header: 'Date', dataIndex: 'date', width: 80},
-                        {header: 'Heure', dataIndex: 'heure', width: 70},
+                        {
+                            header: 'Date', dataIndex: 'date', width: 130,
+                            renderer: function (v, meta, rec) {
+                                return v + ' ' + (rec.get('heure') || '');
+                            }
+                        },
                         {header: 'Vente', dataIndex: 'venteRef', flex: 1},
                         {header: 'CIP', dataIndex: 'produitCip', width: 80},
                         {header: 'Produit', dataIndex: 'produitLibelle', flex: 2},
@@ -282,6 +291,27 @@ Ext.define('testextjs.view.vente.SuppressionsVente', {
         me.selectedRows = {};
         me.selModel_.deselectAll();
         me.updateCounter();
+    },
+    // Export Excel genere par le serveur : memes filtres et memes lignes que la
+    // grille, toutes pages confondues.
+    onExportExcel: function () {
+        var me = this, filters = me.getFilters();
+        var url = '../api/v1/vente-suppressions/export/excel'
+                + '?dtStart=' + encodeURIComponent(filters.dtStart)
+                + '&dtEnd=' + encodeURIComponent(filters.dtEnd)
+                + '&userId=' + encodeURIComponent(filters.userId)
+                + '&type=' + encodeURIComponent(filters.type)
+                + '&query=' + encodeURIComponent(filters.query)
+                + '&_dc=' + new Date().getTime();
+        // Iframe cachee : le telechargement demarre sans quitter ni recharger l'ecran courant.
+        var frame = document.getElementById('suppressions-export-frame');
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.id = 'suppressions-export-frame';
+            frame.style.display = 'none';
+            document.body.appendChild(frame);
+        }
+        frame.src = url;
     },
     doPrint: function () {
         var me = this, filters = me.getFilters();

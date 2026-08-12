@@ -2461,11 +2461,29 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     }
 
     @Override
-    public JSONObject getOpenAvoirsCount() {
+    public JSONObject getOpenAvoirsCount(TUser user, boolean showAll, boolean showAllActivities) {
         JSONObject json = new JSONObject();
         try {
-            Query q = getEntityManager().createNativeQuery(OPEN_AVOIRS_COUNT_SQL);
+            // Memes regles de visibilite que la liste des avoirs ouverts (str_SHOW_VENTE
+            // puis P_SHOW_ALL_ACTIVITY) : badge et panneau de la cloche restent coherents.
+            String sql = OPEN_AVOIRS_COUNT_SQL;
+            boolean filtreUtilisateur = !showAll && user != null;
+            boolean filtreEmplacement = showAll && !showAllActivities && user != null;
+            if (filtreUtilisateur) {
+                sql += " AND p.lg_USER_ID=:connectedUserId";
+            }
+            if (filtreEmplacement) {
+                sql += " AND EXISTS (SELECT 1 FROM t_user uop WHERE uop.lg_USER_ID=p.lg_USER_ID"
+                        + " AND uop.lg_EMPLACEMENT_ID=:connectedEmplacementId)";
+            }
+            Query q = getEntityManager().createNativeQuery(sql);
             q.setParameter("status", Constant.STATUT_IS_CLOSED);
+            if (filtreUtilisateur) {
+                q.setParameter("connectedUserId", user.getLgUSERID());
+            }
+            if (filtreEmplacement) {
+                q.setParameter("connectedEmplacementId", user.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            }
             int total = ((Number) q.getSingleResult()).intValue();
             json.put("total", total);
             json.put("data", new JSONArray());
@@ -2563,6 +2581,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
         if (userId != null) {
             query.setParameter("userId", userId);
+        }
+        if (!params.isShowAll() && params.getUserId() != null) {
+            query.setParameter("connectedUserId", params.getUserId().getLgUSERID());
+        }
+        if (params.isShowAll() && !params.isShowAllActivities() && params.getUserId() != null) {
+            query.setParameter("connectedEmplacementId", params.getUserId().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         }
 
         if (StringUtils.isNotEmpty(params.getDepotId())) {
@@ -2724,6 +2748,18 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
         if (StringUtils.isNotEmpty(params.getUser())) {
             finalSql.append(" AND p.lg_USER_ID=:userId ");
+        }
+        // Regles de visibilite historiques de l'ecran (perdues lors de l'optimisation de la
+        // requete des ventes terminees), memes flags que l'ancien chemin JPA du service :
+        // - privilege str_SHOW_VENTE ('Afficher les ventes de tous les utilisateurs') absent
+        // -> l'utilisateur connecte ne voit que SES ventes ;
+        // - privilege P_SHOW_ALL_ACTIVITY absent -> uniquement les ventes de son emplacement.
+        if (!params.isShowAll() && params.getUserId() != null) {
+            finalSql.append(" AND p.lg_USER_ID=:connectedUserId ");
+        }
+        if (params.isShowAll() && !params.isShowAllActivities() && params.getUserId() != null) {
+            finalSql.append(" AND EXISTS (SELECT 1 FROM t_user uop WHERE uop.lg_USER_ID=p.lg_USER_ID"
+                    + " AND uop.lg_EMPLACEMENT_ID=:connectedEmplacementId) ");
         }
         if (params.isDepotOnly()) {
             finalSql.append(" AND p.lg_NATURE_VENTE_ID = '3' ");

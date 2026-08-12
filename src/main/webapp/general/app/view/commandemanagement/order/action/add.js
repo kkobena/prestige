@@ -211,7 +211,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     store: storerepartiteur,
                                     valueField: 'lg_GROSSISTE_ID',
                                     displayField: 'str_LIBELLE',
-                                    typeAhead: true,
+                                    // typeAhead retire : pre-completait avec le premier resultat
                                     pageSize: 999,
                                     queryMode: 'remote',
                                     width: 450,
@@ -321,7 +321,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     displayField: 'str_DESCRIPTION',
                                     enableKeyEvents: true,
                                     pageSize: 20,
-                                    typeAhead: true,
+                                    // typeAhead retire : il pre-completait le champ avec le premier
+                                    // resultat et la liste se retrouvait filtree sur ce seul produit
                                     width: 600,
 //                                    flex:2
                                     queryMode: 'remote',
