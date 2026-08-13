@@ -110,6 +110,29 @@ Ext.define('testextjs.controller.NotificationCtr', {
         if (label) {
             label.setText('chargement...');
         }
+        // Rafraîchit à la demande les statuts de livraison en attente (mode POLLING
+        // du fournisseur en vigueur), puis recharge la grille si des statuts ont changé.
+        Ext.Ajax.request({
+            url: '../api/v1/sms/refresh-statuts',
+            method: 'POST',
+            success: function (response) {
+                let res = {};
+                try {
+                    res = Ext.decode(response.responseText);
+                } catch (ex) {
+                    res = {};
+                }
+                if (res.success && res.updated > 0) {
+                    const grid = me.getMenunotificationGrid();
+                    if (grid) {
+                        grid.getStore().reload();
+                    }
+                }
+            },
+            failure: function () {
+                // silencieux : le rafraîchissement de statut est un bonus
+            }
+        });
         Ext.Ajax.request({
             url: '../api/v1/sms/solde',
             method: 'GET',
@@ -119,6 +142,13 @@ Ext.define('testextjs.controller.NotificationCtr', {
                     res = Ext.decode(response.responseText);
                 } catch (ex) {
                     res = {};
+                }
+                // La fenêtre "Accusés de réception (DR)" est propre à Orange :
+                // masquée quand un autre fournisseur est en vigueur.
+                const drBtn = me.getMenunotificationlist()
+                        ? me.getMenunotificationlist().down('#drBtn') : null;
+                if (drBtn && res.provider) {
+                    drBtn.setVisible(res.provider === 'ORANGE');
                 }
                 if (!label) {
                     return;
@@ -132,7 +162,7 @@ Ext.define('testextjs.controller.NotificationCtr', {
                     }
                     label.setText(txt);
                 } else if (res.success && !res.found) {
-                    label.setText('<span style="color:#e69500;">solde indisponible (format Orange inattendu)</span>');
+                    label.setText('<span style="color:#e69500;">solde indisponible (format inattendu)</span>');
                 } else {
                     label.setText('<span style="color:red;">' + (res.msg || res.userMessage || 'indisponible') + '</span>');
                 }
@@ -325,11 +355,14 @@ Ext.define('testextjs.controller.NotificationCtr', {
                     } catch (ex) {
                         res = {};
                     }
-                    if (res.success) {
-                        Ext.Msg.alert('Renvoi SMS', res.msg || 'SMS accepté par Orange (201)');
-                    } else {
-                        Ext.Msg.alert('Renvoi SMS', res.msg || 'Le renvoi a échoué.');
-                    }
+                    // MessageBox dimensionnée : les messages longs étaient tronqués avec Ext.Msg.alert.
+                    Ext.MessageBox.show({
+                        title: 'Renvoi SMS',
+                        width: 420,
+                        msg: res.msg || (res.success ? 'SMS accepté par le fournisseur.' : 'Le renvoi a échoué.'),
+                        buttons: Ext.MessageBox.OK,
+                        icon: res.success ? Ext.MessageBox.INFO : Ext.MessageBox.WARNING
+                    });
                     grid.getStore().reload();
                 },
                 failure: function () {

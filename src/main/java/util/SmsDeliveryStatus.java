@@ -16,6 +16,8 @@ public final class SmsDeliveryStatus {
 
     /** Accepté par Orange (HTTP 201) - pas encore de confirmation terminal. */
     public static final String ACCEPTED_BY_ORANGE = "ACCEPTED_BY_ORANGE";
+    /** Accepté par un fournisseur autre qu'Orange (LeTexto...) - pas encore de confirmation terminal. */
+    public static final String ACCEPTED_BY_PROVIDER = "ACCEPTED_BY_PROVIDER";
     /** Remis au réseau Orange. */
     public static final String DELIVERED_TO_NETWORK = "DELIVERED_TO_NETWORK";
     /** Livré sur le téléphone du destinataire (succès réel). */
@@ -26,6 +28,32 @@ public final class SmsDeliveryStatus {
     public static final String DELIVERY_UNCERTAIN = "DELIVERY_UNCERTAIN";
     /** Message en attente de livraison (terminal injoignable temporairement). */
     public static final String MESSAGE_WAITING = "MESSAGE_WAITING";
+
+    /**
+     * Convertit un statut LeTexto (PENDING, SENT, DELIVERED, FAILED) vers notre constante normalisée.
+     */
+    public static String fromLeTexto(String leTextoStatus) {
+        if (leTextoStatus == null) {
+            return null;
+        }
+        switch (leTextoStatus.trim().toUpperCase()) {
+        case "PENDING":
+            return MESSAGE_WAITING;
+        case "SENT":
+            return DELIVERED_TO_NETWORK;
+        case "DELIVERED":
+            return DELIVERED_TO_TERMINAL;
+        case "FAILED":
+            return DELIVERY_IMPOSSIBLE;
+        default:
+            return leTextoStatus.trim();
+        }
+    }
+
+    /** Vrai si le statut est terminal : plus rien à attendre du fournisseur pour ce message. */
+    public static boolean isFinal(String status) {
+        return DELIVERED_TO_TERMINAL.equals(status) || DELIVERY_IMPOSSIBLE.equals(status);
+    }
 
     /**
      * Convertit un {@code deliveryStatus} brut Orange (ex. "DeliveredToTerminal") vers notre constante normalisée.

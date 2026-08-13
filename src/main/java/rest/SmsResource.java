@@ -31,6 +31,10 @@ public class SmsResource {
     private SmsAdminService smsAdminService;
     @EJB
     private SmsService smsService;
+    @EJB
+    private rest.service.SmsFournisseurService smsFournisseurService;
+    @EJB
+    private rest.service.impl.SmsProviderFactory smsProviderFactory;
 
     /** Solde / contrats SMS (bundle restant, expiration) - réponse Orange brute. */
     @GET
@@ -39,11 +43,33 @@ public class SmsResource {
         return Response.ok(smsAdminService.getContracts().toString()).build();
     }
 
-    /** Solde SMS résumé et prêt à afficher (total d'unités + détail par contrat). */
+    /**
+     * Solde SMS résumé et prêt à afficher (total d'unités + détail par contrat). Interroge le fournisseur en vigueur :
+     * API admin pour Orange, API de solde du fournisseur sinon.
+     */
     @GET
     @Path("solde")
     public Response solde() {
-        return Response.ok(smsAdminService.getBalanceSummary().toString()).build();
+        dal.SmsFournisseur enVigueur = smsFournisseurService.getEnVigueur();
+        if (enVigueur != null && !util.sms.SmsProviderCatalog.CODE_ORANGE.equals(enVigueur.getCode())) {
+            util.sms.SmsProvider provider = smsProviderFactory.forFournisseur(enVigueur);
+            if (provider != null) {
+                return Response.ok(provider.balance().toString()).build();
+            }
+        }
+        return Response.ok(
+                smsAdminService.getBalanceSummary().put("provider", util.sms.SmsProviderCatalog.CODE_ORANGE).toString())
+                .build();
+    }
+
+    /**
+     * Rafraîchit à la demande les statuts de livraison des SMS en attente (mode POLLING du fournisseur en vigueur).
+     * Déclenché par l'écran Notifications lors de la consultation du solde.
+     */
+    @POST
+    @Path("refresh-statuts")
+    public Response refreshStatuts() {
+        return Response.ok(smsService.refreshDeliveryStatuses().toString()).build();
     }
 
     /** Statistiques d'utilisation SMS. */
