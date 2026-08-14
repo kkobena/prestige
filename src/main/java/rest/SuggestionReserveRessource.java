@@ -400,4 +400,46 @@ public class SuggestionReserveRessource {
         return Response.ok(data).header("Content-Disposition", "attachment; filename=\"compte_rendu_suggestion.xls\"")
                 .build();
     }
+
+    /**
+     * Export Excel (paysage) du rapport d'importation du panier : lignes rejetees et quantites ajustees. Le rapport
+     * n'est pas persiste, le client renvoie donc les donnees affichees dans le champ de formulaire {@code payload}
+     * (soumission par formulaire cache : le navigateur telecharge la piece jointe sans quitter la page).
+     */
+    @POST
+    @Path("rapport-import/excel")
+    @Consumes(javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces("application/vnd.ms-excel")
+    public Response rapportImportExcel(@javax.ws.rs.FormParam("payload") String payload) throws Exception {
+        TUser user = currentUser();
+        if (user == null) {
+            return deconnecte();
+        }
+        byte[] data = suggestionReserveService.exportRapportImportExcel(user, payload);
+        return Response.ok(data).header("Content-Disposition",
+                "attachment; filename=\"rapport_importation_reappro_" + horodatage() + ".xls\"").build();
+    }
+
+    /** Horodatage des fichiers exportes : chaque export garde son propre nom. */
+    private static String horodatage() {
+        return new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+    }
+
+    /**
+     * PDF (Jasper, A4 paysage) du rapport d'importation, servi inline : soumis par formulaire cache cible sur un nouvel
+     * onglet, le navigateur affiche le PDF et son visualiseur sert a l'impression.
+     */
+    @POST
+    @Path("rapport-import/pdf")
+    @Consumes(javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces("application/pdf")
+    public Response rapportImportPdf(@javax.ws.rs.FormParam("payload") String payload) throws Exception {
+        TUser user = currentUser();
+        if (user == null) {
+            return deconnecte();
+        }
+        byte[] data = suggestionReserveService.exportRapportImportPdf(user, payload);
+        return Response.ok(data).header("Content-Disposition",
+                "inline; filename=\"rapport_importation_reappro_" + horodatage() + ".pdf\"").build();
+    }
 }

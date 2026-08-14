@@ -209,14 +209,60 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
                 return;
             }
             var lignesRapport = [];
-            Ext.each(rejets, function (r) {
+            // motifCourt : version impression/export (la designation a sa propre
+            // colonne, inutile d'y repeter le nom du produit). L'ecran garde motif.
+            var pousserLigne = function (r, type) {
                 lignesRapport.push({ligne: r.ligne, cip: r.cip, quantite: r.quantite,
-                    motif: r.motif, type: 'REJET'});
+                    designation: r.designation || '',
+                    stock: (r.stock === 0 || r.stock) ? String(r.stock) : '',
+                    ecart: (r.ecart === 0 || r.ecart) ? String(r.ecart) : '',
+                    motif: r.motif, motifCourt: r.motifCourt || r.motif, type: type});
+            };
+            Ext.each(rejets, function (r) {
+                pousserLigne(r, 'REJET');
             });
             Ext.each(ajustements, function (r) {
-                lignesRapport.push({ligne: r.ligne, cip: r.cip, quantite: r.quantite,
-                    motif: r.motif, type: 'AJUSTEMENT'});
+                pousserLigne(r, 'AJUSTEMENT');
             });
+            // Resume en texte brut : repris dans l'export Excel et le PDF
+            var resumeTexte = nbAjoutees + ' ligne(s) ajoutee(s) au panier, ' + rejets.length
+                    + ' rejetee(s), ' + ajustements.length + ' quantite(s) ajustee(s)';
+
+            // Le rapport n'existe pas en base : on renvoie au serveur les lignes
+            // affichees (payload JSON) par formulaire cache. cible '_blank' pour le
+            // PDF (nouvel onglet, impression depuis le visualiseur), telechargement
+            // direct pour le .xls.
+            var envoyerRapport = function (endpoint, cible) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '../api/v1/suggestion-reserve/rapport-import/' + endpoint;
+                if (cible) {
+                    form.target = cible;
+                }
+                form.style.display = 'none';
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'payload';
+                input.value = Ext.JSON.encode({
+                    categorie: categorie,
+                    resume: resumeTexte,
+                    lignes: Ext.Array.map(lignesRapport, function (l) {
+                        return {ligne: l.ligne, cip: l.cip, designation: l.designation,
+                            quantite: l.quantite, stock: l.stock, ecart: l.ecart,
+                            motif: l.motifCourt, type: l.type};
+                    })
+                });
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+            };
+            var exporterRapportExcel = function () {
+                envoyerRapport('excel', null);
+            };
+            var imprimerRapport = function () {
+                envoyerRapport('pdf', '_blank');
+            };
             var rapportStore = new Ext.data.Store({
                 fields: ['ligne', 'cip', 'quantite', 'motif', 'type'],
                 data: lignesRapport
@@ -255,7 +301,10 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
                         viewConfig: {enableTextSelection: true}
                     }
                 ],
-                buttons: [{text: 'Fermer', handler: function () {
+                buttons: [
+                    {text: 'Imprimer', iconCls: 'printicon', handler: imprimerRapport},
+                    {text: 'Exporter (Excel)', iconCls: 'excelicon', handler: exporterRapportExcel},
+                    {text: 'Fermer', handler: function () {
                             winRapport.close();
                         }}]
             });
@@ -320,6 +369,31 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
             winImport.show();
         };
 
+        // Libelle du panier avec compteur vivant : produits distincts et total
+        // des unites, rafraichi a chaque ajout, retrait, import ou edition de
+        // quantite (datachanged ne couvre pas l'edition d'une ligne, update si)
+        var cartLabel = Ext.create('Ext.Component', {
+            html: '<b>Panier</b> — vide',
+            margin: '6 0 4 0'
+        });
+        var majCartLabel = function () {
+            var nb = cartStore.getCount();
+            if (nb === 0) {
+                cartLabel.update('<b>Panier</b> — vide');
+                return;
+            }
+            var unites = 0;
+            cartStore.each(function (r) {
+                unites += parseInt(r.get('int_QTE'), 10) || 0;
+            });
+            cartLabel.update('<b>Panier</b> — <b>' + nb + '</b> produit' + (nb > 1 ? 's' : '')
+                    + ', <b>' + unites + '</b> unité' + (unites > 1 ? 's' : ''));
+        };
+        cartStore.on({
+            datachanged: majCartLabel,
+            update: majCartLabel
+        });
+
         var cartGrid = Ext.create('Ext.grid.Panel', {
             store: cartStore,
             flex: 1,
@@ -350,10 +424,11 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
         var win = new Ext.window.Window({
             autoShow: false,
             title: me.getTitre(),
-            width: 640,
-            height: 480,
+            width: 900,
+            height: 620,
             minWidth: 500,
             minHeight: 360,
+            maximizable: true,
             layout: 'vbox',
             modal: true,
             bodyPadding: 8,
@@ -375,7 +450,7 @@ Ext.define('testextjs.view.stockmanagement.reserve.action.reappro', {
                                 {xtype: 'tbspacer', width: 15}, infoLabel]}
                     ]
                 },
-                {xtype: 'component', html: '<b>Panier</b>', margin: '6 0 4 0'},
+                cartLabel,
                 cartGrid
             ],
             dockedItems: [barreMotif],
