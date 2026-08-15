@@ -3,6 +3,7 @@
 Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
     extend: 'Ext.panel.Panel',
     xtype: 'valorisationstock',
+    requires: ['testextjs.view.stockmanagement.inventaire.action.selectionCriteres'],
 
     cls: 'pl-card',
     frame: true,
@@ -21,9 +22,14 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
         (function injectCss() {
             if (document.getElementById('valo-tab-css')) { return; }
             var css = [
-                '.pl-tab-rayon .x-tab-inner{color:' + ACCENT.rayon + ' !important;font-weight:800;}',
-                '.pl-tab-reserve .x-tab-inner{color:' + ACCENT.reserve + ' !important;font-weight:800;}',
-                '.pl-tab-total .x-tab-inner{color:' + ACCENT.total + ' !important;font-weight:800;}',
+                '.pl-tab-rayon .x-tab-inner{color:' + ACCENT.rayon + ' !important;font-weight:800;font-size:14px;line-height:24px;}',
+                '.pl-tab-reserve .x-tab-inner{color:' + ACCENT.reserve + ' !important;font-weight:800;font-size:14px;line-height:24px;}',
+                '.pl-tab-total .x-tab-inner{color:' + ACCENT.total + ' !important;font-weight:800;font-size:14px;line-height:24px;}',
+                // Centre verticalement le libelle sur la hauteur de son montant (les champs de
+                // formulaire ExtJS sont des tableaux : la cellule du libelle est alignee en haut
+                // par defaut, d'ou le decalage avec les grandes polices).
+                '.valo-kpi .x-field-label-cell{vertical-align:middle !important;}',
+                '.valo-kpi .x-form-item-label{padding-top:0 !important;}',
                 '.x-tab-active.pl-tab-rayon{background:#e7f5ec;border-bottom:3px solid ' + ACCENT.rayon + ';}',
                 '.x-tab-active.pl-tab-reserve{background:#fdf0e1;border-bottom:3px solid ' + ACCENT.reserve + ';}',
                 '.x-tab-active.pl-tab-total{background:#e8f0fe;border-bottom:3px solid ' + ACCENT.total + ';}',
@@ -82,15 +88,53 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
         };
         var chartStores = {};
 
+        // Axe du widget de selection multiple selon le mode (memes axes que la creation d'inventaire)
+        var AXES = { 1: 'Famille', 2: 'Emplacement', 3: 'Grossiste' };
+
+        function criteresPanel() {
+            return me.down('#valoCriteres');
+        }
+        function idsCoches() {
+            var p = criteresPanel();
+            return p ? p.getValeurs() : [];
+        }
+        // Modes Famille/Emplacement/Grossiste : la selection se fait desormais par cases a
+        // cocher (widget de la creation d'inventaire). Les anciennes combos a choix unique et
+        // l'intervalle De/A restent masques : cocher remplace les deux usages.
         function toggleCriteria(val) {
             var f = Ext.getCmp('lg_FAMILLEARTICLE_ID'),
                 z = Ext.getCmp('lg_ZONE_GEO_ID'),
                 g = Ext.getCmp('lg_GROSSISTE_ID'),
-                c = Ext.getCmp('contenaire_intervalle');
+                c = Ext.getCmp('contenaire_intervalle'),
+                w = criteresPanel();
             f.hide(); z.hide(); g.hide();
             f.reset(); z.reset(); g.reset();
             c.hide(); Ext.getCmp('str_BEGIN').reset(); Ext.getCmp('str_END').reset();
-            if (val === 1) f.show(); else if (val === 2) z.show(); else if (val === 3) g.show();
+            if (AXES[val]) {
+                w.show();
+                w.changerAxe(AXES[val]);
+            } else {
+                w.hide();
+            }
+        }
+        // Dans les modes a cases, au moins un element doit etre coche : sans coche, on informe
+        // et on n'execute rien (demande explicite : pas de valorisation implicite du tout).
+        function controleSelection() {
+            var mode = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
+            if (AXES[mode] && idsCoches().length === 0) {
+                // Ext.Msg.show avec largeur explicite : la boite par defaut de Ext.Msg.alert
+                // est trop etroite et tronque la seconde ligne du message.
+                Ext.Msg.show({
+                    title: 'Aucun élément coché',
+                    msg: 'Cochez au moins un élément (' + AXES[mode].toLowerCase() + ') à valoriser,<br/>'
+                            + 'ou repassez le filtre sur « Simple » pour tout valoriser.',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.Msg.INFO,
+                    width: 460
+                });
+                return false;
+            }
+            return true;
         }
         function maybeShowInterval(value) {
             var c = Ext.getCmp('contenaire_intervalle');
@@ -158,22 +202,35 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
                 xtype: 'panel',
                 title: titleText,
                 stockKey: key,
-                tabConfig: { cls: headCls },
+                tabConfig: { cls: headCls, height: 32 },
                 bodyPadding: 12,
                 layout: { type: 'hbox', align: 'stretch' },
                 items: [
                     {
-                        xtype: 'container', flex: 1, layout: 'anchor', defaults: { anchor: '100%' },
+                        // Valeurs agrandies et centrees verticalement : l'onglet occupe toute la
+                        // hauteur disponible (surtout en mode Simple) et le camembert de droite
+                        // est grand — des petites polices a cote paraissaient perdues.
+                        xtype: 'container', flex: 1,
+                        layout: { type: 'vbox', align: 'stretch', pack: 'center' },
+                        // Libelles agrandis ; le centrage vertical libelle/montant est fait en
+                        // CSS (classe valo-kpi : vertical-align middle sur la cellule du
+                        // libelle), plus fiable qu'un padding calcule a la main. La meme
+                        // largeur de libelle sur les quatre champs aligne tous les montants
+                        // sur une meme verticale.
                         items: [
                             { xtype: 'displayfield', id: 'kpi_' + key + '_vente', fieldLabel: 'Valeur vente',
-                              value: fmtMoney(0), fieldStyle: 'font-size:1.35em;font-weight:900;color:' + accent + ';' },
+                              cls: 'valo-kpi', labelWidth: 140, labelStyle: 'font-size:1.5em;font-weight:700;',
+                              value: fmtMoney(0), fieldStyle: 'font-size:2.8em;font-weight:900;color:' + accent + ';' },
                             { xtype: 'displayfield', id: 'kpi_' + key + '_achat', fieldLabel: 'Valeur achat',
-                              value: fmtMoney(0), fieldStyle: 'font-size:1.35em;font-weight:900;color:' + accent + ';' },
-                            { xtype: 'component', height: 8 },
+                              cls: 'valo-kpi', labelWidth: 140, labelStyle: 'font-size:1.5em;font-weight:700;',
+                              value: fmtMoney(0), fieldStyle: 'font-size:2.8em;font-weight:900;color:' + accent + ';' },
+                            { xtype: 'component', height: 16 },
                             { xtype: 'displayfield', id: 'kpi_' + key + '_ecart', fieldLabel: 'Écart', value: '0',
-                              labelWidth: 80, fieldStyle: 'font-weight:700;color:' + accent + ';' },
+                              cls: 'valo-kpi', labelWidth: 140, labelStyle: 'font-size:1.3em;font-weight:600;',
+                              fieldStyle: 'font-size:1.8em;font-weight:700;color:' + accent + ';' },
                             { xtype: 'displayfield', id: 'kpi_' + key + '_marge', fieldLabel: 'Marge', value: '0%',
-                              labelWidth: 80, fieldStyle: 'font-weight:700;color:' + accent + ';' }
+                              cls: 'valo-kpi', labelWidth: 140, labelStyle: 'font-size:1.3em;font-weight:600;',
+                              fieldStyle: 'font-size:1.8em;font-weight:700;color:' + accent + ';' }
                         ]
                     },
                     {
@@ -215,12 +272,17 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
         });
 
         function buildParamsFromUI() {
+            var mode = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
+            // Les ids coches partent dans le parametre EXISTANT de l'axe, joints par des
+            // virgules : le serveur applique une egalite (une valeur, SQL historique) ou un
+            // IN (...) (plusieurs valeurs) — aucun nouveau parametre d'API.
+            var ids = AXES[mode] ? idsCoches().join(',') : null;
             return {
                 dtStart: Ext.getCmp('dt_periode').getSubmitValue(),
-                mode: Ext.getCmp('str_TYPE_TRANSACTION').getValue(),
-                lgGROSSISTEID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
-                lgFAMILLEARTICLEID: Ext.getCmp('lg_FAMILLEARTICLE_ID').getValue(),
-                lgZONEGEOID: Ext.getCmp('lg_ZONE_GEO_ID').getValue(),
+                mode: mode,
+                lgGROSSISTEID: mode === 3 ? ids : Ext.getCmp('lg_GROSSISTE_ID').getValue(),
+                lgFAMILLEARTICLEID: mode === 1 ? ids : Ext.getCmp('lg_FAMILLEARTICLE_ID').getValue(),
+                lgZONEGEOID: mode === 2 ? ids : Ext.getCmp('lg_ZONE_GEO_ID').getValue(),
                 END: Ext.getCmp('str_END').getValue(),
                 BEGIN: Ext.getCmp('str_BEGIN').getValue()
             };
@@ -229,8 +291,13 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
         function updateMirrors() {
             var d = Ext.getCmp('dt_periode').getValue();
             Ext.getCmp('date_selected_mirror').setValue(d ? Ext.Date.format(d, 'd/m/Y') : '');
-            var rec = storeType.findRecord('value', Ext.getCmp('str_TYPE_TRANSACTION').getValue());
-            Ext.getCmp('mode_selected_mirror').setValue(rec ? rec.get('label') : '');
+            var mode = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
+            var rec = storeType.findRecord('value', mode);
+            var label = rec ? rec.get('label') : '';
+            if (AXES[mode]) {
+                label += ' (' + idsCoches().length + ' coché(s))';
+            }
+            Ext.getCmp('mode_selected_mirror').setValue(label);
         }
 
         function setTab(key, achat, vente) {
@@ -288,13 +355,25 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
                 return [label, d.vente, d.achat, ecart, fmt.number(margePct, '0.00')];
             }
 
+            // En mode Famille/Emplacement/Grossiste, la colonne de l'axe actif liste les
+            // libelles coches dans le panneau ; les autres axes restent vides.
+            var libFamille = '', libEmplacement = '', libGrossiste = '';
+            if (AXES[p.mode]) {
+                var libelles = criteresPanel().getLibelles().join(' | ');
+                if (p.mode === 1) { libFamille = libelles; }
+                else if (p.mode === 2) { libEmplacement = libelles; }
+                else { libGrossiste = libelles; }
+            } else {
+                libFamille = Ext.getCmp('lg_FAMILLEARTICLE_ID').getRawValue();
+                libEmplacement = Ext.getCmp('lg_ZONE_GEO_ID').getRawValue();
+                libGrossiste = Ext.getCmp('lg_GROSSISTE_ID').getRawValue();
+            }
+
             var rows = [];
             rows.push(['Date', 'Mode', 'Famille', 'Emplacement', 'Grossiste', 'Intervalle De', 'Intervalle À']);
             rows.push([
                 nn(p.dtStart), modeLabel,
-                nn(Ext.getCmp('lg_FAMILLEARTICLE_ID').getRawValue()),
-                nn(Ext.getCmp('lg_ZONE_GEO_ID').getRawValue()),
-                nn(Ext.getCmp('lg_GROSSISTE_ID').getRawValue()),
+                nn(libFamille), nn(libEmplacement), nn(libGrossiste),
                 nn(p.BEGIN), nn(p.END)
             ]);
             rows.push([]);
@@ -335,11 +414,17 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
                     {
                         xtype: 'button', text: 'Actualiser', iconCls: 'refreshicon',
                         handler: function () {
+                            if (!controleSelection()) { return; }
+                            updateMirrors();
                             Ext.getCmp('btn_print').setDisabled(true);
                             callValorisation(buildParamsFromUI());
                         }
                     },
-                    { xtype: 'button', text: 'Export CSV', iconCls: 'excelicon', handler: exportCSV }
+                    { xtype: 'button', text: 'Export CSV', iconCls: 'excelicon',
+                        handler: function () {
+                            if (!controleSelection()) { return; }
+                            exportCSV();
+                        } }
                 ]
             }],
 
@@ -368,6 +453,16 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
                         }
                     ]
                 },
+                {
+                    // Selection multiple des elements a valoriser (memes listes, recherche et
+                    // boutons tout cocher / tout decocher que la creation d'inventaire).
+                    // Visible uniquement en mode Famille / Emplacement / Grossiste.
+                    xtype: 'inventaireselectioncriteres',
+                    itemId: 'valoCriteres',
+                    hidden: true,
+                    height: 300,
+                    style: 'margin-bottom:10px;'
+                },
                 kpiTabs
             ],
 
@@ -375,6 +470,8 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
                 {
                     text: 'Valoriser le stock', id: 'btn_valoriser', minWidth: 160,
                     handler: function () {
+                        if (!controleSelection()) { return; }
+                        updateMirrors();
                         Ext.getCmp('btn_print').setDisabled(true);
                         callValorisation(buildParamsFromUI());
                     }
@@ -382,6 +479,7 @@ Ext.define('testextjs.view.stockmanagement.valorisation.Valorisation', {
                 {
                     text: 'Imprimer', id: 'btn_print', disabled: true, minWidth: 120,
                     handler: function () {
+                        if (!controleSelection()) { return; }
                         var p = buildParamsFromUI();
                         // typeStock selon l'onglet actif : 1=rayon, 2=reserve, 0=total
                         var typeMap = { rayon: '1', reserve: '2', total: '0' };
