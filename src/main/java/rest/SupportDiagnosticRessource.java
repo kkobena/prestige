@@ -55,6 +55,58 @@ public class SupportDiagnosticRessource {
     private SupportEventService supportEventService;
     @EJB
     private SupportTicketService supportTicketService;
+    @EJB
+    private job.SupportWatchdog supportWatchdog;
+    @EJB
+    private job.SupportPreflight supportPreflight;
+    @EJB
+    private job.SupportDatabaseMonitor supportDatabaseMonitor;
+
+    /**
+     * Mesures courantes de la base de donnees (connexions, requetes en cours, verrous). Photographie en lecture seule :
+     * ne declenche aucune alerte, la surveillance periodique s'en charge.
+     */
+    @GET
+    @Path("base")
+    @Produces("application/json")
+    public Response base() {
+        TUser user = (TUser) servletRequest.getSession().getAttribute(Constant.AIRTIME_USER);
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        return Response.ok().entity(ResultFactory.getSuccessResult(supportDatabaseMonitor.mesures(), 1)).build();
+    }
+
+    /**
+     * Boite noire du watchdog : dernier etat connu du serveur avant le crash detecte au demarrage, puis etat courant.
+     * Lecture seule.
+     */
+    @GET
+    @Path("boite-noire")
+    @Produces("text/plain; charset=UTF-8")
+    public Response boiteNoire() {
+        TUser user = (TUser) servletRequest.getSession().getAttribute(Constant.AIRTIME_USER);
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        return Response.ok(supportWatchdog.consulterBoiteNoire()).build();
+    }
+
+    /**
+     * Rejoue l'auto-diagnostic de la configuration de la supervision et rend son resultat. Rejeu SANS trace : seul le
+     * passage automatique au demarrage alimente le journal des evenements, pour qu'une verification manuelle repetee ne
+     * cree pas de bruit.
+     */
+    @GET
+    @Path("preflight")
+    @Produces("application/json")
+    public Response preflight() {
+        TUser user = (TUser) servletRequest.getSession().getAttribute(Constant.AIRTIME_USER);
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        return Response.ok().entity(ResultFactory.getSuccessResult(supportPreflight.executer(false), 1)).build();
+    }
 
     @GET
     @Path("log")
