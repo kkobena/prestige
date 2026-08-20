@@ -118,7 +118,33 @@ public class SalesStatsServiceImpl implements SalesStatsService {
      * même filtre « au moins un article » sans multiplier puis dédoublonner Sémantique inchangée : préventes du jour,
      * statut demandé, nature <> 3, ayant au moins une ligne d'article.
      */
-    private static final String PREVENTE_SQL = "SELECT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i:%s') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur,p.int_PRICE_REMISE AS  discount,p.remise AS remiseId,p.str_REF_TICKET AS transactionNumber,p.lg_TYPE_VENTE_ID AS typeVenteId,p.str_STATUT AS statut FROM  t_preenregistrement p JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT IN(?1) AND p.lg_NATURE_VENTE_ID <> '3' AND p.dt_UPDATED >= CURDATE() AND p.dt_UPDATED < CURDATE() + INTERVAL 1 DAY AND EXISTS (SELECT 1 FROM t_preenregistrement_detail dd WHERE dd.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID) ";
+    /**
+     * Ce qui fait qu'une vente est une VENTE EN ATTENTE, independamment de la periode observee.
+     *
+     * Definie ici une seule fois car DEUX traitements en dependent : l'ecran, qui affiche celles du jour, et le
+     * traitement de nuit, qui archive puis supprime celles de la veille. Les ecrire deux fois les exposait a diverger
+     * en silence - un statut ajoute d'un cote laisserait des ventes jamais tracees, une exclusion retiree de l'autre
+     * ferait supprimer des devis. Aucun test ne signalerait l'ecart.
+     *
+     * Deux conditions :
+     * <ul>
+     * <li>nature de vente '3' exclue : un devis n'est pas une vente en attente ;</li>
+     * <li>au moins une ligne de detail : une vente sans produit n'a rien a montrer ni a tracer.</li>
+     * </ul>
+     *
+     * Les STATUTS, eux, sont partages via {@link #STATUTS_VENTE_ATTENTE}.
+     */
+    private static final String VENTE_ATTENTE_CONDITIONS = " AND p.lg_NATURE_VENTE_ID <> '3'"
+            + " AND EXISTS (SELECT 1 FROM t_preenregistrement_detail dd"
+            + " WHERE dd.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID)";
+
+    /** Statuts d'une vente en attente. Meme jeu de valeurs pour l'ecran et pour le traitement de nuit. */
+    public static final Set<String> STATUTS_VENTE_ATTENTE = Set.of(Constant.STATUT_IS_PROGRESS,
+            Constant.STATUT_PENDING);
+
+    private static final String PREVENTE_SQL = "SELECT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i:%s') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur,p.int_PRICE_REMISE AS  discount,p.remise AS remiseId,p.str_REF_TICKET AS transactionNumber,p.lg_TYPE_VENTE_ID AS typeVenteId,p.str_STATUT AS statut FROM  t_preenregistrement p JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT IN(?1)"
+            + VENTE_ATTENTE_CONDITIONS
+            + " AND p.dt_UPDATED >= CURDATE() AND p.dt_UPDATED < CURDATE() + INTERVAL 1 DAY ";
     private static final String USER_CLOSE = " AND p.lg_USER_ID='%s' ";
     private static final String SEARCH_CLOSE = " AND ((p.lg_PREENREGISTREMENT_ID  IN (SELECT d.lg_PREENREGISTREMENT_ID FROM  t_preenregistrement_detail d JOIN t_famille f ON d.lg_FAMILLE_ID=f.lg_FAMILLE_ID WHERE f.int_CIP LIKE '%s' OR f.str_NAME LIKE '%s' )) OR p.str_REF LIKE '%s' )";
     private static final String NATURE_CLOSE = " AND p.str_TYPE_VENTE='%s' ";
@@ -519,13 +545,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             LOG.log(Level.INFO, "{0} {1}", new Object[] { venteId, tp });
             // Tracabilite : vente abandonnee (ecran "Suppressions de vente")
             venteSuppressionService.logVenteSuppression(tp, this.sessionHelperService.getCurrentUser());
-            Collection<TPreenregistrementDetail> items = tp.getTPreenregistrementDetailCollection();
-            if (CollectionUtils.isNotEmpty(items)) {
-                items.forEach(em::remove);
-            }
-
-            deleteCompteClientBulk(venteId);
-            getEntityManager().remove(tp);
+            supprimerVenteEtDependances(tp, venteId);
             json.put("success", true);
 
         } catch (Exception e) {
@@ -534,6 +554,70 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             json.put("success", false);
         }
         return json;
+    }
+
+    /**
+     * Suppression physique d'une vente en attente et de ce qui en depend. Extrait de {@link #delete} pour que la
+     * suppression manuelle et la suppression automatique du changement de journee suivent EXACTEMENT le meme chemin :
+     * seule la trace differe (auteur reel ou "Systeme").
+     */
+    private void supprimerVenteEtDependances(TPreenregistrement tp, String venteId) {
+        Collection<TPreenregistrementDetail> items = tp.getTPreenregistrementDetailCollection();
+        if (CollectionUtils.isNotEmpty(items)) {
+            items.forEach(em::remove);
+        }
+        deleteCompteClientBulk(venteId);
+        getEntityManager().remove(tp);
+    }
+
+    /**
+     * Ventes en attente de LA VEILLE, jamais validees : elles disparaissaient de l'ecran au changement de journee sans
+     * laisser aucune trace, car la liste ne montre que le jour courant. Rien ne les supprimait : elles restaient
+     * indefiniment en base, invisibles.
+     *
+     * Chacune est desormais tracee dans "Suppressions de vente" avec ses produits et leurs quantites, sous l'operateur
+     * "Systeme", puis reellement supprimee - le meme traitement que si un utilisateur l'avait supprimee lui-meme.
+     *
+     * Perimetre volontairement limite a la VEILLE. Les ventes plus anciennes, accumulees depuis des annees sur une
+     * installation en exploitation, ne sont pas touchees : les traiter d'un bloc au premier passage aurait produit des
+     * milliers de suppressions irreversibles en une transaction.
+     *
+     * Idempotent par construction : une vente traitee n'existe plus, un second passage ne la retrouve pas.
+     *
+     * @return nombre de ventes archivees puis supprimees
+     */
+    @Override
+    public int supprimerVentesAttenteExpirees() {
+        int traitees = 0;
+        try {
+            @SuppressWarnings("unchecked")
+            List<String> ids = getEntityManager()
+                    .createNativeQuery("SELECT p.lg_PREENREGISTREMENT_ID FROM t_preenregistrement p"
+                            + " WHERE p.str_STATUT IN (?1)" + VENTE_ATTENTE_CONDITIONS
+                            // Seule difference avec l'ecran : la veille au lieu du jour courant.
+                            + " AND p.dt_UPDATED >= CURDATE() - INTERVAL 1 DAY AND p.dt_UPDATED < CURDATE()")
+                    .setParameter(1, STATUTS_VENTE_ATTENTE).getResultList();
+            for (String venteId : ids) {
+                try {
+                    TPreenregistrement tp = getEntityManager().find(TPreenregistrement.class, venteId);
+                    if (tp == null) {
+                        continue;
+                    }
+                    venteSuppressionService.logVenteSuppressionSysteme(tp);
+                    supprimerVenteEtDependances(tp, venteId);
+                    traitees++;
+                } catch (Exception e) {
+                    // Une vente en echec ne doit pas empecher le traitement des suivantes.
+                    LOG.log(Level.SEVERE, "suppression vente en attente expiree " + venteId, e);
+                }
+            }
+            if (traitees > 0) {
+                LOG.log(Level.INFO, "Ventes en attente de la veille archivees puis supprimees : {0}", traitees);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "supprimerVentesAttenteExpirees", e);
+        }
+        return traitees;
     }
 
     @Override
@@ -2441,7 +2525,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         try {
             Query q = this.getEntityManager().createNativeQuery(buildPreVentesQuery(params), Tuple.class);
             if ("ALL".equals(params.getStatut())) {
-                q.setParameter(1, Set.of(Constant.STATUT_IS_PROGRESS, Constant.STATUT_PENDING));
+                q.setParameter(1, STATUTS_VENTE_ATTENTE);
             } else {
                 q.setParameter(1, Set.of(params.getStatut()));
             }

@@ -648,7 +648,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                         specialkey: this.onClientSearchTextField
                     }
                     , 'assuranceClient #queryClientAssurance': {
-                        specialkey: this.onQueryClientAssurance
+                        specialkey: this.onQueryClientAssurance,
+                        // buffer : une seule requete en fin de frappe, pas une par touche
+                        keyup: {fn: this.onQueryClientAssuranceKeyUp, buffer: 350}
                     }, 'assuranceClient [xtype=gridpanel] actioncolumn': {
                         click: this.onBtnClientAssuranceClick
                     }, 'assuranceClient [xtype=gridpanel]': {
@@ -3656,24 +3658,72 @@ Ext.define('testextjs.controller.VenteCtr', {
             field.setValue('');
         }
     },
+    /**
+     * Caisse fermee au moment de valider : plutot que d'annoncer l'impasse et de laisser l'operateur
+     * quitter la vente pour aller au menu, on propose de l'ouvrir sur place. La reponse "oui" ouvre
+     * l'ecran d'ouverture de caisse en fenetre modale, exactement comme si on s'y etait rendu.
+     *
+     * Meme motif que DoReglement.afficherErreurReglement, qui traitait deja ce cas cote reglement de
+     * facture : un seul comportement pour une meme situation.
+     */
+    proposerOuvertureCaisse: function () {
+        Ext.Msg.confirm('Caisse fermée', 'Votre caisse est fermée, voulez-vous l\'ouvrir ?', function (btn) {
+            if (btn !== 'yes') {
+                return;
+            }
+            Ext.create('Ext.window.Window', {
+                title: 'Ouverture de caisse',
+                modal: true,
+                width: 470,
+                autoScroll: true,
+                layout: 'fit',
+                items: [{xtype: 'ouverturecaissemanger'}]
+            }).show();
+        });
+    },
+
     onQueryClientAssurance: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
-            const me = this, grid = me.getGridClientAss();
-            let typeVenteId = me.getTypeVenteCombo().getValue();
-            let typeClientId = '';
-            if (typeVenteId === '2') {
-                typeClientId = '1';
-            } else if (typeVenteId === '3') {
-                typeClientId = '2';
-            }
-            if (field.getValue() && field.getValue().trim() !== '') {
-                grid.getStore().load({
-                    params: {
-                        'query': field.getValue(),
-                        'typeClientId': typeClientId
-                    }
-                });
-            }
+            this.rechercherClientAssurance(field);
+        }
+    },
+
+    /**
+     * Recherche automatique des 2 caracteres saisis. Le seuil evite d'interroger le serveur sur une
+     * seule lettre, qui ramenerait presque tout le fichier client ; le buffer declare a l'ecoute de
+     * l'evenement laisse finir la frappe, pour n'envoyer qu'une requete.
+     *
+     * En dessous de 2 caracteres on ne fait rien : la grille garde le dernier resultat plutot que de
+     * se vider sous les yeux de la caissiere pendant qu'elle corrige sa saisie.
+     */
+    onQueryClientAssuranceKeyUp: function (field, e) {
+        if (e.getKey() === e.ENTER) {
+            // Deja traite par specialkey : ne pas lancer deux fois la meme recherche.
+            return;
+        }
+        if ((field.getValue() || '').trim().length < 2) {
+            return;
+        }
+        this.rechercherClientAssurance(field);
+    },
+
+    /** Chemin unique de recherche : bouton, touche Entree et saisie automatique passent tous par ici. */
+    rechercherClientAssurance: function (field) {
+        const me = this, grid = me.getGridClientAss();
+        let typeVenteId = me.getTypeVenteCombo().getValue();
+        let typeClientId = '';
+        if (typeVenteId === '2') {
+            typeClientId = '1';
+        } else if (typeVenteId === '3') {
+            typeClientId = '2';
+        }
+        if (field.getValue() && field.getValue().trim() !== '') {
+            grid.getStore().load({
+                params: {
+                    'query': field.getValue(),
+                    'typeClientId': typeClientId
+                }
+            });
         }
     },
     loadAssuranceClient: function (queryString) {
@@ -5115,7 +5165,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         me.onbtncloturerAssurance(typeRegle);
                     }
                 } else {
-                    Ext.Msg.alert("Message", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à la validation");
+                    me.proposerOuvertureCaisse();
                 }
             }
         } else {
