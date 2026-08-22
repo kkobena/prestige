@@ -299,7 +299,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             return new JSONObject().put("success", false).put("count", 0).put("message",
                     "Aucun produit perime avec ces criteres");
         }
-        String name = "Inventaire peremptions proches "
+        String name = "INVENTAIRE PEREMPTIONS PROCHES "
                 + java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         int count = inventaireService.create(ids, name, name);
         return new JSONObject().put("success", true).put("count", count).put("name", name);
@@ -1243,6 +1243,257 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         return res;
     }
 
+    // ----------------------- MAJ SELECTIVE (une donnee, plusieurs produits) -----------------------
+
+    /** Champs modifiables par la MAJ selective. Une seule operation a la fois : l'ecran n'en propose qu'un. */
+    private static final String CHAMP_GROSSISTE = "GROSSISTE";
+    private static final String CHAMP_FAMILLE = "FAMILLE";
+    private static final String CHAMP_TVA = "TVA";
+    private static final String CHAMP_CODE_REMISE = "CODE_REMISE";
+    private static final String CHAMP_CODE_TABLEAU = "CODE_TABLEAU";
+    private static final String CHAMP_LABORATOIRE = "LABORATOIRE";
+    private static final String CHAMP_GAMME = "GAMME";
+
+    /**
+     * Les combos « Tous » des services communs renvoient la valeur ALL - ou, pour les laboratoires et les gammes, un
+     * simple espace. Dans les deux cas c'est l'absence de filtre, pas un identifiant : la confondre avec un identifiant
+     * reel ne ramenerait aucune ligne, et l'utilisateur croirait le fichier vide.
+     */
+    static boolean filtreActif(String valeur) {
+        return StringUtils.isNotBlank(valeur) && !"ALL".equalsIgnoreCase(valeur.trim());
+    }
+
+    private String majSelectiveWhere(String zoneGeoId, String codeFamille, String codeTableau, String codeTvaId,
+            String codeRemise, String laboratoireId, String gammeId, String search) {
+        StringBuilder w = new StringBuilder(" WHERE f.str_STATUT='enable' ");
+        if (filtreActif(laboratoireId)) {
+            w.append(" AND f.laboratoire_id = :labo ");
+        }
+        if (filtreActif(gammeId)) {
+            w.append(" AND f.gamme_id = :gamme ");
+        }
+        if (filtreActif(zoneGeoId)) {
+            w.append(" AND f.lg_ZONE_GEO_ID = :zone ");
+        }
+        if (filtreActif(codeFamille)) {
+            w.append(" AND f.lg_FAMILLEARTICLE_ID = :fam ");
+        }
+        if (filtreActif(codeTableau)) {
+            w.append(" AND f.int_T = :tableau ");
+        }
+        if (filtreActif(codeTvaId)) {
+            w.append(" AND f.lg_CODE_TVA_ID = :tva ");
+        }
+        // Le code remise est vide sur une grande partie du fichier : « (vide) » doit rester selectionnable.
+        if (filtreActif(codeRemise)) {
+            w.append("VIDE".equalsIgnoreCase(codeRemise.trim())
+                    ? " AND (f.str_CODE_REMISE IS NULL OR f.str_CODE_REMISE = '') "
+                    : " AND f.str_CODE_REMISE = :remise ");
+        }
+        if (StringUtils.isNotBlank(search)) {
+            w.append(" AND (f.int_CIP LIKE :s OR f.str_NAME LIKE :s) ");
+        }
+        return w.toString();
+    }
+
+    private void majSelectiveParams(Query q, String zoneGeoId, String codeFamille, String codeTableau, String codeTvaId,
+            String codeRemise, String laboratoireId, String gammeId, String search) {
+        if (filtreActif(laboratoireId)) {
+            q.setParameter("labo", laboratoireId);
+        }
+        if (filtreActif(gammeId)) {
+            q.setParameter("gamme", gammeId);
+        }
+        if (filtreActif(zoneGeoId)) {
+            q.setParameter("zone", zoneGeoId);
+        }
+        if (filtreActif(codeFamille)) {
+            q.setParameter("fam", codeFamille);
+        }
+        if (filtreActif(codeTableau)) {
+            q.setParameter("tableau", codeTableau);
+        }
+        if (filtreActif(codeTvaId)) {
+            q.setParameter("tva", codeTvaId);
+        }
+        if (filtreActif(codeRemise) && !"VIDE".equalsIgnoreCase(codeRemise.trim())) {
+            q.setParameter("remise", codeRemise.trim());
+        }
+        if (StringUtils.isNotBlank(search)) {
+            q.setParameter("s", "%" + search.trim() + "%");
+        }
+    }
+
+    private static String texteDe(Object valeur) {
+        return valeur != null ? valeur.toString() : "";
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public JSONObject majSelectiveList(String zoneGeoId, String codeFamille, String codeTableau, String codeTvaId,
+            String codeRemise, String laboratoireId, String gammeId, String search, int start, int limit) {
+        JSONObject data = new JSONObject();
+        JSONArray arr = new JSONArray();
+        try {
+            String where = majSelectiveWhere(zoneGeoId, codeFamille, codeTableau, codeTvaId, codeRemise, laboratoireId,
+                    gammeId, search);
+            // Jointures externes : un article sans emplacement, sans famille ou sans grossiste doit rester
+            // visible et modifiable - c'est meme souvent celui que l'on cherche a corriger.
+            // Alias explicites : sans eux str_NAME (article et TVA) puis str_LIBELLE (famille et grossiste)
+            // apparaissent deux fois, et la requete native est rejetee au lieu de rendre des lignes.
+            Query q = em.createNativeQuery("SELECT f.lg_FAMILLE_ID AS id, f.int_CIP AS cip, f.str_NAME AS nom,"
+                    + " z.str_LIBELLEE AS emplacement, fa.str_LIBELLE AS famille, t.str_NAME AS tva,"
+                    + " f.str_CODE_REMISE AS remise, f.int_T AS tableau, g.str_LIBELLE AS grossiste,"
+                    + " lab.libelle AS laboratoire, gam.libelle AS gamme" + " FROM t_famille f"
+                    + " LEFT JOIN t_zone_geographique z ON z.lg_ZONE_GEO_ID = f.lg_ZONE_GEO_ID"
+                    + " LEFT JOIN t_famillearticle fa ON fa.lg_FAMILLEARTICLE_ID = f.lg_FAMILLEARTICLE_ID"
+                    + " LEFT JOIN t_code_tva t ON t.lg_CODE_TVA_ID = f.lg_CODE_TVA_ID"
+                    + " LEFT JOIN t_grossiste g ON g.lg_GROSSISTE_ID = f.lg_GROSSISTE_ID"
+                    + " LEFT JOIN laboratoire lab ON lab.id = f.laboratoire_id"
+                    + " LEFT JOIN gamme_produit gam ON gam.id = f.gamme_id" + where + " ORDER BY f.str_NAME ASC");
+            majSelectiveParams(q, zoneGeoId, codeFamille, codeTableau, codeTvaId, codeRemise, laboratoireId, gammeId,
+                    search);
+            if (limit > 0) {
+                q.setFirstResult(Math.max(0, start));
+                q.setMaxResults(limit);
+            }
+            for (Object[] r : (List<Object[]>) q.getResultList()) {
+                arr.put(new JSONObject().put("lg_FAMILLE_ID", texteDe(r[0])).put("int_CIP", texteDe(r[1]))
+                        .put("str_NAME", texteDe(r[2])).put("emplacement", texteDe(r[3])).put("famille", texteDe(r[4]))
+                        .put("tva", texteDe(r[5])).put("codeRemise", texteDe(r[6])).put("codeTableau", texteDe(r[7]))
+                        .put("grossiste", texteDe(r[8])).put("laboratoire", texteDe(r[9]))
+                        .put("gamme", texteDe(r[10])));
+            }
+            Query qc = em.createNativeQuery("SELECT COUNT(*) FROM t_famille f " + where);
+            majSelectiveParams(qc, zoneGeoId, codeFamille, codeTableau, codeTvaId, codeRemise, laboratoireId, gammeId,
+                    search);
+            data.put("total", ((Number) qc.getSingleResult()).longValue()).put("data", arr);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "majSelectiveList", e);
+            data.put("total", 0).put("data", arr);
+        }
+        return data;
+    }
+
+    @Override
+    public JSONObject majSelectiveCodesTableau() {
+        JSONObject data = new JSONObject();
+        JSONArray arr = new JSONArray();
+        try {
+            List<?> valeurs = em.createNativeQuery("SELECT DISTINCT f.int_T FROM t_famille f"
+                    + " WHERE f.str_STATUT='enable' AND f.int_T IS NOT NULL AND f.int_T <> ''"
+                    + " ORDER BY f.int_T ASC").getResultList();
+            for (Object valeur : valeurs) {
+                String code = texteDe(valeur);
+                arr.put(new JSONObject().put("id", code).put("libelle", code));
+            }
+            data.put("total", arr.length()).put("data", arr);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "majSelectiveCodesTableau", e);
+            data.put("total", 0).put("data", arr);
+        }
+        return data;
+    }
+
+    /** Produits vises par l'operation : les coches, ou tout le filtre moins les exceptions decochees. */
+    @SuppressWarnings("unchecked")
+    private List<String> majSelectiveCibles(String mode, String zoneGeoId, String codeFamille, String codeTableau,
+            String codeTvaId, String codeRemise, String laboratoireId, String gammeId, String search, List<String> ids,
+            List<String> uncheckedIds) {
+        if (!"ALL".equalsIgnoreCase(mode)) {
+            return (ids != null) ? new java.util.ArrayList<>(ids) : new java.util.ArrayList<>();
+        }
+        String where = majSelectiveWhere(zoneGeoId, codeFamille, codeTableau, codeTvaId, codeRemise, laboratoireId,
+                gammeId, search);
+        Query q = em.createNativeQuery("SELECT f.lg_FAMILLE_ID FROM t_famille f " + where);
+        majSelectiveParams(q, zoneGeoId, codeFamille, codeTableau, codeTvaId, codeRemise, laboratoireId, gammeId,
+                search);
+        List<String> cibles = new java.util.ArrayList<>();
+        for (Object o : (List<Object>) q.getResultList()) {
+            if (o != null) {
+                cibles.add(o.toString());
+            }
+        }
+        if (uncheckedIds != null && !uncheckedIds.isEmpty()) {
+            cibles.removeAll(uncheckedIds);
+        }
+        return cibles;
+    }
+
+    @Override
+    public JSONObject majSelectiveApply(String mode, String zoneGeoId, String codeFamille, String codeTableau,
+            String codeTvaId, String codeRemise, String laboratoireId, String gammeId, String search, List<String> ids,
+            List<String> uncheckedIds, String champ, String valeur) {
+        JSONObject res = new JSONObject();
+        try {
+            String cible = StringUtils.trimToEmpty(champ).toUpperCase();
+            String valeurSaisie = StringUtils.trimToEmpty(valeur);
+            String jpql;
+            Object valeurAffectee;
+            /*
+             * Les trois premiers champs referencent une autre table : on resout la reference AVANT d'ecrire quoi que ce
+             * soit. Affecter un identifiant inexistant a des centaines d'articles d'un seul geste laisserait un fichier
+             * articles casse, sans moyen simple de retrouver l'etat d'avant.
+             */
+            switch (cible) {
+            case CHAMP_GROSSISTE:
+                valeurAffectee = em.find(TGrossiste.class, valeurSaisie);
+                jpql = "UPDATE TFamille f SET f.lgGROSSISTEID = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            case CHAMP_FAMILLE:
+                valeurAffectee = em.find(TFamillearticle.class, valeurSaisie);
+                jpql = "UPDATE TFamille f SET f.lgFAMILLEARTICLEID = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            case CHAMP_TVA:
+                valeurAffectee = em.find(dal.TCodeTva.class, valeurSaisie);
+                jpql = "UPDATE TFamille f SET f.lgCODETVAID = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            case CHAMP_CODE_REMISE:
+                valeurAffectee = valeurSaisie;
+                jpql = "UPDATE TFamille f SET f.strCODEREMISE = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            case CHAMP_CODE_TABLEAU:
+                valeurAffectee = valeurSaisie;
+                jpql = "UPDATE TFamille f SET f.intT = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            case CHAMP_LABORATOIRE:
+                valeurAffectee = em.find(dal.Laboratoire.class, valeurSaisie);
+                jpql = "UPDATE TFamille f SET f.laboratoire = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            case CHAMP_GAMME:
+                valeurAffectee = em.find(dal.GammeProduit.class, valeurSaisie);
+                jpql = "UPDATE TFamille f SET f.gamme = :valeur WHERE f.lgFAMILLEID IN :ids";
+                break;
+            default:
+                return res.put("success", false).put("count", 0).put("message",
+                        "Donnée à mettre à jour inconnue : " + champ);
+            }
+            if (valeurAffectee == null) {
+                return res.put("success", false).put("count", 0).put("message",
+                        "La valeur choisie n'existe plus. Rafraîchissez la liste puis recommencez.");
+            }
+            List<String> cibles = majSelectiveCibles(mode, zoneGeoId, codeFamille, codeTableau, codeTvaId, codeRemise,
+                    laboratoireId, gammeId, search, ids, uncheckedIds);
+            if (cibles.isEmpty()) {
+                return res.put("success", false).put("count", 0).put("message", "Aucun produit retenu.");
+            }
+            int count = 0;
+            int chunk = 1000;
+            for (int i = 0; i < cibles.size(); i += chunk) {
+                List<String> sub = cibles.subList(i, Math.min(cibles.size(), i + chunk));
+                count += em.createQuery(jpql).setParameter("valeur", valeurAffectee).setParameter("ids", sub)
+                        .executeUpdate();
+            }
+            LOG.log(Level.INFO, "MAJ selective : {0} = {1} sur {2} produit(s)",
+                    new Object[] { cible, valeurSaisie, count });
+            res.put("success", true).put("count", count);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "majSelectiveApply", e);
+            res.put("success", false).put("count", 0).put("message", "La mise à jour a échoué.");
+        }
+        return res;
+    }
+
     @Override
     public long produitPerimesCount(String query, int nbreMois, String dtStart, String dtEnd, String codeFamille,
             String codeRayon, String codeGrossiste) {
@@ -1358,7 +1609,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         java.util.Set<String> ids = datas.stream().map(ArticleDTO::getId).collect(Collectors.toSet());
 
-        String title = "Inventaire comparaison stock du "
+        String title = "INVENTAIRE COMPARAISON STOCK DU "
                 + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         int count = inventaireService.create(ids, title);
@@ -1483,7 +1734,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             periode = "";
         }
 
-        String title = "Inventaire produits saisis périmés " + periode;
+        String title = "INVENTAIRE PRODUITS SAISIE PERIMES " + periode;
 
         int count = inventaireService.create(ids, title);
 

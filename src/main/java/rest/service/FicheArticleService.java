@@ -113,6 +113,30 @@ public interface FicheArticleService {
     JSONObject majSeuilApply(String mode, String codeFamille, String zoneGeoId, String search, String classeAbcId,
             List<String> ids, List<String> uncheckedIds, Integer q1, Integer q2);
 
+    /**
+     * Liste paginee des produits pour l'ecran MAJ SELECTIVE. Memes filtres que l'ecran : emplacement, famille, code
+     * tableau, code TVA, code remise, laboratoire, gamme, recherche libre. Chaque ligne porte la valeur actuelle des
+     * donnees modifiables, pour que l'on voie ce que l'on s'apprete a changer.
+     */
+    JSONObject majSelectiveList(String zoneGeoId, String codeFamille, String codeTableau, String codeTvaId,
+            String codeRemise, String laboratoireId, String gammeId, String search, int start, int limit);
+
+    /** Valeurs de code tableau reellement presentes dans le fichier articles, pour alimenter le filtre. */
+    JSONObject majSelectiveCodesTableau();
+
+    /**
+     * MAJ groupee d'UNE seule donnee sur les produits retenus : mode SELECTED (ids coches) ou ALL (tout le filtre,
+     * moins les exceptions decochees).
+     *
+     * @param champ
+     *            GROSSISTE, FAMILLE, TVA, CODE_REMISE, CODE_TABLEAU, LABORATOIRE ou GAMME
+     * @param valeur
+     *            la valeur a affecter, verifiee avant toute ecriture pour les champs qui referencent une autre table
+     */
+    JSONObject majSelectiveApply(String mode, String zoneGeoId, String codeFamille, String codeTableau,
+            String codeTvaId, String codeRemise, String laboratoireId, String gammeId, String search, List<String> ids,
+            List<String> uncheckedIds, String champ, String valeur);
+
     byte[] buildComparaisonExcel(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil, String codeFamile,
             String codeRayon, String codeGrossiste, int stock, int seuil) throws JSONException;
 
