@@ -501,6 +501,34 @@ public class ProduitRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
+    /**
+     * Compare, pour une date passee, la valorisation calculee depuis l'archive JSON et celle calculee depuis le releve
+     * relationnel. Sert a valider la migration avant de basculer la lecture (parametre KEY_VALORISATION_SOURCE).
+     *
+     * <p>
+     * Le calcul JSON parcourt l'historique complet de tous les produits : l'appel dure une dizaine de secondes. C'est
+     * une action de verification volontaire, a lancer hors affluence, pas un ecran de consultation.
+     * </p>
+     */
+    @GET
+    @Path("valorisation/comparaison")
+    public Response comparaisonValorisation(@QueryParam(value = "mode") int mode,
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "lgFAMILLEARTICLEID") String lgFAMILLEARTICLEID,
+            @QueryParam(value = "lgGROSSISTEID") String lgGROSSISTEID,
+            @QueryParam(value = "lgZONEGEOID") String lgZONEGEOID, @QueryParam(value = "END") String end,
+            @QueryParam(value = "BEGIN") String begin, @QueryParam(value = "typeStock") String typeStock)
+            throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject jsono = produitService.comparerValorisationHistorique(mode, LocalDate.parse(dtStart), lgGROSSISTEID,
+                lgFAMILLEARTICLEID, lgZONEGEOID, end, begin, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), typeStock);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
     // Suivi UG : produits ayant du stock d'unites gratuites (intUG > 0)
     @GET
     @Path("suivi-ug")
