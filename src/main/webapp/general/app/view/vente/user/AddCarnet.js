@@ -17,9 +17,30 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
     closeAction: 'hide',
     closable: false,
     maximizable: true,
+    /* Battement du champ actif (vp-focus-zone), comme sur l'ecran de vente et la creation
+     * d'un client assurance : meme enchainement de champs, meme besoin de reperage. */
+    cls: 'vp-focus-zone',
     layout: {
         type: 'fit'
 
+    },
+    /**
+     * Dernier maillon de l'enchainement au clavier : le bouton « Enregistrer » prend le focus et se met a
+     * battre. Sans cette marque, rien ne dit a l'utilisateur que la prochaine frappe d'Entree va valider —
+     * le contour de focus du navigateur ne se voit pas sur un bouton bleu. La classe est retiree des que le
+     * bouton perd le focus, pour qu'un bouton au repos ne clignote jamais.
+     */
+    donnerLeFocusAuBouton: function () {
+        var bouton = this.down('#btnAddClientAssurance');
+        if (!bouton) {
+            return;
+        }
+        if (!bouton.suiviDuFocusPose) {
+            bouton.suiviDuFocusPose = true;
+            bouton.on('focus', function (b) { b.addCls('vp-bouton-pret'); });
+            bouton.on('blur', function (b) { b.removeCls('vp-bouton-pret'); });
+        }
+        bouton.focus(false, 100);
     },
     initComponent: function () {
         var me = this;
@@ -148,9 +169,19 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                                     height: 30, flex: 1,
                                                     allowBlank: false,
                                                     enableKeyEvents: true,
+                                                    /* Enchainement au clavier, identique a la creation d'un client
+                                                     * assurance : nom, prenom, matricule, compte, pourcentage, puis
+                                                     * le bouton d'enregistrement. La caissiere ne quitte pas le
+                                                     * clavier pour viser un champ a la souris. */
                                                     listeners: {
                                                         afterrender: function (field) {
                                                             field.focus(false, 100);
+                                                        },
+                                                        specialkey: function (field, e) {
+                                                            if (e.getKey() === e.ENTER) {
+                                                                e.stopEvent();
+                                                                me.down('#strLASTNAME').focus(false, 100);
+                                                            }
                                                         }
                                                     }
 
@@ -160,9 +191,18 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                                     fieldLabel: 'Prénom',
                                                     emptyText: 'Prénom',
                                                     name: 'strLASTNAME',
+                                                    itemId: 'strLASTNAME',
                                                     height: 30, flex: 1,
                                                     allowBlank: false,
-                                                    enableKeyEvents: true
+                                                    enableKeyEvents: true,
+                                                    listeners: {
+                                                        specialkey: function (field, e) {
+                                                            if (e.getKey() === e.ENTER) {
+                                                                e.stopEvent();
+                                                                me.down('#strNUMEROSECURITESOCIAL').focus(false, 100);
+                                                            }
+                                                        }
+                                                    }
 
                                                 }
                                             ]
@@ -176,8 +216,17 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                                     fieldLabel: 'Matricule/SS',
                                                     emptyText: 'Numéro de matricule ',
                                                     name: 'strNUMEROSECURITESOCIAL',
+                                                    itemId: 'strNUMEROSECURITESOCIAL',
                                                     height: 30, flex: 1,
-                                                    enableKeyEvents: true
+                                                    enableKeyEvents: true,
+                                                    listeners: {
+                                                        specialkey: function (field, e) {
+                                                            if (e.getKey() === e.ENTER) {
+                                                                e.stopEvent();
+                                                                me.down('#carnetVo').focus(false, 100);
+                                                            }
+                                                        }
+                                                    }
 
                                                 }, {xtype: 'splitter'},
                                                 {xtype: 'datefield',
@@ -262,7 +311,7 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                     collapsible: false,
                                     height: 120,
                                     bodyPadding: 5,
-                                    title: 'Infos.Tiers.Payant.RO',
+                                    title: 'Infos Compte Carnet',
                                     layout: {
                                         type: 'vbox', align: 'stretch'
 
@@ -275,7 +324,7 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                             items: [
                                                 {
                                                     xtype: 'combobox',
-                                                    fieldLabel: 'Tiers.Payant',
+                                                    fieldLabel: 'Carnet',
                                                     name: 'lgTIERSPAYANTID',
                                                     flex: 1, height: 30,
                                                     minChars: 2,
@@ -286,7 +335,15 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                                     typeAhead: false,
                                                     allowBlank: false,
                                                     queryMode: 'remote',
-                                                    emptyText: 'Choisir un tierspayant...'
+                                                    emptyText: 'Choisir un carnet...',
+                                                    listeners: {
+                                                        specialkey: function (field, e) {
+                                                            if (e.getKey() === e.ENTER) {
+                                                                e.stopEvent();
+                                                                me.down('#intPOURCENTAGE').focus(false, 100);
+                                                            }
+                                                        }
+                                                    }
                                                 },
                                                 {xtype: 'splitter'},
                                                 {
@@ -301,10 +358,20 @@ Ext.define('testextjs.view.vente.user.AddCarnet', {
                                                             allowDecimals: false,
                                                             hideTrigger: true,
                                                             name: 'intPOURCENTAGE',
+                                                            itemId: 'intPOURCENTAGE',
                                                             maskRe: /^(0|100)$/,
                                                             maxValue: 100,
                                                             value: 100,
-                                                            allowBlank: false
+                                                            allowBlank: false,
+                                                            enableKeyEvents: true,
+                                                            listeners: {
+                                                                specialkey: function (field, e) {
+                                                                    if (e.getKey() === e.ENTER) {
+                                                                        e.stopEvent();
+                                                                        me.donnerLeFocusAuBouton();
+                                                                    }
+                                                                }
+                                                            }
 
                                                         },
                                                         {xtype: 'splitter'},

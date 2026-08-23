@@ -20,6 +20,11 @@ Ext.define('testextjs.controller.AnalyseTiersPayantCtr', {
             'analysetierspayant #rechercheProduit': {
                 specialkey: this.onToucheEntree
             },
+            /* Changer le tri relance les deux listes : c'est le serveur qui trie, la grille
+             * n'a pas les lignes des autres pages sous la main. */
+            'analysetierspayant #tri': {
+                select: this.onRechercher
+            },
             'analysetierspayant #grilleTiersPayants': {
                 selectionchange: this.onTiersPayantSelectionne
             },
@@ -43,7 +48,7 @@ Ext.define('testextjs.controller.AnalyseTiersPayantCtr', {
     onExportTiersPayants: function (bouton) {
         var ecran = this.ecran(bouton), p = ecran.parametres();
         window.open('../api/v1/analyse-tierspayant/csv?' + Ext.Object.toQueryString({
-            niveau: 'TIERSPAYANT', dtStart: p.dtStart, dtEnd: p.dtEnd, query: p.queryTiersPayant
+            niveau: 'TIERSPAYANT', dtStart: p.dtStart, dtEnd: p.dtEnd, query: p.queryTiersPayant, tri: p.tri
         }));
     },
 
@@ -73,25 +78,31 @@ Ext.define('testextjs.controller.AnalyseTiersPayantCtr', {
 
     onImprimerTiersPayants: function (bouton) {
         var p = this.ecran(bouton).parametres();
-        this.imprimer({niveau: 'TIERSPAYANT', dtStart: p.dtStart, dtEnd: p.dtEnd, query: p.queryTiersPayant});
+        this.imprimer({niveau: 'TIERSPAYANT', dtStart: p.dtStart, dtEnd: p.dtEnd, query: p.queryTiersPayant,
+            tri: p.tri});
     },
 
     onImprimerProduits: function (bouton) {
         var ecran = this.ecran(bouton), p = ecran.parametres();
         this.imprimer({niveau: 'PRODUIT', dtStart: p.dtStart, dtEnd: p.dtEnd,
-            tiersPayantId: ecran.tiersPayantSelectionne(), query: p.queryProduit});
+            tiersPayantId: ecran.tiersPayantSelectionne(), query: p.queryProduit, tri: p.tri});
     },
 
     onExportProduits: function (bouton) {
         var ecran = this.ecran(bouton), p = ecran.parametres();
         window.open('../api/v1/analyse-tierspayant/csv?' + Ext.Object.toQueryString({
             niveau: 'PRODUIT', dtStart: p.dtStart, dtEnd: p.dtEnd,
-            tiersPayantId: ecran.tiersPayantSelectionne(), query: p.queryProduit
+            tiersPayantId: ecran.tiersPayantSelectionne(), query: p.queryProduit, tri: p.tri
         }));
     },
 
     ecran: function (composant) {
-        return composant.up('analysetierspayant') || Ext.ComponentQuery.query('analysetierspayant')[0];
+        /* Le composant est celui qui a declenche l'action : bouton, champ, grille. Il peut manquer
+         * quand l'action est rappelee autrement qu'a la main ; on retombe alors sur l'ecran ouvert. */
+        if (composant && composant.up) {
+            return composant.up('analysetierspayant') || Ext.ComponentQuery.query('analysetierspayant')[0];
+        }
+        return Ext.ComponentQuery.query('analysetierspayant')[0];
     },
 
     onEcranAffiche: function (ecran) {

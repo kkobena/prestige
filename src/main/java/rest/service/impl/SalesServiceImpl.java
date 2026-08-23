@@ -90,6 +90,7 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -168,6 +169,8 @@ public class SalesServiceImpl implements SalesService {
     private LotService lotService;
     @EJB
     private rest.service.VenteSuppressionService venteSuppressionService;
+    @EJB
+    private SupportEventService supportEventService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -1717,6 +1720,157 @@ public class SalesServiceImpl implements SalesService {
     }
     // Solution de contournement pour le bug PRES-603 non reproductible à ce jour
 
+    /**
+     * Charge la vente a cloturer SOUS VERROU EXCLUSIF.
+     *
+     * Deux demandes de cloture de la MEME vente peuvent partir a quelques millisecondes d'intervalle - double
+     * declenchement du poste, relance apres une reponse qui tarde. Sans verrou, les deux lisent la vente encore
+     * ouverte, les deux preparent leur mouvement de caisse, et la seconde se heurte a la contrainte unique
+     * mvttransaction.pkey : la caissiere voit une erreur alors que la vente vient d'etre encaissee.
+     *
+     * Le verrou serialise ces demandes : la seconde attend la fin de la premiere, relit la vente dans son etat cloture
+     * et repart par le controle d'idempotence. Il ne bloque que les cloture du MEME identifiant de vente, jamais deux
+     * ventes differentes.
+     *
+     * Sans reglage particulier, une transaction bloquee fait attendre la suivante jusqu'au delai d'InnoDB
+     * (innodb_lock_wait_timeout, 50 s par defaut) avant de rendre la main sur une erreur.
+     */
+    /**
+     * Prend le verrou sur la vente a cloturer ET rend son statut, par une lecture SCALAIRE.
+     *
+     * Deux demandes de cloture de la MEME vente peuvent partir a quelques millisecondes d'intervalle - double
+     * declenchement du poste, relance apres une reponse qui tarde. Sans verrou, les deux lisent la vente encore
+     * ouverte, les deux preparent leur mouvement de caisse, et la seconde se heurte a la contrainte unique
+     * mvttransaction.pkey : la caissiere voit une erreur alors que la vente vient d'etre encaissee.
+     *
+     * La lecture est volontairement scalaire, et non un chargement d'entite. Charger la vente sous verrou echouait : la
+     * transaction concurrente vient de lui rattacher un reglement que celle-ci ne voit pas encore, et la resolution de
+     * l'association levait EntityNotFoundException. Deux colonnes suffisent pour decider.
+     *
+     * Le verrou ne porte que sur CETTE vente : deux ventes differentes ne s'attendent jamais. Sans reglage particulier,
+     * une transaction bloquee fait patienter la suivante jusqu'au delai d'InnoDB (innodb_lock_wait_timeout, 50 s par
+     * defaut) avant de rendre la main sur une erreur.
+     *
+     * @return statut et indicateur de copie, ou {@code null} si la vente n'existe pas
+     */
+    private Object[] verrouillerEtLireVente(EntityManager emg, String venteId) {
+        try {
+            Object ligne = emg
+                    .createNativeQuery("SELECT p.str_STATUT, p.copy FROM t_preenregistrement p"
+                            + " WHERE p.lg_PREENREGISTREMENT_ID = ?1 FOR UPDATE")
+                    .setParameter(1, venteId).getSingleResult();
+            return (ligne instanceof Object[]) ? (Object[]) ligne : new Object[] { ligne, Boolean.FALSE };
+        } catch (javax.persistence.NoResultException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Etat d'une vente, sans verrou.
+     *
+     * <p>
+     * Le poste qui n'a pas recu la reponse de sa cloture ne sait pas si la vente est passee. Plutot que de lui faire
+     * chercher dans les ventes terminees - ce qui revient a lui avouer un defaut et le laisse sans ticket - il demande
+     * ici, et l'ecran enchaine tout seul : le ticket si elle est encaissee, la reprise sinon.
+     *
+     * <p>
+     * Lecture SCALAIRE et sans verrou, volontairement : c'est justement quand le serveur peine que cette question est
+     * posee, elle ne doit ni attendre un verrou, ni charger une entite et ses associations.
+     */
+    @Override
+    public JSONObject statutVente(String venteId) {
+        JSONObject json = new JSONObject();
+        try {
+            Object ligne = getEm().createNativeQuery("SELECT p.str_STATUT, p.str_REF FROM t_preenregistrement p"
+                    + " WHERE p.lg_PREENREGISTREMENT_ID = ?1").setParameter(1, venteId).getSingleResult();
+            Object[] valeurs = (ligne instanceof Object[]) ? (Object[]) ligne : new Object[] { ligne, null };
+            String statut = valeurs[0] != null ? String.valueOf(valeurs[0]) : "";
+            return json.put("success", true).put("trouvee", true)
+                    .put("cloturee", Constant.STATUT_IS_CLOSED.equals(statut)).put("statut", statut)
+                    .put("ref", valeurs[1] != null ? String.valueOf(valeurs[1]) : "");
+        } catch (javax.persistence.NoResultException e) {
+            // Vente inconnue : ce n'est pas une erreur, c'est une reponse. L'ecran en tirera qu'il n'y a rien a
+            // imprimer.
+            return json.put("success", true).put("trouvee", false).put("cloturee", false);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "statutVente " + venteId, e);
+            return json.put("success", false).put("msg", "Etat de la vente indisponible");
+        }
+    }
+
+    /**
+     * Vente deja cloturee : on rend le meme succes que si l'on venait de la cloturer. L'objectif demande par la caisse
+     * - cloturer cette vente - est atteint ; annoncer une erreur ferait recommencer une operation deja faite.
+     */
+    static JSONObject reponseVenteDejaCloturee(JSONObject json, String venteId, Object copie) {
+        return json.put("success", true).put("msg", "Opération effectuée avec success").put("copy", estUneCopie(copie))
+                .put("ref", venteId);
+    }
+
+    /**
+     * Signale au Centre de Support qu'une SECONDE demande de cloture est arrivee sur une vente deja encaissee.
+     *
+     * <p>
+     * La caissiere ne voit plus rien : c'est justement pour cela qu'il faut le tracer. Une seconde demande veut dire
+     * que quelque chose a declenche deux fois - double appui, poste qui renvoie, coupure reseau suivie d'une reprise -
+     * et sans ce journal, la correction rendrait le phenomene invisible au lieu de le rendre mesurable.
+     *
+     * <p>
+     * L'evenement est unique et compte ses occurrences : le message reste identique d'un cas a l'autre et ne porte ni
+     * reference ni identifiant, ce sont eux qui creeraient un evenement different a chaque vente. Le detail de la vente
+     * concernee part dans le contenu de l'evenement. L'enregistrement est asynchrone : il ne peut ni ralentir la caisse
+     * ni compromettre la transaction de cloture.
+     */
+    private void signalerDoubleCloture(String chemin, String venteId, Object copie, TUser utilisateur) {
+        try {
+            rest.service.dto.SupportEventDTO dto = new rest.service.dto.SupportEventDTO();
+            dto.setType("APPLICATION");
+            dto.setNiveau(dal.ApplicationEvent.NIVEAU_WARN);
+            dto.setModule("VENTE");
+            dto.setMessageCourt("Double demande de cloture sur une meme vente");
+            dto.setUrlOuEcran("POST " + chemin);
+            dto.setStack("Seconde demande de cloture recue sur une vente deja encaissee."
+                    + " Elle a recu un succes sans rien rejouer : la vente reste encaissee une seule fois.");
+            dto.setPayloadJson(new JSONObject().put("vente", venteId).put("venteCopiee", estUneCopie(copie))
+                    .put("caissier", utilisateur != null ? utilisateur.getLgUSERID() : "")
+                    .put("explication",
+                            "Deux validations sont parties pour la meme vente."
+                                    + " A surveiller : si le compteur monte, chercher du cote du poste (double appui,"
+                                    + " douchette, reprise apres coupure reseau) plutot que du cote du serveur.")
+                    .toString());
+            supportEventService.record(dto,
+                    utilisateur != null ? utilisateur.getStrFIRSTNAME() + " " + utilisateur.getStrLASTNAME() : null);
+            /*
+             * L'evenement du support compte les cas ; il ne retient que la reference du premier, puisque tous se
+             * regroupent sous la meme signature. La trace ci-dessous nomme CHAQUE vente concernee : c'est elle qui
+             * permet ensuite de remonter au poste et a l'heure.
+             */
+            LOG.log(Level.WARNING, "Double demande de cloture sur la vente {0} ({1})",
+                    new Object[] { venteId, chemin });
+        } catch (Exception e) {
+            // Le journal du support ne doit jamais peser sur une cloture de vente.
+            LOG.log(Level.WARNING, "signalerDoubleCloture", e);
+        }
+    }
+
+    /**
+     * Lecture du drapeau « copie » venu d'une requete native : selon le pilote et la version de MySQL, la colonne
+     * revient en booleen, en entier ou en chaine. Les trois formes doivent donner le meme resultat.
+     */
+    static boolean estUneCopie(Object valeur) {
+        if (valeur == null) {
+            return false;
+        }
+        if (valeur instanceof Boolean) {
+            return (Boolean) valeur;
+        }
+        if (valeur instanceof Number) {
+            return ((Number) valeur).intValue() != 0;
+        }
+        String texte = String.valueOf(valeur).trim();
+        return "1".equals(texte) || "true".equalsIgnoreCase(texte);
+    }
+
     private boolean isAlreadyClosedVente(TPreenregistrement tp, JSONObject json) {
 
         if (tp.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)) {
@@ -1742,7 +1896,24 @@ public class SalesServiceImpl implements SalesService {
             }
 
             boolean isDiff = false;
-            tp = emg.find(TPreenregistrement.class, clotureVenteParams.getVenteId());
+            final String venteId = clotureVenteParams.getVenteId();
+            /*
+             * Verrou pris AVANT tout, et controle « deja cloturee » AVANT la branche des copies : place dans le sinon,
+             * une nouvelle validation d'une vente copiee contournait ce controle et rejouait l'annulation de la vente
+             * d'origine.
+             */
+            Object[] etatVente = verrouillerEtLireVente(emg, venteId);
+            if (etatVente == null) {
+                json.put("success", false);
+                json.put("msg", "Vente introuvable");
+                return json;
+            }
+            if (Constant.STATUT_IS_CLOSED.equals(String.valueOf(etatVente[0]))) {
+                signalerDoubleCloture("/api/v1/vente/cloturer/assurance", venteId, etatVente[1],
+                        clotureVenteParams.getUserId());
+                return reponseVenteDejaCloturee(json, venteId, etatVente[1]);
+            }
+            tp = emg.find(TPreenregistrement.class, venteId);
             if (tp.getCopy()) {
                 TPreenregistrement venteAsupprimer = getEm().find(TPreenregistrement.class, tp.getLgPARENTID());
                 if (checkChargedCompteClientPreenregistrement(venteAsupprimer.getLgPREENREGISTREMENTID()).isPresent()
@@ -1754,8 +1925,6 @@ public class SalesServiceImpl implements SalesService {
                 // l'annulation automatique de la vente originale est attribuée à l'utilisateur
                 // qui a lancé la modification (porté par la copie), pas au caissier qui clôture
                 annulerVenteAnterieur(tp.getLgUSERID(), venteAsupprimer);
-            } else if (isAlreadyClosedVente(tp, json)) {
-                return json;
             }
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
@@ -1984,14 +2153,29 @@ public class SalesServiceImpl implements SalesService {
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à validation");
                 return json;
             }
-            tp = emg.find(TPreenregistrement.class, clotureVenteParams.getVenteId());
+            final String venteId = clotureVenteParams.getVenteId();
+            /*
+             * Verrou pris AVANT tout, et controle « deja cloturee » AVANT la branche des copies : place dans le sinon,
+             * une nouvelle validation d'une vente copiee contournait ce controle et rejouait l'annulation de la vente
+             * d'origine.
+             */
+            Object[] etatVente = verrouillerEtLireVente(emg, venteId);
+            if (etatVente == null) {
+                json.put("success", false);
+                json.put("msg", "Vente introuvable");
+                return json;
+            }
+            if (Constant.STATUT_IS_CLOSED.equals(String.valueOf(etatVente[0]))) {
+                signalerDoubleCloture("/api/v1/vente/cloturer/vno", venteId, etatVente[1],
+                        clotureVenteParams.getUserId());
+                return reponseVenteDejaCloturee(json, venteId, etatVente[1]);
+            }
+            tp = emg.find(TPreenregistrement.class, venteId);
             if (tp.getCopy()) {
                 TPreenregistrement venteAsupprimer = getEm().find(TPreenregistrement.class, tp.getLgPARENTID());
                 // l'annulation automatique de la vente originale est attribuée à l'utilisateur
                 // qui a lancé la modification (porté par la copie), pas au caissier qui clôture
                 annulerVenteAnterieur(tp.getLgUSERID(), venteAsupprimer);
-            } else if (isAlreadyClosedVente(tp, json)) {
-                return json;
             }
             String old = tp.getLgTYPEVENTEID().getLgTYPEVENTEID();
             if (!old.equals(clotureVenteParams.getTypeVenteId())) {
