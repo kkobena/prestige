@@ -34,12 +34,24 @@ import util.Constant;
  * </p>
  *
  * <p>
- * La procedure stockee {@code proc_update_stock_snaps()} n'est plus appelee. Elle parcourait un curseur de ~22 000
- * produits en inserant ligne a ligne dans t_stock_snapshot, le tout dans une seule transaction, sur une table liee a
- * t_famille par cle etrangere : verrous longs sur les lignes produit et blocage des caisses lorsqu'elle tournait
- * pendant les ventes (redemarrage du serveur en pleine journee). Son resultat etait de toute facon redondant avec
- * {@link #updateStock(LocalDate)}, qui releve la meme journee depuis la meme source par lots courts.
- * {@link #migrateSnapshots()} reste appele pour ecouler les lignes eventuellement restees dans la table de transit.
+ * Deux traitements historiques ont ete retires.
+ * </p>
+ *
+ * <p>
+ * La procedure stockee {@code proc_update_stock_snaps()} parcourait un curseur de tous les produits en inserant ligne a
+ * ligne dans t_stock_snapshot, le tout dans une seule transaction, sur une table liee a t_famille par cle etrangere :
+ * verrous longs sur les lignes produit et blocage des caisses lorsqu'elle tournait pendant les ventes. Son resultat
+ * etait de toute facon redondant avec {@link #updateStock(LocalDate)}, qui releve la meme journee par lots courts.
+ * </p>
+ *
+ * <p>
+ * Le vidage de t_stock_snapshot vers l'archive JSON a lui aussi ete retire, et pour une raison plus grave : il datait
+ * chaque ligne d'apres la table de transit mais lui appliquait la reserve <em>du jour de son execution</em>, la reserve
+ * n'etant nulle part historisee. Il inscrivait donc dans l'historique une reserve qui n'a jamais existe a la date
+ * consideree, puis supprimait la ligne d'origine. Or t_stock_snapshot s'est revelee etre, chez les officines installees
+ * de longue date, la seule archive fiable : prix, PMP et taux de TVA y sont figes a la date reelle, et aucune colonne
+ * de reserve ne peut la corrompre. Elle est desormais la source de la reprise d'historique, et n'est plus consommee par
+ * personne.
  * </p>
  *
  * @author koben
@@ -99,14 +111,13 @@ public class DailyStockService {
 
             // Appels via self pour que les @TransactionAttribute soient appliqués par le proxy EJB
             self.updateStock(dateStock);
-            self.migrateSnapshots();
 
             LocalDateTime end = LocalDateTime.now();
             LOG.log(Level.INFO, "Daily stock finished at {0} duration(s): {1}",
                     new Object[] { end, Duration.between(start, end).toSeconds() });
 
             // Declaration explicite du passage : le controle de fraicheur du Centre de Support lisait auparavant
-            // t_stock_snapshot, table de transit que migrateSnapshots() vide, et concluait chaque heure que le job
+            // t_stock_snapshot, que le vidage vidait, et concluait chaque heure que le job
             // n'avait jamais tourne.
             supportEventService.recordJobRun("SNAPSHOT_STOCK");
 
@@ -306,73 +317,6 @@ public class DailyStockService {
         } catch (Exception e) {
             return 0;
         }
-    }
-
-    /**
-     * Orchestrateur sans transaction : délègue chaque batch à migrateSnapshotBatch() via le proxy EJB.
-     */
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void migrateSnapshots() {
-        while (self.migrateSnapshotBatch()) {
-            // continue jusqu'à ce qu'il n'y ait plus rien à migrer
-        }
-    }
-
-    /**
-     * Migre un batch de TStockSnapshot dans une transaction courte dédiée.
-     *
-     * @return true s'il reste des enregistrements à migrer, false sinon
-     */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public boolean migrateSnapshotBatch() {
-
-        List<TStockSnapshot> list = em.createNamedQuery("TStockSnapshot.findAll", TStockSnapshot.class)
-                .setMaxResults(BATCH_SIZE).getResultList();
-
-        if (list.isEmpty()) {
-            return false;
-        }
-
-        List<String> familleIds = new ArrayList<>();
-        for (TStockSnapshot s : list) {
-            familleIds.add(s.getTStockSnapshotPK().getFamilleId());
-        }
-        Map<String, Integer> reserveMap = loadReserveMap(familleIds);
-        List<Ligne> lignes = new ArrayList<>(list.size());
-
-        for (TStockSnapshot s : list) {
-
-            TFamille famille = new TFamille(s.getTStockSnapshotPK().getFamilleId());
-
-            StockSnapshot snapshot = em.find(StockSnapshot.class, famille.getLgFAMILLEID());
-
-            if (snapshot == null) {
-                snapshot = new StockSnapshot().id(famille.getLgFAMILLEID());
-            }
-
-            snapshot.setProduit(famille);
-            int jour = Integer
-                    .parseInt(s.getTStockSnapshotPK().getId().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
-            int qtyReserve = reserveMap.getOrDefault(famille.getLgFAMILLEID(), 0);
-            // Remplace l'entree du jour si elle existe deja (sinon le Set conserverait l'ancienne sans qtyReserve).
-            snapshot.getStocks().removeIf(v -> v.getStockOfDay() == jour);
-            snapshot.getStocks().add(new StockSnapshotValue().prixMoyentpondere(s.getPrixPaf()) // simplifié
-                    .prixPaf(s.getPrixPaf()).prixUni(s.getPrixUni()).qty(s.getQty()).qtyReserve(qtyReserve)
-                    .stockOfDay(jour));
-
-            em.merge(snapshot);
-            em.remove(em.contains(s) ? s : em.merge(s));
-
-            lignes.add(new Ligne(jour, s.getTStockSnapshotPK().getMagasin(), famille.getLgFAMILLEID(), nz(s.getQty()),
-                    qtyReserve, nz(s.getPrixPaf()), nz(s.getPrixUni()), nz(s.getPrixMoyentpondere()),
-                    nz(s.getValeurTva())));
-        }
-
-        ecrireReleveRelationnel(lignes);
-
-        em.flush();
-        em.clear();
-        return true;
     }
 
     @Asynchronous

@@ -1688,14 +1688,16 @@ public class ProduitServiceImpl implements ProduitService {
         // On ajoute la valorisation RESERVE et le TOTAL (rayon + reserve) pour les 3 onglets.
         Params rayon;
         Params reserve;
-        if (dtStart.equals(LocalDate.now())) {
+        boolean dateDuJour = dtStart.equals(LocalDate.now());
+        boolean sourceRelationnelle = !dateDuJour && lireDepuisReleveRelationnel();
+        if (dateDuJour) {
             rayon = getValeurStockFrorCurrenDate(mode, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN,
                     emplacementId);
             reserve = getValeurReserveStockForCurrentDate(mode, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END,
                     BEGIN, emplacementId);
         } else {
             // Historique : releve relationnel si la bascule est active, sinon archive JSON (comportement d'origine).
-            Params hist = lireDepuisReleveRelationnel()
+            Params hist = sourceRelationnelle
                     ? getValeurStockFromReleve(mode, dtStart, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END,
                             BEGIN)
                     : getValeurStockFromJson(mode, dtStart, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN);
@@ -1715,7 +1717,37 @@ public class ProduitServiceImpl implements ProduitService {
         data.put("reserveValueTwo", reVente);
         data.put("totalValue", rAchat + reAchat);
         data.put("totalValueTwo", rVente + reVente);
+        // Une journee jamais relevee renvoie les memes zeros qu'une officine reellement vide. Le drapeau permet a
+        // l'ecran de dire "aucun releve pour cette date" plutot que d'afficher un total qui ressemble a une mesure.
+        data.put("releveDisponible",
+                releveDisponible(dateDuJour, sourceRelationnelle, () -> compterLignesReleve(dtStart)));
         return new JSONObject().put("data", data);
+    }
+
+    /**
+     * Indique si la date demandee a effectivement fait l'objet d'un releve.
+     *
+     * <p>
+     * Trois cas. La date du jour est calculee en direct sur le stock courant : la mesure existe toujours. L'historique
+     * lu dans le releve relationnel se verifie en comptant les lignes de la journee : zero ligne signifie que le
+     * traitement n'a pas tourne ce jour-la, pas que le stock etait nul. L'historique lu dans l'archive JSON, lui, n'est
+     * pas verifiable a cout raisonnable ; ce mode n'etant qu'un retour arriere temporaire, il conserve son comportement
+     * d'origine et ne signale rien.
+     * </p>
+     *
+     * @param dateDuJour
+     *            la valorisation porte sur aujourd'hui
+     * @param sourceRelationnelle
+     *            l'historique est lu dans stock_snapshot_day
+     * @param lignesRelevees
+     *            compte des lignes de la journee, evalue seulement lorsque c'est necessaire
+     */
+    static boolean releveDisponible(boolean dateDuJour, boolean sourceRelationnelle,
+            java.util.function.LongSupplier lignesRelevees) {
+        if (dateDuJour || !sourceRelationnelle) {
+            return true;
+        }
+        return lignesRelevees.getAsLong() > 0L;
     }
 
     /**
@@ -2482,8 +2514,11 @@ public class ProduitServiceImpl implements ProduitService {
         // Historique detaille (PDF), par type de stock (rayon/reserve/total) : releve relationnel si la bascule est
         // active, sinon archive JSON.
         if (lireDepuisReleveRelationnel()) {
-            return valorisationDepuisReleve(mode, dtStart, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN,
-                    emplacementId, typeStock);
+            ValorisationDTO etat = valorisationDepuisReleve(mode, dtStart, lgGROSSISTEID, lgFAMILLEARTICLEID,
+                    lgZONEGEOID, END, BEGIN, emplacementId, typeStock);
+            // Un etat vide sur une journee jamais relevee ne doit pas se lire comme une officine vide.
+            etat.setReleveDisponible(releveDisponible(false, true, () -> compterLignesReleve(dtStart)));
+            return etat;
         }
         return valorisation(mode, dtStart, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, emplacementId,
                 typeStock);

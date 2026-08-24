@@ -8,6 +8,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import config.AppConfig;
+import rest.service.impl.ReserveHistoriqueService;
 import rest.service.impl.StockSnapshotBackfillService;
 
 /**
@@ -30,6 +31,9 @@ public class StockSnapshotBackfillScheduler {
     private StockSnapshotBackfillService backfillService;
 
     @Inject
+    private ReserveHistoriqueService reserveHistoriqueService;
+
+    @Inject
     private AppConfig appConfig;
 
     @Schedule(hour = "1", minute = "30", second = "0", persistent = false)
@@ -39,6 +43,10 @@ public class StockSnapshotBackfillScheduler {
             return;
         }
         try {
+            // Assainissement d'abord : il remet a zero la reserve des journees anterieures a son activation, y compris
+            // sur les journees deja ecrites par l'ancien vidage. La reprise qui suit reecrit ces memes journees depuis
+            // l'archive relationnelle ; faire l'inverse laisserait la fausse reserve visible jusqu'a la nuit suivante.
+            reserveHistoriqueService.assainir();
             backfillService.executerAsync();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Declenchement de la reprise historique", e);
