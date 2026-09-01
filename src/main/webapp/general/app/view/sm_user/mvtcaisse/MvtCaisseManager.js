@@ -3,6 +3,47 @@ var url_services_data_utilisateur = '../webservices/sm_user/utilisateur/ws_data.
 
 var Me;
 
+/*
+ * Le journal de caisse ne montre que trois natures d'operation : les entrees de caisse, les
+ * sorties de caisse et les reglements tiers payant. Tout le reste - fonds de caisse, ventes,
+ * acomptes, avoirs, reglements differes - relevait d'autres ecrans et encombrait celui-ci.
+ *
+ * La reconnaissance se fait sur le LIBELLE et non sur l'identifiant, qui n'est pas garanti d'une
+ * officine a l'autre. « 1/3 » distingue les reglements tiers payant des reglements differes, dont
+ * le libelle contient aussi le mot « reglement ».
+ */
+function estTypeDuJournal(libelle) {
+    const l = (libelle || '').toLowerCase();
+    return (l.indexOf('entree') !== -1 && l.indexOf('caisse') !== -1)
+            || (l.indexOf('sortie') !== -1 && l.indexOf('caisse') !== -1)
+            || l.indexOf('1/3') !== -1;
+}
+
+/*
+ * Ce que l'ecran envoie au serveur : le type choisi dans la liste deroulante, ou les trois types
+ * du journal quand aucun n'est choisi. Le service accepte une liste separee par des virgules.
+ */
+function typesDemandes() {
+    const combo = Ext.getCmp('typeMvtFiltre');
+    if (!combo) {
+        return '';
+    }
+    const choisi = combo.getValue();
+    if (choisi) {
+        return choisi;
+    }
+    // Le magasin de la liste deroulante est deja reduit aux trois types du journal : on reprend
+    // ses identifiants tels quels. Il est lu depuis le combo, seul point d'acces disponible aux
+    // methodes de la vue, qui sont hors de la portee ou le magasin est declare.
+    const ids = [];
+    combo.getStore().each(function (rec) {
+        if (estTypeDuJournal(rec.get('str_NAME'))) {
+            ids.push(rec.get('lg_TYPE_MVT_CAISSE_ID'));
+        }
+    });
+    return ids.join(',');
+}
+
 
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
@@ -96,6 +137,22 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                     type: 'json',
                     root: 'data',
                     totalProperty: 'total'
+                }
+            },
+            listeners: {
+                /* Le journal ne retient que trois types : entrees de caisse, sorties de caisse et
+                 * reglements tiers payant. La liste deroulante ne propose donc qu'eux - laisser
+                 * choisir un type que la liste n'affiche pas ne menerait qu'a un ecran vide. */
+                load: function (store) {
+                    store.filterBy(function (rec) {
+                        return estTypeDuJournal(rec.get('str_NAME'));
+                    });
+                    // Les types ne sont connus qu'apres cet appel : la premiere liste a pu partir
+                    // sans filtre, on la redemande une fois - et une seule, le magasin ne se
+                    // chargeant qu'a l'ouverture de l'ecran.
+                    if (Me && Me.onRechClick) {
+                        Me.onRechClick();
+                    }
                 }
             }
         });
@@ -272,6 +329,25 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                                 }
                             }
                         }]
+                },
+                {
+                    /* Reedition du ticket du mouvement : le meme que celui sorti au moment de
+                     * l'operation, commentaire compris. Rien a reconstruire, c'est le service
+                     * d'impression existant qui le refait a l'identique. */
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            icon: 'resources/images/icons/fam/printer.png',
+                            tooltip: 'Reediter le ticket de ce mouvement',
+                            scope: this,
+                            handler: this.onReediterTicket,
+                            getClass: function (value, metadata, record) {
+                                // Sans identifiant de mouvement, il n'y a pas de ticket a refaire.
+                                return record.get('id') ? 'x-display-hide' : 'x-hide-display';
+                            }
+                        }]
                 }
 
 
@@ -305,7 +381,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                                 if (Ext.getCmp('lg_USER_ID').getValue()) {
                                     userId = Ext.getCmp('lg_USER_ID').getValue();
                                 }
-                                let typeMvtId = Ext.getCmp('typeMvtFiltre').getValue() || "";
+                let typeMvtId = typesDemandes();
                                 myProxy.setExtraParam('dtStart', Ext.getCmp('dt_debut_journal').getSubmitValue());
                                 myProxy.setExtraParam('dtEnd', Ext.getCmp('dt_fin_journal').getSubmitValue());
                                 myProxy.setExtraParam('checked', true);
@@ -343,8 +419,15 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
     },
 
     loadStore: function () {
+        /* On n'interroge pas la liste tant que les trois types du journal ne sont pas connus :
+         * partir sans eux ferait apparaitre une fraction de seconde les operations que cet ecran
+         * est justement charge de ne plus montrer. Le magasin des types previent des son
+         * chargement (voir son ecouteur load), et c'est lui qui declenche alors la recherche. */
+        if (!typesDemandes()) {
+            return;
+        }
         Me.onRechClick();
-       
+
     },
     onPdfPrint: function () {
 
@@ -352,7 +435,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
         if (Ext.getCmp('lg_USER_ID').getValue()) {
             userId = Ext.getCmp('lg_USER_ID').getValue();
         }
-        const typeMvtId = Ext.getCmp('typeMvtFiltre').getValue() || "";
+        const typeMvtId = typesDemandes();
 
         const dtStart = Ext.getCmp('dt_debut_journal').getSubmitValue();
         const dtEnd = Ext.getCmp('dt_fin_journal').getSubmitValue();
@@ -377,7 +460,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                 dtEnd: Ext.getCmp('dt_fin_journal').getSubmitValue(),
                 checked: true,
                 userId: userId,
-                typeMvtId: Ext.getCmp('typeMvtFiltre').getValue() || ""
+                typeMvtId: typesDemandes()
             },
             success: function (response, options) {
                 const result = Ext.JSON.decode(response.responseText, true);
@@ -427,7 +510,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                 dtEnd: Ext.getCmp('dt_fin_journal').getSubmitValue(),
                 checked: true,
                 userId: userId,
-                typeMvtId: Ext.getCmp('typeMvtFiltre').getValue() || ""
+                typeMvtId: typesDemandes()
             }
         });
         Me.loadSummary();
@@ -445,6 +528,27 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
         const rec = grid.getStore().getAt(rowIndex);
         Ext.create('testextjs.view.sm_user.mvtcaisse.action.Detail', {data: rec.data}).show();
 
+    },
+
+    /**
+     * Ressort le ticket d'un mouvement de caisse, a l'identique de celui imprime au moment de
+     * l'operation - le service d'impression le rebatit a partir du mouvement, commentaire compris.
+     * L'impression est silencieuse quand tout va bien : seul un echec se signale.
+     */
+    onReediterTicket: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
+        const mvtCaisseId = rec.get('id');
+        if (!mvtCaisseId) {
+            return;
+        }
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/caisse/ticke-mvt-caisse?mvtCaisseId=' + encodeURIComponent(mvtCaisseId),
+            failure: function (response) {
+                Ext.MessageBox.alert('Reedition du ticket',
+                        "Le ticket n'a pas pu etre reedite : " + response.status + ' ' + response.statusText);
+            }
+        });
     },
     modifyClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);

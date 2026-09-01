@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Espace produit</title>
+  <link rel="shortcut icon" href="../resources/images/favicon.ico"/>
+  <style>
+    /* Page STATIQUE en libre acces : aucune JSP, aucune dependance a l'application connectee.
+       Toutes les donnees viennent de l'API REST (espace-produit/recherche, officine). */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Segoe UI", Arial, sans-serif; background: #F4F6F9; color: #1E3A5F; padding: 24px; }
+    .ep-carte { max-width: 1100px; margin: 0 auto; background: #FFFFFF; border: 1px solid #D3DBE5;
+                border-radius: 8px; padding: 20px 24px; box-shadow: 0 2px 10px rgba(30,58,95,.08); }
+    .ep-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+                 margin-bottom: 4px; }
+    .ep-entete h1 { font-size: 20px; }
+    .ep-entete a { color: #1E5FA8; text-decoration: none; font-size: 14px; }
+    .ep-entete a:hover { text-decoration: underline; }
+    .ep-officine { color: #5A6B80; font-size: 13px; margin-bottom: 12px; }
+    .ep-recherche { display: flex; gap: 10px; margin-bottom: 16px; }
+    .ep-recherche input { flex: 1; font-size: 17px; padding: 10px 14px; border: 2px solid #1E5FA8;
+                          border-radius: 6px; outline: none; }
+    .ep-note { color: #5A6B80; font-size: 13px; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: #4C9A46; color: #FFFFFF; text-align: left; padding: 8px 10px; white-space: nowrap; }
+    tbody td { border-bottom: 1px solid #E4E9F0; padding: 7px 10px; }
+    tbody tr:nth-child(even) { background: #F7FAF7; }
+    td.num, th.num { text-align: right; }
+    .ep-vide { padding: 26px 10px; text-align: center; color: #5A6B80; }
+    .ep-total { margin-top: 10px; font-size: 13px; color: #5A6B80; }
+    td.ep-col-btn, th.ep-col-btn { width: 42px; text-align: center; }
+
+    /* Couleurs des colonnes : prix en gras bleu, rayon en gras vert quand > 0,
+       reserve en orange, total en bleu nuit gras. */
+    td.ep-prix { color: #1A3FC4; font-weight: bold; }
+    td.ep-rayon-pos { color: #1E8449; font-weight: bold; }
+    td.ep-reserve { color: #E67E22; }
+    td.ep-stock-total { color: #14213D; font-weight: bold; }
+    /* Lignes speciales : rouge quand rayon ET total sont negatifs,
+       violet quand rayon ET total sont a zero. Ces couleurs priment sur celles des colonnes. */
+    tr.ep-ligne-rouge td { color: #C0392B !important; font-weight: bold; }
+    tr.ep-ligne-violette td { color: #8E44AD !important; font-weight: bold; }
+
+    /* Survol : la ligne entiere ressort, legerement grossie et coloree. */
+    tbody tr { transition: transform .12s ease, background-color .12s ease, box-shadow .12s ease; }
+    tbody tr:hover { background: #DCEEFF; transform: scale(1.012); box-shadow: 0 2px 12px rgba(30,95,168,.28);
+                     position: relative; z-index: 1; }
+    .ep-btn-courbe { border: 1px solid #4C9A46; background: #F0F8F0; color: #2E6B3E; border-radius: 5px;
+                     padding: 3px 8px; cursor: pointer; font-size: 14px; }
+    .ep-btn-courbe:hover { background: #4C9A46; color: #fff; }
+
+    /* Mode EMBARQUE (fenetre modale de l'ecran de connexion) : la carte EST la vue,
+       sans page blanche autour ; le defilement se fait dans la carte elle-meme. */
+    body.ep-embarquee { padding: 0; background: transparent; }
+    body.ep-embarquee .ep-carte { max-width: none; height: 100vh; margin: 0; border: 0; border-radius: 0;
+                                  box-shadow: none; box-sizing: border-box; overflow-y: auto; }
+
+    /* Courbe d'evolution des ventes : surcouche interne */
+    #ep-graph { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(15,32,54,.45); }
+    #ep-graph .ep-graph-carte { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+                                width: min(1020px, 94%); background: #fff; border-radius: 10px;
+                                padding: 18px 22px; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+    #ep-graph .ep-graph-entete { display: flex; justify-content: space-between; align-items: baseline;
+                                 gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+    #ep-graph h2 { font-size: 16px; }
+    #ep-graph .ep-graph-fermer { border: 1px solid #1E5FA8; background: #fff; color: #1E5FA8;
+                                 border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+    #ep-graph .ep-graph-fermer:hover { background: #1E5FA8; color: #fff; }
+    #ep-graph svg { width: 100%; height: auto; display: block; }
+  </style>
+</head>
+<body>
+  <div class="ep-carte">
+    <div class="ep-entete">
+      <h1>Espace produit</h1>
+      <a href="index.jsp" id="ep-retour">← Retour à la connexion</a>
+    </div>
+    <div class="ep-officine" id="ep-officine"></div>
+    <div class="ep-recherche">
+      <input id="ep-q" type="text" placeholder="CIP, nom du produit ou code EAN (2 caractères minimum)…"
+             autocomplete="off" autofocus>
+    </div>
+    <div class="ep-note">La recherche trouve le texte n'importe où dans le nom. Consultation seule.</div>
+    <table>
+      <thead>
+        <tr>
+          <th>CIP</th><th>Désignation</th><th>Emplacement</th>
+          <th class="num">Prix vente</th><th class="num">Stock rayon</th>
+          <th class="num">Stock réserve</th><th class="num">Stock total</th>
+          <th class="ep-col-btn" title="Évolution des ventes">📈</th>
+        </tr>
+      </thead>
+      <tbody id="ep-corps">
+        <tr><td colspan="8" class="ep-vide">Saisissez un CIP ou un nom de produit pour lancer la recherche.</td></tr>
+      </tbody>
+    </table>
+    <div class="ep-total" id="ep-total"></div>
+  </div>
+
+  <!-- Courbe d'evolution des ventes par mois, annee en cours : la quantite vendue
+       est posee sur chaque pique de mois. -->
+  <div id="ep-graph">
+    <div class="ep-graph-carte">
+      <div class="ep-graph-entete">
+        <h2 id="ep-graph-titre">Évolution des ventes</h2>
+        <button type="button" class="ep-graph-fermer" id="ep-graph-fermer">✕ Fermer</button>
+      </div>
+      <div id="ep-graph-zone"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var champ = document.getElementById('ep-q');
+      var corps = document.getElementById('ep-corps');
+      var total = document.getElementById('ep-total');
+      var tampon = null;
+      var derniereRequete = 0;
+
+      function echapper(t) {
+        var d = document.createElement('div');
+        d.textContent = t == null ? '' : String(t);
+        return d.innerHTML;
+      }
+      function montant(n) { return Number(n || 0).toLocaleString('fr-FR'); }
+
+      // Nom de l'officine : le meme service public que celui de l'ecran de connexion.
+      (function () {
+        var x = new XMLHttpRequest();
+        x.open('GET', '../api/v1/officine', true);
+        x.onload = function () {
+          try {
+            var o = JSON.parse(x.responseText);
+            if (o && o[0] && o[0].nomComplet) {
+              document.getElementById('ep-officine').textContent = o[0].nomComplet;
+              document.title = 'Espace produit · ' + o[0].nomComplet;
+            }
+          } catch (e) { /* la page reste utilisable sans le nom */ }
+        };
+        x.send();
+      })();
+
+      function afficher(lignes, texte) {
+        if (!lignes.length) {
+          corps.innerHTML = '<tr><td colspan="8" class="ep-vide">Aucun produit ne correspond à «&nbsp;'
+              + echapper(texte) + '&nbsp;».</td></tr>';
+          total.textContent = '';
+          return;
+        }
+        var html = '';
+        for (var i = 0; i < lignes.length; i++) {
+          var l = lignes[i];
+          var rayon = Number(l.stockRayon || 0), totalStock = Number(l.stockTotal || 0);
+          // ligne rouge : rayon ET total negatifs ; ligne violette : rayon ET total a zero
+          var classeLigne = (rayon < 0 && totalStock < 0) ? ' class="ep-ligne-rouge"'
+              : (rayon === 0 && totalStock === 0) ? ' class="ep-ligne-violette"' : '';
+          var classeRayon = rayon > 0 ? ' ep-rayon-pos' : '';
+          html += '<tr' + classeLigne + '><td>' + echapper(l.cip) + '</td><td>' + echapper(l.designation)
+              + '</td><td>' + echapper(l.emplacement) + '</td><td class="num ep-prix">' + montant(l.prixVente)
+              + '</td><td class="num' + classeRayon + '">' + montant(rayon)
+              + '</td><td class="num ep-reserve">' + montant(l.stockReserve)
+              + '</td><td class="num ep-stock-total">' + montant(totalStock) + '</td><td class="ep-col-btn">'
+              + '<button type="button" class="ep-btn-courbe" title="Évolution des ventes par mois (année en cours)"'
+              + ' data-id="' + echapper(l.id) + '" data-nom="' + echapper(l.designation) + '">📈</button>'
+              + '</td></tr>';
+        }
+        corps.innerHTML = html;
+        total.textContent = lignes.length + ' produit(s)' + (lignes.length >= 50 ? ' — liste limitée à 50, précisez la recherche' : '');
+      }
+
+      function chercher() {
+        var texte = champ.value.trim();
+        if (texte.length < 2) {
+          corps.innerHTML = '<tr><td colspan="8" class="ep-vide">Saisissez au moins 2 caractères.</td></tr>';
+          total.textContent = '';
+          return;
+        }
+        var numero = ++derniereRequete;
+        var x = new XMLHttpRequest();
+        x.open('GET', '../api/v1/espace-produit/recherche?q=' + encodeURIComponent(texte), true);
+        x.onload = function () {
+          if (numero !== derniereRequete) { return; } // une frappe plus recente a pris la main
+          try { afficher(JSON.parse(x.responseText).data || [], texte); }
+          catch (e) { corps.innerHTML = '<tr><td colspan="8" class="ep-vide">Erreur de lecture.</td></tr>'; }
+        };
+        x.send();
+      }
+
+      champ.addEventListener('input', function () {
+        if (tampon) { clearTimeout(tampon); }
+        tampon = setTimeout(chercher, 500);
+      });
+      champ.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { if (tampon) { clearTimeout(tampon); } chercher(); }
+      });
+
+      // Ouverte en fenetre MODALE sur l'ecran de connexion (iframe) : le bouton retour
+      // referme la fenetre au lieu de naviguer, et la carte occupe toute la vue (pas de
+      // page blanche autour, defilement dans la carte). En acces direct, rien ne change.
+      if (window.self !== window.top) {
+        document.body.classList.add('ep-embarquee');
+        document.getElementById('ep-retour').addEventListener('click', function (e) {
+          e.preventDefault();
+          try { window.parent.prestigeFermerEspaceProduit(); } catch (err) { }
+        });
+      }
+
+      // ---------------- Courbe d'evolution des ventes (annee en cours) ----------------
+      // Meme regle de calcul que le menu « Statistique vente produit » ; la quantite
+      // vendue est posee sur chaque pique de mois.
+      var MOIS = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin',
+        'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+
+      function dessinerCourbe(quantites, annee) {
+        var largeur = 980, hauteur = 400;
+        var gauche = 46, droite = 18, haut = 34, bas = 34;
+        var zoneL = largeur - gauche - droite, zoneH = hauteur - haut - bas;
+        var maxi = 1;
+        for (var i = 0; i < 12; i++) { if (quantites[i] > maxi) { maxi = quantites[i]; } }
+        var x = function (i) { return gauche + (zoneL * i / 11); };
+        var y = function (q) { return haut + zoneH - (zoneH * q / maxi); };
+
+        var s = '<svg viewBox="0 0 ' + largeur + ' ' + hauteur + '" xmlns="http://www.w3.org/2000/svg">';
+        // quadrillage horizontal + valeurs d'echelle
+        for (var g = 0; g <= 4; g++) {
+          var qg = Math.round(maxi * g / 4), yg = y(qg);
+          s += '<line x1="' + gauche + '" y1="' + yg + '" x2="' + (largeur - droite) + '" y2="' + yg
+              + '" stroke="#E4E9F0"/>'
+              + '<text x="' + (gauche - 8) + '" y="' + (yg + 4) + '" text-anchor="end" font-size="11"'
+              + ' fill="#5A6B80">' + qg.toLocaleString('fr-FR') + '</text>';
+        }
+        // surface sous la courbe
+        var chemin = '';
+        for (i = 0; i < 12; i++) { chemin += (i ? ' L ' : 'M ') + x(i) + ' ' + y(quantites[i]); }
+        s += '<path d="' + chemin + ' L ' + x(11) + ' ' + (haut + zoneH) + ' L ' + x(0) + ' ' + (haut + zoneH)
+            + ' Z" fill="rgba(76,154,70,.12)" stroke="none"/>';
+        // courbe
+        s += '<path d="' + chemin + '" fill="none" stroke="#4C9A46" stroke-width="2.5"'
+            + ' stroke-linejoin="round" stroke-linecap="round"/>';
+        // points, quantites sur chaque pique, mois en abscisse
+        for (i = 0; i < 12; i++) {
+          var xi = x(i), yi = y(quantites[i]);
+          s += '<circle cx="' + xi + '" cy="' + yi + '" r="4" fill="#2E6B3E"/>'
+              + '<text x="' + xi + '" y="' + (yi - 10) + '" text-anchor="middle" font-size="12"'
+              + ' font-weight="bold" fill="#1E3A5F">' + quantites[i].toLocaleString('fr-FR') + '</text>'
+              + '<text x="' + xi + '" y="' + (hauteur - 10) + '" text-anchor="middle" font-size="11"'
+              + ' fill="#5A6B80">' + MOIS[i] + '</text>';
+        }
+        return s + '</svg>';
+      }
+
+      function ouvrirCourbe(id, nom) {
+        var x = new XMLHttpRequest();
+        x.open('GET', '../api/v1/espace-produit/ventes-mensuelles?id=' + encodeURIComponent(id), true);
+        x.onload = function () {
+          try {
+            var r = JSON.parse(x.responseText);
+            var quantites = [];
+            for (var i = 0; i < 12; i++) { quantites.push(Number((r.data || [])[i] || 0)); }
+            document.getElementById('ep-graph-titre').textContent =
+                'Évolution des ventes ' + r.annee + ' — ' + (r.designation || nom)
+                + (r.cip ? ' (' + r.cip + ')' : '');
+            document.getElementById('ep-graph-zone').innerHTML = dessinerCourbe(quantites, r.annee);
+            document.getElementById('ep-graph').style.display = 'block';
+          } catch (e) { /* silencieux : la liste reste utilisable */ }
+        };
+        x.send();
+      }
+
+      corps.addEventListener('click', function (e) {
+        var bouton = e.target.closest ? e.target.closest('.ep-btn-courbe') : null;
+        if (bouton) { ouvrirCourbe(bouton.getAttribute('data-id'), bouton.getAttribute('data-nom')); }
+      });
+      document.getElementById('ep-graph-fermer').addEventListener('click', function () {
+        document.getElementById('ep-graph').style.display = 'none';
+        champ.focus();
+      });
+      document.getElementById('ep-graph').addEventListener('click', function (e) {
+        if (e.target === this) { this.style.display = 'none'; champ.focus(); }
+      });
+    })();
+  </script>
+</body>
+</html>

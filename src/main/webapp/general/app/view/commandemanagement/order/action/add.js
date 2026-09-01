@@ -1,6 +1,29 @@
 /* global Ext */
 
 var Me_Window;
+
+/*
+ * L'ecran de saisie de commande, retrouve sans passer par la variable globale.
+ *
+ * « Me_Window » est partagee par trois ecrans, et la fenetre de creation d'un produit la
+ * reaffecte a la fin (« Me_Window = Oview ») - or « Oview » est elle-meme une globale, posee
+ * par plus de cent cinquante fichiers. Ouvrir une sous-fenetre depuis la creation d'un produit
+ * suffisait donc a faire pointer « Me_Window » ailleurs, et le premier geste suivant echouait
+ * sur « Me_Window.onAddNewItem is not a function », plus aucun produit ne pouvant etre ajoute.
+ *
+ * On remonte desormais a l'ecran par le composant qui declenche l'evenement quand on l'a sous
+ * la main, sinon par son type - il n'y en a qu'un d'ouvert a la fois. La globale ne sert plus
+ * que de dernier repli.
+ */
+function ecranCommande(composant) {
+    if (composant && composant.up) {
+        var parent = composant.up('ordermanagerlist');
+        if (parent) {
+            return parent;
+        }
+    }
+    return Ext.ComponentQuery.query('ordermanagerlist')[0] || Me_Window;
+}
 var Omode;
 var ref;
 var ref_final;
@@ -63,7 +86,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         famille_id_search = "";
 
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
-        ref = Me_Window.getNameintern();
+        // Dans initComponent, l'ecran n'est pas encore rendu : « this » est la seule reference
+        // sure, aucune recherche par type ne le trouverait encore.
+        ref = this.getNameintern();
         if (ref === "0") {
             str_STATUT = this.getOdatasource();
         }
@@ -177,9 +202,11 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                 align: 'stretch',
                 padding: 10
             },
-            defaults: {
-                flex: 1
-            },
+            // Pas de flex par defaut : il etait pose sur TOUS les enfants, barre de boutons
+            // comprise, et les quatre zones se partageaient la hauteur en parts egales. Sur un
+            // ecran plein page, les cadres du haut devenaient d'immenses cadres vides et le
+            // detail de la commande etait ecrase. Les cadres du haut prennent leur hauteur
+            // naturelle, le detail recoit la place restante.
             id: 'panelID',
             items: [
                 {
@@ -223,7 +250,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                         select: function (cmp) {
 
                                             if (titre === 'Modifier les informations de la commande') {
-                                                Me_Window.onchangeGrossiste();
+                                                ecranCommande(this).onchangeGrossiste();
                                             } else {
                                                 Ext.getCmp('str_NAME').focus(true, 100, function () {
                                                     Ext.getCmp('str_NAME').selectText(0, 1);
@@ -297,7 +324,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
                                             if (value === "0" || value === "Cliquez ici pour créer un nouvel article") {
-                                                Me_Window.onbtnaddArticle();
+                                                ecranCommande().onbtnaddArticle();
                                             } else {
                                                 Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
                                                     Ext.getCmp('int_QUANTITE').selectText(0, 1);
@@ -339,7 +366,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
                                             if (value === "0" || value === "Cliquez ici pour créer un nouvel article") {
-                                                Me_Window.onbtnaddArticle();
+                                                ecranCommande().onbtnaddArticle();
                                             } else {
                                                 Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
                                                     Ext.getCmp('int_QUANTITE').selectText(0, 1);
@@ -382,7 +409,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                                 if (Ext.getCmp('str_NAME').getValue() !== "") {
 
                                                     if (Ext.getCmp('int_QUANTITE').getValue() > 0) {
-                                                        Me_Window.onAddNewItem();
+                                                        ecranCommande(field).onAddNewItem();
 
                                                     } else {
                                                         Ext.MessageBox.alert('Error Message', 'La quantité doit être supérieure à 0 ');
@@ -399,10 +426,14 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
                                 },
                                 {
-                                    text: 'Ajouter un nouvel article',
+                                    /* Visible en permanence : avant, la creation n'apparaissait que via la
+                                     * pseudo-ligne « Cliquez ici pour creer un nouvel article » de la recherche. */
+                                    text: 'Cr&eacute;er un produit',
                                     id: 'btn_add_article',
+                                    cls: 'btn-primaryb',
+                                    iconCls: 'addicon',
+                                    tooltip: 'Creer un nouveau produit (grossiste de la commande prerempli)',
                                     margins: '0 0 0 6',
-                                    hidden: true,
                                     xtype: 'button',
                                     handler: this.onbtnaddArticle
                                 },
@@ -424,20 +455,19 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                     title: 'Detail(s) Commandes',
                     collapsible: true,
                     cls: 'dg-card',
+                    // seul cadre a recevoir la place restante ; minHeight garde les 370 px
+                    // d'origine si l'ecran venait a etre affiche en hauteur automatique
+                    flex: 1,
+                    minHeight: 370,
                     defaultType: 'textfield',
-                    layout: 'anchor',
-                    defaults: {
-                        anchor: '100%'
-                    },
+                    layout: 'fit',
                     items: [
                         {
-                            columnWidth: 0.65,
                             xtype: 'gridpanel',
                             id: 'gridpanelID',
                             cls: 'my-grid-header',
                             plugins: [this.cellEditing],
                             store: store_details_order,
-                            height: 370,
                             columns: [
                                 {
                                     xtype: 'rownumberer',
@@ -673,6 +703,20 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     sortable: false,
                                     menuDisabled: true,
                                     items: [{
+                                            /* Un crayon sur une feuille ne disait pas « code-barres » :
+                                             * pictogramme dedie (vente-theme.css). */
+                                            iconCls: 'vp-icone-ean',
+                                            tooltip: 'Ajouter ou modifier le code EAN de cet article',
+                                            scope: this,
+                                            handler: this.onMajCodeEanClick
+                                        }]
+                                },
+                                {
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [{
                                             icon: 'resources/images/icons/fam/delete.png',
                                             tooltip: 'Supprimer',
                                             scope: this,
@@ -690,7 +734,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                         'render': function (cmp) {
                                             cmp.getEl().on('keypress', function (e) {
                                                 if (e.getKey() === e.ENTER) {
-                                                    Me_Window.onRechClick();
+                                                    ecranCommande().onRechClick();
                                                 }
                                             });
                                         }
@@ -715,7 +759,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             str_TYPE_TRANSACTION = value;
 
 
-                                            Me_Window.onRechClick();
+                                            ecranCommande().onRechClick();
                                         }
                                     }
                                 }
@@ -738,12 +782,12 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                         myProxy.params = {
                                             query: '',
                                             filtre: 'ALL',
-                                            orderId: Me_Window.getNameintern()
+                                            orderId: ecranCommande().getNameintern()
 
                                         };
                                         myProxy.setExtraParam('query', val.getValue());
                                         myProxy.setExtraParam('filtre', filtre.getValue());
-                                        myProxy.setExtraParam('orderId', Me_Window.getNameintern());
+                                        myProxy.setExtraParam('orderId', ecranCommande().getNameintern());
                                     }
 
                                 }
@@ -763,7 +807,31 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                     ui: 'footer',
                     dock: 'bottom',
                     border: '0',
-                    items: ['->',
+                    items: [
+                        /* Export CSV de la commande en cours : meme fichier (CIP;QTE) que les
+                         * autres exports, telecharge directement au clic. */
+                        {
+                            text: 'Exporter CSV',
+                            id: 'btn_export_cmd_csv',
+                            cls: 'btn-primary',
+                            iconCls: 'export_csv_icon',
+                            tooltip: 'Exporter les lignes de cette commande au format CSV',
+                            scope: this,
+                            handler: this.onExportCsvCommande
+                        },
+                        /* Import de la reponse du grossiste : fichier CSV ou Excel, une ligne par
+                         * produit. L'import n'ecrit rien tout seul - il rend un compte rendu que
+                         * l'officine lit avant de decider, les substitutions etant signalees. */
+                        {
+                            text: 'Importer la réponse du grossiste',
+                            id: 'btn_import_reponse',
+                            cls: 'btn-primary',
+                            iconCls: 'importicon',
+                            tooltip: 'Charger le fichier de réponse (CSV ou Excel) envoyé par le grossiste',
+                            scope: this,
+                            handler: this.onImporterReponseGrossiste
+                        },
+                        '->',
                         {
                             text: 'CREER BON DE LIVRAISON',
                             id: 'btn_creerbl',
@@ -841,7 +909,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                         Ext.getCmp('str_NAME').selectText(0, 1);
                     });
 
-                    Me_Window.getCommandeAmount(Me_Window.getNameintern());
+                    ecranCommande().getCommandeAmount(ecranCommande().getNameintern());
                 },
                 failure: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
@@ -852,7 +920,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         });
     },
     loadStore: function () {
-        Me_Window.onRechClick();
+        ecranCommande().onRechClick();
     },
 
     onbtndetail: function () {
@@ -873,7 +941,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             method: 'GET',
             timeout: 2400000,
             params: {
-                orderId: Me_Window.getNameintern(),
+                orderId: ecranCommande().getNameintern(),
                 grossisteId: Ext.getCmp('lgGROSSISTEID').getValue()
             },
             success: function (response) {
@@ -892,6 +960,214 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             }
         });
     },
+    /* Export CSV des lignes de la commande ouverte : meme format que les autres exports
+     * (code produit ; quantite), telecharge directement au clic. */
+    onExportCsvCommande: function () {
+        if (!ref_final || ref_final === "0") {
+            Ext.MessageBox.alert('Message', "Aucune commande ouverte : rien à exporter.");
+            return;
+        }
+        window.location = '../api/v1/commande/export-csv?id=' + encodeURIComponent(ref_final);
+    },
+
+    /*
+     * Import de la reponse du grossiste.
+     *
+     * Le fichier - CSV ou classeur Excel, sans ligne d'en-tete - porte une ligne par produit :
+     * code envoye ; quantite commandee ; code reponse ; quantite recue ; prix d'achat ; designation
+     * (la designation etant facultative).
+     *
+     * L'import n'ecrit RIEN : le serveur confronte le fichier aux lignes de la commande et rend un
+     * compte rendu en trois tas, que cette fenetre affiche. Les lignes ou le grossiste a servi un
+     * AUTRE produit ne sont jamais appliquees d'office : porter la quantite d'un produit sur la
+     * ligne d'un autre fausserait l'entree en stock. L'officine tranche, dossier en main.
+     */
+    onImporterReponseGrossiste: function () {
+        var me = this;
+        if (!ref_final || ref_final === "0") {
+            Ext.MessageBox.alert('Message', "Ouvrez d'abord une commande.");
+            return;
+        }
+        var fenetre = Ext.create('Ext.window.Window', {
+            title: 'Importer la réponse du grossiste',
+            modal: true, width: 560, bodyPadding: 12, layout: 'anchor',
+            items: [{
+                    xtype: 'form', itemId: 'formImport', border: false,
+                    items: [{
+                            xtype: 'component',
+                            html: '<div style="margin-bottom:10px;color:#333;">Fichier <b>CSV</b> ou'
+                                    + ' <b>Excel</b>, une ligne par produit, sans ligne d\'en-tête :<br>'
+                                    + '<code>code envoyé ; qté commandée ; code réponse ; qté reçue ;'
+                                    + ' prix achat ; désignation</code><br>'
+                                    + '<span style="color:#666;">La désignation est facultative.</span></div>'
+                        }, {
+                            xtype: 'filefield', name: 'fichier', itemId: 'fichier', anchor: '100%',
+                            emptyText: 'Choisir le fichier de réponse...', buttonText: 'Parcourir',
+                            allowBlank: false
+                        }]
+                }],
+            buttons: [{
+                    text: 'Analyser le fichier', itemId: 'btnAnalyser',
+                    handler: function (bouton) {
+                        var formulaire = fenetre.down('#formImport').getForm();
+                        if (!formulaire.isValid()) {
+                            return;
+                        }
+                        bouton.disable();
+                        formulaire.submit({
+                            url: '../api/v1/order-detail/reponse-grossiste/' + encodeURIComponent(ref_final),
+                            waitMsg: 'Lecture du fichier . . .',
+                            success: function (form, action) {
+                                bouton.enable();
+                                fenetre.close();
+                                me.afficherCompteRenduReponse(action.result || {});
+                            },
+                            failure: function (form, action) {
+                                bouton.enable();
+                                /* ExtJS traite « success:false » comme un echec de formulaire : le
+                                 * compte rendu est pourtant dans la reponse, on l'affiche au lieu
+                                 * d'un message generique. */
+                                var r = action.result || {};
+                                if (r.reconnues || r.aArbitrer || r.rejetees) {
+                                    fenetre.close();
+                                    me.afficherCompteRenduReponse(r);
+                                } else {
+                                    Ext.MessageBox.alert('Message',
+                                            r.message || "Le fichier n'a pas pu être lu.");
+                                }
+                            }
+                        });
+                    }
+                }, {
+                    text: 'Annuler', handler: function () { fenetre.close(); }
+                }]
+        });
+        fenetre.show();
+    },
+
+    /*
+     * Compte rendu de l'import : trois listes, chacune avec son motif. Rien n'a encore ete ecrit.
+     *
+     * Le bouton « Appliquer » ne porte QUE sur les lignes reconnues, celles ou le produit, le code et la
+     * quantite concordent. Les lignes a arbitrer (substitution, quantite hors commande, produit non servi)
+     * restent au jugement de l'officine : elles se traitent a la main dans la grille de la commande.
+     */
+    afficherCompteRenduReponse: function (resultat) {
+        var me = this;
+        var lignes = [];
+        var ajouter = function (tableau, categorie) {
+            Ext.each(tableau || [], function (l) {
+                lignes.push(Ext.apply({categorie: categorie}, l));
+            });
+        };
+        var reconnues = resultat.reconnues || [];
+        ajouter(reconnues, 'Reconnue');
+        ajouter(resultat.aArbitrer, 'À arbitrer');
+        ajouter(resultat.rejetees, 'Rejetée');
+
+        var couleur = function (v) {
+            if (v === 'Reconnue') { return '<span style="color:#1e7b34;font-weight:bold;">' + v + '</span>'; }
+            if (v === 'À arbitrer') { return '<span style="color:#b36b00;font-weight:bold;">' + v + '</span>'; }
+            return '<span style="color:#c0392b;font-weight:bold;">' + v + '</span>';
+        };
+        Ext.create('Ext.window.Window', {
+            title: 'Réponse du grossiste — ' + (resultat.commande || '') + ' : ' + (resultat.lues || 0)
+                    + ' ligne(s) lue(s), ' + ((resultat.reconnues || []).length) + ' reconnue(s), '
+                    + ((resultat.aArbitrer || []).length) + ' à arbitrer, '
+                    + ((resultat.rejetees || []).length) + ' rejetée(s)',
+            modal: true, width: 1050, height: 520, layout: 'fit',
+            items: [{
+                    xtype: 'grid',
+                    store: new Ext.data.Store({
+                        fields: ['categorie', 'ligne', 'cipEnvoye', 'cipReponse', 'produit', 'designation',
+                            'qteCommandee', 'qteCommandeeSysteme', 'qteRecue', 'prixAchat', 'motif'],
+                        data: lignes
+                    }),
+                    columns: [
+                        {header: 'État', dataIndex: 'categorie', width: 90, renderer: couleur},
+                        {header: 'Ligne', dataIndex: 'ligne', width: 55, align: 'center'},
+                        {header: 'Code envoyé', dataIndex: 'cipEnvoye', width: 100},
+                        {header: 'Code réponse', dataIndex: 'cipReponse', width: 100},
+                        {header: 'Produit', dataIndex: 'produit', flex: 1},
+                        {header: 'Qté cdée', dataIndex: 'qteCommandee', width: 75, align: 'center'},
+                        {header: 'Qté reçue', dataIndex: 'qteRecue', width: 75, align: 'center'},
+                        {header: 'Prix achat', dataIndex: 'prixAchat', width: 80, align: 'center'},
+                        {header: 'Commande', dataIndex: 'qteCommandeeSysteme', width: 110, align: 'center',
+                            renderer: function (v, meta, rec) {
+                                /* Ce que l'application va faire de la ligne, en clair. */
+                                if (rec.get('categorie') !== 'Reconnue') {
+                                    return v === null || v === undefined ? '' : v;
+                                }
+                                if (v === rec.get('qteRecue')) {
+                                    return v + ' <span style="color:#666;">(inchangé)</span>';
+                                }
+                                return v + ' → <b>' + rec.get('qteRecue') + '</b>';
+                            }},
+                        {header: 'Observation', dataIndex: 'motif', flex: 1}
+                    ]
+                }],
+            dockedItems: [{
+                    xtype: 'toolbar', dock: 'bottom', ui: 'footer',
+                    items: [{xtype: 'component', html: '<span style="color:#666;">Rien n\'est écrit tant que'
+                                + ' vous n\'avez pas appliqué. Seules les lignes reconnues sont appliquées ;'
+                                + ' les lignes à arbitrer restent à traiter dans la commande.</span>'},
+                        '->',
+                        {
+                            text: 'Appliquer les ' + reconnues.length + ' ligne(s) reconnue(s)',
+                            disabled: reconnues.length === 0,
+                            handler: function (bouton) {
+                                me.appliquerReponseGrossiste(reconnues, bouton.up('window'));
+                            }
+                        },
+                        {text: 'Fermer', handler: function (b) { b.up('window').close(); }}]
+                }]
+        }).show();
+    },
+
+    /* Report effectif des quantites servies sur les lignes reconnues, apres confirmation. */
+    appliquerReponseGrossiste: function (reconnues, fenetre) {
+        var me = this;
+        var change = 0;
+        Ext.each(reconnues, function (l) {
+            if (l.qteRecue !== l.qteCommandeeSysteme) {
+                change++;
+            }
+        });
+        Ext.MessageBox.confirm('Confirmation',
+                'Appliquer la réponse du grossiste sur ' + reconnues.length + ' ligne(s) ?<br>'
+                + change + ' ligne(s) verront leur quantité changer.',
+                function (choix) {
+                    if (choix !== 'yes') {
+                        return;
+                    }
+                    Ext.Ajax.request({
+                        method: 'POST',
+                        url: '../api/v1/order-detail/reponse-grossiste/'
+                                + encodeURIComponent(ref_final) + '/appliquer',
+                        headers: {'Content-Type': 'application/json'},
+                        jsonData: Ext.encode(Ext.Array.map(reconnues, function (l) {
+                            return {detailId: l.detailId, qteRecue: l.qteRecue};
+                        })),
+                        success: function (reponse) {
+                            var r = Ext.decode(reponse.responseText);
+                            Ext.MessageBox.alert('Message', r.message || '');
+                            if (r.success) {
+                                if (fenetre) {
+                                    fenetre.close();
+                                }
+                                Ext.getCmp('gridpanelID').getStore().reload();
+                                /* Les totaux d'achat et de vente de l'entete suivent les quantites. */
+                                me.getCommandeAmount(ref_final);
+                            }
+                        },
+                        failure: function () {
+                            Ext.MessageBox.alert('Message',
+                                    "La mise à jour des quantités n'a pas abouti.");
+                        }
+                    });
+                });
+    },
+
     onbtncancel: function () {
 
         testextjs.app.getController('App').onLoadNewComponentWithDataSource("i_order_manager", "", "", "");
@@ -940,7 +1216,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         let lg_FAMILLE_ID1 = rec.get('lg_FAMILLE_ID');
         let lg_GROSSISTE_LIBELLE = rec.get('lg_GROSSISTE_LIBELLE');
         let win = Ext.create("Ext.window.Window", {
-            titre: "Ajouter un code article  [" + fam + "]",
+            // « titre » n'est pas une configuration d'ExtJS : la fenetre s'ouvrait sans aucun titre.
+            title: "Ajouter un code article  [" + fam + "]",
             modal: true,
             width: 500,
             height: 200,
@@ -1025,10 +1302,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             items: [
                                 {
                                     xtype: 'button',
-                                    text: 'Save',
+                                    text: 'Ajouter le code',
                                     handler: function (btn) {
                                         let formulaire = btn.up("form");
-                                        console.log(formulaire);
                                         if (formulaire.isValid()) {
                                             me.updateCip(win, formulaire);
 
@@ -1055,6 +1331,143 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
 
     },
+    /**
+     * Mise a jour du code EAN de l'article de la ligne cliquee.
+     *
+     * Le code est ecrit sur le produit ET sur son deconditionne : les deux designent la meme boite et
+     * doivent porter le meme code, sans quoi la douchette n'en retrouve qu'un. Le serveur s'en charge,
+     * quel que soit celui des deux sur lequel on a clique, et refuse un code deja porte par un autre
+     * article en nommant le porteur.
+     */
+    onMajCodeEanClick: function (grid, rowIndex) {
+        let rec = grid.getStore().getAt(rowIndex);
+        let familleId = rec.get('lg_FAMILLE_ID');
+        let designation = rec.get('lg_FAMILLE_NAME');
+
+        let envoyer = function (win, champ) {
+            let code = Ext.String.trim(champ.getValue() || '');
+            if (!code) {
+                Ext.Msg.alert('Code EAN', 'Saisissez le code avant de valider.');
+                return;
+            }
+            Ext.Ajax.request({
+                method: 'PUT',
+                // Le code voyage dans l'adresse et non dans le corps : le service n'accepte que du
+                // JSON, et un corps de formulaire lui vaudrait un refus « 415 ».
+                url: '../api/v1/fichearticle/code-ean/' + familleId + '?ean=' + encodeURIComponent(code),
+                success: function (response) {
+                    let reponse = Ext.JSON.decode(response.responseText, true) || {};
+                    if (reponse.success) {
+                        win.close();
+                        Ext.Msg.alert('Code EAN', reponse.message || 'Code EAN mis a jour.');
+                    } else {
+                        /* Le code appartient a un autre article : on garde la fenetre ouverte et on
+                         * represente la saisie, ENTIEREMENT SELECTIONNEE. Le focus seul obligeait a
+                         * effacer le code a la main avant d'en scanner un autre ; selectionne, il est
+                         * remplace d'un coup par la douchette ou par la frappe.
+                         * La selection est posee APRES la fermeture du message : tant qu'il est
+                         * affiche, il retient le focus et la selection serait perdue. */
+                        Ext.Msg.alert('Code EAN', reponse.message || 'La mise a jour a echoue.',
+                                function () {
+                                    champ.focus(true, 50);
+                                    Ext.defer(function () {
+                                        champ.selectText();
+                                    }, 80);
+                                });
+                    }
+                },
+                failure: function (response) {
+                    Ext.Msg.alert('Code EAN', 'Le serveur n\'a pas repondu : ' + response.status);
+                }
+            });
+        };
+
+        let win = Ext.create('Ext.window.Window', {
+            title: 'Code EAN — ' + designation,
+            modal: true,
+            width: 520,
+            maximizable: false,
+            items: [{
+                    xtype: 'form',
+                    bodyPadding: 10,
+                    fieldDefaults: {labelAlign: 'right', labelWidth: 160, msgTarget: 'side', anchor: '100%'},
+                    items: [{
+                            xtype: 'fieldset',
+                            title: 'Nouveau code EAN',
+                            defaultType: 'textfield',
+                            defaults: {anchor: '100%'},
+                            items: [{
+                                    name: 'codeEan',
+                                    itemId: 'codeEan',
+                                    fieldLabel: 'Code EAN',
+                                    emptyText: 'Scannez ou saisissez le code',
+                                    allowBlank: false,
+                                    enableKeyEvents: true,
+                                    listeners: {
+                                        /* On presente le code actuel s'il en existe un, entierement
+                                         * selectionne : la douchette ou la frappe le remplacent d'un
+                                         * coup, et Entree seule le revalide - ce qui remet d'accord
+                                         * un produit et son detail qui auraient diverge. */
+                                        afterrender: function (champ) {
+                                            champ.focus(true, 50);
+                                            Ext.Ajax.request({
+                                                method: 'GET',
+                                                url: '../api/v1/fichearticle/code-ean/' + familleId,
+                                                success: function (response) {
+                                                    let lu = Ext.JSON.decode(response.responseText, true) || {};
+                                                    if (!lu.success || !lu.codeEan) {
+                                                        /* Aucun code sur l'article : le champ reste vide, mais
+                                                         * le curseur doit s'y trouver quand meme - on scanne
+                                                         * juste apres avoir clique l'icone. Le focus pose au
+                                                         * rendu peut avoir ete perdu entre-temps, cette reponse
+                                                         * arrivant apres l'ouverture de la fenetre. */
+                                                        champ.focus(true, 50);
+                                                        return;
+                                                    }
+                                                    champ.setValue(lu.codeEan);
+                                                    champ.focus(true, 50);
+                                                    Ext.defer(function () {
+                                                        champ.selectText();
+                                                    }, 80);
+                                                },
+                                                failure: function () {
+                                                    // Le code n'a pas pu etre relu : le champ reste
+                                                    // saisissable, curseur dedans.
+                                                    champ.focus(true, 50);
+                                                }
+                                            });
+                                        },
+                                        specialkey: function (champ, e) {
+                                            if (e.getKey() === e.ENTER) {
+                                                envoyer(win, champ);
+                                            }
+                                        }
+                                    }
+                                }]
+                        }],
+                    dockedItems: [{
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {pack: 'end', type: 'hbox'},
+                            items: [{
+                                    xtype: 'button',
+                                    text: 'Mettre a jour',
+                                    handler: function (btn) {
+                                        envoyer(win, btn.up('form').down('#codeEan'));
+                                    }
+                                }, {
+                                    text: 'Fermer',
+                                    handler: function () {
+                                        win.close();
+                                    }
+                                }]
+                        }]
+                }]
+        });
+        win.show();
+    },
+
     onbtnaddArticle: function () {
         var grossisteIdValue = Ext.getCmp('lgGROSSISTEID').getValue();
         new testextjs.view.configmanagement.famille.action.add2({
@@ -1083,7 +1496,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 Ext.getCmp('str_NAME').focus(true, 100, function () {
                                     Ext.getCmp('str_NAME').selectText(0, 1);
                                 });
-                                Me_Window.getCommandeAmount(Me_Window.getNameintern());
+                                ecranCommande().getCommandeAmount(ecranCommande().getNameintern());
 
                             },
                             failure: function (response) {

@@ -45,6 +45,25 @@ public class tierspayantManagement extends bllBase {
 
     Object Otable = TTiersPayant.class;
 
+    /**
+     * Renseigne quand le plafond de credit pose est inferieur a la consommation en cours. Ce n'est pas une erreur : la
+     * modification aboutit. L'information est simplement rendue a l'appelant pour rester visible.
+     */
+    private String avertissementPlafond;
+
+    /** Meme principe pour le quota de consommation mensuelle du compte client. */
+    private String avertissementQuota;
+
+    /** @return l'avertissement de plafond, ou null si le plafond pose ne pose aucune question */
+    public String getAvertissementPlafond() {
+        return avertissementPlafond;
+    }
+
+    /** @return l'avertissement de quota, ou null si le quota pose ne pose aucune question */
+    public String getAvertissementQuota() {
+        return avertissementQuota;
+    }
+
     public tierspayantManagement(dataManager OdataManager) {
         this.setOdataManager(OdataManager);
         this.checkDatamanager();
@@ -387,11 +406,31 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setStrCOMPTECONTRIBUABLE(str_COMPTE_CONTRIBUABLE);
             OTTiersPayant.setStrCODEOFFICINE(str_CODE_OFFICINE);
             OTTiersPayant.setStrREGISTRECOMMERCE(str_REGISTRE_COMMERCE);
-            if (OTTiersPayant.getDblPLAFONDCREDIT() > 0
-                    && OTTiersPayant.getDbCONSOMMATIONMENSUELLE() > dbl_PLAFOND_CREDIT) {
-                this.buildErrorTraceMessage(
-                        "Echec de mise à jour. La consommation en cours est supérieure au plafond.");
-                return;
+            /*
+             * Plafond de credit : la fiche n'est plus REFUSEE quand la consommation en cours depasse le plafond
+             * demande. Le refus rendait la zone inmodifiable des lors que la consommation avait depasse la valeur visee
+             * - y compris pour la ramener a zero, c'est-a-dire pour retirer le plafond. Or zero veut dire
+             * "aucun plafond" : c'est justement le moyen de debloquer un organisme, il ne peut pas etre interdit.
+             *
+             * L'avertissement est desormais donne AVANT l'enregistrement, dans l'ecran, et l'utilisateur decide. Cote
+             * serveur on se contente de poser la valeur ; l'ecart eventuel est ecrit dans le message de retour pour
+             * qu'il reste visible meme quand la modification vient d'ailleurs que de l'ecran.
+             *
+             * ATTENTION au champ lu ici. db_CONSOMMATION_MENSUELLE de la fiche est un CUMUL, remis a zero a la
+             * facturation UNIQUEMENT pour les organismes non absolus (cf. updateInvoicePlafond) ; sur les autres il
+             * s'accumule indefiniment. Ce n'est PAS ce que montre l'ecran, qui affiche l'ENCOURS REEL recalcule - somme
+             * des restes a payer non factures (cf. TiersPayantServiceImpl.encoursParTiersPayant). Les deux valeurs
+             * portent le meme nom et peuvent tout a fait differer : d'ou un refus incomprehensible du temps ou ce
+             * controle bloquait, l'ecran affichant 0 pendant que le cumul se comptait en millions. Le message nomme
+             * donc explicitement la valeur dont il parle.
+             */
+            int cumulEnregistre = OTTiersPayant.getDbCONSOMMATIONMENSUELLE() != null
+                    ? OTTiersPayant.getDbCONSOMMATIONMENSUELLE() : 0;
+            if (dbl_PLAFOND_CREDIT > 0 && cumulEnregistre > dbl_PLAFOND_CREDIT) {
+                this.avertissementPlafond = "Plafond de crédit posé à " + (long) dbl_PLAFOND_CREDIT
+                        + ". Pour information, le cumul de consommation enregistré sur la fiche est de "
+                        + cumulEnregistre + " : ce cumul n'est remis à zéro à la facturation que pour les organismes"
+                        + " non absolus, il peut donc différer de l'encours affiché à l'écran.";
             }
             OTTiersPayant.setDblPLAFONDCREDIT(dbl_PLAFOND_CREDIT);
             OTTiersPayant.setBIsAbsolute(b_IsAbsolute);
@@ -434,15 +473,30 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtUPDATED(new Date());
 
-            if (OTCompteClient.getDblQUOTACONSOMENSUELLE() > dbl_QUOTA_CONSO_MENSUELLE) {
-                this.buildErrorTraceMessage(
-                        "Impossible de modifier le plafond. Etat du plafond supérieur au nouveau plafond.");
-                return;
-            }
+            /*
+             * Compte client absent : la garde d'entree teste « tiers payant ET compte tous deux absents », un organisme
+             * sans compte client passait donc jusqu'ici et la lecture ci-dessous levait un NullPointerException. La
+             * fiche partait alors dans le catch general et rendait « Impossible de mettre a jour » - alors que le tiers
+             * payant, lui, venait bien d'etre modifie : message trompeur sur une modification en partie faite. Sans
+             * compte client il n'y a simplement pas de quota a poser.
+             */
+            if (OTCompteClient != null) {
+                /*
+                 * Quota de consommation mensuelle : meme regle que le plafond de credit ci-dessus. La fiche etait
+                 * refusee des lors que l'etat du quota depassait la valeur visee, ce qui interdisait de baisser le
+                 * quota - et donc de le ramener a zero. On previent, on ne bloque plus.
+                 */
+                double quotaEnCours = OTCompteClient.getDblQUOTACONSOMENSUELLE() != null
+                        ? OTCompteClient.getDblQUOTACONSOMENSUELLE() : 0d;
+                if (dbl_QUOTA_CONSO_MENSUELLE > 0 && quotaEnCours > dbl_QUOTA_CONSO_MENSUELLE) {
+                    this.avertissementQuota = "Quota de consommation posé à " + (long) dbl_QUOTA_CONSO_MENSUELLE
+                            + " alors que l'état du quota est de " + (long) quotaEnCours + ".";
+                }
 
-            OTCompteClient.setDblPLAFOND(dbl_QUOTA_CONSO_MENSUELLE);
-            OTCompteClient.setDtUPDATED(OTTiersPayant.getDtUPDATED());
-            this.getOdataManager().getEm().merge(OTCompteClient);
+                OTCompteClient.setDblPLAFOND(dbl_QUOTA_CONSO_MENSUELLE);
+                OTCompteClient.setDtUPDATED(OTTiersPayant.getDtUPDATED());
+                this.getOdataManager().getEm().merge(OTCompteClient);
+            }
 
             this.merge(OTTiersPayant);
             this.do_event_log(this.getOdataManager(), "",
@@ -1759,8 +1813,10 @@ public class tierspayantManagement extends bllBase {
             OTCompteClientTiersPayant.setIntPRIORITY(int_PRIORITY);
             OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTCompteClientTiersPayant.setDtCREATED(new Date());
-            OTCompteClientTiersPayant.setDblPLAFOND(dbl_PLAFOND);
-            // OTCompteClientTiersPayant.setDblPLAFOND(dbl_QUOTA_CONSO_VENTE);
+            // Plafond par vente : la valeur saisie prime ; a defaut, celle predefinie
+            // sur la fiche de l'organisme ; sinon zero (aucun plafond).
+            OTCompteClientTiersPayant.setDblPLAFOND(rest.service.calculation.PlafondsTiersPayant
+                    .plafondInitialDuLien(dbl_PLAFOND, OTTiersPayant.getDblPLAFONDVENTE()));
             OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(str_NUMERO_SECURITE_SOCIAL);
             OTCompteClientTiersPayant.setDblQUOTACONSOVENTE(dbl_QUOTA_CONSO_VENTE);
             OTCompteClientTiersPayant.setDbPLAFONDENCOURS(dbPLAFONDENCOURS);

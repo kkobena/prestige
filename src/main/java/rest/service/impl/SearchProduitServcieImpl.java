@@ -92,12 +92,24 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             }
             data.put("total", 1);
         } else {
-            getAllLite(false, search, diciId, empl, type, zoneGeoId, stockOperator, stockValue, tvaId, true, start,
-                    limit).forEach(
-                            tuple -> arrayObj
-                                    .put(buildProduitDataLite(canceledBtn, tuple, objs, empl, checkExpirationdate)));
+            // Fiche article uniquement : le mode "contient" place un joker devant le texte.
+            // Les autres ecrans (commande, vente) passent par les memes requetes sans cette transformation.
+            String motif = rest.RechercheArticle.motif(search, modeRechercheFicheArticle());
+            List<Object[]> tuples = getAllLite(false, motif, diciId, empl, type, zoneGeoId, stockOperator, stockValue,
+                    tvaId, true, start, limit);
+            // Etat produit (en commande, en suggestion, entree en stock) calcule EN UNE PASSE
+            // pour toute la page : trois requetes par ligne rendaient la recherche lente.
+            List<String> ids = new java.util.ArrayList<>();
+            for (Object[] tuple : tuples) {
+                ids.add(((TFamille) tuple[0]).getLgFAMILLEID());
+            }
+            java.util.Map<String, rest.service.dto.EtatProduit> etats = productStateService.getEtatProduits(ids);
+            for (Object[] tuple : tuples) {
+                arrayObj.put(buildProduitDataLite(canceledBtn, tuple, objs, empl, checkExpirationdate,
+                        etats.get(((TFamille) tuple[0]).getLgFAMILLEID())));
+            }
             data.put("total",
-                    getAllCount(search, diciId, empl, type, zoneGeoId, stockOperator, stockValue, tvaId, true));
+                    getAllCount(motif, diciId, empl, type, zoneGeoId, stockOperator, stockValue, tvaId, true));
         }
         data.put("results", arrayObj);
         return data;
@@ -117,13 +129,16 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             }
             sql.append("WHERE t.str_STATUT = 'enable' AND fs.lg_EMPLACEMENT_ID = :emplacementId ");
 
-            applyFilters(sql, search, diciId, type, zoneGeoId, stockOperator, stockValue, tvaId, true);
+            // L'inventaire cree depuis la fiche article doit porter sur la MEME liste que celle
+            // affichee : la recherche suit donc le meme mode ("contient" ou "commence par").
+            String motif = rest.RechercheArticle.motif(search, modeRechercheFicheArticle());
+            applyFilters(sql, motif, diciId, type, zoneGeoId, stockOperator, stockValue, tvaId, true);
             if (onlyReserve) {
                 sql.append("AND t.bool_RESERVE = 1 ");
             }
 
             Query q = em.createNativeQuery(sql.toString());
-            setFilterParameters(q, empl, search, diciId, zoneGeoId, stockOperator, stockValue, tvaId);
+            setFilterParameters(q, empl, motif, diciId, zoneGeoId, stockOperator, stockValue, tvaId);
 
             List<?> rows = q.getResultList();
             List<String> ids = new java.util.ArrayList<>();
@@ -184,6 +199,19 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
                     em.getReference(TParameters.class, "KEY_ACTIVATE_PEREMPTION_DATE").getStrVALUE().trim()) == 1;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /**
+     * Mode de recherche de la fiche article. Parametre absent ou illisible : le defaut ("contient") s'applique, la
+     * regle de repli etant portee par {@link rest.RechercheArticle}.
+     */
+    private String modeRechercheFicheArticle() {
+        try {
+            TParameters parametre = em.find(TParameters.class, rest.RechercheArticle.PARAMETRE);
+            return parametre != null ? parametre.getStrVALUE() : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -467,6 +495,8 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
         } else {
             json.put("lg_ZONE_GEO_ID", "");
         }
+        // Identifiant reel de l'emplacement, a cote du libelle : voir le commentaire ci-dessous.
+        json.put("lg_ZONE_GEO_ID_REEL", zone != null ? StringUtils.defaultString(zone.getLgZONEGEOID()) : "");
         // Grossiste par defaut : association EAGER, deja hydratee avec la famille
         json.put("lg_GROSSISTE_ID",
                 t.getLgGROSSISTEID() != null ? StringUtils.defaultString(t.getLgGROSSISTEID().getStrLIBELLE()) : "");
@@ -488,6 +518,12 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
      */
     private JSONObject buildProduitDataLite(boolean canceledAction, Object[] tuple, Object[] objArray, String empl,
             boolean checkExpirationdate) {
+        return buildProduitDataLite(canceledAction, tuple, objArray, empl, checkExpirationdate, null);
+    }
+
+    /** Variante avec l'etat produit deja calcule (par lot) : aucun aller-retour supplementaire par ligne. */
+    private JSONObject buildProduitDataLite(boolean canceledAction, Object[] tuple, Object[] objArray, String empl,
+            boolean checkExpirationdate, rest.service.dto.EtatProduit etatPrecharge) {
         JSONObject json = new JSONObject();
         try {
             TFamille t = (TFamille) tuple[0];
@@ -530,6 +566,13 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             } else {
                 json.put("lg_ZONE_GEO_ID", "");
             }
+            // Identifiant REEL de l'emplacement, en plus du libelle. « lg_ZONE_GEO_ID » porte
+            // historiquement le libelle - les colonnes des grilles en vivent, on n'y touche pas -
+            // mais la fiche article a besoin de l'identifiant pour reafficher l'emplacement et le
+            // renvoyer tel quel. Sans lui, le formulaire renvoyait un libelle, que le serveur
+            // devait rechercher parmi les libelles : deux emplacements homonymes suffisaient a
+            // faire echouer l'enregistrement.
+            json.put("lg_ZONE_GEO_ID_REEL", zone != null ? StringUtils.defaultString(zone.getLgZONEGEOID()) : "");
 
             // Grossiste par defaut de l'article : l'association @ManyToOne est EAGER, le
             // grossiste est deja hydrate avec la famille (aucune requete en plus). Sans ce
@@ -590,7 +633,8 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
         TFamille t = (TFamille) tuple[0];
 
-        json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
+        json.put("produitState", new JSONObject(
+                etatPrecharge != null ? etatPrecharge : productStateService.getEtatProduit(t.getLgFAMILLEID())));
 
         return json;
     }
@@ -669,6 +713,13 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             } else {
                 json.put("lg_ZONE_GEO_ID", "");
             }
+            // Identifiant REEL de l'emplacement, en plus du libelle. « lg_ZONE_GEO_ID » porte
+            // historiquement le libelle - les colonnes des grilles en vivent, on n'y touche pas -
+            // mais la fiche article a besoin de l'identifiant pour reafficher l'emplacement et le
+            // renvoyer tel quel. Sans lui, le formulaire renvoyait un libelle, que le serveur
+            // devait rechercher parmi les libelles : deux emplacements homonymes suffisaient a
+            // faire echouer l'enregistrement.
+            json.put("lg_ZONE_GEO_ID_REEL", zone != null ? StringUtils.defaultString(zone.getLgZONEGEOID()) : "");
             if (t.getBoolDECONDITIONNE() == 0 && t.getBoolDECONDITIONNEEXIST() == 1) {
                 Object[] deconditionnement = getDecondionneParent(t.getLgFAMILLEID());
                 if (deconditionnement != null) {

@@ -1,10 +1,54 @@
 /* global Ext */
 
 var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
+/* Consommation en cours de la fiche ouverte, relevee a l'ouverture et lue au moment
+ * d'enregistrer : onbtnsave est un handler de bouton, « this » y designe le BOUTON et
+ * non la fenetre, la source de donnees n'y est donc pas accessible. */
+var consommationEnCoursTiersPayant = 0;
 var url_services_transaction_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_transaction.jsp?mode=';
 
+/*
+ * L'interrupteur « gerer ce carnet comme un depot » ne concerne que les carnets : il n'apparait
+ * que lorsque le type choisi en est un. On se fie au LIBELLE du type plutot qu'a son identifiant,
+ * qui n'est pas garanti d'une officine a l'autre ; l'identifiant sert de recours.
+ */
+function typeEstCarnet(combo) {
+    if (!combo) {
+        return false;
+    }
+    var valeur = combo.getValue();
+    var enregistrement = combo.getStore() ? combo.getStore().findRecord('lg_TYPE_TIERS_PAYANT_ID', valeur) : null;
+    if (enregistrement) {
+        var libelle = (enregistrement.get('str_LIBELLE_TYPE_TIERS_PAYANT') || '').toLowerCase();
+        return libelle.indexOf('carnet') !== -1;
+    }
+    // Aucun enregistrement sous la main : le magasin des types ne se remplit qu'a l'ouverture de la
+    // liste deroulante, et la fiche peut s'ouvrir sans qu'on y ait touche. On se rabat alors sur ce
+    // que vaut le champ lui-meme - le mot « carnet » quand c'est le libelle qui a ete pose, ou
+    // l'identifiant de reference a defaut.
+    return (valeur + '').toLowerCase().indexOf('carnet') !== -1 || valeur === '2';
+}
+
+function majAffichageCarnetDepot() {
+    var interrupteur = Ext.getCmp('is_depot');
+    if (!interrupteur) {
+        return;
+    }
+    var carnet = typeEstCarnet(Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD'));
+    interrupteur.setVisible(carnet);
+    if (!carnet) {
+        // Un tiers payant qui n'est pas un carnet ne peut pas etre gere en depot : on ne laisse
+        // pas trainer une case cochee que l'utilisateur ne voit plus.
+        interrupteur.setValue(false);
+    }
+}
+
 var url_services_data_ville_tp = '../webservices/configmanagement/ville/ws_data.jsp';
-var url_services_data_typetierspayant_tp = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
+// Types de tiers payant : service REST. La reponse garde la forme lue par l'ecran (total +
+// results, memes noms de colonnes), le combo se comporte donc exactement comme avant.
+// Le JSP reste en place : cinq autres vues s'en servent encore (edition de facture, achat
+// differe, factures reglees, reglement, suivi conso clients) et ne sont pas touchees ici.
+var url_services_data_typetierspayant_tp = '../api/v1/tierspayant/types';
 var url_services_data_typecontrat_tp = '../webservices/configmanagement/typecontrat/ws_data.jsp';
 var url_services_data_regimecaisse_tp = '../webservices/configmanagement/regimecaisse/ws_data.jsp';
 var url_services_data_risque_tp = '../webservices/configmanagement/risque/ws_data.jsp';
@@ -68,7 +112,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/groupe/ws_data.jsp',
+                url: '../api/v1/groupe-tierspayant/list', // meme logique et memes cles JSON que la JSP historique
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -318,7 +362,12 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     editable: false,
                                     queryMode: 'remote',
                                     emptyText: 'Choisir un type tiers payant ...',
-                                    style: 'background-color: #ffffe0;'
+                                    style: 'background-color: #ffffe0;',
+                                    listeners: {
+                                        select: function () {
+                                            majAffichageCarnetDepot();
+                                        }
+                                    }
                                 }
                             ]
                         },
@@ -656,6 +705,19 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     value: 0
                                 },
                                 {
+                                    // Valeur predefinie du plafond des liens client/tiers payant :
+                                    // heritee par les nouveaux clients, propagee quand elle change aux
+                                    // liens restes sur la valeur heritee - un plafond saisi a la main sur
+                                    // un client n'est pas ecrase. 0 = aucun plafond predefini.
+                                    fieldLabel: 'Plafond par tiers payant',
+                                    emptyText: 'Plafond par tiers payant',
+                                    name: 'dbl_PLAFOND_VENTE',
+                                    id: 'dbl_PLAFOND_VENTE',
+                                    maskRe: /[0-9.]/,
+                                    selectOnFocus: true,
+                                    value: 0
+                                },
+                                {
                                     allowBlank: false,
                                     fieldLabel: 'Accompte',
                                     emptyText: 'Accompte',
@@ -677,6 +739,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     fieldLabel: 'Prepayer',
                                     name: 'bool_IsACCOUNT',
                                     id: 'bool_IsACCOUNT',
+                                    // Retire de la vue, mais toujours present : le champ garde sa valeur, la
+                                    // soumet comme avant, et son ecouteur continue de piloter le quota et le
+                                    // montant du compte. Rien n'est supprime, on cesse seulement de le montrer.
+                                    hidden: true,
                                     listeners: {
                                         change: function (checkbox, newValue, oldValue, eOpts) {
                                             if (newValue) {
@@ -699,7 +765,18 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     checked: false,
                                     id: 'b_IsAbsolute'
                                 },
-                                {xtype: 'container'},
+                                {
+                                    /* Ne concerne que les carnets : l'interrupteur reste cache tant que le
+                                     * type choisi n'est pas « carnet ». Il evite d'avoir a ressortir de la
+                                     * fiche pour aller cocher « gerer comme depot » dans un autre menu. */
+                                    xtype: 'checkbox',
+                                    fieldLabel: 'Carnet dépôt',
+                                    boxLabel: 'Gérer ce carnet comme un dépôt',
+                                    name: 'is_depot',
+                                    id: 'is_depot',
+                                    checked: false,
+                                    hidden: true
+                                },
                                 {xtype: 'container'}
                             ]
                         }
@@ -712,9 +789,29 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
         //Initialisation des valeur
 
 
+        /* Droit de saisir les plafonds : sans lui les deux zones sont grisees, comme demande en
+         * recette. Le droit voyage avec la ligne de la liste ; a la creation, la fiche n'a pas de
+         * ligne d'origine et les zones restent saisissables - il n'y a encore aucun plafond a
+         * proteger, et le controle de fond reste cote serveur. */
+        var plafondModifiable = (Omode !== "update")
+                || (this.getOdatasource() && this.getOdatasource().P_BTN_MODIFIER_PLAFOND_TIERS_PAYANT !== false);
+        Ext.each(['dbl_PLAFOND_CREDIT', 'dbl_PLAFOND_VENTE'], function (id) {
+            var champ = Ext.getCmp(id);
+            if (champ && !plafondModifiable) {
+                champ.setReadOnly(true);
+                champ.addCls('x-item-disabled');
+                champ.setFieldStyle('background-color:#EDEDED;color:#7a7a7a;');
+                if (champ.setFieldLabel) {
+                    champ.setFieldLabel(champ.getFieldLabel() + ' <span style="color:#999;">(droit requis)</span>');
+                }
+            }
+        });
+
+        consommationEnCoursTiersPayant = 0;
         if (Omode === "update") {
 
             ref = this.getOdatasource().lg_TIERS_PAYANT_ID;
+            consommationEnCoursTiersPayant = parseFloat(this.getOdatasource().db_CONSOMMATION_MENSUELLE) || 0;
 
             Ext.getCmp('str_CODE_ORGANISME').setValue(this.getOdatasource().str_CODE_ORGANISME);
             Ext.getCmp('str_NAME_ADD').setValue(this.getOdatasource().str_NAME);
@@ -732,6 +829,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
 
 
             Ext.getCmp('dbl_PLAFOND_CREDIT').setValue(this.getOdatasource().dbl_PLAFOND_CREDIT);
+            Ext.getCmp('dbl_PLAFOND_VENTE').setValue(this.getOdatasource().dbl_PLAFOND_VENTE || 0);
             Ext.getCmp('dbl_TAUX_REMBOURSEMENT').setValue(this.getOdatasource().dbl_TAUX_REMBOURSEMENT);
 
             Ext.getCmp('str_NUMERO_IDF_ORGANISME').setValue(this.getOdatasource().str_NUMERO_IDF_ORGANISME);
@@ -760,7 +858,37 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             Ext.getCmp('str_CODE_DOC_COMPTOIRE').setValue(this.getOdatasource().str_CODE_DOC_COMPTOIRE);
             Ext.getCmp('bool_ENABLED').setValue(this.getOdatasource().bool_ENABLED);
             Ext.getCmp('lg_VILLE_ID').setValue(this.getOdatasource().lg_VILLE_ID);
-            Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD').setValue(this.getOdatasource().lg_TYPE_TIERS_PAYANT_ID);
+            /* Type du tiers payant : la liste transporte le LIBELLE (« Carnet ») dans le champ
+             * identifiant, et le veritable identifiant a cote. On pose l'identifiant quand il est
+             * la, apres avoir mis la ligne correspondante dans le magasin : sans elle la liste
+             * deroulante afficherait l'identifiant brut au lieu du libelle. A defaut d'identifiant
+             * on repose le libelle, exactement comme avant. */
+            (function (source) {
+                var combo = Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD');
+                if (!combo) {
+                    return;
+                }
+                var identifiant = source.lg_TYPE_TIERS_PAYANT_ID_REEL;
+                if (!identifiant) {
+                    combo.setValue(source.lg_TYPE_TIERS_PAYANT_ID);
+                    return;
+                }
+                var magasin = combo.getStore();
+                if (magasin && magasin.findExact('lg_TYPE_TIERS_PAYANT_ID', identifiant) === -1) {
+                    magasin.add({
+                        lg_TYPE_TIERS_PAYANT_ID: identifiant,
+                        str_LIBELLE_TYPE_TIERS_PAYANT: source.lg_TYPE_TIERS_PAYANT_ID || identifiant
+                    });
+                }
+                combo.setValue(identifiant);
+            })(this.getOdatasource());
+            // L'interrupteur du carnet depot se presente dans l'etat enregistre. Le magasin des
+            // types se remplit en differe : on repasse a son chargement pour que la case soit
+            // visible ou non selon le type reellement charge.
+            Ext.getCmp('is_depot').setValue(this.getOdatasource().is_depot === true
+                    || this.getOdatasource().is_depot === 'true');
+            majAffichageCarnetDepot();
+            store_type_tp.on('load', majAffichageCarnetDepot);
             Ext.getCmp('lg_TYPE_CONTRAT_ID').setValue(this.getOdatasource().lg_TYPE_CONTRAT_ID);
             Ext.getCmp('lg_REGIMECAISSE_ID').setValue(this.getOdatasource().lg_REGIMECAISSE_ID);
             Ext.getCmp('lg_RISQUE_ID').setValue(this.getOdatasource().lg_RISQUE_ID);
@@ -800,6 +928,9 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             minHeight: 200,
             layout: 'fit',
             plain: true,
+            // Fenetre modale, comme le detail du tiers payant : evite les clics
+            // dans la liste restee accessible derriere (retour d'officine).
+            modal: true,
             maximizable: true,
             items: form,
             buttons: [{
@@ -841,9 +972,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
 
             if (Omode === "create") {
 
-                internal_url = url_services_transaction_tierspayant + 'create';
-
-                //alert("CREATION DE TP OK");
+                // Creation en REST (memes regles metier et meme reponse que la JSP historique) ;
+                // les options « gere comme depot » et plafond par vente partent toujours dans le
+                // second temps (depot-apres-creation), la creation ne rendant pas l'identifiant.
+                internal_url = '../api/v1/tierspayant/gestion/create';
 
             } else {
                 // Modification en REST (memes regles metier que la JSP) ; l'identifiant est
@@ -857,6 +989,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             }
 
 
+            var envoyerLaFiche = function () {
             testextjs.app.getController('App').ShowWaitingProcess();
             Ext.Ajax.request({
                 url: internal_url,
@@ -874,6 +1007,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                     dbl_CAUTION: Ext.getCmp('dbl_CAUTION').getValue(),
                     bool_IsACCOUNT: Ext.getCmp('bool_IsACCOUNT').getValue(),
                     dbl_PLAFOND_CREDIT: Ext.getCmp('dbl_PLAFOND_CREDIT').getValue(),
+                    // En modification, le service REST pose la valeur et la propage aux liens
+                    // actifs au changement. En creation, la JSP historique l'ignore : elle part
+                    // dans le second temps ci-dessous, avec « gere comme depot ».
+                    dbl_PLAFOND_VENTE: Ext.getCmp('dbl_PLAFOND_VENTE').getValue() || 0,
                     dbl_TAUX_REMBOURSEMENT: Ext.getCmp('dbl_TAUX_REMBOURSEMENT').getValue(),
                     str_NUMERO_CAISSE_OFFICIEL: Ext.getCmp('str_NUMERO_CAISSE_OFFICIEL').getValue(),
                     str_CENTRE_PAYEUR: Ext.getCmp('str_CENTRE_PAYEUR').getValue(),
@@ -914,7 +1051,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                     int_NB_BONS_PAR_PAGE: Ext.getCmp('int_NB_BONS_PAR_PAGE').getValue() || 0,
                     int_TAILLE_POLICE: Ext.getCmp('int_TAILLE_POLICE').getValue() || 0,
                     cmu: Ext.getCmp('cmu').getValue(),
-                    caution: Ext.getCmp('caution').getValue()
+                    caution: Ext.getCmp('caution').getValue(),
+                    // Gere comme depot : n'a de sens que pour un carnet, d'ou le controle de
+                    // visibilite. En modification, le service REST le pose avec le reste.
+                    is_depot: Ext.getCmp('is_depot').isVisible() && Ext.getCmp('is_depot').getValue()
                 },
                 success: function (response)
                 {
@@ -924,10 +1064,44 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                         Ext.MessageBox.alert('Error Message', object.errors);
                         return;
                     } else {
-                        Ext.MessageBox.alert('Confirmation', object.errors);
-                        fenetre.close();
-                        Me_Workflow = Oview;
-                        Me_Workflow.getStore().reload();
+                        /* A la CREATION, la page historique ne rend pas l'identifiant du tiers
+                         * payant qu'elle vient d'ecrire : l'option « gere comme depot » ne peut
+                         * donc pas voyager avec le reste. On la pose dans un second temps, et
+                         * c'est le serveur qui retrouve la fiche - meme nom, meme type, creee a
+                         * l'instant. En modification, elle est deja posee par le service REST. */
+                        var poserDepot = (Omode === "create" && Ext.getCmp('is_depot').isVisible()
+                                && Ext.getCmp('is_depot').getValue());
+                        var plafondVenteCree = (Omode === "create"
+                                ? (parseFloat(Ext.getCmp('dbl_PLAFOND_VENTE').getValue()) || 0) : 0);
+                        var terminer = function (messageEnPlus) {
+                            Ext.MessageBox.alert('Confirmation',
+                                    object.errors + (messageEnPlus ? '<br><br>' + messageEnPlus : ''));
+                            fenetre.close();
+                            Me_Workflow = Oview;
+                            Me_Workflow.getStore().reload();
+                        };
+                        if (!poserDepot && plafondVenteCree <= 0) {
+                            terminer();
+                            return;
+                        }
+                        Ext.Ajax.request({
+                            url: '../api/v1/tierspayant/gestion/depot-apres-creation',
+                            method: 'POST',
+                            params: {
+                                str_NAME: Ext.getCmp('str_NAME_ADD').getValue(),
+                                lg_TYPE_TIERS_PAYANT_ID: Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD').getValue(),
+                                is_depot: poserDepot,
+                                dbl_PLAFOND_VENTE: plafondVenteCree
+                            },
+                            success: function (reponseDepot) {
+                                var r = Ext.JSON.decode(reponseDepot.responseText, true) || {};
+                                terminer(r.success ? '' : r.message);
+                            },
+                            failure: function () {
+                                terminer("Les options (géré comme dépôt, plafond par vente) n'ont pas pu être posées."
+                                        + " Ouvrez la fiche depuis la liste pour les renseigner.");
+                            }
+                        });
                     }
 
                 },
@@ -940,6 +1114,36 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
 
                 }
             });
+            };
+
+            /* Plafond de credit inferieur a la consommation en cours : on PREVIENT, on ne bloque plus.
+             * La fiche etait auparavant refusee dans ce cas, ce qui rendait la zone inmodifiable des
+             * lors que la consommation avait depasse la valeur visee - y compris pour la ramener a
+             * zero, c'est-a-dire pour RETIRER le plafond. Zero veut dire "aucun plafond" : c'est le
+             * moyen de debloquer un organisme, il passe donc toujours sans question. */
+            var plafondSaisi = parseFloat(Ext.getCmp('dbl_PLAFOND_CREDIT').getValue()) || 0;
+            var consoEnCours = (Omode === "create") ? 0 : consommationEnCoursTiersPayant;
+            if (plafondSaisi > 0 && consoEnCours > plafondSaisi) {
+                var format = function (v) {
+                    return Ext.util.Format.number(v, '0,000') + ' F';
+                };
+                Ext.MessageBox.show({
+                    title: 'Plafond inférieur à la consommation',
+                    msg: 'La consommation en cours de cet organisme est de <b>' + format(consoEnCours)
+                            + '</b>, le plafond que vous enregistrez est de <b>' + format(plafondSaisi)
+                            + '</b>.<br><br>Le plafond sera bien enregistré : les ventes à venir seront'
+                            + ' contrôlées sur cette nouvelle valeur.<br><br>Enregistrer quand même ?',
+                    buttons: Ext.MessageBox.YESNO,
+                    icon: Ext.MessageBox.QUESTION,
+                    fn: function (bouton) {
+                        if (bouton === 'yes') {
+                            envoyerLaFiche();
+                        }
+                    }
+                });
+                return;
+            }
+            envoyerLaFiche();
 
         } else {
             Ext.MessageBox.show({

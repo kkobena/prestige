@@ -49,6 +49,14 @@
               <span class="pl-brand__mark" aria-hidden="true">✚</span>
               <span class="pl-brand__text pl-animated-text--brand"><%= jdom.APP_NAME %></span>
             </div>
+            <!-- Espace produit : consultation LIBRE, sans compte. S'ouvre en fenetre MODALE
+                 par-dessus l'ecran de connexion ; son bouton « Retour » la referme.
+                 Meme animation que le bouton d'origine (pl-btn), taille de la pilule voisine. -->
+            <a href="espace-produit.html" id="espaceProduit" class="pl-btn pl-btn--compact"
+               onclick="prestigeOuvrirEspaceProduit(); return false;"
+               style="background:#4C9A46;">
+              <span aria-hidden="true">🔎</span><span>Espace produit</span>
+            </a>
           </div>
 
           <div class="pl-pharmacy-stack">
@@ -105,6 +113,44 @@
       </div>
     </section>
   </main>
+
+  <!-- Espace produit en fenetre modale : la surcouche couvre toute la page de connexion,
+       le contenu (espace-produit.html) est charge dans le cadre, et son bouton
+       « Retour à la connexion » referme la fenetre (voir espace-produit.html). -->
+  <!-- Le cadre est exactement la carte de recherche : pas de page blanche autour,
+       le defilement se fait DANS la vue elle-meme (voir espace-produit.html, mode embarque). -->
+  <div id="ep-modale" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,32,54,.55);">
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+                width:min(1140px,94vw);height:min(88vh,780px);background:#fff;border-radius:10px;
+                overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.35);">
+      <iframe id="ep-cadre" title="Espace produit"
+              style="width:100%;height:100%;border:0;display:block;"></iframe>
+    </div>
+  </div>
+  <script>
+    function prestigeOuvrirEspaceProduit() {
+      var modale = document.getElementById('ep-modale');
+      var cadre = document.getElementById('ep-cadre');
+      var premierChargement = !cadre.src;
+      if (premierChargement) { cadre.src = 'espace-produit.html'; }
+      modale.style.display = 'block';
+      // Curseur directement dans le champ de recherche, pret pour la saisie -
+      // au premier chargement comme aux reouvertures.
+      var focaliserRecherche = function () {
+        try {
+          cadre.contentWindow.focus();
+          cadre.contentWindow.document.getElementById('ep-q').focus();
+        } catch (e) { }
+      };
+      if (premierChargement) {
+        cadre.addEventListener('load', focaliserRecherche, { once: true });
+      }
+      setTimeout(focaliserRecherche, 150);
+    }
+    function prestigeFermerEspaceProduit() {
+      document.getElementById('ep-modale').style.display = 'none';
+    }
+  </script>
 
   <!-- Récupération du nom de la pharmacie -->
   <script>

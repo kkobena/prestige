@@ -84,4 +84,16 @@ public interface SuggestionService {
 
     JSONObject suggererQteReappro(Set<VenteDetailsDTO> datas);
 
+    /** Cree une suggestion VIDE de type manuelle (statut is_Process) pour le grossiste donne. */
+    JSONObject createSuggestionManuelle(String grossisteId);
+
+    /**
+     * Fusionne les suggestions cochees (au moins deux) comme la fusion des commandes en cours : les lignes s'ajoutent,
+     * les doublons de produit additionnent leurs quantites, les suggestions sources sont supprimees, le resultat
+     * devient manuelle (is_Process). Quand les suggestions melent plusieurs grossistes, grossisteCibleId designe celui
+     * qui porte la fusion ; s'il manque, la reponse liste les grossistes possibles (choixGrossisteRequis) pour que
+     * l'ecran fasse choisir.
+     */
+    JSONObject mergeSuggestionSelection(List<String> suggestionIds, String grossisteCibleId);
+
 }

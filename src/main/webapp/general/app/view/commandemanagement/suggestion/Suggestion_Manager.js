@@ -325,6 +325,25 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     handler: this.onAddClick
                 },
                 {
+                    /* Lot 3 : creation d'une suggestion VIDE de type MANUELLE — on choisit le
+                     * grossiste, la suggestion est creee puis la saisie s'ouvre. */
+                    text: 'CRÉER SUGGESTION MANUELLE',
+                    iconCls: 'addicon',
+                    cls: 'btn-primaryb',
+                    tooltip: 'Créer une suggestion vide de type manuelle puis y ajouter les produits',
+                    scope: this,
+                    handler: this.onCreerSuggestionManuelle
+                }, '-',
+                {
+                    /* Lot 3 : fusion des suggestions cochees — meme fonctionnement que la
+                     * fusion des commandes en cours (au moins deux, meme grossiste). */
+                    text: 'FUSIONNER',
+                    iconCls: 'fusionicon',
+                    tooltip: 'Fusionner les suggestions cochées (au moins deux, du même grossiste)',
+                    scope: this,
+                    handler: this.onFusionnerSuggestions
+                }, '-',
+                {
                     xtype: 'textfield',
                     id: 'rechecher',
                     name: 'suggestion',
@@ -485,6 +504,206 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
 
     },
 
+    /* Lot 3 : petite fenetre de choix du grossiste, puis creation d'une suggestion
+     * manuelle vide et ouverture de la saisie existante. */
+    onCreerSuggestionManuelle: function () {
+        const storeGrossiste = new Ext.data.Store({
+            model: 'testextjs.model.Grossiste',
+            pageSize: 999,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/grossiste/all',
+                reader: {type: 'json', root: 'results', totalProperty: 'total'}
+            }
+        });
+        const win = Ext.create('Ext.window.Window', {
+            title: 'Créer une suggestion manuelle',
+            modal: true,
+            width: 480,
+            bodyPadding: 10,
+            items: [{
+                    xtype: 'combobox',
+                    fieldLabel: 'Grossiste',
+                    itemId: 'grossisteManuelle',
+                    labelWidth: 80,
+                    anchor: '100%',
+                    width: 440,
+                    store: storeGrossiste,
+                    valueField: 'lg_GROSSISTE_ID',
+                    displayField: 'str_LIBELLE',
+                    queryMode: 'remote',
+                    allowBlank: false,
+                    emptyText: 'Choisir un grossiste...',
+                    listeners: {
+                        afterrender: function (cmp) {
+                            cmp.focus(true, 100);
+                        }
+                    }
+                }],
+            buttons: [
+                {
+                    text: 'Créer',
+                    handler: function () {
+                        const combo = win.down('#grossisteManuelle');
+                        const grossisteId = combo.getValue();
+                        if (!grossisteId) {
+                            Ext.Msg.alert('Message', 'Veuillez choisir le grossiste');
+                            return;
+                        }
+                        const rec = combo.findRecordByValue(grossisteId);
+                        const libelle = rec ? rec.get('str_LIBELLE') : '';
+                        Ext.Ajax.request({
+                            method: 'POST',
+                            url: '../api/v1/suggestion/create-manuelle?grossisteId=' + encodeURIComponent(grossisteId),
+                            success: function (response) {
+                                const result = Ext.JSON.decode(response.responseText, true);
+                                if (!result || !result.success) {
+                                    Ext.Msg.alert('Message', (result && result.msg) || 'La création a échoué');
+                                    return;
+                                }
+                                win.destroy();
+                                /* ouverture de la saisie comme le fait « Modifier », avec les
+                                 * champs qu'elle lit (grossiste en libelle, montants a zero) */
+                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(
+                                        'suggerercdemanager', 'Suggestion de commande', result.suggestionId,
+                                        {lg_GROSSISTE_ID: libelle, int_TOTAL_ACHAT: 0, int_TOTAL_VENTE: 0,
+                                            int_DATE_BUTOIR_ARTICLE: ''});
+                                /* la saisie s'ouvre : la main directement dans « choisir un
+                                 * article » (retour lot 3, point 6) */
+                                Ext.defer(function () {
+                                    const article = Ext.getCmp('str_NAME');
+                                    if (article && !article.destroyed) {
+                                        article.focus(true, 100);
+                                    }
+                                }, 900);
+                            },
+                            failure: function (response) {
+                                Ext.Msg.alert('Message', 'Erreur du serveur ' + response.status);
+                            }
+                        });
+                    }
+                },
+                {
+                    text: 'Annuler',
+                    handler: function () {
+                        win.destroy();
+                    }
+                }
+            ]
+        });
+        win.show();
+    },
+
+    /* Lot 3 : fusion des suggestions cochees — miroir de la fusion des commandes.
+     * Quand la selection mele plusieurs grossistes, le serveur renvoie la liste et
+     * on fait CHOISIR celui qui porte la fusion, au lieu de refuser (retour point 6). */
+    onFusionnerSuggestions: function () {
+        const me = this;
+        if (suggCheckedIds.length < 2) {
+            Ext.MessageBox.alert('Avertissement',
+                    'Veuillez sélectionner au moins deux suggestions à fusionner');
+            return;
+        }
+        Ext.MessageBox.confirm('Message',
+                'Fusionner les ' + suggCheckedIds.length + ' suggestions cochées ?',
+                function (btn) {
+                    if (btn !== 'yes') {
+                        return;
+                    }
+                    me.envoyerFusion(null);
+                });
+    },
+    envoyerFusion: function (grossisteId) {
+        const me = this;
+        testextjs.app.getController('App').ShowWaitingProcess();
+        Ext.Ajax.request({
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/suggestion/merge-selection',
+            timeout: 2400000,
+            params: Ext.JSON.encode({suggestionId: suggCheckedIds, grossisteId: grossisteId || ''}),
+            success: function (response) {
+                testextjs.app.getController('App').StopWaitingProcess();
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result && result.success) {
+                    suggCheckedIds = [];
+                    Ext.MessageBox.alert('Info',
+                            'Fusion effectuée avec succès dans la suggestion ' + (result.ref || ''));
+                    me.getStore().load();
+                } else if (result && result.choixGrossisteRequis) {
+                    me.choisirGrossisteFusion(result.grossistes || []);
+                } else {
+                    Ext.MessageBox.alert('Avertissement',
+                            (result && result.msg) || 'La fusion a échoué');
+                }
+            },
+            failure: function (response) {
+                testextjs.app.getController('App').StopWaitingProcess();
+                Ext.MessageBox.alert('Error Message', 'La fusion a échouée (' + response.status + ')');
+            }
+        });
+    },
+    /* Les suggestions cochees appartiennent a plusieurs grossistes : on demande
+     * lequel porte la fusion — les lignes des autres basculent sur lui. */
+    choisirGrossisteFusion: function (grossistes) {
+        const me = this;
+        const storeChoix = new Ext.data.Store({
+            fields: ['id', 'libelle'],
+            data: grossistes
+        });
+        const win = Ext.create('Ext.window.Window', {
+            title: 'Choisir le grossiste de la fusion',
+            modal: true,
+            width: 500,
+            bodyPadding: 10,
+            items: [
+                {
+                    xtype: 'displayfield',
+                    value: 'Les suggestions cochées appartiennent à plusieurs grossistes.<br/>'
+                            + 'Choisissez celui qui portera la suggestion fusionnée : les produits '
+                            + 'des autres suggestions lui seront rattachés.',
+                    anchor: '100%'
+                },
+                {
+                    xtype: 'combobox',
+                    itemId: 'grossisteFusion',
+                    fieldLabel: 'Grossiste',
+                    labelWidth: 80,
+                    width: 460,
+                    store: storeChoix,
+                    valueField: 'id',
+                    displayField: 'libelle',
+                    queryMode: 'local',
+                    editable: false,
+                    allowBlank: false,
+                    value: grossistes.length ? grossistes[0].id : null
+                }
+            ],
+            buttons: [
+                {
+                    text: 'Fusionner',
+                    handler: function () {
+                        const grossisteId = win.down('#grossisteFusion').getValue();
+                        if (!grossisteId) {
+                            Ext.Msg.alert('Message', 'Veuillez choisir le grossiste');
+                            return;
+                        }
+                        win.destroy();
+                        me.envoyerFusion(grossisteId);
+                    }
+                },
+                {
+                    text: 'Annuler',
+                    handler: function () {
+                        win.destroy();
+                    }
+                }
+            ]
+        });
+        win.show();
+    },
+
     onRemoveClick: function (grid, rowIndex) {
 
         Ext.MessageBox.confirm('Message',
@@ -564,8 +783,17 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                 }
             }
         });
+        /* Le titre portait l'identifiant technique de la suggestion, illisible et sans utilite
+         * pour l'usager. Il nomme desormais le grossiste et la reference du bon - ce que
+         * l'officine a sous les yeux dans la liste. L'identifiant reste disponible dans la
+         * colonne masquee pour qui en a besoin. */
+        const grossiste = rec.get('lg_GROSSISTE_ID') || rec.get('str_GROSSISTE') || '';
+        const reference = rec.get('str_REF') || '';
+        let intitule = 'Contenu de la suggestion';
+        if (grossiste) { intitule += ' — ' + grossiste; }
+        if (reference) { intitule += ' — REF ' + reference; }
         Ext.create('Ext.window.Window', {
-            title: 'Contenu de la suggestion [' + suggestionId + '] — consultation seule',
+            title: intitule + ' — consultation seule',
             modal: true,
             width: 950,
             height: 500,

@@ -157,7 +157,11 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             cls: 'screen-wrap',
             fieldDefaults: {labelAlign: 'left', labelWidth: 90, anchor: '100%', msgTarget: 'side'},
             layout: {type: 'vbox', align: 'stretch', padding: 10},
-            defaults: {flex: 1},
+            // Pas de flex par defaut : il etait pose sur TOUS les enfants, y compris la barre
+            // de boutons, et les quatre zones se partageaient la hauteur en parts egales. Sur
+            // un ecran plein page, les deux cadres du haut devenaient d'immenses cadres vides
+            // et la liste des produits etait ecrasee. Les cadres du haut prennent desormais
+            // leur hauteur naturelle et c'est la liste qui recoit la place restante.
             id: 'panelID',
             items: [{
                 xtype: 'fieldset',
@@ -263,16 +267,17 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     xtype: 'fieldset',
                     title: 'Liste des produits de la suggestion',
                     cls: 'dg-card',
-                    collapsible: true, defaultType: 'textfield', layout: 'anchor',
-                    defaults: {anchor: '100%'},
+                    // seul cadre a recevoir la place restante ; minHeight garde les 370 px
+                    // d'origine si l'ecran venait a etre affiche en hauteur automatique
+                    flex: 1,
+                    minHeight: 370,
+                    collapsible: true, defaultType: 'textfield', layout: 'fit',
                     items: [{
-                            columnWidth: 0.65,
                             xtype: 'gridpanel',
                             id: 'gridpanelSuggestionID',
                             cls: 'my-grid-header',
                             plugins: [this.cellEditing],
                             store: store_details_sugg,
-                            height: 370,
                             listeners: {
                                 cellclick: function (view, td, cellIndex, record) {
                                     Me_Window.showProduitInfos(record);
@@ -406,6 +411,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     items: ['->',
                         {text: 'Retour', id: 'btn_cancel',cls: 'btn-primary', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
                         {text: 'Imprimer', id: 'btn_print',cls: 'btn-primary', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
+                        /* Export CSV de la suggestion en cours : meme fichier (CIP;QTE) que
+                         * l'export deja disponible depuis la liste des suggestions. Le
+                         * telechargement part du clic, pas d'un retour de requete : aucune
+                         * fenetre surgissante a debloquer. */
+                        {text: 'Exporter CSV', id: 'btn_export_csv', cls: 'btn-primary',
+                            iconCls: 'export_csv_icon', scope: this,
+                            tooltip: 'Exporter les lignes de cette suggestion au format CSV',
+                            handler: this.onbtnexportcsv},
                         
                         {
                             text: 'Nettoyer la suggestion',
@@ -567,6 +580,17 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     onPdfClick: function (lg_SUGGESTION_ORDER_ID) {
         var linkUrl = url_services_pdf_liste_suggerercde + "?lg_SUGGESTION_ORDER_ID=" + lg_SUGGESTION_ORDER_ID;
         window.open(linkUrl);
+    },
+
+    /* Export CSV de la suggestion ouverte : le fichier (CIP;QTE) que l'officine envoie au
+     * grossiste. Le telechargement part du clic lui-meme, sans passer par un retour de
+     * requete : rien a debloquer cote navigateur. */
+    onbtnexportcsv: function () {
+        if (!orderIdRef) {
+            Ext.MessageBox.alert('Message', "Aucune suggestion ouverte : rien à exporter.");
+            return;
+        }
+        window.location = '../api/v1/suggestion/csv?id=' + encodeURIComponent(orderIdRef);
     },
 
     setTitleFrame: function (str_data) {

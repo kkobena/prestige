@@ -1971,11 +1971,13 @@ public class CaisseServiceImpl implements CaisseService {
                 : sql.replace("{userId}", "");
     }
 
+    /**
+     * Le parametre porte un type, ou plusieurs separes par des virgules : le journal de caisse n'affiche plus que les
+     * entrees, les sorties et les reglements tiers payant, et il lui en faut donc trois d'un coup. Aucune signature ne
+     * change ; les autres appelants, qui n'envoient qu'un identifiant, se comportent exactement comme avant.
+     */
     private String replaceTypeMvtPlaceholder(String sql, String typeMvtId) {
-        return StringUtils.isNotEmpty(typeMvtId)
-                ? sql.replace("{typeMvt}",
-                        String.format(" AND m.lg_TYPE_MVT_CAISSE_ID='%s' ", typeMvtId.replace("'", "")))
-                : sql.replace("{typeMvt}", " ");
+        return sql.replace("{typeMvt}", rest.FiltreTypesMvtCaisse.fragment("m.lg_TYPE_MVT_CAISSE_ID", typeMvtId));
     }
 
     @Override
@@ -1984,6 +1986,29 @@ public class CaisseServiceImpl implements CaisseService {
         return FunctionUtils.returnData(
                 this.getAllMvtCaisses(dtStart, dtEnd, checked, userId, typeMvtId, limit, start, false),
                 countMvtCaisses(dtStart, dtEnd, checked, userId, typeMvtId));
+    }
+
+    @Override
+    public String typesDuJournalCaisse() {
+        try {
+            List<dal.TTypeMvtCaisse> types = getEntityManager()
+                    .createQuery("SELECT t FROM TTypeMvtCaisse t", dal.TTypeMvtCaisse.class).getResultList();
+            StringBuilder retenus = new StringBuilder();
+            for (dal.TTypeMvtCaisse type : types) {
+                if (rest.TypesJournalCaisse.estTypeDuJournal(type.getStrNAME())) {
+                    if (retenus.length() > 0) {
+                        retenus.append(',');
+                    }
+                    retenus.append(type.getLgTYPEMVTCAISSEID());
+                }
+            }
+            return retenus.toString();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "typesDuJournalCaisse", e);
+            // Rien de retenu : on rend une chaine vide, donc le comportement d'avant - tous les
+            // types. Mieux vaut une liste trop large qu'un journal vide.
+            return "";
+        }
     }
 
     private List<Tuple> fetchAllMvtCaisses(String dtStart, String dtEnd, boolean checked, String userId,

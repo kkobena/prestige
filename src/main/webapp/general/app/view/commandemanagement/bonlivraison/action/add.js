@@ -99,7 +99,11 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             cls: 'screen-wrap',
             fieldDefaults: {labelAlign: 'left', labelWidth: 150, anchor: '100%', msgTarget: 'side'},
             layout: {type: 'vbox', align: 'stretch', padding: 10},
-            defaults: {flex: 1},
+            // Pas de flex par defaut : il etait pose sur TOUS les enfants, barre de boutons
+            // comprise, et les trois zones se partageaient la hauteur en parts egales. Sur un
+            // ecran plein page, les infos generales devenaient un immense cadre vide et le
+            // detail de la commande etait ecrase. Le cadre du haut prend sa hauteur naturelle,
+            // le detail recoit la place restante.
             id: 'panelID',
             items: [
                 {
@@ -173,15 +177,17 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                     title: '<span class="ig-title">Detail(s) de la Commande</span>',
                     collapsible: true,
                     cls: 'dg-card',
-                    layout: 'anchor',
-                    defaults: {anchor: '100%'},
+                    // seul cadre a recevoir la place restante ; minHeight garde les 370 px
+                    // d'origine si l'ecran venait a etre affiche en hauteur automatique
+                    flex: 1,
+                    minHeight: 370,
+                    layout: 'fit',
                     items: [
                         {
                             xtype: 'gridpanel',
                             id: 'gridpanelID',
                             cls: 'my-grid-header',
                             store: store_details_livraison,
-                            height: 370,
                             columns: [
                                 {text: 'Details Suggestion Id', flex: 1, sortable: true, hidden: true, dataIndex: 'lg_BON_LIVRAISON_DETAIL', id: 'lg_BON_LIVRAISON_DETAIL'},
                                 {text: 'Famille', flex: 1, sortable: true, hidden: true, dataIndex: 'lg_FAMILLE_ID'},
@@ -252,13 +258,54 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                             ],
                             tbar: [
                                 {xtype: 'textfield', cls: 'glass-input', id: 'rechercherDetail', name: 'rechercherDetail', emptyText: 'Recherche', flex: 1,
-                                    listeners: {render: function (cmp) {
-                                            cmp.getEl().on('keypress', function (e) {
-                                                if (e.getKey() === e.ENTER) {
-                                                    Me_Workflow.onRechClick();
-                                                }
-                                            });
-                                        }}
+                                    enableKeyEvents: true,
+                                    /* Recherche pendant la frappe, des deux caracteres.
+                                     *
+                                     * Le declencheur est la VALEUR, pas la touche : les fleches, la tabulation
+                                     * ou Majuscule ne relancent donc rien, et une saisie rapide n'envoie qu'une
+                                     * seule requete grace au delai de grace. En dessous de deux caracteres on
+                                     * ne cherche pas - sauf quand le champ redevient vide, ou l'on remet la
+                                     * liste complete, sans quoi l'utilisateur ne pourrait plus y revenir.
+                                     *
+                                     * Entree garde son role : elle cherche tout de suite, sans attendre. */
+                                    derniereRecherche: null,
+                                    attenteRecherche: null,
+                                    rechercherSiBesoin: function (immediat) {
+                                        const cmp = this;
+                                        const valeur = (cmp.getValue() || '').trim();
+                                        if (valeur === cmp.derniereRecherche) {
+                                            return;
+                                        }
+                                        if (valeur.length === 1) {
+                                            return;
+                                        }
+                                        cmp.derniereRecherche = valeur;
+                                        clearTimeout(cmp.attenteRecherche);
+                                        if (immediat) {
+                                            Me_Workflow.onRechClick();
+                                            return;
+                                        }
+                                        cmp.attenteRecherche = setTimeout(function () {
+                                            Me_Workflow.onRechClick();
+                                        }, 350);
+                                    },
+                                    listeners: {
+                                        keyup: function (cmp, e) {
+                                            cmp.rechercherSiBesoin(e.getKey() === e.ENTER);
+                                        },
+                                        /* Au retour dans le champ, la saisie precedente est selectionnee :
+                                         * la frappe suivante la remplace, sans avoir a effacer. */
+                                        focus: function (cmp) {
+                                            if (cmp.getValue()) {
+                                                Ext.defer(function () {
+                                                    cmp.selectText();
+                                                }, 1);
+                                            }
+                                        },
+                                        destroy: function (cmp) {
+                                            clearTimeout(cmp.attenteRecherche);
+                                        }
+                                    }
                                 }, '-',
                                 {xtype: 'combobox', cls: 'glass-input', name: 'str_TYPE_TRANSACTION', margins: '0 0 0 10', id: 'str_TYPE_TRANSACTION',
                                     store: store_type, valueField: 'str_TYPE_TRANSACTION', displayField: 'str_desc',

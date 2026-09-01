@@ -801,6 +801,8 @@ Ext.application({
         'FamilleArticleStatsCtr',
         'VingthManagerCtr',
         'AnalyseTiersPayantCtr',
+        'DetailsCtr',
+        'VentesRateesCtr',
         'AbcManagerCtr',
         'FeuilleDeMatchCtr',
         'peremptionManagerCtr',
@@ -860,6 +862,262 @@ Ext.application({
     ],
     autoCreateViewport: true
 
+});
+
+// ---------------------------------------------------------------------
+// Memorisation des colonnes PAR POSTE (lot 3) : les grilles declarees
+// « stateful » (avec un stateId stable) conservent colonnes affichees ou
+// masquees, largeurs, ordre et tri dans le stockage local du navigateur.
+// L'etat survit au changement de menu et a la deconnexion, et disparait
+// quand le cache du navigateur est vide — comportement demande.
+// Seules les grilles explicitement marquees sont concernees : aucune
+// grille existante ne change de comportement sans stateId.
+// ---------------------------------------------------------------------
+(function () {
+    try {
+        if (window.localStorage && Ext.state && Ext.state.LocalStorageProvider) {
+            Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider({prefix: 'prestige-'}));
+        }
+    } catch (e) {
+        // stockage local indisponible (navigation privee, quota...) :
+        // pas de memorisation, comportement d'origine
+    }
+
+    /*
+     * Identifiant STABLE par colonne, indispensable a la memorisation.
+     *
+     * ExtJS reconnait une colonne dans l'etat enregistre par « stateId ou headerId » ;
+     * faute de stateId, le headerId est genere a la creation (header-1234) et CHANGE a
+     * chaque nouvelle instance de la grille. L'etat etait donc bien enregistre mais ne
+     * pouvait plus etre applique en revenant sur le menu : tout repartait par defaut.
+     *
+     * On derive donc un identifiant du dataIndex (ou du rang pour les colonnes qui n'en
+     * ont pas, numeroteur et colonnes d'action), prefixe par la grille.
+     */
+    window.PrestigeEtatColonnes = {
+        identifier: function (prefixe, colonnes) {
+            (colonnes || []).forEach(function (colonne, rang) {
+                if (colonne && !colonne.stateId) {
+                    colonne.stateId = prefixe + '-' + (colonne.dataIndex || ('col' + rang));
+                }
+            });
+            return colonnes;
+        }
+    };
+})();
+
+// ---------------------------------------------------------------------
+// Couleurs de mise en evidence des lignes, reglees par officine.
+//
+// Deux parametres de l'ecran « Gestion des parametrages » donnent la couleur
+// de la ligne survolee (COULEUR_SURVOL_LIGNE) et celle de la ligne
+// selectionnee (COULEUR_SELECTION_LIGNE). Il n'y a qu'un code hexadecimal a
+// saisir par etat : le lisere et la couleur du libelle en sont deduits, et un
+// fond clair recoit un texte sombre, un fond fonce un texte clair.
+//
+// Les valeurs sont posees en variables CSS sur <html> ; les feuilles de style
+// les utilisent avec la couleur d'origine en repli, donc un appel qui echoue
+// ou un parametre absent laisse l'application telle qu'elle etait.
+// ---------------------------------------------------------------------
+window.PrestigeCouleursLignes = (function () {
+    'use strict';
+
+    var DEFAUTS = {survol: '#ffcc80', selection: '#CE93D8'};
+
+    /** #abc ou #aabbcc -> {r, g, b}, null si le code n'est pas exploitable. */
+    function composantes(couleur) {
+        var code = String(couleur || '').trim().replace('#', '');
+        if (code.length === 3) {
+            code = code.charAt(0) + code.charAt(0) + code.charAt(1) + code.charAt(1)
+                    + code.charAt(2) + code.charAt(2);
+        }
+        if (!/^[0-9a-fA-F]{6}$/.test(code)) {
+            return null;
+        }
+        return {
+            r: parseInt(code.substring(0, 2), 16),
+            g: parseInt(code.substring(2, 4), 16),
+            b: parseInt(code.substring(4, 6), 16)
+        };
+    }
+
+    function enHexa(n) {
+        var v = Math.max(0, Math.min(255, Math.round(n))).toString(16);
+        return v.length === 1 ? '0' + v : v;
+    }
+
+    /**
+     * Lisere : meme teinte que le fond, mais franchement plus foncee et plus vive.
+     *
+     * Multiplier les trois composantes assombrirait aussi la couleur, mais en la
+     * ternissant (l'orange virait au brun). On passe donc par la teinte et la
+     * saturation, qui sont conservees, et seule la luminosite est baissee.
+     */
+    function lisere(rgb) {
+        var r = rgb.r / 255, v = rgb.g / 255, b = rgb.b / 255;
+        var maxi = Math.max(r, v, b), mini = Math.min(r, v, b);
+        var l = (maxi + mini) / 2;
+        var d = maxi - mini;
+        var s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+        var h = 0;
+        if (d !== 0) {
+            if (maxi === r) {
+                h = 60 * (((v - b) / d) % 6);
+            } else if (maxi === v) {
+                h = 60 * (((b - r) / d) + 2);
+            } else {
+                h = 60 * (((r - v) / d) + 4);
+            }
+        }
+        if (h < 0) {
+            h += 360;
+        }
+        return versHexa(h, Math.min(1, s * 1.35 + 0.15), Math.max(0.18, l * 0.5));
+    }
+
+    /** Teinte, saturation, luminosite -> code hexadecimal. */
+    function versHexa(h, s, l) {
+        var c = (1 - Math.abs(2 * l - 1)) * s;
+        var x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+        var m = l - c / 2;
+        var t = (h < 60) ? [c, x, 0] : (h < 120) ? [x, c, 0] : (h < 180) ? [0, c, x]
+                : (h < 240) ? [0, x, c] : (h < 300) ? [x, 0, c] : [c, 0, x];
+        return '#' + enHexa((t[0] + m) * 255) + enHexa((t[1] + m) * 255) + enHexa((t[2] + m) * 255);
+    }
+
+    /** Libelle sombre sur fond clair, clair sur fond fonce. */
+    function couleurTexte(rgb) {
+        var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b);
+        return luminance > 150 ? '#1a1a1a' : '#ffffff';
+    }
+
+    function poser(nom, valeur) {
+        if (document.documentElement && document.documentElement.style.setProperty) {
+            document.documentElement.style.setProperty(nom, valeur);
+        }
+    }
+
+    function appliquer(couleurs) {
+        var valeurs = couleurs || {};
+        var survol = composantes(valeurs.survol) || composantes(DEFAUTS.survol);
+        var selection = composantes(valeurs.selection) || composantes(DEFAUTS.selection);
+
+        poser('--vp-survol-fond', '#' + enHexa(survol.r) + enHexa(survol.g) + enHexa(survol.b));
+        poser('--vp-survol-bord', lisere(survol));
+        poser('--vp-survol-texte', couleurTexte(survol));
+        // Dans les listes, on ne force le libelle que si la couleur choisie est
+        // foncee : sur un fond clair, les colonnes gardent leurs couleurs
+        // (stock en bleu, alertes en rouge) au lieu d'etre uniformisees.
+        poser('--vp-survol-texte-grille', couleurTexte(survol) === '#ffffff' ? '#ffffff' : 'inherit');
+        poser('--vp-selection-fond', '#' + enHexa(selection.r) + enHexa(selection.g) + enHexa(selection.b));
+        poser('--vp-selection-texte', couleurTexte(selection));
+    }
+
+    function charger() {
+        try {
+            var requete = new XMLHttpRequest();
+            requete.open('GET', '../api/v1/app-params/couleurs-lignes', true);
+            requete.onreadystatechange = function () {
+                if (requete.readyState !== 4 || requete.status !== 200) {
+                    return;
+                }
+                try {
+                    appliquer(JSON.parse(requete.responseText));
+                } catch (e) {
+                    // reponse inattendue : on garde les couleurs d'origine
+                }
+            };
+            requete.send();
+        } catch (e) {
+            // pas de reseau : on garde les couleurs d'origine
+        }
+    }
+
+    charger();
+    return {appliquer: appliquer, recharger: charger};
+})();
+
+// ---------------------------------------------------------------------
+// Ligne active : au clic, c'est la LIGNE entiere qui est marquee (violet),
+// pas la seule cellule cliquee.
+//
+// La plupart des grilles de l'application sont en selection « cellule »
+// (selType cellmodel) : ExtJS ne marque alors que la cellule cliquee
+// (x-grid-cell-selected) et ne pose AUCUNE classe sur la ligne — il n'y a
+// donc rien a styler en CSS seul.
+//
+// Plutot que de basculer 230 grilles en selection « ligne », ce qui
+// changerait la semantique de selection (edition en cellule, appels a
+// getCurrentPosition, evenements select), on se contente d'ajouter une
+// classe d'affichage vp-ligne-active sur la ligne qui porte la selection.
+// Purement cosmetique : la selection ExtJS, elle, ne change pas.
+//
+// La ligne CLIQUEE est marquee elle aussi, meme si elle n'est pas
+// selectionnee : sur la liste des factures par exemple, la selection est
+// volontairement reservee a la case a cocher (checkOnly) et refusee aux
+// factures non supprimables — cliquer une ligne ne selectionne donc rien
+// et il ne se passait rien a l'ecran.
+//
+// Les arbres (menu de navigation) heritent de Ext.tree.Panel et non de
+// Ext.grid.Panel : ils ne sont pas concernes et gardent leur propre style.
+// ---------------------------------------------------------------------
+Ext.define('Prestige.override.GrilleLigneActive', {
+    override: 'Ext.grid.Panel',
+
+    initComponent: function () {
+        this.callParent(arguments);
+
+        this.on('afterrender', function (grille) {
+            try {
+                var modele = grille.getSelectionModel();
+                var vue = grille.getView();
+                if (!modele || !vue) {
+                    return;
+                }
+                var ligneCliquee = null;
+
+                var marquer = function (enregistrement) {
+                    var noeud = enregistrement ? vue.getNode(enregistrement) : null;
+                    if (noeud) {
+                        Ext.fly(noeud).addCls('vp-ligne-active');
+                    }
+                };
+
+                var repeindre = function () {
+                    try {
+                        if (!vue.rendered || !vue.getEl()) {
+                            return;
+                        }
+                        Ext.Array.each(vue.getEl().query('.vp-ligne-active'), function (noeud) {
+                            Ext.fly(noeud).removeCls('vp-ligne-active');
+                        });
+                        Ext.Array.each(modele.getSelection() || [], marquer);
+                        // la ligne cliquee reste marquee tant qu'aucune autre
+                        // n'est cliquee ou selectionnee
+                        if (!(modele.getSelection() || []).length) {
+                            marquer(ligneCliquee);
+                        }
+                    } catch (e) {
+                        // rendu en cours de destruction : rien a repeindre
+                    }
+                };
+
+                modele.on('selectionchange', repeindre);
+                vue.on('refresh', repeindre);
+                grille.on('itemclick', function (v, enregistrement) {
+                    ligneCliquee = enregistrement;
+                    repeindre();
+                });
+                if (grille.getStore()) {
+                    grille.getStore().on('load', function () {
+                        ligneCliquee = null;
+                    });
+                }
+            } catch (e) {
+                // grille atypique : on laisse le comportement d'origine
+            }
+        });
+    }
 });
 
 // ---------------------------------------------------------------------
@@ -990,6 +1248,45 @@ Ext.application({
             }
         });
     }
+
+    // Garde sur Ext.EventManager.removeAll. ExtJS 4.2 y lit « element.id » sans verifier
+    // que l'element existe encore :
+    //     removeAll: function (n) { var o = (typeof n === "string") ? n : n.id, ... }
+    // Quand un composant est detruit deux fois, ou quand son noeud DOM a deja disparu,
+    // l'appel remonte « can't access property "id", n is undefined » et interrompt la
+    // destruction en cours : l'ecran reste a moitie ferme. Retirer les ecouteurs d'un
+    // element absent n'a aucun sens, il n'y a rien a retirer : on ne fait rien et on
+    // remonte l'incident une seule fois, avec la pile, pour identifier l'appelant.
+    (function () {
+        if (!window.Ext || !Ext.EventManager || typeof Ext.EventManager.removeAll !== 'function') {
+            return;
+        }
+        var removeAllOrigine = Ext.EventManager.removeAll;
+        var dejaSignale = false;
+        Ext.EventManager.removeAll = function (element) {
+            if (element === null || element === undefined) {
+                if (!dejaSignale) {
+                    dejaSignale = true;
+                    var pile = null;
+                    try {
+                        pile = new Error('removeAll sur un element absent').stack;
+                    } catch (ignore) {
+                        pile = null;
+                    }
+                    reportError({
+                        type: 'JS',
+                        niveau: 'WARN',
+                        module: 'FRONTEND',
+                        messageCourt: 'Ext.EventManager.removeAll appelé sur un élément absent (neutralisé)',
+                        urlOuEcran: String(window.location.pathname || '').substring(0, 255),
+                        stack: pile ? String(pile).substring(0, 8000) : null
+                    });
+                }
+                return;
+            }
+            return removeAllOrigine.apply(this, arguments);
+        };
+    })();
 
     Ext.onReady(function () {
         // Alimente le fil d'Ariane a chaque appel API (hors envois du support lui-meme).

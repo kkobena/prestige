@@ -186,8 +186,11 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                             fieldStyle: 'border:2px solid #1565C0;'},
                         {text: 'Rechercher', itemId: 'rechercher', iconCls: 'searchicon', scope: this},
                         {xtype: 'tbseparator'},
-                        {text: 'Recalculer classification', itemId: 'recalculer', iconCls: 'suggestionreapro', tooltip: 'Recalcule la classification ABC sur la période'},
-                        {text: 'Appliquer aux fiches', itemId: 'appliquer', iconCls: 'printable', tooltip: 'Écrit la classe ABC calculée sur les fiches articles'},
+                        /* Icones distinctes (retour d'officine) : le recalcul ne partage plus celle
+                         * de « Créer suggestion » (camion de reappro), et « Appliquer aux fiches »
+                         * ne partage plus celle d'« Imprimer » (imprimante). */
+                        {text: 'Recalculer classification', itemId: 'recalculer', icon: 'resources/images/icons/fam/table_refresh.png', tooltip: 'Recalcule la classification ABC sur la période'},
+                        {text: 'Appliquer aux fiches', itemId: 'appliquer', icon: 'resources/images/icons/fam/accept.png', tooltip: 'Écrit la classe ABC calculée sur les fiches articles'},
                         {text: 'Courbe évolution', itemId: 'evolution', iconCls: 'charticon', tooltip: 'Évolution mensuelle des classes sur la période'},
                         {xtype: 'tbseparator'},
                         {text: 'Paramétrer les classes', itemId: 'parametrerClasses', iconCls: 'configuration', tooltip: 'Modifier Q1, Q2, Q3, unité et bornes des classes A/B/C'}
@@ -228,8 +231,13 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                     xtype: 'gridpanel',
                     store: data,
                     sortableColumns: false,
+                    /* Memorisation des colonnes par poste (voir app.js) */
+                    stateful: true,
+                    stateId: 'grille-classification-abc',
                     viewConfig: {columnLines: true},
-                    columns: [
+                    /* identifiants stables : sans eux, l'etat enregistre n'est plus
+                     * reconnu quand on revient sur le menu (cf. app.js) */
+                    columns: window.PrestigeEtatColonnes.identifier('abc', [
                         {header: 'Id', width: 40, xtype: 'rownumberer'},
                         {header: 'CIP', dataIndex: 'cip', width: 80},
                         {header: 'EAN', dataIndex: 'ean', width: 100, hidden: true},
@@ -242,7 +250,11 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                         {header: 'Famille', dataIndex: 'famille', flex: 1},
                         {header: 'Rayon', dataIndex: 'rayon', flex: 1},
                         {header: 'Code Geo', dataIndex: 'codeGeoArticle', width: 100, hidden: true},
-                        {header: 'Stock', dataIndex: 'stockDisponible', width: 70, align: 'right', renderer: moneyRenderer},
+                        /* Lot 3 : seul le stock TOTAL est visible par defaut — rayon et reserve
+                         * restent cochables dans le menu de colonnes. */
+                        {header: 'Stock', dataIndex: 'stockDisponible', width: 70, align: 'right', renderer: moneyRenderer, hidden: true},
+                        {header: 'RES', dataIndex: 'stockReserve', width: 60, align: 'right', renderer: moneyRenderer, hidden: true},
+                        {header: 'Stock total', dataIndex: 'stockTotal', width: 80, align: 'right', renderer: moneyRenderer},
                         {header: 'Seuil', dataIndex: 'seuilMini', width: 70, align: 'right', renderer: moneyRenderer},
                         {header: 'Qté réappro', dataIndex: 'quantiteReappro', width: 80, align: 'right', renderer: moneyRenderer},
                         {header: 'Qté vendue', dataIndex: 'quantiteVendue', width: 80, align: 'right',
@@ -323,7 +335,7 @@ Ext.define('testextjs.view.Report.abc.AbcManager', {
                                 }
                             }]
                         }
-                    ],
+                    ]),
                     selModel: {selType: 'cellmodel'},
                     bbar: {xtype: 'pagingtoolbar', store: data, dock: 'bottom', displayInfo: true},
                     listeners: {

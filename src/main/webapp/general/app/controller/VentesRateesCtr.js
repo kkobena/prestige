@@ -1,0 +1,950 @@
+/* global Ext, testextjs */
+
+/*
+ * Ventes ratees : fenetre d'acces rapide (bouton panier du bandeau, liste du jour) et menu de
+ * consultation complete (registre filtre, analyse, editions, exports).
+ *
+ * La pastille du bouton panier compte les PRODUITS DISTINCTS non commandes du jour ; elle est
+ * actualisee apres chaque ajout, suppression, rattachement et changement d'etat commande.
+ */
+Ext.define('testextjs.controller.VentesRateesCtr', {
+    extend: 'Ext.app.Controller',
+    views: ['testextjs.view.ventesratees.VentesRateesManager'],
+
+    init: function () {
+        this.control({
+            'ventesrateesmanager': {
+                afterrender: this.onEcranAffiche,
+                tabchange: this.onChangementOnglet
+            },
+            'ventesrateesmanager #grilleRegistre': {
+                itemdblclick: this.onDoubleClicRegistre,
+                supprimerdemande: this.onSupprimerDepuisRegistre
+            },
+            'ventesrateesmanager #btnRechercher': {
+                click: this.onRechercher
+            },
+            'ventesrateesmanager #btnVider': {
+                click: this.onViderFiltres
+            },
+            'ventesrateesmanager #btnNouvelle': {
+                click: this.onNouvelleDemandeMenu
+            },
+            'ventesrateesmanager #btnImprimer': {
+                click: this.onImprimer
+            },
+            'ventesrateesmanager #btnExcel': {
+                click: this.onExcel
+            },
+            'ventesrateesmanager #btnCsv': {
+                click: this.onCsv
+            },
+            'ventesrateesmanager #btnModifier': {
+                click: this.onModifier
+            },
+            'ventesrateesmanager #btnCommander': {
+                click: this.onCommanderMenu
+            },
+            'ventesrateesmanager #btnRattacher': {
+                click: this.onRattacher
+            },
+            'ventesrateesmanager #btnAnalyser': {
+                click: this.onAnalyser
+            },
+            'ventesrateesmanager #btnAnalysePdf': {
+                click: this.onImprimerAnalyse
+            },
+            'ventesrateesmanager #btnAnalyseExcel': {
+                click: this.onExcelAnalyse
+            },
+            'ventesrateesmanager #filtreProduit': {
+                specialkey: this.onToucheEntree
+            },
+            'ventesrateesmanager #filtreClient': {
+                specialkey: this.onToucheEntree
+            }
+        });
+    },
+
+    ecran: function (composant) {
+        return composant.up('ventesrateesmanager');
+    },
+
+    onEcranAffiche: function (ecran) {
+        this.chargerRegistre(ecran);
+        // Curseur directement dans le filtre produit, pret pour la saisie
+        Ext.defer(function () {
+            var champ = ecran.down('#filtreProduit');
+            if (champ && champ.rendered) {
+                champ.focus();
+            }
+        }, 400);
+    },
+
+    /** L'onglet Analyse se charge seul a sa premiere ouverture, sur la journee en cours. */
+    onChangementOnglet: function (ecran, nouvelOnglet) {
+        if (nouvelOnglet && nouvelOnglet.getItemId() === 'ongletAnalyse' && !ecran.analyseChargee) {
+            ecran.analyseChargee = true;
+            this.onAnalyser(ecran.down('#btnAnalyser'));
+        }
+    },
+
+    /** Double-clic sur une ligne du registre : la fenetre de modification s'ouvre preremplie. */
+    onDoubleClicRegistre: function (vue, record) {
+        var me = this;
+        var ecran = vue.up('ventesrateesmanager');
+        me.ouvrirSaisie(record, function () {
+            me.chargerRegistre(ecran);
+        });
+    },
+
+    /** Croix de suppression d'une ligne du registre : meme confirmation que dans la modale du panier. */
+    onSupprimerDepuisRegistre: function (vue, record) {
+        var me = this;
+        var ecran = vue.up('ventesrateesmanager');
+        me.supprimerAvecConfirmation(record, function () {
+            me.chargerRegistre(ecran);
+            prestigeVentesRateesBadge();
+        });
+    },
+
+    onToucheEntree: function (champ, e) {
+        if (e.getKey() === e.ENTER) {
+            this.chargerRegistre(this.ecran(champ));
+        }
+    },
+
+    chargerRegistre: function (ecran) {
+        var me = this;
+        var store = ecran.storeRegistre;
+        var grille = ecran.down('#grilleRegistre');
+        store.getProxy().extraParams = ecran.parametresRegistre();
+        // Le droit de supprimer voyage avec la liste : la croix apparait apres le chargement.
+        store.on('load', function () {
+            me.majDroitSuppression(store, grille);
+        }, null, {single: true});
+        store.loadPage(1);
+    },
+
+    onRechercher: function (bouton) {
+        this.chargerRegistre(this.ecran(bouton));
+    },
+
+    onViderFiltres: function (bouton) {
+        var ecran = this.ecran(bouton);
+        Ext.each(['filtreDebut', 'filtreFin', 'filtreUtilisateur', 'filtreProduit', 'filtreClient', 'filtreMotif'],
+                function (id) {
+                    ecran.down('#' + id).setValue(null);
+                });
+        Ext.each(['filtreConnu', 'filtreCommande', 'filtreRattache'], function (id) {
+            ecran.down('#' + id).setValue('');
+        });
+        this.chargerRegistre(ecran);
+    },
+
+    /*
+     * Pas de boite « Génération du PDF » : le modele compile est en cache cote serveur, la
+     * reponse est immediate - le PDF s'ouvre directement dans un nouvel onglet.
+     */
+    onImprimer: function (bouton) {
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/ventes-ratees/recherche/print',
+            params: this.ecran(bouton).parametresRegistre(),
+            success: function (response) {
+                var r = Ext.JSON.decode(response.responseText, true) || {};
+                if (r.success && r.msg) {
+                    // URL relative au contexte, comme les autres editions de l'application
+                    window.open('..' + r.msg, '_blank');
+                } else {
+                    Ext.Msg.alert('Message', r.msg || 'Le PDF n\'a pas pu être généré.');
+                }
+            },
+            failure: function () {
+                Ext.Msg.alert('Message', 'Le PDF n\'a pas pu être généré.');
+            }
+        });
+    },
+
+    onExcel: function (bouton) {
+        window.open('../api/v1/ventes-ratees/recherche/excel?'
+                + Ext.Object.toQueryString(this.ecran(bouton).parametresRegistre()));
+    },
+
+    onCsv: function (bouton) {
+        window.open('../api/v1/ventes-ratees/recherche/csv?'
+                + Ext.Object.toQueryString(this.ecran(bouton).parametresRegistre()));
+    },
+
+    selection: function (ecran) {
+        var selection = ecran.down('#grilleRegistre').getSelectionModel().getSelection();
+        if (!selection.length) {
+            Ext.Msg.alert('Message', 'Sélectionnez d\'abord une demande dans la liste.');
+            return null;
+        }
+        return selection[0];
+    },
+
+    // ------------------------------------------------------------------ commande
+
+    onCommanderMenu: function (bouton) {
+        var me = this, ecran = me.ecran(bouton);
+        var record = me.selection(ecran);
+        if (!record) {
+            return;
+        }
+        if (record.get('commande')) {
+            Ext.Msg.alert('Message', 'Cette demande est déjà commandée.');
+            return;
+        }
+        me.commanderAvecConfirmation(record.get('id'), function () {
+            me.chargerRegistre(ecran);
+        });
+    },
+
+    /**
+     * Marquage commande avec la confirmation de commande groupee de la specification : si le produit
+     * apparait dans plusieurs demandes actives, proposer « Toutes les lignes / Cette ligne uniquement /
+     * Annuler » ; sinon marquer directement la ligne.
+     */
+    commanderAvecConfirmation: function (id, apres) {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/ventes-ratees/' + id + '/groupe',
+            success: function (response) {
+                var r = Ext.JSON.decode(response.responseText, true) || {};
+                if (!r.success) {
+                    Ext.Msg.alert('Message', r.msg || 'Opération impossible.');
+                    return;
+                }
+                if (!r.confirmationNecessaire) {
+                    me.commander(id, false, apres);
+                    return;
+                }
+                Ext.Msg.show({
+                    title: 'Commande groupée',
+                    msg: r.message,
+                    icon: Ext.Msg.QUESTION,
+                    buttons: Ext.Msg.YESNOCANCEL,
+                    buttonText: {yes: 'Toutes les lignes', no: 'Cette ligne uniquement', cancel: 'Annuler'},
+                    fn: function (choix) {
+                        if (choix === 'yes') {
+                            me.commander(id, true, apres);
+                        } else if (choix === 'no') {
+                            me.commander(id, false, apres);
+                        }
+                    }
+                });
+            },
+            failure: function () {
+                Ext.Msg.alert('Message', 'Opération impossible.');
+            }
+        });
+    },
+
+    commander: function (id, toutes, apres) {
+        Ext.Ajax.request({
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/ventes-ratees/' + id + '/commander',
+            params: Ext.JSON.encode({toutes: toutes}),
+            success: function (response) {
+                var r = Ext.JSON.decode(response.responseText, true) || {};
+                if (!r.success) {
+                    Ext.Msg.alert('Message', r.msg || 'Opération impossible.');
+                    return;
+                }
+                prestigeVentesRateesBadge();
+                if (apres) {
+                    apres(r);
+                }
+            },
+            failure: function () {
+                Ext.Msg.alert('Message', 'Opération impossible.');
+            }
+        });
+    },
+
+    // ------------------------------------------------------------------ rattachement
+
+    onRattacher: function (bouton) {
+        var me = this, ecran = me.ecran(bouton);
+        var record = me.selection(ecran);
+        if (!record) {
+            return;
+        }
+        if (record.get('connu')) {
+            Ext.Msg.alert('Message', 'Cette demande est déjà liée à un produit de la base.');
+            return;
+        }
+        var comboProduit = me.comboProduit('Produit de la base', 580);
+        var fenetre = Ext.create('Ext.window.Window', {
+            title: 'Rattacher « ' + record.get('designation') + ' » à un produit',
+            modal: true,
+            width: 640,
+            bodyPadding: 12,
+            items: [comboProduit],
+            buttons: [{
+                    text: 'Rattacher',
+                    handler: function () {
+                        var familleId = comboProduit.getValue();
+                        var choisi = comboProduit.findRecordByValue(familleId);
+                        if (!familleId || !choisi) {
+                            Ext.Msg.alert('Message', 'Choisissez le produit dans la liste.');
+                            return;
+                        }
+                        Ext.Ajax.request({
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            url: '../api/v1/ventes-ratees/' + record.get('id') + '/rattacher',
+                            params: Ext.JSON.encode({familleId: familleId}),
+                            success: function (response) {
+                                var r = Ext.JSON.decode(response.responseText, true) || {};
+                                if (!r.success) {
+                                    Ext.Msg.alert('Message', r.msg || 'Le rattachement a échoué.');
+                                    return;
+                                }
+                                fenetre.close();
+                                prestigeVentesRateesBadge();
+                                me.chargerRegistre(ecran);
+                            },
+                            failure: function () {
+                                Ext.Msg.alert('Message', 'Le rattachement a échoué.');
+                            }
+                        });
+                    }
+                }, {
+                    text: 'Annuler',
+                    handler: function () {
+                        fenetre.close();
+                    }
+                }]
+        });
+        fenetre.show();
+        comboProduit.focus(false, 200);
+    },
+
+    // ------------------------------------------------------------------ saisie / modification
+
+    onNouvelleDemandeMenu: function (bouton) {
+        var me = this, ecran = me.ecran(bouton);
+        me.ouvrirSaisie(null, function () {
+            me.chargerRegistre(ecran);
+        });
+    },
+
+    onModifier: function (bouton) {
+        var me = this, ecran = me.ecran(bouton);
+        var record = me.selection(ecran);
+        if (!record) {
+            return;
+        }
+        me.ouvrirSaisie(record, function () {
+            me.chargerRegistre(ecran);
+        });
+    },
+
+    /** Combo produit : recherche distante « contient » sur le CIP, le nom ou l'EAN ; texte libre accepte. */
+    comboProduit: function (label, largeur) {
+        var storeProduits = new Ext.data.Store({
+            fields: ['id', 'cip', 'designation', {name: 'stock', type: 'int'}],
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/ventes-ratees/produits',
+                reader: {type: 'json', root: 'data'}
+            }
+        });
+        return Ext.create('Ext.form.field.ComboBox', {
+            fieldLabel: label,
+            labelWidth: 110,
+            width: largeur,
+            store: storeProduits,
+            queryMode: 'remote',
+            queryParam: 'q',
+            minChars: 2,
+            valueField: 'id',
+            displayField: 'designation',
+            forceSelection: false,
+            emptyText: 'CIP, nom du produit, ou texte libre si inconnu',
+            // Liste deroulante plus large que le champ : le CIP, le nom et le stock tiennent
+            // sur UNE ligne, sans fusion ni retour a la ligne.
+            matchFieldWidth: false,
+            listConfig: {
+                minWidth: 640,
+                getInnerTpl: function () {
+                    return '<div style="white-space:nowrap;">'
+                            + '<span style="color:#1a4f8b;font-weight:bold;">{cip}</span>'
+                            + ' &nbsp;{designation}&nbsp; '
+                            + '<span style="color:#888;">(stock : {stock})</span></div>';
+                }
+            }
+        });
+    },
+
+    /**
+     * Colonne « croix » de suppression, posee sur chaque ligne des grilles du registre.
+     *
+     * <p>
+     * Elle reste CACHEE tant que le service n'a pas dit que l'utilisateur a le droit de supprimer :
+     * voir majDroitSuppression. Cacher la croix ne protege rien a soi seul - le service refuse aussi
+     * la suppression - mais evite de proposer un geste qui sera refuse.
+     */
+    colonneSupprimer: function (apres) {
+        var me = this;
+        return {
+            xtype: 'actioncolumn',
+            itemId: 'colonneSupprimer',
+            header: '',
+            width: 32,
+            align: 'center',
+            sortable: false,
+            menuDisabled: true,
+            hidden: true,
+            items: [{
+                    icon: 'resources/images/icons/fam/delete.png',
+                    tooltip: 'Supprimer cette demande du registre',
+                    handler: function (vue, ligne) {
+                        me.supprimerAvecConfirmation(vue.getStore().getAt(ligne), apres);
+                    }
+                }]
+        };
+    },
+
+    /**
+     * Montre ou cache la croix selon le droit renvoye AVEC la liste (cle « peutSupprimer »).
+     *
+     * <p>
+     * Le droit est lu dans la reponse brute du service plutot que devine cote ecran : c'est le
+     * serveur qui tranche, l'ecran ne fait que suivre ce qu'il annonce.
+     */
+    majDroitSuppression: function (store, grille) {
+        var lecteur = store.getProxy() ? store.getProxy().getReader() : null;
+        var brut = lecteur ? lecteur.rawData : null;
+        var colonne = grille && grille.down ? grille.down('#colonneSupprimer') : null;
+        if (colonne) {
+            colonne.setVisible(!!(brut && brut.peutSupprimer));
+        }
+    },
+
+    /**
+     * Suppression d'une demande : confirmation, puis appel du service.
+     *
+     * <p>
+     * La reponse est LUE avant de rafraichir : le service repond 200 avec success=false quand le
+     * droit manque, et se contenter du code HTTP laisserait croire que la ligne a ete supprimee.
+     */
+    supprimerAvecConfirmation: function (record, apres) {
+        if (!record) {
+            return;
+        }
+        var libelle = record.get('designation') || 'cette demande';
+        Ext.Msg.confirm('Suppression',
+                'Retirer « ' + Ext.String.htmlEncode(libelle) + ' » du registre des ventes ratées ?'
+                + '<br><br>La demande ne comptera plus ni dans le compteur du jour ni dans l\'analyse'
+                + ' de la période.',
+                function (choix) {
+                    if (choix !== 'yes') {
+                        return;
+                    }
+                    Ext.Ajax.request({
+                        method: 'DELETE',
+                        url: '../api/v1/ventes-ratees/' + record.get('id'),
+                        success: function (reponse) {
+                            var r = Ext.JSON.decode(reponse.responseText, true) || {};
+                            if (!r.success) {
+                                Ext.Msg.alert('Message', r.msg || 'La suppression a échoué.');
+                                return;
+                            }
+                            if (apres) {
+                                apres();
+                            }
+                        },
+                        failure: function () {
+                            Ext.Msg.alert('Message', 'La suppression a échoué.');
+                        }
+                    });
+                });
+    },
+
+    /**
+     * Fenetre de saisie d'une demande (creation ou modification). Le produit se cherche par CIP ou par
+     * nom ; un texte qui ne correspond a aucun produit est conserve en saisie libre, avec le CIP libre
+     * eventuel. Client, telephone, motif et commentaire appartiennent a la ligne.
+     */
+    ouvrirSaisie: function (record, apres) {
+        var me = this;
+        var enModification = !!record;
+
+        // Champ de recherche large : le CIP, le nom et le stock restent sur une ligne.
+        var comboProduit = me.comboProduit('Produit demandé', 600);
+        var storeMotifs = new Ext.data.Store({
+            fields: ['id', 'libelle'],
+            proxy: {type: 'ajax', url: '../api/v1/ventes-ratees/motifs', reader: {type: 'json', root: 'data'}},
+            autoLoad: true
+        });
+
+        var champCip = Ext.create('Ext.form.field.Text', {
+            fieldLabel: 'CIP libre', labelWidth: 110, width: 320,
+            emptyText: 'Facultatif, produit inconnu'
+        });
+        var champQuantite = Ext.create('Ext.form.field.Number', {
+            fieldLabel: 'Quantité', labelWidth: 110, width: 210, value: 1, minValue: 1, allowBlank: false
+        });
+        // Information saisie librement, pas une recherche dans la base des clients.
+        var champClient = Ext.create('Ext.form.field.Text', {
+            fieldLabel: 'Client', labelWidth: 110, width: 600,
+            emptyText: 'Facultatif : nom du client'
+        });
+        var champTelephone = Ext.create('Ext.form.field.Text', {
+            fieldLabel: 'Téléphone', labelWidth: 110, width: 320, emptyText: 'Facultatif'
+        });
+        var comboMotif = Ext.create('Ext.form.field.ComboBox', {
+            fieldLabel: 'Motif *', labelWidth: 110, width: 600, allowBlank: false,
+            store: storeMotifs, queryMode: 'local', valueField: 'id', displayField: 'libelle',
+            editable: false, emptyText: 'Motif de la vente ratée (obligatoire)'
+        });
+        var champCommentaire = Ext.create('Ext.form.field.TextArea', {
+            fieldLabel: 'Commentaire', labelWidth: 110, width: 600, height: 54, emptyText: 'Facultatif'
+        });
+
+        if (enModification) {
+            if (record.get('connu')) {
+                comboProduit.setRawValue(record.get('designation'));
+                comboProduit.setDisabled(true);
+                champCip.setDisabled(true);
+            } else {
+                comboProduit.setRawValue(record.get('designation'));
+                champCip.setValue(record.get('cip'));
+            }
+            champQuantite.setValue(record.get('quantite'));
+            champClient.setValue(record.get('nomClient'));
+            champTelephone.setValue(record.get('telephone'));
+            if (record.get('motifId')) {
+                // Le magasin des motifs se remplit en differe. On pose la valeur des qu'il est la,
+                // et tout de suite s'il l'etait deja : attendre un chargement qui a eu lieu
+                // laisserait la liste deroulante vide.
+                var poserMotif = function () {
+                    comboMotif.setValue(record.get('motifId'));
+                };
+                if (storeMotifs.getCount()) {
+                    poserMotif();
+                } else {
+                    storeMotifs.on('load', poserMotif, null, {single: true});
+                }
+            }
+            champCommentaire.setValue(record.get('commentaire'));
+        }
+
+        var enregistrer = function () {
+            var familleId = comboProduit.getValue();
+            var choisi = familleId ? comboProduit.findRecordByValue(familleId) : null;
+            var designation = choisi ? choisi.get('designation') : Ext.String.trim(comboProduit.getRawValue() || '');
+            if (!designation) {
+                Ext.Msg.alert('Message', 'Indiquez le produit demandé (recherche ou texte libre).');
+                return;
+            }
+            if (!comboMotif.getValue()) {
+                Ext.Msg.alert('Message', 'Le motif de la vente ratée est obligatoire.', function () {
+                    comboMotif.focus(false, 100);
+                });
+                return;
+            }
+            var donnees = {
+                familleId: choisi ? familleId : '',
+                cip: choisi ? choisi.get('cip') : (champCip.getValue() || ''),
+                designation: designation,
+                quantite: champQuantite.getValue() || 1,
+                nomClient: Ext.String.trim(champClient.getValue() || ''),
+                telephone: champTelephone.getValue() || '',
+                motifId: comboMotif.getValue() || '',
+                commentaire: champCommentaire.getValue() || ''
+            };
+            Ext.Ajax.request({
+                method: enModification ? 'PUT' : 'POST',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/ventes-ratees' + (enModification ? '/' + record.get('id') : ''),
+                params: Ext.JSON.encode(donnees),
+                success: function (response) {
+                    var r = Ext.JSON.decode(response.responseText, true) || {};
+                    if (!r.success) {
+                        Ext.Msg.alert('Message', r.msg || 'L\'enregistrement a échoué.');
+                        return;
+                    }
+                    prestigeVentesRateesBadge();
+                    if (!enModification) {
+                        // saisie a la chaine : le formulaire se vide, le curseur revient au produit
+                        comboProduit.setValue(null);
+                        comboProduit.setRawValue('');
+                        champCip.setValue('');
+                        champQuantite.setValue(1);
+                        champClient.setValue('');
+                        champTelephone.setValue('');
+                        comboMotif.setValue(null);
+                        champCommentaire.setValue('');
+                        comboProduit.focus(false, 100);
+                    } else {
+                        fenetre.close();
+                    }
+                    if (apres) {
+                        apres(r);
+                    }
+                },
+                failure: function () {
+                    Ext.Msg.alert('Message', 'L\'enregistrement a échoué.');
+                }
+            });
+        };
+
+        var fenetre = Ext.create('Ext.window.Window', {
+            title: enModification ? 'Modifier la demande' : 'Nouvelle vente ratée',
+            modal: true,
+            width: 650,
+            bodyPadding: 12,
+            layout: {type: 'vbox'},
+            items: [comboProduit, champCip, champQuantite, champClient, champTelephone, comboMotif,
+                champCommentaire],
+            buttons: [{
+                    text: enModification ? 'Enregistrer' : 'Ajouter',
+                    handler: enregistrer
+                }, {
+                    text: 'Fermer',
+                    handler: function () {
+                        fenetre.close();
+                    }
+                }]
+        });
+        fenetre.show();
+        // curseur place automatiquement dans le champ de recherche a l'ouverture
+        comboProduit.focus(false, 200);
+        return fenetre;
+    },
+
+    // ------------------------------------------------------------------ analyse
+
+    onAnalyser: function (bouton) {
+        var ecran = this.ecran(bouton);
+        var progress = Ext.MessageBox.wait('Calcul de l\'analyse . . .', 'Veuillez patienter');
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/ventes-ratees/analyse',
+            params: ecran.parametresAnalyse(),
+            success: function (response) {
+                progress.hide();
+                var r = Ext.JSON.decode(response.responseText, true) || {};
+                var conteneur = Ext.get('vr-analyse');
+                if (!conteneur) {
+                    return;
+                }
+                if (!r.success) {
+                    conteneur.update('L\'analyse n\'a pas pu être calculée.');
+                    return;
+                }
+                conteneur.update(testextjs.controller.VentesRateesCtr.htmlAnalyse(r));
+            },
+            failure: function () {
+                progress.hide();
+                Ext.Msg.alert('Message', 'L\'analyse n\'a pas pu être calculée.');
+            }
+        });
+    },
+
+    onImprimerAnalyse: function (bouton) {
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/ventes-ratees/analyse/print',
+            params: this.ecran(bouton).parametresAnalyse(),
+            success: function (response) {
+                var r = Ext.JSON.decode(response.responseText, true) || {};
+                if (r.success && r.msg) {
+                    // URL relative au contexte, comme les autres editions de l'application
+                    window.open('..' + r.msg, '_blank');
+                } else {
+                    Ext.Msg.alert('Message', r.msg || 'Le PDF n\'a pas pu être généré.');
+                }
+            },
+            failure: function () {
+                Ext.Msg.alert('Message', 'Le PDF n\'a pas pu être généré.');
+            }
+        });
+    },
+
+    onExcelAnalyse: function (bouton) {
+        window.open('../api/v1/ventes-ratees/analyse/excel?'
+                + Ext.Object.toQueryString(this.ecran(bouton).parametresAnalyse()));
+    },
+
+    statics: {
+        /** HTML de l'onglet analyse : indicateurs puis classements et evolutions, en tableaux simples. */
+        htmlAnalyse: function (r) {
+            var e = Ext.String.htmlEncode;
+            var ind = r.indicateurs || {};
+            var carte = function (valeur, libelle) {
+                return '<div style="display:inline-block;min-width:130px;margin:0 10px 10px 0;padding:10px 14px;'
+                        + 'border:1px solid #d5dbe3;border-radius:6px;background:#f8fafc;text-align:center;">'
+                        + '<div style="font-size:22px;font-weight:bold;color:#1a4f8b;">' + valeur + '</div>'
+                        + '<div style="font-size:11px;color:#5a6b80;">' + libelle + '</div></div>';
+            };
+            var tableau = function (titre, lignes, colonnes) {
+                var html = '<div style="display:inline-block;vertical-align:top;margin:0 22px 18px 0;">'
+                        + '<div style="font-weight:bold;margin-bottom:6px;">' + titre + '</div>'
+                        + '<table style="border-collapse:collapse;font-size:12px;">'
+                        + '<tr style="background:#4C9A46;color:#fff;">';
+                Ext.each(colonnes, function (c) {
+                    html += '<th style="padding:4px 10px;text-align:left;">' + c[1] + '</th>';
+                });
+                html += '</tr>';
+                if (!lignes || !lignes.length) {
+                    html += '<tr><td colspan="' + colonnes.length
+                            + '" style="padding:6px 10px;color:#888;">Aucune donnée</td></tr>';
+                }
+                Ext.each(lignes || [], function (l) {
+                    html += '<tr>';
+                    Ext.each(colonnes, function (c) {
+                        var v = l[c[0]];
+                        html += '<td style="padding:3px 10px;border-bottom:1px solid #e4e9f0;">'
+                                + (typeof v === 'number' ? v : e(String(v == null ? '' : v))) + '</td>';
+                    });
+                    html += '</tr>';
+                });
+                return html + '</table></div>';
+            };
+            var colonnesProduit = [['libelle', 'Produit'], ['demandes', 'Demandes'], ['quantite', 'Qté'],
+                ['nonCommandees', 'Non cdées']];
+            var colonnesSerie = [['libelle', ''], ['demandes', 'Demandes'], ['quantite', 'Qté']];
+            return carte(ind.nbDemandes || 0, 'Demandes')
+                    + carte(ind.quantiteTotale || 0, 'Quantité totale demandée')
+                    + carte(ind.produitsDistincts || 0, 'Produits distincts')
+                    + carte(ind.clientsDistincts || 0, 'Clients distincts')
+                    + carte((ind.commandees || 0) + ' (' + (ind.proportionCommandees || 0) + '%)',
+                            'Demandes commandées')
+                    + carte(ind.nonCommandees || 0, 'Demandes non commandées')
+                    + carte(ind.inconnues || 0, 'Saisies libres (produit inconnu)')
+                    + '<hr style="border:none;border-top:1px solid #d5dbe3;margin:8px 0 16px;">'
+                    + tableau('Produits les plus demandés', r.plusDemandes, colonnesProduit)
+                    + tableau('Plus grosses quantités cumulées', r.plusGrossesQuantites, colonnesProduit)
+                    + tableau('Produits les plus souvent non commandés', r.plusNonCommandes, colonnesProduit)
+                    + tableau('Produits inconnus les plus saisis', r.libresFrequents, colonnesProduit)
+                    + tableau('Principaux motifs', r.parMotif, colonnesSerie)
+                    + tableau('Demandes par jour', r.parJour, colonnesSerie)
+                    + tableau('Par utilisateur', r.parUtilisateur, colonnesSerie);
+        }
+    },
+
+    // ------------------------------------------------------------------ fenetre d'acces rapide (jour)
+
+    /**
+     * Fenetre modale du bouton panier : saisie rapide + demandes de la journee (lignes detaillees et
+     * synthese par produit, sans fusion en base).
+     */
+    ouvrirModale: function () {
+        var me = this;
+        var existante = Ext.getCmp('vr-modale');
+        if (existante) {
+            existante.close();
+            return;
+        }
+
+        var storeJour = new Ext.data.Store({
+            /* « motif » porte le LIBELLE, affiche dans la colonne ; « motifId » porte l'identifiant,
+             * dont la fenetre de modification a besoin pour representer la liste deroulante. Il
+             * manquait ici : le motif deja saisi ne revenait pas au double-clic depuis le panier. */
+            fields: ['id', 'cip', 'designation', 'nomClient', 'telephone', 'motifId', 'motif', 'commentaire', 'date',
+                'utilisateur', 'etat', {name: 'quantite', type: 'int'}, {name: 'commande', type: 'boolean'},
+                {name: 'connu', type: 'boolean'}],
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/ventes-ratees/jour',
+                reader: {type: 'json', root: 'data'}
+            },
+            autoLoad: false
+        });
+        var storeSynthese = new Ext.data.Store({
+            fields: ['cle', 'cip', 'designation', {name: 'quantiteTotale', type: 'int'},
+                {name: 'nbDemandes', type: 'int'}, {name: 'nonCommandees', type: 'int'},
+                {name: 'connu', type: 'boolean'}],
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/ventes-ratees/jour',
+                reader: {type: 'json', root: 'groupes'}
+            },
+            autoLoad: false
+        });
+        var recharger = function () {
+            storeJour.load();
+            storeSynthese.load();
+            prestigeVentesRateesBadge();
+        };
+        // Le droit de supprimer voyage avec la liste : la croix apparait apres le chargement.
+        storeJour.on('load', function () {
+            me.majDroitSuppression(storeJour, grilleJour);
+        });
+
+        var etatRenderer = function (v, meta, r) {
+            return '<span style="color:' + (r.get('commande') ? '#1e8449' : '#c0392b') + ';font-weight:bold;">'
+                    + v + '</span>';
+        };
+
+        var grilleJour = Ext.create('Ext.grid.Panel', {
+            title: 'Demandes de la journée (détail)',
+            store: storeJour,
+            flex: 3,
+            columns: [
+                // Date et heure completes, bien lisibles
+                {header: 'Date et heure', dataIndex: 'date', width: 145,
+                    renderer: function (v) {
+                        return '<span style="font-size:12px;">' + Ext.String.htmlEncode(v || '') + '</span>';
+                    }},
+                {header: 'CIP', dataIndex: 'cip', width: 80},
+                {header: 'Produit / désignation', dataIndex: 'designation', flex: 2,
+                    renderer: function (v, meta, r) {
+                        var t = Ext.String.htmlEncode(v || '');
+                        return r.get('connu') ? t : t + ' <span style="color:#9a6d00;">(libre)</span>';
+                    }},
+                {header: 'Qté', dataIndex: 'quantite', width: 46, align: 'right'},
+                {header: 'Client', dataIndex: 'nomClient', flex: 1},
+                {header: 'Motif', dataIndex: 'motif', flex: 1},
+                {header: 'État', dataIndex: 'etat', width: 135, renderer: etatRenderer},
+                me.colonneSupprimer(recharger)
+            ],
+            viewConfig: {
+                // Lignes un peu plus hautes : date, heure et etat restent lisibles
+                getRowClass: function () {
+                    return 'vr-ligne-lisible';
+                }
+            },
+            listeners: {
+                // Double-clic sur une ligne : la fenetre de modification s'ouvre preremplie.
+                itemdblclick: function (vue, record) {
+                    me.ouvrirSaisie(record, recharger);
+                }
+            },
+            tbar: [
+                {text: 'Marquer commandé', iconCls: 'check_icon', handler: function () {
+                        var s = grilleJour.getSelectionModel().getSelection();
+                        if (!s.length) {
+                            Ext.Msg.alert('Message', 'Sélectionnez d\'abord une demande.');
+                            return;
+                        }
+                        if (s[0].get('commande')) {
+                            Ext.Msg.alert('Message', 'Cette demande est déjà commandée.');
+                            return;
+                        }
+                        me.commanderAvecConfirmation(s[0].get('id'), recharger);
+                    }},
+                // Meme chemin que la croix de la ligne : meme confirmation, meme lecture de la reponse.
+                {text: 'Supprimer', iconCls: 'icon-clear-group', handler: function () {
+                        var s = grilleJour.getSelectionModel().getSelection();
+                        if (!s.length) {
+                            Ext.Msg.alert('Message', 'Sélectionnez d\'abord une demande.');
+                            return;
+                        }
+                        me.supprimerAvecConfirmation(s[0], recharger);
+                    }},
+                '->',
+                {text: 'Ouvrir le menu Ventes ratées', handler: function () {
+                        var modale = Ext.getCmp('vr-modale');
+                        if (modale) {
+                            modale.close();
+                        }
+                        testextjs.app.getController('App')
+                                .onLoadNewComponent('ventesrateesmanager', 'Ventes ratées', '');
+                    }}
+            ]
+        });
+
+        var grilleSynthese = Ext.create('Ext.grid.Panel', {
+            title: 'Synthèse du jour (produits cumulés)',
+            store: storeSynthese,
+            flex: 2,
+            columns: [
+                {header: 'Produit', dataIndex: 'designation', flex: 2,
+                    renderer: function (v, meta, r) {
+                        var t = Ext.String.htmlEncode(v || '');
+                        return r.get('connu') ? t : t + ' <span style="color:#9a6d00;">(libre)</span>';
+                    }},
+                {header: 'Demandes', dataIndex: 'nbDemandes', width: 75, align: 'right'},
+                {header: 'Qté totale', dataIndex: 'quantiteTotale', width: 75, align: 'right'},
+                {header: 'Non cdées', dataIndex: 'nonCommandees', width: 75, align: 'right'}
+            ]
+        });
+
+        var fenetre = Ext.create('Ext.window.Window', {
+            id: 'vr-modale',
+            title: '🛒 Ventes ratées - saisie rapide et liste du jour',
+            modal: true,
+            width: Math.min(1150, Ext.getBody().getViewSize().width - 60),
+            height: Math.min(640, Ext.getBody().getViewSize().height - 60),
+            layout: {type: 'hbox', align: 'stretch'},
+            items: [grilleJour, {xtype: 'splitter'}, grilleSynthese],
+            tbar: [{
+                    text: 'Nouvelle demande',
+                    iconCls: 'addicon',
+                    handler: function () {
+                        me.ouvrirSaisie(null, recharger);
+                    }
+                }, '->', {
+                    xtype: 'tbtext',
+                    id: 'vr-modale-total',
+                    // marge droite : le texte ne colle pas au bord de la fenetre
+                    margin: '0 12 0 0'
+                }],
+            listeners: {
+                afterrender: function () {
+                    recharger();
+                    // « Nombre de produits : N » en rouge, bien visible : les produits
+                    // distincts non commandes du jour (la meme regle que la pastille).
+                    storeSynthese.on('load', function (s) {
+                        var texte = Ext.getCmp('vr-modale-total');
+                        if (!texte) {
+                            return;
+                        }
+                        var produits = 0;
+                        s.each(function (g) {
+                            if (g.get('nonCommandees') > 0) {
+                                produits++;
+                            }
+                        });
+                        // setText (et non update du DOM) : la barre recalcule sa mise en page,
+                        // sinon le texte deborde du bord droit de la fenetre.
+                        texte.setText('<span style="font-size:14px;">Nombre de produits : '
+                                + '<span style="color:#c0392b;font-weight:bold;font-size:19px;">'
+                                + produits + '</span></span>');
+                    });
+                }
+            }
+        });
+        fenetre.show();
+        // la saisie s'ouvre immediatement : curseur dans le champ produit, zone de quantite visible
+        me.ouvrirSaisie(null, recharger);
+    }
+});
+
+/* ------------------------------------------------------------------ bouton panier du bandeau */
+
+/** Actualise la pastille du bouton panier (produits distincts non commandes du jour). */
+function prestigeVentesRateesBadge() {
+    Ext.Ajax.request({
+        method: 'GET',
+        url: '../api/v1/ventes-ratees/compteur-jour',
+        success: function (response) {
+            var r = Ext.JSON.decode(response.responseText, true) || {};
+            var badge = Ext.get('vr-badge');
+            if (!badge) {
+                return;
+            }
+            var total = r.total || 0;
+            if (total > 0) {
+                badge.dom.innerHTML = total > 99 ? '99+' : total;
+                badge.setStyle('display', 'inline-block');
+            } else {
+                badge.setStyle('display', 'none');
+            }
+        }
+    });
+}
+
+/** Ouvre la fenetre modale des ventes ratees depuis le bouton panier. */
+function prestigeShowVentesRatees() {
+    testextjs.app.getController('VentesRateesCtr').ouvrirModale();
+}

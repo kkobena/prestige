@@ -144,15 +144,29 @@ public class ReportUtil {
     }
 
     /**
+     * Modeles embarques deja compiles, gardes en memoire : un .jrxml du war ne change jamais en cours d'execution, il
+     * n'y a aucune raison de le recompiler a chaque impression - c'est la compilation qui faisait attendre l'usager
+     * plusieurs centaines de millisecondes a CHAQUE clic sur PDF. Le cache disparait avec le redeploiement, comme le
+     * war. Un JasperReport compile est immuable et se remplit sans etat partage : le partage entre requetes est sur.
+     */
+    private static final java.util.concurrent.ConcurrentMap<String, JasperReport> MODELES_EMBARQUES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
      * Compile un modele .jrxml embarque dans le classpath (/reports/&lt;nom&gt;.jrxml) lorsque le fichier n'est pas
-     * deploye dans le repertoire des rapports.
+     * deploye dans le repertoire des rapports. Compile UNE fois, puis servi depuis la memoire.
      */
     public JasperReport compileFromClasspath(String reportName) {
+        JasperReport connu = MODELES_EMBARQUES.get(reportName);
+        if (connu != null) {
+            return connu;
+        }
         try (InputStream in = ReportUtil.class.getResourceAsStream("/reports/" + reportName + ".jrxml")) {
             if (in == null) {
                 return null;
             }
-            return JasperCompileManager.compileReport(in);
+            JasperReport compile = JasperCompileManager.compileReport(in);
+            MODELES_EMBARQUES.put(reportName, compile);
+            return compile;
         } catch (IOException | JRException e) {
             LOG.log(Level.SEVERE, "compileFromClasspath " + reportName, e);
             return null;
@@ -481,7 +495,29 @@ public class ReportUtil {
     }
 
     public String buildReport(Map<String, Object> parameters, String reportName, List<?> datas) {
-        String fileName = getFileNames(reportName);
+        return buildReport(parameters, reportName, datas, reportName);
+    }
+
+    /**
+     * Meme edition, mais le fichier produit porte un nom choisi, different de celui du modele.
+     *
+     * <p>
+     * Le modele .jrxml est un fichier installe sur site : le renommer obligerait a intervenir sur chaque poste. Quand
+     * seul le nom du document remis a l'utilisateur doit changer, c'est ce parametre qui sert.
+     *
+     * @param parameters
+     *            parametres de l'etat
+     * @param reportName
+     *            nom du modele .jrxml, inchange
+     * @param datas
+     *            lignes de l'etat
+     * @param nomFichier
+     *            prefixe du fichier PDF produit (la date et l'heure y sont ajoutees)
+     *
+     * @return chemin du PDF, relatif au contexte
+     */
+    public String buildReport(Map<String, Object> parameters, String reportName, List<?> datas, String nomFichier) {
+        String fileName = getFileNames(nomFichier);
         try {
             JasperReport jasperReport = getReport(reportName, jdom.scr_report_file);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);

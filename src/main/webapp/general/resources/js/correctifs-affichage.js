@@ -189,19 +189,35 @@ window.PrestigeAffichage.collerAuConteneur = function (panneau, options) {
 window.PrestigeAffichage.ECRANS_COLLES = [
     // facturation
     'facturemanager', 'facturesubrogatoireother', 'groupeInvoices', 'factureprovisoire',
+    'recapOrganisme',
     // parametrage et administration
     'parametermanager', 'kobysky', 'zonegeographiquemanager', 'usermanager',
     // caisse
-    'listecaissemanager', 'visualisercaissemanager',
+    'listecaissemanager', 'visualisercaissemanager', 'gestcaissemanager',
+    'caisserecetterecap', 'cashmovements',
     // articles
     'famillemanager', 'produitsxx', 'articlevendumanager', 'articlevendurecapitulatif',
+    'ugmanager', 'mouvementprixvente',
     // commandes et approvisionnement
-    'reservesuggestionsgrid', 'i_sugg_manager', //'suggerercdemanager',
-  'i_order_manager', //'ordermanagerlist',
-  'bonlivraisonmanager','retourfrsmanager', //'bonlivraisondetail', 
+    'reservesuggestionsgrid', 'i_sugg_manager', 'suggerercdemanager',
+    'i_order_manager', 'ordermanagerlist',
+    'bonlivraisonmanager', 'retourfrsmanager', 'retourfournisseurmanagerlist',
+    'bonlivraisondetail',
     // stock
-    'ajustementmanager', 'etatstock', 'inventaire',
+    'ajustementmanager', 'etatstock', 'inventaire', 'editinventaireManager',
     'monitoringproduct', 'suivientreevente', 'monitoringarticlecomplet',
+    'detailsmanager', 'gestionsurstock', 'stockmort', 'saisieperime',
+    'evolutionstock', 'famillestockcomparaisonmanager', 'peremptionquery',
+    // tiers payants et clients
+    'tierspayantmanager', 'clientmanager', 'analysetierspayant',
+    // analyses
+    'abcmanager', 'vingtquatrevingt', 'margeproducts', 'feuilledematch',
+    'evaluationventemoyenne',
+    // ventes
+    'ventemanager', 'venteannuler', 'venteavoirmanager', 'venteproduitannules',
+    'suppressionsvente', 'delayed',
+    // service client
+    'ventesrateesmanager',
     // etats et tableaux de bord
     'etatscontrolemanager', 'etatannuel', 'achatgrossistemensuel',
     'tableauPhama', 'tableauPhamaCarnet', 'statistiqueTVA',

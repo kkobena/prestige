@@ -268,7 +268,12 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                 TCompteClientTiersPayant tcctp = venteTiersPayantItem.getLgCOMPTECLIENTTIERSPAYANTID();
                 venteTiersPayantItem.setIntPERCENT(tcctp.getIntPOURCENTAGE());
             } else {
-                venteTiersPayantItem.setIntPERCENT(lineResult.getFinalTaux());
+                // Taux UTILISE par le calcul, jamais le taux effectif (part ecretee / total) :
+                // ecrire ce dernier degradait le taux a chaque recalcul (100 -> 92 -> 85...),
+                // faisait deriver les montants a chaque modification de produit et figeait la
+                // part meme apres relevement d'un plafond. Le ticket retrouve aussi le taux
+                // contractuel (100 % en carnet).
+                venteTiersPayantItem.setIntPERCENT(lineResult.getTauxApplique());
             }
             venteTiersPayantItem.setIntPRICE(lineResult.getMontant().intValue());
             venteTiersPayantItem.setStrREFBON(lineResult.getNumBon());
@@ -297,8 +302,11 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantTp(output.getTotalTiersPayant().intValue());
 
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
-        montantAPaye.setRestructuring(StringUtils.isNoneEmpty(output.getWarningMessage()));
-        montantAPaye.setMessage(output.getWarningMessage());
+        // Plus de motifs de refus : tous les plafonds (compte, par vente, credit de l'organisme)
+        // ECRETENT la part tiers payant, et l'avertissement dit la difference laissee au client.
+        String messagePlafonds = output.getWarningMessage();
+        montantAPaye.setRestructuring(StringUtils.isNoneEmpty(messagePlafonds));
+        montantAPaye.setMessage(messagePlafonds);
 
         return montantAPaye;
 
@@ -376,7 +384,10 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             tiersPayantIds.add(tiersPayant.getLgTIERSPAYANTID());
             ti.setClientTiersPayantId(ctp.getLgCOMPTECLIENTTIERSPAYANTID());
             ti.setTiersPayantId(tiersPayant.getLgTIERSPAYANTID());
-            ti.setTiersPayantFullName(tiersPayant.getStrFULLNAME());
+            // Nom complet, sinon nom court : le message d'avertissement des plafonds doit toujours
+            // nommer le tiers payant.
+            ti.setTiersPayantFullName(
+                    StringUtils.defaultIfBlank(tiersPayant.getStrFULLNAME(), tiersPayant.getStrNAME()));
             // ti.setTaux(ctp.getIntPOURCENTAGE() / 100.0f);// apres les retours de franck, on prends le taux sais du
             // front
             if (Objects.nonNull(it.getIntPERCENT())) {
@@ -389,6 +400,10 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             Optional.ofNullable(tiersPayant.getDblPLAFONDCREDIT())
                     .ifPresent(v -> ti.setPlafondCreditTiersPayant(BigDecimal.valueOf(v))); // plafond sur la fiche du
             // TP
+            // Consommation globale de l'organisme : c'est elle qui se confronte au plafond de
+            // credit de sa fiche pour dire ce qu'il reste d'encours.
+            Optional.ofNullable(tiersPayant.getDbCONSOMMATIONMENSUELLE())
+                    .ifPresent(v -> ti.setConsoGlobaleTiersPayant(BigDecimal.valueOf(v)));
             Optional.ofNullable(ctp.getDbPLAFONDENCOURS()).ifPresent(v -> ti.setPlafondConso(BigDecimal.valueOf(v)));
             Optional.ofNullable(ctp.getDbCONSOMMATIONMENSUELLE())
                     .ifPresent(v -> ti.setConsoMensuelle(BigDecimal.valueOf(v)));
@@ -426,7 +441,9 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                 TCompteClientTiersPayant tcctp = saleLine.getLgCOMPTECLIENTTIERSPAYANTID();
                 saleLine.setIntPERCENT(tcctp.getIntPOURCENTAGE());
             } else {
-                saleLine.setIntPERCENT(lineResult.getFinalTaux());
+                // Meme regle que sur l'autre chemin de calcul : le taux memorise est celui
+                // utilise par le calcul, pas le taux effectif apres ecretage.
+                saleLine.setIntPERCENT(lineResult.getTauxApplique());
             }
             saleLine.setIntPRICE(lineResult.getMontant().intValue());
             saleLine.setStrREFBON(lineResult.getNumBon());
@@ -455,8 +472,11 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantTp(output.getTotalTiersPayant().intValue());
 
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
-        montantAPaye.setRestructuring(StringUtils.isNoneEmpty(output.getWarningMessage()));
-        montantAPaye.setMessage(output.getWarningMessage());
+        // Plus de motifs de refus : tous les plafonds (compte, par vente, credit de l'organisme)
+        // ECRETENT la part tiers payant, et l'avertissement dit la difference laissee au client.
+        String messagePlafonds = output.getWarningMessage();
+        montantAPaye.setRestructuring(StringUtils.isNoneEmpty(messagePlafonds));
+        montantAPaye.setMessage(messagePlafonds);
 
         return montantAPaye;
 

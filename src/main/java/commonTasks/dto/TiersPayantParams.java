@@ -33,6 +33,9 @@ public class TiersPayantParams implements Serializable {
     private Integer dbPLAFONDENCOURS = 0;
     private Integer dbCONSOMMATIONMENSUELLE;
     private Integer dblPLAFOND = 0;
+    // Plafond credit de la fiche du tiers payant (plafond global de l'organisme) : rappele a la
+    // vente carnet quand aucun plafond de consommation n'est pose sur le compte du client.
+    private Integer dblPLAFONDCREDIT = 0;
     private Integer dblQUOTACONSOMENSUELLE = 0;
     private boolean bIsAbsolute;
     private String ancienTierPayant;
@@ -77,6 +80,14 @@ public class TiersPayantParams implements Serializable {
 
     public void setDbCONSOMMATIONMENSUELLE(Integer dbCONSOMMATIONMENSUELLE) {
         this.dbCONSOMMATIONMENSUELLE = dbCONSOMMATIONMENSUELLE;
+    }
+
+    public Integer getDblPLAFONDCREDIT() {
+        return dblPLAFONDCREDIT;
+    }
+
+    public void setDblPLAFONDCREDIT(Integer dblPLAFONDCREDIT) {
+        this.dblPLAFONDCREDIT = dblPLAFONDCREDIT;
     }
 
     public Integer getDblPLAFOND() {
@@ -185,6 +196,16 @@ public class TiersPayantParams implements Serializable {
             this.lgTIERSPAYANTID = payant.getLgTIERSPAYANTID();
             this.numSecurity = cp.getStrNUMEROSECURITESOCIAL();
             this.order = cp.getIntPRIORITY();
+            // Plafonds et consommation du compte, comme dans le constructeur sur
+            // TCompteClientTiersPayant : sans eux, le rappel a l'ecran (plafond vente en assurance,
+            // encours/plafond en carnet) affichait zero au rechargement d'une vente existante.
+            // La consommation mensuelle est le veritable encours du compte (incremente a chaque
+            // cloture) ; db_PLAFOND_ENCOURS est, malgre son nom, le plafond de cette consommation.
+            this.dblPLAFOND = cp.getDblPLAFOND() != null ? cp.getDblPLAFOND().intValue() : 0;
+            this.dbPLAFONDENCOURS = cp.getDbPLAFONDENCOURS() != null ? cp.getDbPLAFONDENCOURS() : 0;
+            this.dbCONSOMMATIONMENSUELLE = cp.getDbCONSOMMATIONMENSUELLE() != null ? cp.getDbCONSOMMATIONMENSUELLE()
+                    : 0;
+            this.dblPLAFONDCREDIT = payant.getDblPLAFONDCREDIT() != null ? payant.getDblPLAFONDCREDIT().intValue() : 0;
 
         } catch (Exception e) {
         }
@@ -237,6 +258,7 @@ public class TiersPayantParams implements Serializable {
             this.order = cp.getIntPRIORITY();
             this.dbCONSOMMATIONMENSUELLE = cp.getDbCONSOMMATIONMENSUELLE();
             this.dbPLAFONDENCOURS = cp.getDbPLAFONDENCOURS();
+            this.dblPLAFONDCREDIT = payant.getDblPLAFONDCREDIT() != null ? payant.getDblPLAFONDCREDIT().intValue() : 0;
             this.taux = cp.getIntPOURCENTAGE();
             this.lgCOMPTECLIENTID = cp.getLgCOMPTECLIENTID().getLgCOMPTECLIENTID();
             this.bIsAbsolute = cp.getBIsAbsolute();

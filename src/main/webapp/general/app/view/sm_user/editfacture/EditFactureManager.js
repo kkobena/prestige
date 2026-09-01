@@ -123,14 +123,18 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     ],
     title: 'Gestion des facturations ',
     frame: true,
+    /* Memorisation des colonnes par poste (voir app.js). */
+    stateful: true,
+    stateId: 'grille-facture-manager',
     // repere les info-bulles issues de cet ecran, cf. marquerInfobullesDeLaListe()
     cls: 'facture-liste',
     width: "98%",
     height: 580,
-    // Mise en evidence de la ligne survolee (uniquement cette grille)
     viewConfig: {
+        // survol : la classe standard d'ExtJS, pour que la ligne soit orange
+        // comme dans toutes les autres grilles (vente-theme.css). Cette grille
+        // avait sa propre classe et son propre jaune pale.
         trackOver: true,
-        overItemCls: 'facture-row-over',
         // coche de selection masquee (CSS) pour les lignes non supprimables :
         // reglees, partiellement reglees ou avec facture/avoir FNE
         getRowClass: function (rec) {
@@ -497,7 +501,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     },
 
     buildDetailsColumns: function () {
-        return [
+        /* identifiants stables par colonne : sans eux l'etat memorise n'est plus
+           reconnu au retour sur le menu (cf. app.js) */
+        return window.PrestigeEtatColonnes.identifier('facture', [
             {
                 header: 'lg_FACTURE_ID',
                 dataIndex: 'lg_FACTURE_ID',
@@ -553,6 +559,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             }, {
                 header: 'Montant Forfaitaire',
                 dataIndex: 'MONTANTFORFETAIRE',
+                // masquee a l'affichage a la demande de l'officine ; la colonne reste
+                // disponible dans le selecteur de colonnes et dans les editions
+                hidden: true,
                 flex: 1,
                 renderer: renduAvecInfobulle('Montant forfaitaire', amountformat),
                 align: 'right'
@@ -846,7 +855,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         handler: this.onPaidFactureClick
                     }]
             }
-        ];
+        ]);
     },
     onOpenFneLink: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);

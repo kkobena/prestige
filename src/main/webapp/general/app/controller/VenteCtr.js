@@ -238,6 +238,10 @@ Ext.define('testextjs.controller.VenteCtr', {
             selector: 'doventemanager #contenu #infosClientStandard'
         },
         {
+            ref: 'btnClientComptant',
+            selector: 'doventemanager #contenu #btnClientComptant'
+        },
+        {
             ref: 'clientSearchTextField',
             selector: 'doventemanager #contenu #clientSearchTextField'
         },
@@ -583,7 +587,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                         click: this.refresh
                     },
                     'doventemanager #contenu [xtype=gridpanel] #query': {
-                        specialkey: this.onSpecialSpecialKey
+                        specialkey: this.onSpecialSpecialKey,
+                        keyup: this.onQueryFrappe
                     },
                     'doventemanager #contenu #montantRecu': {
                         change: this.montantRecuChangeListener,
@@ -647,6 +652,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                     },
                     'doventemanager #contenu #clientSearchTextField': {
                         specialkey: this.onClientSearchTextField
+                    },
+                    'doventemanager #contenu #btnClientComptant': {
+                        click: this.onBtnClientComptantClick
                     }
                     , 'assuranceClient #queryClientAssurance': {
                         specialkey: this.onQueryClientAssurance,
@@ -813,6 +821,9 @@ Ext.define('testextjs.controller.VenteCtr', {
         montantTp.hide();
         sansBon.hide();
         me.setGridFillHeight(true);
+        // Retour au comptant : le bouton « associer un client » redevient
+        // disponible si le reglement est en especes
+        me.refreshBtnClientComptant();
     },
     /* Comptant : la grille s'étire jusqu'au bas du panneau (plein écran, pour
      * occuper toute la hauteur quel que soit l'écran). En assurance/carnet le
@@ -895,6 +906,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         let assureContainer = me.getAssureContainer(), ayantDroyCmp = me.getAyantDroyCmp(),
                 montantTp = me.getMontantTp();
         montantTp.show();
+        // Assurance/carnet : le client est porté par la vente, pas par ce bouton
+        // (on ne lit pas la combo type de vente : elle peut etre encore en cours
+        // de repositionnement au rappel d'une vente — le parametre fait foi)
+        me.getBtnClientComptant() && me.getBtnClientComptant().hide();
         // "Vente sans bon" retiré de l'écran (le paramètre reste à false)
         me.setGridFillHeight(false);
         me.appliquerLibellesTiersPayant(typevente);
@@ -1483,6 +1498,37 @@ Ext.define('testextjs.controller.VenteCtr', {
             const me = this;
             me.refresh();
         }
+    },
+
+    /**
+     * Recherche pendant la frappe dans « LISTE DES ARTICLES CHOISIS », des deux caracteres.
+     *
+     * Le declencheur est la VALEUR du champ, jamais la touche : les fleches, la tabulation ou
+     * Majuscule ne relancent donc rien, et une saisie rapide n'envoie qu'une seule requete grace
+     * au delai de grace. En dessous de deux caracteres on ne cherche pas - sauf quand le champ
+     * redevient vide, ou l'on remet la liste complete, sans quoi la caissiere ne pourrait plus y
+     * revenir. Entree conserve son role et cherche sans attendre, par onSpecialSpecialKey.
+     */
+    onQueryFrappe: function (field, e) {
+        const me = this;
+        if (e.getKey() === e.ENTER) {
+            return;
+        }
+        const valeur = (field.getValue() || '').trim();
+        if (valeur === me.derniereRechercheArticle) {
+            return;
+        }
+        if (valeur.length === 1) {
+            return;
+        }
+        me.derniereRechercheArticle = valeur;
+        clearTimeout(me.attenteRechercheArticle);
+        me.attenteRechercheArticle = setTimeout(function () {
+            const ecran = Ext.ComponentQuery.query('doventemanager')[0];
+            if (ecran && !ecran.isDestroyed) {
+                me.refresh();
+            }
+        }, 350);
     },
     onQtySpecialKey: function (field, e, options) {
         if (field.getValue() > 0) {
@@ -2157,6 +2203,7 @@ Ext.define('testextjs.controller.VenteCtr', {
     handleMobileMoney: function () {
         const me = this;
         me.getCbContainer().hide();
+        me.refreshBtnClientComptant();
         if (Ext.isEmpty(me.getClient())) {
             me.showAndHideInfosStandardClient(true);
         }
@@ -2339,6 +2386,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         // Mode réellement appliqué : sert de point de retour au garde-fou
         // « sans produit » et au rollback du bouton Annuler (fenêtre client)
         me._appliedTypeReglement = value;
+        me.refreshBtnClientComptant();
     }
     ,
     // Utilitaire: focus + sélection du texte sur Montant Reçu
@@ -2554,6 +2602,12 @@ Ext.define('testextjs.controller.VenteCtr', {
 
         let monnais = 0;
         if (montantRecu > 0) {
+            if (!data) {
+                // Aucun net a payer calcule (vente encore vide, ou recalcul en cours) : on ne peut
+                // ni rendre la monnaie ni autoriser la cloture. Sans cette garde, chaque frappe
+                // dans MONTANT RECU levait « data is null » (vu en officine dans le log support).
+                return;
+            }
             let netTopay = data.montantNet;
             me.getVnobtnCloture().enable();
             monnais = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
@@ -2723,10 +2777,99 @@ Ext.define('testextjs.controller.VenteCtr', {
      * directement dans le champ de saisie : la caissière tape le nom
      * sans avoir à cliquer dans le champ.
      */
+    /*
+     * Volet « selection rapide » mobile money (lot 3, option A validee) : quand un
+     * mode mobile est choisi, la fenetre client s'ouvre avec, au-dessus du volet de
+     * recherche habituel, une tuile par client mobile money parametre sur la fiche
+     * du mode de reglement. La tuile du mode choisi passe en premier, en evidence.
+     * Un clic attache le client et ferme la fenetre — le volet normal reste la
+     * pour creer/chercher un vrai client.
+     */
+    ajouterSelectionRapideMobileMoney: function (win) {
+        const me = this;
+        const modeCourant = me.getSafeComboValue('getVnotypeReglement', '1');
+        // Le volet vaut pour un mode mobile PRINCIPAL, et aussi (retour lot 3,
+        // point 3) pour le fractionnement « especes + autre mode » : la fenetre
+        // client s'ouvre alors juste avant que extraModeReglementId ne soit posé,
+        // d'ou l'evaluation differee dans la reponse du serveur.
+        if (!me.isMobileMode(modeCourant) && modeCourant !== '1') {
+            return;
+        }
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/modereglement/clients-mobile-money',
+            success: function (response) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (!result || !result.data || !result.data.length || win.destroyed) {
+                    return;
+                }
+                // Contexte au moment de l'affichage : mobile principal, ou second mode
+                // engagé sur une vente en especes. Sinon, pas de volet.
+                const contexteExtra = (modeCourant === '1' && !!me.extraModeReglementId);
+                if (!me.isMobileMode(modeCourant) && !contexteExtra) {
+                    return;
+                }
+                const modeEnAvant = contexteExtra ? me.extraModeReglementId : modeCourant;
+                const clients = result.data.slice();
+                // la tuile du mode choisi d'abord, en evidence
+                clients.sort(function (a, b) {
+                    const pa = (a.typeReglementId === modeEnAvant) ? 0 : 1;
+                    const pb = (b.typeReglementId === modeEnAvant) ? 0 : 1;
+                    return pa !== pb ? pa - pb : String(a.modeLibelle).localeCompare(String(b.modeLibelle));
+                });
+                const boutons = clients.map(function (c) {
+                    const enAvant = c.typeReglementId === modeEnAvant;
+                    return {
+                        xtype: 'button',
+                        margin: '0 6 6 0',
+                        height: 44,
+                        text: '<div style="font-weight:900;font-size:13px;">' + c.modeLibelle + '</div>'
+                                + '<div style="font-size:11px;">' + c.nom + ' ' + c.prenom + '</div>',
+                        style: enAvant
+                                ? 'background:#1E8449;border-color:#1E8449;'
+                                : 'background:#5D6D7E;border-color:#5D6D7E;',
+                        handler: function () {
+                            const record = Ext.create('testextjs.model.caisse.ClientLambda', {
+                                lgCLIENTID: c.clientId,
+                                strFIRSTNAME: c.nom,
+                                strLASTNAME: c.prenom,
+                                strADRESSE: c.telephone
+                            });
+                            me.updateClientStandard(record);
+                            // Retour lot 3, point 2 : cliquer la tuile d'un AUTRE operateur
+                            // bascule le reglement dessus (on a pu se tromper au depart).
+                            if (c.typeReglementId === modeEnAvant) {
+                                return;
+                            }
+                            if (contexteExtra) {
+                                // second mode : on remplace le mode engagé par celui de la tuile
+                                me.onModeReglementSelect({id: c.typeReglementId, libelle: c.modeLibelle});
+                            } else {
+                                // mode principal : la combo bascule et son etat d'ecran suit
+                                const combo = me.getVnotypeReglement();
+                                combo.setValue(c.typeReglementId);
+                                me.typeReglementSelectEvent(combo);
+                            }
+                        }
+                    };
+                });
+                win.insert(0, {
+                    xtype: 'panel',
+                    bodyPadding: '8 8 2 8',
+                    border: false,
+                    title: '<span style="font-size:12px;">SÉLECTION RAPIDE MOBILE MONEY</span>',
+                    layout: {type: 'hbox', align: 'stretch'},
+                    style: 'border-bottom:2px solid #1E8449;',
+                    items: boutons
+                });
+            }
+        });
+    },
     openClientLambdaSearchWindow: function () {
         const me = this;
         const win = Ext.create('testextjs.view.vente.user.ClientLambda');
         win.add(me.buildLambdaClientGrid());
+        me.ajouterSelectionRapideMobileMoney(win);
         win.show();
         const queryField = win.down('#queryClientLambda');
         if (queryField) {
@@ -2811,6 +2954,47 @@ Ext.define('testextjs.controller.VenteCtr', {
             recu.setReadOnly(false);
         }
         recu.focus(true, 100);
+    },
+    /*
+     * Vente comptant en especes : association FACULTATIVE d'un client standard.
+     * Le circuit est celui des autres modes (fenetre ClientLambda, update/client
+     * sur la prevente) — on ne fait que l'ouvrir a la demande.
+     */
+    onBtnClientComptantClick: function () {
+        const me = this;
+        if (!me.getCurrent()) {
+            Ext.MessageBox.show({
+                title: 'Message',
+                width: 550,
+                msg: 'Veuillez ajouter des produits à la vente avant d\'associer un client',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING,
+                fn: function (buttonId) {
+                    if (buttonId === "ok") {
+                        me.getVnoproduitCombo().focus(true, 100);
+                    }
+                }
+            });
+            return;
+        }
+        me.getInfosClientStandard().show();
+        me.openClientLambdaSearchWindow();
+    },
+    /*
+     * Le bouton « associer un client » n'a de sens qu'en vente comptant reglée
+     * en especes PURES : partout ailleurs (mobile money, cheque/CB/virement,
+     * assurance/carnet, ou especes avec un second mode engagé) le client est
+     * deja demandé par le mode ou porté par la vente (retour lot 3, point 1).
+     */
+    refreshBtnClientComptant: function () {
+        const me = this;
+        const btn = me.getBtnClientComptant();
+        if (!btn) {
+            return;
+        }
+        const typeVente = me.getSafeComboValue('getTypeVenteCombo', '1');
+        const typeRegle = me.getSafeComboValue('getVnotypeReglement', '1');
+        btn.setVisible(typeVente === '1' && typeRegle === '1' && !me.extraModeReglementId);
     },
     updateClientStandard: function (record) {
         const me = this;
@@ -3224,6 +3408,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                     if (_typeReglementId !== '1' && me.getCurrent()) {
                         me.typeReglementSelectEvent(cmp);
                     }
+                    // visibilite du bouton « associer un client » alignee sur le mode restauré
+                    me.refreshBtnClientComptant();
                 }
             });
         }
@@ -3313,6 +3499,8 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     goBack: function () {
         const me = this;
+        // Sortie d'ecran : la vente rappelee redevient disponible pour les autres caisses
+        me.libererRappelVente();
         // Abandon d'une modification de vente clôturée : la copie en attente est supprimée pour ne pas
         // laisser traîner une vente orpheline qu'un autre utilisateur pourrait reprendre et clôturer.
         // (Le bouton ATTENTE reste le moyen de conserver volontairement la copie.)
@@ -3340,7 +3528,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         const me = this;
         me.client = new testextjs.model.caisse.ClientAssurance(clientData);
         me.showAssureContainer(lgTYPEVENTEID);
-        me.buildtierspayantContainer();
+        // Le type de vente est passe explicitement : la combo type de vente est repositionnee par un
+        // rappel ASYNCHRONE (updateComboxFields) et vaut encore « comptant » a cet instant du
+        // rechargement - les blocs carnet (encours/plafond/caution) ne se construisaient jamais.
+        me.buildtierspayantContainer(lgTYPEVENTEID);
         me.updateAssurerCmp();
         me.ayantDroit = ayantDroit;
         if (lgTYPEVENTEID === '2') {
@@ -3469,6 +3660,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         const montant = me.getMontantTp && me.getMontantTp();
         if (montant && montant.setFieldLabel) {
             montant.setFieldLabel(carnet ? 'PART CARNET:' : 'PART ASSURANCE:');
+        }
+        // En vente carnet, la carte du client ne concerne pas un assure : elle prend le nom du metier.
+        const carteClient = me.getAssureCmp && me.getAssureCmp();
+        if (carteClient && carteClient.setTitle) {
+            carteClient.setTitle('<span style="color:blue;">'
+                    + (carnet ? 'INFOS CLIENT CARNET' : 'INFOS ASSURE') + '</span>');
         }
     },
     resetTitle: function (typeVente) {
@@ -4056,6 +4253,15 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     addTpCmp: function (record) {
         let me = this, tpContainerForm = me.getTpContainerForm();
+        // Ne pas perdre le numero de bon deja saisi : la reconstruction du bloc (apres
+        // enregistrement de la fiche client par exemple) repart du record serveur, qui ne
+        // connait pas encore ce bon - il vidait la saisie de la caissiere.
+        if (!record.numBon) {
+            const bonExistant = me.champDuBlocTp(tpContainerForm, 'textfield', 'refBon');
+            if (bonExistant && bonExistant.getValue()) {
+                record.numBon = bonExistant.getValue();
+            }
+        }
         tpContainerForm.removeAll();
         let cmp = me.buildCmp(record);
         tpContainerForm.add(cmp);
@@ -4065,26 +4271,48 @@ Ext.define('testextjs.controller.VenteCtr', {
         const me = this;
         let      typeVenteCombo = me.getTypeVenteCombo().getValue();
         let client = me.getClient();
-        me.ancienTierspayant = client.get('lgTIERSPAYANTID');
 
-        if (client) {
-            let clientwin;
-            if (typeVenteCombo === '2') {
-                clientwin = Ext.create('testextjs.view.vente.user.addClientAssurance');
-                me.getTpComplementaireGrid().getStore().load({
-                    params: {"clientId": client.get('lgCLIENTID')}
-                });
-                me.getClientAssuranceForm().loadRecord(client);
-                clientwin.show();
-                me.getNomAssClient().focus(false, 50);
-//                me.getTiersvo().setReadOnly(true);// Pour la modification du tiers payant à la vente , modifie le 22 02 2020
-            } else if (typeVenteCombo === '3') {
-                clientwin = Ext.create('testextjs.view.vente.user.AddCarnet');
-                me.getClientCarnetForm().loadRecord(client);
-                clientwin.show();
-                me.getNomCarnetClient().focus(false, 100);
-//                me.getCarnetVo().setReadOnly(true);//Pour la modification du tiers payant à la vente , modifie le 22 02 2020
+        if (!client) {
+            return;
+        }
+        // Le record retenu vient de la recherche precedente : entre-temps le client a pu changer
+        // (propagation d'un plafond depuis la fiche du tiers payant, modification sur un autre
+        // poste). On recharge depuis la base avant d'alimenter le formulaire ; si la lecture
+        // echoue, on garde le record en memoire plutot que d'empecher la modification.
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/client/client-assurance/' + client.get('lgCLIENTID') + '/0',
+            success: function (response) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result && result.success && result.data) {
+                    client = new testextjs.model.caisse.ClientAssurance(result.data);
+                    me.client = client;
+                }
+                me.ouvrirModificationClient(typeVenteCombo, client);
+            },
+            failure: function () {
+                me.ouvrirModificationClient(typeVenteCombo, client);
             }
+        });
+    },
+
+    ouvrirModificationClient: function (typeVenteCombo, client) {
+        const me = this;
+        me.ancienTierspayant = client.get('lgTIERSPAYANTID');
+        let clientwin;
+        if (typeVenteCombo === '2') {
+            clientwin = Ext.create('testextjs.view.vente.user.addClientAssurance');
+            me.getTpComplementaireGrid().getStore().load({
+                params: {"clientId": client.get('lgCLIENTID')}
+            });
+            me.getClientAssuranceForm().loadRecord(client);
+            clientwin.show();
+            me.getNomAssClient().focus(false, 50);
+        } else if (typeVenteCombo === '3') {
+            clientwin = Ext.create('testextjs.view.vente.user.AddCarnet');
+            me.getClientCarnetForm().loadRecord(client);
+            clientwin.show();
+            me.getNomCarnetClient().focus(false, 100);
         }
     },
     onbtnClientAssurence: function () {
@@ -4779,11 +5007,11 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
         return e;
     },
-    buildtierspayantContainer: function () {
+    buildtierspayantContainer: function (typeVente) {
         var me = this, tpContainerForm = me.getTpContainerForm(), client = me.getClient();
         var tierspayants = client.get('preenregistrementstp');
         Ext.each(tierspayants, function (item) {
-            var cmp = me.buildCmp(item);
+            var cmp = me.buildCmp(item, typeVente);
             tpContainerForm.add(cmp);
         });
         me.buildBtnAddTierspayant();
@@ -4805,12 +5033,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                         let newStore = Array.from(tierspayants);
                         let items = tpContainerForm.items;
                         Ext.each(items.items, function (item) {
-                            if (item.items) {
-                                let tp = item.items.items[3].getValue();
-                                newStore = me.buildRecord(newStore, tp);
+                            // Recherche par itemId : la position des enfants du bloc n'est pas stable.
+                            const champTp = me.champDuBlocTp(item, 'hiddenfield', 'lgTIERSPAYANTID');
+                            if (champTp) {
+                                newStore = me.buildRecord(newStore, champTp.getValue());
                             }
-
-
                         });
                         let tpclientStore = new Ext.data.Store({
                             model: 'testextjs.model.caisse.ClientTiersPayant',
@@ -4966,10 +5193,186 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
 
     },
-    buildCmp: function (record) {
+    /**
+     * Etat du plafond d'un compte carnet.
+     *
+     * Attention au nommage historique des colonnes : le VRAI encours du compte est
+     * db_CONSOMMATION_MENSUELLE - c'est elle que la cloture d'une vente incremente et que la
+     * fiche tiers payant affiche dans sa colonne Encours - tandis que db_PLAFOND_ENCOURS est le
+     * PLAFOND de consommation du compte (celui du blocage bCANBEUSE cote serveur). L'ecran
+     * lisait db_PLAFOND_ENCOURS comme un encours : il restait a 0 apres chaque vente.
+     *
+     * Un plafond a zero, absent ou nul veut dire « pas de plafond » : le compte n'est alors jamais
+     * signale comme atteint, sans quoi tous les carnets sans plafond declencheraient l'alerte.
+     */
+    etatDuPlafondCarnet: function (record) {
+        const encours = Number(record.dbCONSOMMATIONMENSUELLE || 0);
+        // Plafond affiche : celui du COMPTE du client (champ « Plafond.Encours » de sa fiche
+        // carnet) s'il est pose, sinon le plafond CREDIT de la fiche du tiers payant (plafond
+        // global de l'organisme). Sans l'un ni l'autre : « aucun ».
+        const plafond = Number(record.dbPLAFONDENCOURS || 0) > 0
+                ? Number(record.dbPLAFONDENCOURS)
+                : Number(record.dblPLAFONDCREDIT || 0);
+        const sansPlafond = !(plafond > 0);
+        return {
+            encours: encours,
+            plafond: plafond,
+            sansPlafond: sansPlafond,
+            atteint: !sansPlafond && encours >= plafond
+        };
+    },
+
+    montantCarnet: function (v) {
+        // Espace insecable : le « F » ne doit jamais passer seul a la ligne sous le montant.
+        return Ext.util.Format.number(v, '0,000') + ' F';
+    },
+
+    /**
+     * Une information du compte carnet (icone + libelle + valeur), en police agrandie : ces montants
+     * se lisent de loin par la caissiere, sur la meme ligne que le numero de bon.
+     */
+    texteInfoCarnet: function (icone, libelle, valeur, couleur) {
+        return '<img src="resources/images/icons/fam/' + icone + '" style="vertical-align:-2px;margin-right:5px;">'
+                + '<span style="font-size:15px;font-weight:bold;color:#333;">' + libelle + ' : </span>'
+                + '<span style="font-size:17px;font-weight:800;color:' + couleur + ';">' + valeur + '</span>';
+    },
+
+    /**
+     * Champs « Encours / Plafond / Caution » du compte carnet, places sur la MEME ligne que le numero
+     * de bon (l'espace a droite du bouton Retirer etait perdu), avec l'avertissement quand le plafond
+     * est atteint. Uniquement en carnet : la vente assurance n'a pas de compte a plafonner ainsi.
+     */
+    champsCompteCarnet: function (record) {
+        const me = this;
+        const etat = me.etatDuPlafondCarnet(record);
+        const items = [{
+                xtype: 'displayfield',
+                hideLabel: true,
+                flex: 1,
+                itemId: 'encoursCarnet' + record.order,
+                margin: '0 10 0 0',
+                // Encours en VERT (retour d'officine) ; il passe au rouge quand le plafond est atteint.
+                value: me.texteInfoCarnet('cash.png', 'Encours',
+                        me.montantCarnet(etat.encours), etat.atteint ? 'red' : '#1E8449')
+            }, {
+                xtype: 'displayfield',
+                hideLabel: true,
+                flex: 1,
+                itemId: 'plafondCarnet' + record.order,
+                margin: '0 10 0 0',
+                // Les valeurs de plafond sont en ROUGE (retour d'officine).
+                value: me.texteInfoCarnet('chart_bar.png', 'Plafond',
+                        etat.sansPlafond ? 'aucun' : me.montantCarnet(etat.plafond), '#C0392B')
+            },
+            // Plafond par vente (celui de la fiche tiers payant, herite sur le compte) : distinct du
+            // plafond de consommation ci-dessus, il borne chaque passage en caisse. Affiche seulement
+            // s'il est pose, avec la meme presentation qu'en vente assurance.
+            ...me.champPlafondVenteAssurance(record), {
+                // Caution du compte (celle du menu « Gestion de cautions carnet », pas le champ de la
+                // fiche tiers payant) : le champ reste cache tant que la requete lancee au rendu n'a
+                // pas confirme qu'une caution existe pour ce compte.
+                xtype: 'displayfield',
+                hideLabel: true,
+                flex: 1,
+                hidden: true,
+                itemId: 'cautionCarnet' + record.order,
+                margin: '0 10 0 0',
+                listeners: {
+                    afterrender: function (champ) {
+                        me.rappelerCautionCarnet(champ, record);
+                    }
+                }
+            }];
+        return items;
+    },
+
+    /**
+     * Avertissement du compte carnet (plafond atteint) : sur la ligne du numero de bon, a sa droite —
+     * sous les infos encours/plafonds de la ligne du dessus, sans ligne supplementaire (retour
+     * d'officine). Rien n'est rendu tant qu'il n'y a pas de message.
+     */
+    ligneAlerteCarnet: function (record) {
+        const me = this;
+        const etat = me.etatDuPlafondCarnet(record);
+        if (!etat.atteint) {
+            return [];
+        }
+        return [{
+                xtype: 'displayfield',
+                hideLabel: true,
+                flex: 1,
+                itemId: 'alertePlafond' + record.order,
+                cls: 'vp-alerte-plafond',
+                margin: '0 0 0 20',
+                value: 'attention!!! ce client payera en especes'
+            }];
+    },
+
+    /**
+     * Rappel du plafond vente en vente assurance, a droite du bouton Retirer de chaque tiers
+     * payant : uniquement quand un plafond est pose sur le compte (0 = pas de plafond, rien ne
+     * s'affiche). Contrairement au carnet, on ne rappelle QUE le plafond.
+     */
+    champPlafondVenteAssurance: function (record) {
+        const me = this;
+        const plafond = Number(record.dblPLAFOND || 0);
+        if (!(plafond > 0)) {
+            return [];
+        }
+        return [{
+                xtype: 'displayfield',
+                hideLabel: true,
+                flex: 1.2,
+                itemId: 'plafondVenteTp' + record.order,
+                margin: '0 5 0 0',
+                fieldStyle: 'white-space:nowrap;',
+                // Valeur de plafond : en rouge, comme les autres plafonds de l'ecran de vente.
+                value: me.texteInfoCarnet('chart_bar.png', 'Plafond vente',
+                        me.montantCarnet(plafond), '#C0392B')
+            }];
+    },
+
+    /**
+     * Interroge les cautions du compte carnet et affiche le solde si une caution existe ; sans
+     * caution, le champ reste invisible. Best-effort : un echec de la requete laisse simplement la
+     * ligne sans rappel de caution.
+     */
+    rappelerCautionCarnet: function (champ, record) {
+        const me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/cautions',
+            params: {tiersPayantId: record.lgTIERSPAYANTID, start: 0, limit: 20},
+            success: function (response) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                const cautions = (result && result.data) || [];
+                if (!cautions.length || champ.isDestroyed) {
+                    return;
+                }
+                let solde = 0;
+                Ext.each(cautions, function (c) {
+                    solde += Number(c.montant || 0);
+                });
+                champ.setValue(me.texteInfoCarnet('argent.png', 'Caution',
+                        me.montantCarnet(solde), solde > 0 ? '#1E8449' : 'red'));
+                champ.show();
+            }
+        });
+    },
+
+    buildCmp: function (record, typeVenteForce) {
         let percent = '30%';
-        let me = this, typeVente = me.getTypeVenteCombo().getValue();
-        if (typeVente === '3') {
+        // typeVenteForce : fourni par le rechargement d'une vente existante, ou la combo type de
+        // vente n'est pas encore repositionnee (rappel asynchrone) au moment de construire le bloc.
+        let me = this, typeVente = typeVenteForce || me.getTypeVenteCombo().getValue();
+        const carnet = (typeVente === '3');
+        if (carnet) {
+            // Un seul compte en carnet : toute la largeur, pour loger encours, plafond et caution
+            // sur la ligne du numero de bon au lieu d'une ligne supplementaire.
+            percent = '100%';
+        } else if (Number(record.dblPLAFOND || 0) > 0) {
+            // Assurance avec plafond vente : un peu plus large, pour que le rappel du plafond
+            // tienne a droite du bouton Retirer sans ecraser le champ du numero de bon.
             percent = '40%';
         }
         const cmp = {
@@ -4980,11 +5383,14 @@ Ext.define('testextjs.controller.VenteCtr', {
             items: [
                 {
                     xtype: 'fieldcontainer',
-                    layout: {type: 'hbox', align: 'stretch'},
+                    layout: {type: 'hbox', align: 'middle'},
                     items: [{
                             xtype: 'displayfield',
                             fieldLabel: 'TP' + record.order,
-                            flex: 1.5,
+                            // En carnet : largeur au plus juste pour que le taux reste COLLE au nom
+                            // du compte, et que les infos (encours/plafonds) occupent la droite de
+                            // cette meme ligne (retour d'officine).
+                            ...(carnet ? {width: 320} : {flex: 1.5}),
                             labelWidth: 30,
                             fieldStyle: "color:blue;font-weight:bold;",
                             value: record.tpFullName,
@@ -4993,19 +5399,22 @@ Ext.define('testextjs.controller.VenteCtr', {
                         {
                             xtype: 'displayfield',
                             fieldLabel: 'Taux:',
-                            flex: 0.5,
+                            ...(carnet ? {width: 120} : {flex: 0.5}),
                             labelWidth: 30,
                             name: 'taux' + record.order,
                             itemId: 'taux' + record.order,
                             fieldStyle: "color:blue;font-weight:bold;",
                             value: record.taux + '%',
                             margin: '0 10 0 0'
-                        }]
+                        },
+                        // Compte carnet : encours, plafond, plafond vente et caution a DROITE de la
+                        // ligne du tiers payant (retour d'officine)
+                        ...(carnet ? me.champsCompteCarnet(record) : [])]
                 }
                 ,
                 {
                     xtype: 'fieldcontainer',
-                    layout: {type: 'hbox', align: 'stretch'},
+                    layout: {type: 'hbox', align: 'middle'},
                     items: [{
                             xtype: 'textfield',
                             fieldLabel: 'Numéro de bon:',
@@ -5013,7 +5422,10 @@ Ext.define('testextjs.controller.VenteCtr', {
                             labelWidth: 100,
                             name: 'refBon' + record.order,
                             itemId: 'refBon' + record.order,
-                            flex: 1,
+                            // En carnet le conteneur occupe toute la largeur : le champ garde une
+                            // largeur raisonnable et laisse la place aux infos du compte a sa droite
+                            // (raccourci — retour d'officine : la zone etait trop longue).
+                            ...(carnet ? {width: 380} : {flex: 1}),
                             height: 30,
                             margin: '0 10 0 0',
                             value: record.numBon,
@@ -5029,19 +5441,25 @@ Ext.define('testextjs.controller.VenteCtr', {
                                 }
                             }
                         },
-                        {
-                            xtype: 'button',
-                            text: 'Retirer',
-                            icon: 'resources/images/icons/fam/delete.png',
-                            margin: '0 10 0 0',
-                            handler: function (btn) {
-                                const cp = btn.up('fieldcontainer');
-                                const container = cp.up('container');
-                                const compteTp = container.query('hiddenfield:first');
-                                me.removetierspayant(compteTp[0].value);
-                                container.destroy();
-                            }
-                        }
+                        // Retirer : pas en carnet (retour d'officine) — le compte unique du carnet
+                        // se remplace en rappelant un autre client, il ne se « retire » pas.
+                        ...(carnet ? [] : [{
+                                xtype: 'button',
+                                text: 'Retirer',
+                                icon: 'resources/images/icons/fam/delete.png',
+                                margin: '0 10 0 0',
+                                handler: function (btn) {
+                                    const cp = btn.up('fieldcontainer');
+                                    const container = cp.up('container');
+                                    const compteTp = container.query('hiddenfield:first');
+                                    me.removetierspayant(compteTp[0].value);
+                                    container.destroy();
+                                }
+                            }]),
+                        // Carnet : l'eventuel avertissement (plafond atteint) occupe la droite de la
+                        // ligne du bon, sous les infos de la ligne du dessus — pas de ligne en plus.
+                        // Assurance : rappel du plafond vente, seulement s'il est pose.
+                        ...(carnet ? me.ligneAlerteCarnet(record) : me.champPlafondVenteAssurance(record))
                     ]
                 },
                 {
@@ -5059,6 +5477,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                 {
                     xtype: 'numberfield',
+                    itemId: 'tauxValeur' + record.order,
                     value: record.taux,
                     hidden: true
                 },
@@ -5680,28 +6099,40 @@ Ext.define('testextjs.controller.VenteCtr', {
             });
         }
     },
+    /**
+     * Retrouve un champ d'un bloc tiers payant par son type et le prefixe de son itemId
+     * (les itemId portent le numero d'ordre du tiers payant : refBon1, compteTp2...).
+     *
+     * Les blocs etaient lus par POSITION dans la liste des enfants : le moindre composant
+     * ajoute ou retire du bloc (ligne encours/plafond du carnet, rappel du plafond vente)
+     * decalait les indices et cassait l'ajout de produit et la cloture avec un
+     * « cmtp.getValue is not a function ». La recherche par itemId est insensible a la
+     * mise en page.
+     */
+    champDuBlocTp: function (bloc, xtype, prefixe) {
+        if (!bloc || !bloc.query) {
+            return null;
+        }
+        const candidats = bloc.query(xtype) || [];
+        for (let i = 0; i < candidats.length; i++) {
+            if (candidats[i].itemId && candidats[i].itemId.indexOf(prefixe) === 0) {
+                return candidats[i];
+            }
+        }
+        return null;
+    },
     checkEmptyBonRef: function () {
         const me = this;
         let tpContainerForm = me.getTpContainerForm();
         let items = tpContainerForm.items;
         let result = null;
-        let emptyRef = false;
-        let numBonField;
         Ext.each(items.items, function (item) {
-            if (item.items) {
-                numBonField = item.items.items[1].items.items[0];
-
-                if (numBonField.getValue().trim() === '') {
-                    emptyRef = true;
-                    return;
-                }
+            const numBonField = me.champDuBlocTp(item, 'textfield', 'refBon');
+            if (numBonField && numBonField.getValue().trim() === '') {
+                result = numBonField;
+                return false;
             }
         });
-        if (emptyRef) {
-            result = numBonField;
-
-        }
-
         return result;
     },
     buildAssuranceData: function () {
@@ -5709,23 +6140,22 @@ Ext.define('testextjs.controller.VenteCtr', {
         let items = tpContainerForm.items;
         let tierspayants = [];
         Ext.each(items.items, function (item) {
-            if (item.items) {
-                const numBonField = item.items.items[1].items.items[0];
-                /*tp = item.items.items[3].getValue(),*/
-                const taux = item.items.items[4];
-                const cmtp = item.items.items[2];
-                const cmu = item.items.items[5];
-                tierspayants.push(
-                        {
-                            "compteTp": cmtp.getValue(),
-                            "numBon": numBonField.getValue(),
-                            "taux": parseInt(taux.getValue()),
-                            "cmu": cmu.getValue()
-                        }
-                );
+            const cmtp = me.champDuBlocTp(item, 'hiddenfield', 'compteTp');
+            if (!cmtp) {
+                // bouton « Ajouter une assurance complémentaire » ou composant etranger au bloc
+                return;
             }
-
-
+            const numBonField = me.champDuBlocTp(item, 'textfield', 'refBon');
+            const taux = me.champDuBlocTp(item, 'numberfield', 'tauxValeur');
+            const cmu = me.champDuBlocTp(item, 'hiddenfield', 'cmu');
+            tierspayants.push(
+                    {
+                        "compteTp": cmtp.getValue(),
+                        "numBon": numBonField ? numBonField.getValue() : '',
+                        "taux": parseInt(taux ? taux.getValue() : 0, 10),
+                        "cmu": cmu ? cmu.getValue() : 'false'
+                    }
+            );
         });
         return tierspayants;
     },
@@ -5809,7 +6239,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                                 const restructuring = result.data.restructuring;
                                 if (restructuring === true) {
                                     Ext.MessageBox.show({
-                                        title: 'Message d\'erreur',
+                                        // Avertissement, pas une erreur : la vente continue, la
+                                        // difference ecretee est a payer en especes ou autrement.
+                                        title: 'Avertissement plafond',
                                         width: 500,
                                         msg: message,
                                         buttons: Ext.MessageBox.OK,
@@ -6341,10 +6773,26 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
         }
     },
+    /*
+     * Libere le verrou de rappel de la vente courante (lot 3). Appele a la
+     * remise en attente et au retour a la liste ; sans effet si la vente n'est
+     * pas verrouillee par ce poste (le serveur ne libere que son detenteur).
+     */
+    libererRappelVente: function () {
+        const me = this, vente = me.getCurrent();
+        if (!vente || !vente.lgPREENREGISTREMENTID) {
+            return;
+        }
+        Ext.Ajax.request({
+            method: 'PUT',
+            url: '../api/v1/vente/rappel/liberer/' + vente.lgPREENREGISTREMENTID
+        });
+    },
     putToStandBy: function () {
         const me = this;
         me.rememberPreventeMode();
         me.saveModeReglementAttente();
+        me.libererRappelVente();
         me.resetAll();
         me.getVnoproduitCombo().focus(false, 100, function () {
         });
@@ -6495,10 +6943,19 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.showMontantRecuRequisMessage();
             return;
         }
+        // Message explicite (retour lot 3, point 4) : montant de la vente, montant
+        // saisi en rouge gras, et la difference a couvrir en gras.
+        const difference = netTopay - especesSaisies;
         Ext.MessageBox.show({
             title: 'Avertissement',
-            width: 550,
-            msg: 'le montant de la vente est de <span style="color: black; font-size: 1rem;font-weight: 900;">' + Ext.util.Format.number(netTopay, '0,000.') + '</span> voulez vous ajouter un autre mode ?',
+            width: 560,
+            msg: '⚠ Le montant de la vente est de <span style="font-weight:900;font-size:1.05rem;">'
+                    + Ext.util.Format.number(netTopay, '0,000.') + ' F</span>, vous avez saisi '
+                    + '<span style="color:#C0392B;font-weight:900;font-size:1.05rem;">'
+                    + Ext.util.Format.number(especesSaisies, '0,000.') + ' F</span>.<br/>'
+                    + 'Voulez-vous associer un autre mode de paiement pour la différence de '
+                    + '<span style="font-weight:900;font-size:1.05rem;">'
+                    + Ext.util.Format.number(difference, '0,000.') + ' F</span> ?',
             buttons: Ext.MessageBox.YESNO,
             icon: Ext.MessageBox.WARNING,
             fn: function (buttonId) {
@@ -6553,6 +7010,8 @@ Ext.define('testextjs.controller.VenteCtr', {
             montantExtra.setReadOnly(false);
         }
         me.handleExtraAmountInputValue();
+        // second mode engagé : le bouton « associer un client » n'a plus lieu d'etre
+        me.refreshBtnClientComptant();
         if (Ext.isEmpty(me.getClient())) {
             // La fenêtre « client lié » vient de s'ouvrir : le focus est dans
             // son champ de recherche ; il reviendra à l'encaissement après le
@@ -6576,6 +7035,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.extraModeReglementId = null;
         me.extraModeManualAmount = false;
         me.getBtnExtraMode()?.hide();
+        // plus de second mode engagé : le bouton « associer un client » revient si especes pures
+        me.refreshBtnClientComptant();
         // Ne pas voler le focus si la fenêtre « client lié » est ouverte
         // (son champ de recherche doit garder la main)
         if (!Ext.ComponentQuery.query('clientLambda').length) {
@@ -6693,7 +7154,11 @@ Ext.define('testextjs.controller.VenteCtr', {
     onBtnCancelModeReglement: function () {
         const me = this;
         const win = me.getReglementGrid();
-        win.destroy();
+        // La grille des modes peut ne pas etre ouverte : bascule d'operateur par
+        // une tuile de la selection rapide (retour lot 3, point 2)
+        if (win && !win.destroyed) {
+            win.destroy();
+        }
     },
     onBtnModeReglementClick: function (grid, rowIndex, colIndex) {
         const me = this;
@@ -6946,7 +7411,14 @@ Ext.define('testextjs.controller.VenteCtr', {
             maximizable: true,
             items: [{
                     xtype: 'container',
-                    layout: 'hbox',
+                    /* align: 'stretch' est ce qui donne aux deux panneaux la hauteur de la
+                     * fenetre. Sans lui, une rangee hbox laisse chaque panneau prendre la
+                     * hauteur de son contenu : avec trente-cinq articles, le panneau de detail
+                     * depassait la fenetre et emportait ses boutons hors de l'ecran. */
+                    layout: {
+                        type: 'hbox',
+                        align: 'stretch'
+                    },
                     padding: 15, // Plus de padding
                     items: [
                         me.buildPreventeListPanel(),
@@ -7125,17 +7597,23 @@ Ext.define('testextjs.controller.VenteCtr', {
             margin: '0 0 0 10',
             layout: 'fit',
             items: [{
-                    xtype: 'container',
+                    /* Un panneau et non un simple conteneur : c'est ce qui permet d'AMARRER les
+                     * deux boutons en bas (voir dockedItems), tout en restant le composant que le
+                     * reste du code retrouve par down('#preventeDetailContainer'). */
+                    xtype: 'panel',
+                    border: false,
                     itemId: 'preventeDetailContainer',
                     layout: {
                         type: 'vbox',
                         align: 'stretch'
                     },
-                    // AJOUT: Définir une hauteur fixe avec défilement si nécessaire
-                    style: {
-                        'max-height': '700px', // Augmenter la hauteur maximale
-                        'overflow-y': 'auto'   // Permettre le défilement si nécessaire
-                    },
+                    /* Le defilement est confie a ExtJS, plus a une hauteur maximale en CSS.
+                     *
+                     * Une prevente de trente-cinq articles faisait deborder ce conteneur : le CSS
+                     * bornait la hauteur de l'element sans qu'ExtJS en sache rien, et le bas de la
+                     * pile - les boutons - sortait de la zone visible. Avec autoScroll, c'est la
+                     * mise en page qui borne le conteneur et fait defiler le trop-plein. */
+                    autoScroll: true,
                     items: [{
                             xtype: 'container',
                             layout: 'hbox',
@@ -7290,11 +7768,17 @@ Ext.define('testextjs.controller.VenteCtr', {
                                         return v ? Ext.util.Format.number(v, '0,000') + ' F' : '';
                                     }
                                 }]
-                        }, {
+                        }],
+                    /* Les deux boutons sont AMARRES au bas du panneau : ils ne font plus partie
+                     * de la pile qui defile. Quel que soit le nombre d'articles de la prevente,
+                     * ils restent a leur place et visibles. Amarres ICI, sur le composant que le
+                     * reste du code interroge, ils continuent d'etre trouves par
+                     * detailContainer.down('#recallPreventeBtn'). */
+                    dockedItems: [{
                             xtype: 'container',
+                            dock: 'bottom',
                             layout: 'hbox',
-                            margin: '15 0 0 0', // AUGMENTER la marge supérieure
-                            padding: '10 0',
+                            padding: '10 0 0 0',
                             items: [{
                                     xtype: 'button',
                                     text: 'Rappeler cette prévente',

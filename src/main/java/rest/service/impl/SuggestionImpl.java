@@ -1617,6 +1617,111 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
+    @Override
+    public JSONObject createSuggestionManuelle(String grossisteId) {
+        try {
+            TGrossiste grossiste = this.em.find(TGrossiste.class, grossisteId);
+            if (grossiste == null) {
+                return new JSONObject().put("success", false).put("msg", "Grossiste introuvable");
+            }
+            TSuggestionOrder suggestionOrder = createSuggestionOrder(grossiste, STATUT_IS_PROGRESS);
+            return new JSONObject().put("success", true).put("suggestionId", suggestionOrder.getLgSUGGESTIONORDERID())
+                    .put("ref", suggestionOrder.getStrREF());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Creation suggestion manuelle impossible", e);
+            return new JSONObject().put("success", false).put("msg", "La création a échoué");
+        }
+    }
+
+    @Override
+    public JSONObject mergeSuggestionSelection(List<String> suggestionIds, String grossisteCibleId) {
+        try {
+            if (suggestionIds == null || suggestionIds.size() < 2) {
+                return new JSONObject().put("success", false).put("msg",
+                        "Sélectionnez au moins deux suggestions à fusionner");
+            }
+            List<TSuggestionOrder> suggestions = new ArrayList<>();
+            // grossistes presents dans la selection (id -> libelle), dans l'ordre de rencontre
+            java.util.LinkedHashMap<String, String> grossistes = new java.util.LinkedHashMap<>();
+            for (String id : suggestionIds) {
+                TSuggestionOrder s = this.em.find(TSuggestionOrder.class, id);
+                if (s == null) {
+                    return new JSONObject().put("success", false).put("msg", "Suggestion introuvable : " + id);
+                }
+                if (Constant.STATUT_ENABLE.equals(s.getStrSTATUT())) {
+                    return new JSONObject().put("success", false).put("msg",
+                            "La suggestion " + s.getStrREF() + " est déjà commandée : fusion impossible");
+                }
+                TGrossiste g = s.getLgGROSSISTEID();
+                grossistes.put(g != null ? g.getLgGROSSISTEID() : "", g != null ? g.getStrLIBELLE() : "");
+                suggestions.add(s);
+            }
+            // Plusieurs grossistes coches : l'utilisateur choisit celui qui porte la fusion
+            // (retour lot 3, point 6). Sans choix transmis, on renvoie la liste a l'ecran
+            // pour qu'il fasse choisir, au lieu de refuser.
+            if (grossistes.size() > 1 && StringUtils.isBlank(grossisteCibleId)) {
+                JSONArray choix = new JSONArray();
+                for (java.util.Map.Entry<String, String> g : grossistes.entrySet()) {
+                    choix.put(new JSONObject().put("id", g.getKey()).put("libelle", g.getValue()));
+                }
+                return new JSONObject().put("success", false).put("choixGrossisteRequis", true).put("grossistes",
+                        choix);
+            }
+            // Cible : la premiere suggestion cochee du grossiste choisi (ou la premiere tout court).
+            // Les lignes venues des autres grossistes basculent sur le grossiste de la cible
+            // (createMergeDetails les rattache a la suggestion cible et a SON grossiste).
+            TSuggestionOrder cible = suggestions.get(0);
+            if (StringUtils.isNotBlank(grossisteCibleId)) {
+                TSuggestionOrder choisie = null;
+                for (TSuggestionOrder s : suggestions) {
+                    if (s.getLgGROSSISTEID() != null
+                            && grossisteCibleId.equals(s.getLgGROSSISTEID().getLgGROSSISTEID())) {
+                        choisie = s;
+                        break;
+                    }
+                }
+                if (choisie == null) {
+                    return new JSONObject().put("success", false).put("msg",
+                            "Le grossiste choisi ne correspond à aucune suggestion cochée");
+                }
+                suggestions.remove(choisie);
+                suggestions.add(0, choisie);
+                cible = choisie;
+            }
+            Collection<TSuggestionOrderDetails> lignesCible = cible.getTSuggestionOrderDetailsCollection();
+            for (int i = 1; i < suggestions.size(); i++) {
+                TSuggestionOrder source = suggestions.get(i);
+                for (TSuggestionOrderDetails ligne : source.getTSuggestionOrderDetailsCollection()) {
+                    TFamille famille = ligne.getLgFAMILLEID();
+                    boolean existe = false;
+                    for (TSuggestionOrderDetails ligneCible : lignesCible) {
+                        if (famille.getLgFAMILLEID().equals(ligneCible.getLgFAMILLEID().getLgFAMILLEID())) {
+                            ligneCible.setIntNUMBER(ligneCible.getIntNUMBER() + ligne.getIntNUMBER());
+                            ligneCible.setIntPRICE(ligneCible.getIntNUMBER() * ligneCible.getIntPAFDETAIL());
+                            this.em.merge(ligneCible);
+                            existe = true;
+                            break;
+                        }
+                    }
+                    if (!existe) {
+                        TSuggestionOrderDetails clonee = createMergeDetails(cible, ligne);
+                        lignesCible.add(clonee);
+                    }
+                }
+                this.em.remove(source);
+            }
+            // Le resultat a ete retouche par un humain : il devient une suggestion manuelle
+            cible.setStrSTATUT(STATUT_IS_PROGRESS);
+            cible.setDtUPDATED(new Date());
+            this.em.merge(cible);
+            return new JSONObject().put("success", true).put("ref", cible.getStrREF()).put("suggestionId",
+                    cible.getLgSUGGESTIONORDERID());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Fusion des suggestions impossible", e);
+            return new JSONObject().put("success", false).put("msg", "La fusion a échoué");
+        }
+    }
+
     private TSuggestionOrderDetails createMergeDetails(TSuggestionOrder suggestionOrder, TSuggestionOrderDetails ite) {
         TSuggestionOrderDetails cloned = ite.clone();
         cloned.setLgSUGGESTIONORDERID(suggestionOrder);

@@ -164,6 +164,41 @@ body.x-body,
     padding: 2px 10px 4px;
 }
 
+/* Boutons « modifier » des cartes client : l'icône directement, sans le cadre bleu du thème.
+   Le thème pose son dégradé en !important, d'où les !important en face. */
+.vp-vente .x-btn.vp-btn-plat,
+.vp-vente .x-btn.vp-btn-plat .x-btn-tc,
+.vp-vente .x-btn.vp-btn-plat .x-btn-tl,
+.vp-vente .x-btn.vp-btn-plat .x-btn-tr,
+.vp-vente .x-btn.vp-btn-plat .x-btn-mc,
+.vp-vente .x-btn.vp-btn-plat .x-btn-ml,
+.vp-vente .x-btn.vp-btn-plat .x-btn-mr,
+.vp-vente .x-btn.vp-btn-plat .x-btn-bc,
+.vp-vente .x-btn.vp-btn-plat .x-btn-bl,
+.vp-vente .x-btn.vp-btn-plat .x-btn-br {
+    background: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.vp-vente .x-btn.vp-btn-plat {
+    transition: transform .12s ease;
+}
+
+.vp-vente .x-btn.vp-btn-plat:hover {
+    transform: scale(1.2);
+}
+
+/* Icône « modifier » agrandie (l'image de 16 px était perdue dans la carte) et centrée
+   dans son bouton pour rester alignée sur la ligne du texte du client. */
+.vp-vente .x-btn.vp-btn-plat .x-btn-icon-el {
+    width: 26px !important;
+    height: 26px !important;
+    background-size: 26px 26px !important;
+    background-position: center center !important;
+}
+
 /* Infos tiers payants : le fond bleuté couvre TOUTE la section */
 .vp-vente .x-fieldset.vp-tp-card,
 .vp-vente .x-fieldset.vp-tp-card .x-fieldset-body,
@@ -242,9 +277,8 @@ body.x-body,
     background-color: #F5F8FB;
 }
 
-.vp-vente .x-grid-row-over .x-grid-cell {
-    background-color: #E3EEF9;
-}
+/* Le survol de l'ecran de vente suit la regle generale (orange franc)
+   definie en fin de fichier : plus de bleu pale specifique ici. */
 
 /* Bouton supprimer de la ligne : icône plus grande, bien visible */
 .vp-vente .x-action-col-cell img,
@@ -521,10 +555,9 @@ body.x-body,
     font-weight: 800;
 }
 
-/* Facturation : mise en evidence de la ligne survolee (grille facturemanager) */
-.facture-row-over .x-grid-cell {
-    background-color: #fff3cd !important;
-}
+/* Facturation : la grille des factures avait sa propre classe de survol et son
+   propre jaune pale. Elle suit maintenant la regle generale (orange) definie en
+   fin de fichier, comme toutes les autres grilles. */
 
 /* ------------------------------------------------------------------------------
    Fiche d'inventaire de RESERVE.
@@ -706,6 +739,24 @@ body.x-body,
     background-image: url(../images/icons/fam/delete.png) !important;
 }
 
+/* ============================================================
+ * BOUTON D'ENREGISTREMENT QUI A RECU LE FOCUS AU CLAVIER
+ *
+ * Sur les vues de creation de client (assurance et carnet), la
+ * touche Entree enchaine les champs et, au dernier, donne le focus
+ * au bouton « Enregistrer ». Sans marque visible, l'utilisateur ne
+ * sait pas que la prochaine frappe d'Entree va valider : le contour
+ * de focus du navigateur est trop discret sur un bouton bleu.
+ *
+ * Meme vocabulaire visuel que les champs actifs de l'ecran de vente
+ * (vp-focus-beat) : la meme couleur, le meme rythme. Le halo bat sur
+ * les quatre bords, sans voile blanc a l'interieur — le libelle du
+ * bouton doit rester lisible pendant l'animation.
+ *
+ * Pour l'activer : ajouter la classe vp-bouton-pret au bouton
+ * lorsqu'il prend le focus, la retirer lorsqu'il le perd.
+ * ============================================================ */
+
 @keyframes vp-bouton-beat {
     0% {
         box-shadow: 0 0 0 0 rgba(13, 233, 202, .95);
@@ -739,6 +790,22 @@ body.x-body,
     }
 }
 
+/* ============================================================
+ * BANDEAU CLIENT DE L'ECRAN DE VENTE, SUR UNE SEULE LIGNE
+ *
+ * Nom, prenoms et matricule occupaient trois lignes empilees,
+ * chacune precedee de son etiquette : 118 px de haut pour trois
+ * valeurs courtes, sur un ecran ou chaque pixel rendu a la grille
+ * des produits compte.
+ *
+ * Les trois champs restent TROIS composants ExtJS distincts — tout
+ * le code qui les renseigne continue de fonctionner — mais ils sont
+ * rendus en ligne, comme des mots dans une phrase. Ils se replient
+ * donc d'eux-memes sur une deuxieme ligne quand un nom compose et un
+ * long matricule ne tiennent plus, et restent sur une seule ligne le
+ * reste du temps. Aucun calcul de largeur, aucune troncature.
+ * ============================================================ */
+
 .vp-ligne-client .x-form-item {
     display: inline-block !important;
     width: auto !important;
@@ -750,4 +817,231 @@ body.x-body,
 .vp-ligne-client .x-form-display-field {
     width: auto !important;
     white-space: normal;
+}
+
+/* ============================================================
+ * PLAFOND DU COMPTE CARNET ATTEINT
+ *
+ * Le compte est a bout : la caissiere doit encaisser en especes.
+ * Le message ne peut pas passer inapercu au milieu des autres
+ * informations du bandeau, d'ou le rouge, le gras et le
+ * clignotement — meme vocabulaire visuel que les autres
+ * signaux de l'ecran de vente (vp-focus-beat, vp-bouton-beat),
+ * pour que l'oeil le lise comme une alerte et non comme une
+ * donnee de plus.
+ *
+ * Sur un poste regle pour limiter les animations, le message
+ * reste rouge et gras : c'est le battement qui s'arrete, pas
+ * l'avertissement.
+ * ============================================================ */
+
+@keyframes vp-alerte-plafond-beat {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .25;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.vp-alerte-plafond .x-form-display-field {
+    color: #d9534f !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    animation: vp-alerte-plafond-beat 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vp-alerte-plafond .x-form-display-field {
+        animation: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+ * COULEURS DE MISE EN EVIDENCE DES LIGNES, REGLABLES PAR OFFICINE.
+ *
+ * Les valeurs ci-dessous sont les couleurs d'origine (orange au survol, violet
+ * a la selection). Elles servent de repli : au chargement, l'application lit
+ * les parametres COULEUR_SURVOL_LIGNE et COULEUR_SELECTION_LIGNE (ecran
+ * « Gestion des parametrages ») et redefinit ces variables sur <html> — voir
+ * PrestigeCouleursLignes dans app.js. Le lisere et la couleur du libelle sont
+ * deduits de la couleur choisie, il n'y a qu'un code a saisir par etat.
+ * -------------------------------------------------------------------------- */
+:root {
+    --vp-survol-fond: #ffcc80;
+    --vp-survol-bord: #e65100;
+    --vp-survol-texte: #1a1a1a;
+    /* Dans les listes, le libelle n'est force qu'au-dessus d'un fond FONCE :
+       sur un fond clair les colonnes gardent leurs couleurs (stock en bleu,
+       alertes en rouge). D'ou « inherit » par defaut. */
+    --vp-survol-texte-grille: inherit;
+    --vp-selection-fond: #CE93D8;
+    --vp-selection-texte: #1a1a1a;
+}
+
+/* --------------------------------------------------------------------------
+ * Survol de ligne bien visible (retour d'officine) : le survol par defaut du
+ * theme est un bleu tres pale (AliceBlue) qu'on ne distingue pas sur les
+ * grandes listes. On le remplace par une couleur franche.
+ *
+ * ExtJS 4.2 pose « x-grid-row-over » sur la ligne (les versions precedentes
+ * posaient « x-grid-item-over ») : les deux sont ciblees, et le fond doit
+ * etre porte par les CELLULES, qui ont leur propre couleur de fond.
+ *
+ * La regle est GLOBALE : elle couvre toutes les grilles de l'application,
+ * y compris celles qui seront ajoutees plus tard, sans avoir a poser une
+ * classe ecran par ecran. La classe vp-grille-survol reste acceptee pour
+ * les vues qui la portent deja (elle n'est plus necessaire).
+ * Seule la navigation est exclue : elle a son propre survol (navigation.css).
+ * -------------------------------------------------------------------------- */
+/*
+ * Le fond est pose sur les cellules FILLES de la ligne survolee, jamais sur
+ * ses descendantes : dans une grille GROUPEE (liste des bons par organisme
+ * par exemple), ExtJS pose x-grid-row-over sur l'enveloppe du groupe et non
+ * sur la ligne pointee. En selecteur descendant, tout le groupe passait a
+ * l'orange - y compris sa ligne de totaux - et la ligne reellement sous la
+ * souris ne se distinguait plus.
+ *
+ * Le survol CSS natif (:hover) sur la ligne de donnees couvre justement ce
+ * cas : lui ne peut designer que la ligne pointee.
+ */
+.x-grid-row-over > .x-grid-cell,
+.x-grid-item-over > .x-grid-cell,
+.x-grid-data-row:hover > .x-grid-cell {
+    background-color: var(--vp-survol-fond, #ffcc80) !important;
+    background-image: none !important;
+    border-top: 1px solid var(--vp-survol-bord, #e65100) !important;
+    border-bottom: 1px solid var(--vp-survol-bord, #e65100) !important;
+    color: var(--vp-survol-texte-grille, inherit) !important;
+}
+
+.x-grid-row-over,
+.x-grid-item-over,
+.x-grid-data-row:hover {
+    cursor: pointer;
+}
+
+/* La navigation garde le survol navy/accent defini dans navigation.css :
+   ses couleurs gagnent deja en specificite, on neutralise seulement les
+   liseres orange que la regle globale poserait sur le menu. */
+.prestige-nav .x-grid-row-over > .x-grid-cell,
+.prestige-nav .x-grid-item-over > .x-grid-cell,
+.prestige-nav .x-grid-data-row:hover > .x-grid-cell,
+.prestige-nav .x-grid-row-over .x-grid-cell,
+.prestige-nav .x-grid-item-over .x-grid-cell {
+    border-top: 0 none !important;
+    border-bottom: 0 none !important;
+}
+
+/* --------------------------------------------------------------------------
+ * Ligne selectionnee au clic : violet moyen-clair, comme sur la fiche
+ * article (regle #GridArticleID de header.css). Globale elle aussi, pour
+ * que le comportement soit le meme sur toutes les grilles.
+ *
+ * Placee APRES le survol : sur une ligne selectionnee que l'on survole,
+ * c'est le violet de la selection qui reste visible - le comportement
+ * deja en place sur la fiche article.
+ *
+ * On ne peint que les lignes SELECTIONNEES (x-grid-row-selected /
+ * x-grid-item-selected) et pas les lignes simplement focalisees, pour ne
+ * pas marquer une ligne que l'utilisateur n'a pas choisie.
+ *
+ * Comme pour le survol, on vise les cellules FILLES : dans une grille
+ * groupee, peindre les descendantes colorerait tout le groupe.
+ * -------------------------------------------------------------------------- */
+.x-grid-item-selected > .x-grid-cell,
+.x-grid-item-selected > .x-grid-cell > .x-grid-cell-inner,
+.x-grid-row-selected > .x-grid-cell,
+.x-grid-row-selected > .x-grid-cell > .x-grid-cell-inner,
+.vp-ligne-active > .x-grid-cell,
+.vp-ligne-active > .x-grid-cell > .x-grid-cell-inner,
+.vp-ligne-active > .x-grid-cell-selected {
+    background-color: var(--vp-selection-fond, #CE93D8) !important;
+    background-image: none !important;
+    color: var(--vp-selection-texte, #1a1a1a) !important;
+}
+
+/* --------------------------------------------------------------------------
+ * Ligne a la fois SELECTIONNEE et SURVOLEE : c'est le survol qui se voit, sur
+ * la cellule ET sur son interieur.
+ *
+ * Sans cette regle on lisait un melange : des blocs violets cernes d'orange.
+ * Deux couches sont en jeu - la cellule (.x-grid-cell) et son interieur
+ * (.x-grid-cell-inner, qui porte le texte et laisse voir la cellule sur ses
+ * marges). La regle de survol ne peint que la CELLULE, et son selecteur porte
+ * « :hover », qui compte comme une classe : elle est donc plus specifique que
+ * celle de la selection et gagnait sur la cellule. La selection, elle, peint
+ * AUSSI l'interieur, que le survol ne couvrait pas : d'ou l'orange autour et
+ * le violet au milieu.
+ *
+ * Le survol couvre desormais les deux couches, et cette regle est placee
+ * APRES la selection pour l'emporter a specificite egale. Meme choix que dans
+ * le menu de navigation : sur la ligne qu'on vient de choisir et que l'on
+ * survole, c'est le survol qui doit se voir.
+ * -------------------------------------------------------------------------- */
+.x-grid-row-over > .x-grid-cell,
+.x-grid-row-over > .x-grid-cell > .x-grid-cell-inner,
+.x-grid-item-over > .x-grid-cell,
+.x-grid-item-over > .x-grid-cell > .x-grid-cell-inner,
+.x-grid-data-row:hover > .x-grid-cell,
+.x-grid-data-row:hover > .x-grid-cell > .x-grid-cell-inner {
+    background-color: var(--vp-survol-fond, #ffcc80) !important;
+    background-image: none !important;
+    color: var(--vp-survol-texte-grille, inherit) !important;
+}
+
+/* La navigation garde sa propre couleur de selection : ses regles
+   (navigation.css) gagnent en specificite pour le fond, et la couleur du
+   libelle est posee sur .x-tree-node-text, donc rien a neutraliser ici. */
+
+
+/* --------------------------------------------------------------------------
+ * Icone « vider les filtres ».
+ *
+ * Le bouton portait « icon-clear-group », une icone de la feuille d'exemples
+ * d'ExtJS qui represente un groupement de lignes : elle ne dit pas « vider ».
+ * Le theme de l'application n'a aucune image de gomme, et en ajouter une
+ * obligerait a livrer un fichier de plus : le pictogramme est donc dessine en
+ * caractere, dans la place que le bouton reserve deja a son icone.
+ * -------------------------------------------------------------------------- */
+.vp-icone-vider {
+    background-image: none !important;
+}
+.vp-icone-vider:before {
+    content: '\232B';
+    display: block;
+    font-size: 15px;
+    line-height: 16px;
+    text-align: center;
+    color: #c0392b;
+    font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+ * Icone « code EAN ».
+ *
+ * La colonne portait « page_white_edit.png », un crayon sur une feuille : elle
+ * dit « modifier quelque chose », pas « code-barres ». Comme pour l'icone
+ * « vider », le theme n'a aucune image de code-barres et en ajouter une
+ * obligerait a livrer un fichier de plus : le pictogramme est dessine en
+ * caractere, dans la place que la colonne reserve deja a son icone.
+ *
+ * U+2016 (double barre verticale) et U+007C se lisent comme les barres d'un
+ * code-barres ; l'espacement resserre les rapproche.
+ * -------------------------------------------------------------------------- */
+.vp-icone-ean {
+    background-image: none !important;
+}
+.vp-icone-ean:before {
+    content: '\2016\2016';
+    display: block;
+    font-size: 15px;
+    line-height: 16px;
+    letter-spacing: -1px;
+    text-align: center;
+    color: #1f4e79;
+    font-weight: bold;
 }

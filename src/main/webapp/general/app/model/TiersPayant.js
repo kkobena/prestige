@@ -152,6 +152,12 @@ Ext.define('testextjs.model.TiersPayant', {
             type: 'string'
         },
         {
+            // Le champ ci-dessus transporte le LIBELLE du type (la colonne « Type » de la liste
+            // l'affiche tel quel). Le veritable identifiant arrive ici, pour la fiche.
+            name: 'lg_TYPE_TIERS_PAYANT_ID_REEL',
+            type: 'string'
+        },
+        {
             name: 'lg_TYPE_CONTRAT_ID',
             type: 'string'
         },
@@ -222,6 +228,10 @@ Ext.define('testextjs.model.TiersPayant', {
             name: 'dbl_PLAFOND',
             type: 'double'
         }, {
+            // Plafond par vente predefini par l'organisme (fiche tiers payant)
+            name: 'dbl_PLAFOND_VENTE',
+            type: 'double'
+        }, {
             name: 'dbl_QUOTA_CONSO_MENSUELLE',
             type: 'double'
         }, {
@@ -272,7 +282,10 @@ Ext.define('testextjs.model.TiersPayant', {
             type: 'number'
         },
         {name: 'P_BTN_DESACTIVER_TIERS_PAYANT', type: 'boolean'},
+        {name: 'P_BTN_MODIFIER_PLAFOND_TIERS_PAYANT', type: 'boolean'},
         {name: 'cmu', type: 'boolean'},
+        // Gere comme depot : l'interrupteur de la fiche s'ouvre dans l'etat enregistre.
+        {name: 'is_depot', type: 'boolean'},
          {
             name: 'caution',
             type: 'int'

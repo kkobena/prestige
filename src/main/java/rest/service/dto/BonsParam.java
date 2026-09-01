@@ -25,6 +25,8 @@ public class BonsParam {
     private String hEnd;
     private String search;
     private String tiersPayantId;
+    private String typeTiersPayantId;
+    private String groupeId;
     private int start;
     private int limit;
     private String emplacementId;

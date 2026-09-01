@@ -54,12 +54,14 @@ public class TiersPayantServiceImpl implements TiersPayantService {
      * @param typeTierspayant
      * @param btnDesactive
      * @param delete
+     * @param modifierPlafond
+     *            droit de saisir les plafonds sur la fiche ; sans lui l'ecran grise les zones
      *
      * @return
      */
     @Override
     public JSONObject fetchList(int start, int limit, String search, String typeTierspayant, boolean btnDesactive,
-            boolean delete) {
+            boolean delete, boolean modifierPlafond) {
         JSONObject data = new JSONObject();
         List<TTiersPayant> list = showAllOrOneTierspayant(search, typeTierspayant, start, limit);
         int count = showAllOrOneTierspayant(search, typeTierspayant);
@@ -87,6 +89,9 @@ public class TiersPayantServiceImpl implements TiersPayantService {
             }
 
             json.put("lg_TIERS_PAYANT_ID", tTiersPayant.getLgTIERSPAYANTID());
+            // Gere comme depot : l'ecran de modification en a besoin pour presenter l'interrupteur
+            // dans l'etat ou il se trouve, plutot que decoche par defaut.
+            json.put("is_depot", Boolean.TRUE.equals(tTiersPayant.getIsDepot()));
             // str_CODE_ORGANISME
             json.put("str_CODE_ORGANISME", tTiersPayant.getStrCODEORGANISME());
             // str_NAME
@@ -103,6 +108,8 @@ public class TiersPayantServiceImpl implements TiersPayantService {
             json.put("str_MAIL", tTiersPayant.getStrMAIL());
             // dbl_PLAFOND_CREDIT
             json.put("dbl_PLAFOND_CREDIT", tTiersPayant.getDblPLAFONDCREDIT());
+            json.put("dbl_PLAFOND_VENTE",
+                    tTiersPayant.getDblPLAFONDVENTE() != null ? tTiersPayant.getDblPLAFONDVENTE() : 0);
             // dbl_TAUX_REMBOURSEMENT (à associer à la table TRembourcement
             json.put("dbl_TAUX_REMBOURSEMENT", tTiersPayant.getDblTAUXREMBOURSEMENT());
             // str_NUMERO_CAISSE_OFFICIEL
@@ -157,6 +164,11 @@ public class TiersPayantServiceImpl implements TiersPayantService {
                     (tTiersPayant.getLgVILLEID() != null ? tTiersPayant.getLgVILLEID().getStrName() : ""));
             json.put("lg_TYPE_TIERS_PAYANT_ID", (tTiersPayant.getLgTYPETIERSPAYANTID() != null
                     ? tTiersPayant.getLgTYPETIERSPAYANTID().getStrLIBELLETYPETIERSPAYANT() : ""));
+            // La colonne « Type » de la liste affiche le LIBELLE, et le champ ci-dessus le transporte
+            // depuis toujours : la grille en depend, on n'y touche pas. Le VERITABLE identifiant part
+            // a cote, pour la fiche qui doit retrouver le type a l'ouverture en modification.
+            json.put("lg_TYPE_TIERS_PAYANT_ID_REEL", (tTiersPayant.getLgTYPETIERSPAYANTID() != null
+                    ? tTiersPayant.getLgTYPETIERSPAYANTID().getLgTYPETIERSPAYANTID() : ""));
             json.put("lg_TYPE_CONTRAT_ID", (tTiersPayant.getLgTYPECONTRATID() != null
                     ? tTiersPayant.getLgTYPECONTRATID().getStrLIBELLETYPECONTRAT() : ""));
             json.put("lg_RISQUE_ID",
@@ -177,6 +189,8 @@ public class TiersPayantServiceImpl implements TiersPayantService {
             json.put("b_IsAbsolute", tTiersPayant.getBIsAbsolute());
             json.put("db_CONSOMMATION_MENSUELLE", encoursParTp.getOrDefault(tTiersPayant.getLgTIERSPAYANTID(), 0));
             json.put("dbl_PLAFOND_CREDIT", tTiersPayant.getDblPLAFONDCREDIT());
+            json.put("dbl_PLAFOND_VENTE",
+                    tTiersPayant.getDblPLAFONDVENTE() != null ? tTiersPayant.getDblPLAFONDVENTE() : 0);
             json.put("nbrbons", (tTiersPayant.getIntNBREBONS() != null)
                     ? (tTiersPayant.getIntNBREBONS() > 0 ? tTiersPayant.getIntNBREBONS() : 0) : 0);
             json.put("montantFact", (tTiersPayant.getIntMONTANTFAC() != null)
@@ -205,6 +219,8 @@ public class TiersPayantServiceImpl implements TiersPayantService {
             }
             json.put("BTNDELETE", delete);
             json.put("P_BTN_DESACTIVER_TIERS_PAYANT", btnDesactive);
+            // Droit de saisir les plafonds sur la fiche : lu par l'ecran pour griser les zones.
+            json.put("P_BTN_MODIFIER_PLAFOND_TIERS_PAYANT", modifierPlafond);
             json.put("int_NUMBER_CLIENT", clients != null ? clients.nombre : 0);
             json.put("str_FAMILLE_ITEM", strProduct);
             jsonarray.put(json);
