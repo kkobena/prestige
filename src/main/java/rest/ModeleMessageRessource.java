@@ -18,10 +18,10 @@ import org.json.JSONObject;
 import rest.service.ModeleMessageService;
 import util.Constant;
 
-/** Modeles de messages SMS / WhatsApp (point 2). */
+/** Modeles de messages SMS / WhatsApp */
 @Path("v1/modeles-messages")
 @Produces("application/json")
-@Consumes(MediaType.WILDCARD)
+@Consumes("application/json")
 public class ModeleMessageRessource {
 
     @EJB
