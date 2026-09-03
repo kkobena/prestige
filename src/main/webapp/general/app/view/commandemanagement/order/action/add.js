@@ -33,7 +33,6 @@ var int_montant_vente;
 var int_montant_achat;
 var str_STATUT;
 var storerepartiteur;
-var comboDefaultvalue;
 var store_details_order;
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
@@ -93,7 +92,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             str_STATUT = this.getOdatasource();
         }
         ref_final = ref;
-        titre = this.getTitre();
+        /* « titre » etait pose sans « var » : une globale, ecrite par une quinzaine d'ecrans.
+         * On la garde locale ici, l'ecran n'a aucune raison de la partager. */
+        let titre = this.getTitre();
         this.prixAchat = this.getOdatasource()?.PRIX_ACHAT_TOTAL;
         this.title = titre;
         let produitStore = new Ext.data.Store({
@@ -111,7 +112,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             }
         });
         let store = Ext.create('testextjs.store.Search');
-        comboDefaultvalue = this.getOdatasource().lg_GROSSISTE_ID;
         let store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [
@@ -249,8 +249,10 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                         },
                                         select: function (cmp) {
 
-                                            if (titre === 'Modifier les informations de la commande') {
-                                                ecranCommande(this).onchangeGrossiste();
+                                            /* Ce listener se declenche longtemps apres l'ouverture :
+                                             * c'est l'ecran lui-meme qu'on interroge, pas une globale. */
+                                            if (ecranCommande(cmp).estModification()) {
+                                                ecranCommande(cmp).onchangeGrossiste();
                                             } else {
                                                 Ext.getCmp('str_NAME').focus(true, 100, function () {
                                                     Ext.getCmp('str_NAME').selectText(0, 1);
@@ -863,8 +865,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             Ext.getCmp('btn_save').show();
         }
 
-        if (titre === "Modifier les informations de la commande") {
-            Ext.getCmp('lgGROSSISTEID').setValue(this.getOdatasource().str_GROSSISTE_LIBELLE);
+        if (this.estModification()) {
+            this.poserRepartiteurDeLaCommande(this.getOdatasource());
             int_montant_achat = Ext.util.Format.number(this.getOdatasource().PRIX_ACHAT_TOTAL, '0,000.');
             int_montant_vente = Ext.util.Format.number(this.getOdatasource().PRIX_VENTE_TOTAL, '0,000.');
             Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
@@ -919,6 +921,57 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             });
         });
     },
+    /*
+     * L'ecran sert a DEUX choses : creer une commande, ou modifier une commande existante. Le mode
+     * se lisait jusqu'ici en comparant le titre de la fenetre a la chaine « Modifier les informations
+     * de la commande » - et ce titre etait range dans une globale partagee par une quinzaine
+     * d'ecrans. Ouvrir un autre ecran entre-temps suffisait donc a fausser le test : on choisissait
+     * la mauvaise branche sans le moindre message.
+     *
+     * On se fonde desormais sur ce qui distingue vraiment les deux ouvertures. OrderManager passe
+     * l'identifiant de la commande en modification (« onManageDetailsClick ») et la chaine « 0 » en
+     * creation (« onAddClick ») ; c'est deja ce que lit le debut de initComponent. Renommer le menu
+     * ou traduire le titre ne casse plus rien.
+     *
+     * A noter : la configuration « mode » n'est pas utilisable ici. Le chargeur generique
+     * onLoadNewComponentWithDataSource ne transmet que nameintern, titre et odatasource - « mode »
+     * resterait vide et l'ecran croirait etre en creation.
+     */
+    estModification: function () {
+        return this.getNameintern() !== "0";
+    },
+
+    /*
+     * Repartiteur de la commande rappele a l'ouverture, en modification.
+     *
+     * L'ecran posait ici le LIBELLE du repartiteur dans une liste dont la valeur est un identifiant.
+     * Tant que l'utilisateur ne rouvrait pas la liste, tout ce que l'ecran envoyait ensuite comme
+     * « grossisteId » etait donc ce libelle : la creation d'un produit depuis la commande recevait un
+     * libelle et ne pouvait pas preselectionner le repartiteur.
+     *
+     * On pose desormais l'identifiant, apres avoir mis la ligne correspondante dans le magasin - sans
+     * elle la liste afficherait l'identifiant brut au lieu du libelle, le magasin n'etant charge qu'au
+     * premier deroulement. A defaut d'identifiant on repose le libelle, exactement comme avant : une
+     * base qui ne le renverrait pas se comporte comme aujourd'hui plutot que de perdre l'affichage.
+     */
+    poserRepartiteurDeLaCommande: function (source) {
+        var combo = Ext.getCmp('lgGROSSISTEID');
+        if (!combo || !source) {
+            return;
+        }
+        var libelle = source.str_GROSSISTE_LIBELLE;
+        var identifiant = source.lg_GROSSISTE_ID;
+        if (!identifiant) {
+            combo.setValue(libelle);
+            return;
+        }
+        var magasin = combo.getStore();
+        if (magasin && magasin.findExact('lg_GROSSISTE_ID', identifiant) === -1) {
+            magasin.add({lg_GROSSISTE_ID: identifiant, str_LIBELLE: libelle || identifiant});
+        }
+        combo.setValue(identifiant);
+    },
+
     loadStore: function () {
         ecranCommande().onRechClick();
     },

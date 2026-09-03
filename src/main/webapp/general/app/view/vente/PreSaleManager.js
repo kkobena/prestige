@@ -84,6 +84,13 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                             itemId: 'rechercher',
                             scope: this,
                             iconCls: 'searchicon'
+                        }, '-',
+                        {
+                            /* Export Excel de la liste FILTREE entiere (recherche, statut), pas de la page affichee. */
+                            text: 'Excel',
+                            tooltip: 'Exporter la liste des préventes en Excel',
+                            itemId: 'excelBtn',
+                            iconCls: 'export_excel_icon'
                         }
                     ]
                 }
@@ -152,7 +159,9 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                                     tooltip: 'Modifier',
                                     menuDisabled: true,
                                      getClass: function (value, metadata, record) {
-                                        if (record.get('strSTATUT') === 'pending') {
+                                        // Une prevente est enregistree en « is_Process » (nature prevente) ;
+                                        // le bouton n'attendait que « pending » et ne sortait jamais.
+                                        if (record.get('strSTATUT') === 'pending' || record.get('strSTATUT') === 'is_Process') {
 
                                             return 'x-display-hide';
                                         } else {
@@ -168,6 +177,20 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                                 }]
                         },
 
+                        {
+                            /* Reimpression du ticket synthetique de la prevente (montants + QR code). */
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/fam/printer.png',
+                                    tooltip: 'Réimprimer le ticket de prévente',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toPrint', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+                                }]
+                        },
                         {
                             xtype: 'actioncolumn',
                             width: 30,

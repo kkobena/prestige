@@ -80,9 +80,227 @@
  *      defilent, dans leur propre ascenseur ;
  *   3. masque l'entete de l'ecran : une fois les deux barres collees l'une a l'autre, le
  *      titre etait ecrit deux fois de suite.
+ *
+ * =====================================================================================
+ * 4) MOTEUR DE MISE EN PAGE BLOQUE : L'AFFICHAGE "SE PERD"
+ *
+ * Symptome constate : de temps en temps, un ecran (le menu principal par exemple) n'occupe
+ * plus toute la largeur : le panneau central garde son ancienne taille et une bande vide
+ * apparait a droite (ou en bas). Plus aucun redimensionnement n'est pris en compte, et
+ * l'ouverture du menu suivant peut echouer, jusqu'au rechargement de la page (F5).
+ *
+ * Cause, reproduite sur le banc : ExtJS 4.2 execute toutes les mises en page dans un
+ * "contexte" unique (Ext.AbstractComponent.flushLayouts). Il note ce contexte comme etant
+ * en cours, lance le calcul, et ne le libere qu'a la toute fin du calcul. Si une exception
+ * survient AU MILIEU du calcul (un rendu de grille qui plante, une donnee inattendue dans
+ * un ecran...), la fin n'est jamais atteinte : le contexte reste marque "en cours" pour
+ * toujours. Des lors, chaque demande de mise en page (redimensionnement de la fenetre,
+ * ouverture d'un menu, ajustement d'un ecran colle) est simplement mise en attente
+ * derriere un calcul qui ne se terminera jamais. L'ecran fige a sa derniere taille connue.
+ *
+ * Correctif : PrestigeAffichage surveille flushLayouts. Si le calcul leve une exception
+ * alors que le contexte est encore marque "en cours" :
+ *   1. le contexte est libere, le moteur redevient utilisable immediatement ;
+ *   2. l'incident est journalise avec sa pile d'appels, pour retrouver l'ecran fautif :
+ *      console du navigateur, fil d'Ariane, et journal du Centre de Support (ecrans
+ *      Diagnostic et Historique, message "Mise en page bloquee puis retablie : ...",
+ *      colonne ecran = xtype et titre de l'ecran affiche) ;
+ *   3. une mise en page complete est relancee juste apres, pour que l'ecran reprenne la
+ *      bonne taille sans attendre ; au plus trois relances en cinq secondes, afin qu'une
+ *      erreur qui se repete a chaque calcul ne tourne pas en boucle ;
+ *   4. l'exception est ensuite relancee telle quelle : rien n'est masque.
  */
 /* global Ext */
 window.PrestigeAffichage = window.PrestigeAffichage || {};
+
+(function () {
+    'use strict';
+
+    var Composant = Ext.AbstractComponent,
+        flushOriginal = Composant && Composant.flushLayouts,
+        incidents = [],
+        relances = [],
+        MAX_INCIDENTS = 20,
+        MAX_RELANCES = 3,
+        FENETRE_RELANCES = 5000;
+
+    if (!flushOriginal || flushOriginal.correctifBlocage) {
+        return;
+    }
+
+    function journaliser(erreur) {
+        var message = 'LAYOUT: exception pendant la mise en page : '
+                + (erreur && erreur.message ? erreur.message : String(erreur));
+        incidents.push({
+            date: new Date(),
+            message: message,
+            pile: erreur && erreur.stack ? String(erreur.stack) : ''
+        });
+        if (incidents.length > MAX_INCIDENTS) {
+            incidents.shift();
+        }
+        try {
+            if (window.console && console.error) {
+                console.error('[Prestige] ' + message + ' - moteur de mise en page libere', erreur);
+            }
+        } catch (e) {
+        }
+        try {
+            if (window.__prestigeSupport && window.__prestigeSupport.push) {
+                window.__prestigeSupport.push(message);
+            }
+        } catch (e) {
+        }
+        // Journal du Centre de Support (ecran Diagnostic / Historique) : l'incident y apparait
+        // avec l'ecran affiche, la pile d'appels et le fil d'Ariane, comme une erreur JS.
+        try {
+            if (window.__prestigeSupport && window.__prestigeSupport.signaler) {
+                window.__prestigeSupport.signaler({
+                    type: 'JS',
+                    niveau: 'ERROR',
+                    module: 'FRONTEND',
+                    messageCourt: ('Mise en page bloquée puis rétablie : '
+                            + (erreur && erreur.message ? erreur.message : String(erreur))).substring(0, 500),
+                    urlOuEcran: ecranCourant().substring(0, 255),
+                    stack: erreur && erreur.stack ? String(erreur.stack).substring(0, 8000) : null
+                });
+            }
+        } catch (e) {
+        }
+    }
+
+    /** Ecran affiche dans le panneau central au moment de l'incident : "xtype (titre)". */
+    function ecranCourant() {
+        try {
+            var panneau = Ext.getCmp('content-panel'),
+                ecran = panneau && panneau.items && panneau.items.getAt(0),
+                titre = panneau && panneau.title ? String(panneau.title).replace(/&nbsp;/g, '').trim() : '';
+            if (!ecran) {
+                return titre || String(window.location.pathname || '');
+            }
+            return ecran.getXType() + (titre ? ' (' + titre + ')' : '');
+        } catch (e) {
+            return String(window.location.pathname || '');
+        }
+    }
+
+    function relancePossible() {
+        var maintenant = new Date().getTime();
+        relances = Ext.Array.filter(relances, function (t) {
+            return maintenant - t < FENETRE_RELANCES;
+        });
+        if (relances.length >= MAX_RELANCES) {
+            return false;
+        }
+        relances.push(maintenant);
+        return true;
+    }
+
+    function relancerMiseEnPage() {
+        Ext.Function.defer(function () {
+            var vues = Ext.ComponentQuery.query('viewport'), i;
+            try {
+                for (i = 0; i < vues.length; i++) {
+                    if (vues[i].rendered && !vues[i].isDestroyed) {
+                        vues[i].updateLayout();
+                    }
+                }
+            } catch (e) {
+                // deja journalise par flushLayouts ; on ne relance pas indefiniment
+            }
+        }, 30);
+    }
+
+    /**
+     * Detache les layouts d'un calcul interrompu, comme le fait ExtJS lui-meme quand un
+     * calcul echoue proprement (Ext.layout.Context.handleFailure) : un layout qui garde
+     * une reference au contexte mort serait pris pour "deja commence" au calcul suivant,
+     * son initialisation serait sautee et ce calcul planterait a son tour.
+     */
+    function detacher(contexte) {
+        var layouts = contexte && contexte.layouts, cle, layout;
+        if (!layouts) {
+            return;
+        }
+        for (cle in layouts) {
+            if (layouts.hasOwnProperty(cle)) {
+                layout = layouts[cle];
+                if (layout) {
+                    layout.running = false;
+                    layout.ownerContext = null;
+                }
+            }
+        }
+    }
+
+    Composant.flushLayouts = function () {
+        // le contexte en attente est celui que flushLayouts va executer
+        var contexte = this.pendingLayouts;
+        try {
+            return flushOriginal.apply(this, arguments);
+        } catch (erreur) {
+            if (contexte) {
+                if (this.runningLayoutContext === contexte) {
+                    this.runningLayoutContext = null;
+                }
+                detacher(contexte);
+                journaliser(erreur);
+                if (relancePossible()) {
+                    relancerMiseEnPage();
+                }
+            }
+            throw erreur;
+        }
+    };
+    Composant.flushLayouts.correctifBlocage = true;
+
+    /** Derniers incidents de mise en page (pour le diagnostic depuis la console). */
+    window.PrestigeAffichage.incidentsMiseEnPage = incidents;
+})();
+
+/*
+ * Editions PDF longues : l'onglet doit etre ouvert DANS le clic de l'utilisateur. Ouvert plus
+ * tard, a l'arrivee de la reponse du serveur, le navigateur le prend pour une fenetre
+ * surgissante et le bloque (Firefox, Chrome) des que l'edition dure plus d'une seconde.
+ *   var onglet = PrestigeEditions.ouvrirOnglet();   // au clic : onglet vide « Édition en cours... »
+ *   PrestigeEditions.afficher(onglet, url);          // a la reponse : le PDF s'y charge
+ *   PrestigeEditions.fermer(onglet);                 // en cas d'echec
+ * Si le navigateur refuse malgre tout l'onglet (null), on retombe sur window.open a la reponse.
+ */
+window.PrestigeEditions = {
+    ouvrirOnglet: function () {
+        var onglet = null;
+        try {
+            onglet = window.open('', '_blank');
+            if (onglet && onglet.document) {
+                onglet.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Édition en cours</title>'
+                        + '<style>body{font-family:Segoe UI,Arial,sans-serif;background:#f3f5f8;color:#1b2a3a;display:flex;'
+                        + 'align-items:center;justify-content:center;height:100vh;margin:0}div{text-align:center}'
+                        + 'b{font-size:20px}p{color:#65758a}</style></head><body><div><b>Édition en cours...</b>'
+                        + '<p>Le document s\'affichera ici dès qu\'il sera prêt.</p></div></body></html>');
+                onglet.document.close();
+            }
+        } catch (e) {
+            onglet = null;
+        }
+        return onglet;
+    },
+    afficher: function (onglet, url) {
+        if (onglet && !onglet.closed) {
+            onglet.location.href = url;
+        } else {
+            window.open(url, '_blank');
+        }
+    },
+    fermer: function (onglet) {
+        try {
+            if (onglet && !onglet.closed) {
+                onglet.close();
+            }
+        } catch (e) {
+        }
+    }
+};
 
 /**
  * Colle un ecran plein page a la barre de titre du panneau central.
@@ -168,7 +386,20 @@ window.PrestigeAffichage.collerAuConteneur = function (panneau, options) {
     }
 
     panneau.on('afterrender', function () {
+        var conteneur = panneau.ownerCt;
         Ext.Function.defer(ajusterPuisVerifier, 1);
+        // L'ecran suit aussi le panneau central lui-meme, pas seulement la fenetre du
+        // navigateur : quand le panneau central change de taille sans que la fenetre ait
+        // bouge (mise en page relancee apres un blocage du moteur, cf. section 4), l'ecran
+        // colle reprenait sinon son ancienne taille jusqu'au prochain redimensionnement.
+        // Sans boucle possible : la taille du panneau central est fixee par la fenetre,
+        // redimensionner l'ecran qu'il contient ne le fait pas changer de taille.
+        if (conteneur && conteneur.on) {
+            conteneur.on('resize', ajusterPuisVerifier);
+            panneau.on('destroy', function () {
+                conteneur.un('resize', ajusterPuisVerifier);
+            });
+        }
     });
     Ext.EventManager.onWindowResize(ajusterPuisVerifier);
     panneau.on('destroy', function () {
@@ -212,12 +443,14 @@ window.PrestigeAffichage.ECRANS_COLLES = [
     'tierspayantmanager', 'clientmanager', 'analysetierspayant',
     // analyses
     'abcmanager', 'vingtquatrevingt', 'margeproducts', 'feuilledematch',
-    'evaluationventemoyenne',
+    'evaluationventemoyenne', 'cazonegeomanager',
     // ventes
     'ventemanager', 'venteannuler', 'venteavoirmanager', 'venteproduitannules',
     'suppressionsvente', 'delayed',
     // service client
-    'ventesrateesmanager',
+    'ventesrateesmanager', 'modelemessagemanager',
+    // gestion des fichiers
+    'ventesmodifieesmanager',
     // etats et tableaux de bord
     'etatscontrolemanager', 'etatannuel', 'achatgrossistemensuel',
     'tableauPhama', 'tableauPhamaCarnet', 'statistiqueTVA',

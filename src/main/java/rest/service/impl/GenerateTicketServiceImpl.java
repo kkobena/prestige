@@ -45,9 +45,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -188,12 +190,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class, id);
             String idVente = id;
             MvtTransaction mvtTransaction = findByPkey(idVente);
+            if (mvtTransaction == null) {
+                return refusVenteSansMouvement(oTPreenregistrement);
+            }
 
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -263,6 +268,85 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     @Override
+    public JSONObject imprimerTicketPrevente(String venteId) throws JSONException {
+        JSONObject json = new JSONObject();
+        try {
+            TPreenregistrement p = getEntityManager().find(TPreenregistrement.class, venteId);
+            if (p == null) {
+                return json.put("success", false).put("msg", "Prévente introuvable.");
+            }
+            // QR code : l'identifiant de la vente, que le champ de recherche de prevente de l'ecran de vente rappelle
+            // directement. Ecrit dans le meme repertoire que les codes-barres des tickets.
+            java.io.File qr = util.QrCodeImage.ecrire(TicketPrevente.contenuQrCode(p.getLgPREENREGISTREMENTID()),
+                    new java.io.File(jdom.barecode_file + "qr-" + p.getLgPREENREGISTREMENTID() + ".png"));
+
+            String typeVente = p.getLgTYPEVENTEID() != null ? p.getLgTYPEVENTEID().getLgTYPEVENTEID()
+                    : Constant.VENTE_COMPTANT_ID;
+            String vendeur = "";
+            if (p.getLgUSERVENDEURID() != null) {
+                vendeur = DataStringManager.subStringData(p.getLgUSERVENDEURID().getStrFIRSTNAME(), 0, 1) + "."
+                        + p.getLgUSERVENDEURID().getStrLASTNAME();
+            }
+            List<TicketPrevente.Organisme> organismes = new ArrayList<>();
+            String matricule = "";
+            for (TPreenregistrementCompteClientTiersPayent t : listeVenteTiersPayantsByIdVente(
+                    p.getLgPREENREGISTREMENTID())) {
+                String nom = t.getLgCOMPTECLIENTTIERSPAYANTID() != null
+                        && t.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID() != null
+                                ? t.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() : "";
+                organismes.add(new TicketPrevente.Organisme(nom, t.getIntPERCENT(),
+                        t.getIntPRICE() == null ? 0 : t.getIntPRICE()));
+                // Matricule : le numero du compte tiers payant (premier organisme)
+                if (matricule.isEmpty() && t.getLgCOMPTECLIENTTIERSPAYANTID() != null
+                        && t.getLgCOMPTECLIENTTIERSPAYANTID().getStrNUMEROSECURITESOCIAL() != null) {
+                    matricule = t.getLgCOMPTECLIENTTIERSPAYANTID().getStrNUMEROSECURITESOCIAL();
+                }
+            }
+            // Beneficiaire : l'ayant droit de la vente, sinon le client lui-meme
+            String beneficiaire = "";
+            if (p.getAyantDroit() != null) {
+                beneficiaire = org.apache.commons.lang3.StringUtils.defaultString(p.getAyantDroit().getStrFIRSTNAME())
+                        + " " + org.apache.commons.lang3.StringUtils.defaultString(p.getAyantDroit().getStrLASTNAME());
+            } else if (p.getClient() != null) {
+                beneficiaire = org.apache.commons.lang3.StringUtils.defaultString(p.getClient().getStrFIRSTNAME()) + " "
+                        + org.apache.commons.lang3.StringUtils.defaultString(p.getClient().getStrLASTNAME());
+            }
+            TicketPrevente ticket = new TicketPrevente(typeVente, p.getStrREF(),
+                    util.DateCommonUtils.formatDateHeureCreation(p.getDtCREATED()), vendeur,
+                    p.getIntPRICE() == null ? 0 : p.getIntPRICE(),
+                    p.getIntPRICEREMISE() == null ? 0 : p.getIntPRICEREMISE(),
+                    p.getIntCUSTPART() == null ? 0 : p.getIntCUSTPART(), organismes).avecBeneficiaire(beneficiaire,
+                            matricule);
+
+            TEmplacement te = p.getLgUSERID().getLgEMPLACEMENTID();
+            // Une seule interrogation du spouleur d'impression : chaque recherche de l'imprimante par defaut
+            // coute une a deux secondes sous Windows, et ce chemin la faisait trois fois.
+            PrintService imprimante = findPrintService();
+            ImpressionServiceImpl imp = new ImpressionServiceImpl();
+            imp.setOTImprimante(findImprimanteByName(imprimante));
+            imp.setOfficine(findOfficine());
+            imp.setService(imprimante);
+            imp.setTitle(ticket.titre());
+            imp.setTypeTicket(Constant.TICKET_PREVENTE);
+            imp.setShowCodeBar(true);
+            imp.setEmplacement(te);
+            imp.setOperation(p.getDtCREATED() != null ? p.getDtCREATED() : new Date());
+            imp.setIntBegin(0);
+            imp.buildTicket(ticket.lignes(), ticket.enTete(), Collections.emptyList(), Collections.emptyList(),
+                    Collections.emptyList(), qr.getAbsolutePath());
+            imp.printTicketVente(1);
+            json.put("success", true);
+        } catch (PrinterException | IllegalStateException e) {
+            LOG.log(Level.SEVERE, "ticket prevente", e);
+            json.put("success", false).put("msg", "Impression n'a pas aboutie : " + e.getMessage());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "ticket prevente", e);
+            json.put("success", false).put("msg", "Impression n'a pas aboutie");
+        }
+        return json;
+    }
+
+    @Override
     public JSONObject lunchPrinterForTicketVo(String id) throws JSONException {
         JSONObject json = new JSONObject();
         int counter = 40;
@@ -279,11 +363,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class, id);
             String oldId = id;
             MvtTransaction mvtTransaction = findByPkey(oldId);
+            if (mvtTransaction == null) {
+                return refusVenteSansMouvement(oTPreenregistrement);
+            }
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -500,6 +587,52 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return datas;
     }
 
+    @EJB
+    private rest.service.SupportEventService supportEventService;
+
+    /**
+     * Ticket REFUSE pour une vente terminee sans mouvement de caisse.
+     *
+     * Une telle vente est le reste d'une cloture interrompue entre le passage en « terminee » et la creation du
+     * mouvement (cas constate en officine) : rien n'est passe en caisse, les lignes de reglement et la sortie de stock
+     * n'existent pas. Imprimer un ticket reconstitue tromperait le client et la caisse ; on refuse avec un message
+     * explicite, et l'incident est signale au Centre de Support pour regularisation. Avant ce garde-fou, l'impression
+     * echouait par NullPointerException sans aucune explication.
+     */
+    private JSONObject refusVenteSansMouvement(TPreenregistrement vente) throws JSONException {
+        LOG.log(Level.WARNING, "Vente {0} ({1}) terminee sans mouvement de caisse : ticket refuse",
+                new Object[] { vente.getLgPREENREGISTREMENTID(), vente.getStrREF() });
+        signalerVenteSansMouvement(vente);
+        return new JSONObject().put("success", false).put("venteIncomplete", true).put("msg",
+                "Ticket refusé : la vente N° " + StringUtils.defaultString(vente.getStrREF())
+                        + " est incomplète (clôture interrompue : aucun encaissement en caisse, aucune ligne de "
+                        + "règlement, aucune sortie de stock). L'incident est signalé au Centre de Support ; "
+                        + "la vente doit être régularisée avant toute impression.");
+    }
+
+    private void signalerVenteSansMouvement(TPreenregistrement vente) {
+        try {
+            String date = vente.getDtUPDATED() != null
+                    ? new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(vente.getDtUPDATED()) : "?";
+            TUser caissier = vente.getLgUSERCAISSIERID() != null ? vente.getLgUSERCAISSIERID() : vente.getLgUSERID();
+            String login = caissier != null ? caissier.getStrLOGIN() : "?";
+            rest.service.dto.SupportEventDTO dto = new rest.service.dto.SupportEventDTO();
+            dto.setType("APPLICATION");
+            dto.setNiveau("ERROR");
+            dto.setModule("VENTE");
+            dto.setMessageCourt("Vente terminée sans mouvement de caisse : ticket refusé (clôture incomplète, "
+                    + "aucun encaissement, vente à régulariser)");
+            dto.setUrlOuEcran("Vente " + StringUtils.defaultString(vente.getStrREF()) + " du " + date);
+            dto.setPayloadJson(new JSONObject().put("venteId", vente.getLgPREENREGISTREMENTID())
+                    .put("reference", StringUtils.defaultString(vente.getStrREF())).put("date", date)
+                    .put("montant", vente.getIntPRICE()).put("statutVente", vente.getStrSTATUTVENTE())
+                    .put("caissier", login).toString());
+            supportEventService.record(dto, login);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Signalement au support d'une vente sans mouvement de caisse", e);
+        }
+    }
+
     private MvtTransaction findByPkey(String pkey) {
         try {
             TypedQuery<MvtTransaction> query = getEntityManager()
@@ -507,7 +640,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             query.setMaxResults(1);
             query.setParameter(1, pkey);
             return query.getSingleResult();
+        } catch (javax.persistence.NoResultException e) {
+            return null;
         } catch (Exception e) {
+            // Autre echec (chargement de l'entite, base injoignable...) : il etait avale sans trace, on ne pouvait
+            // pas distinguer « aucun mouvement » de « mouvement illisible ». On le journalise, et on rend null
+            // comme avant pour ne pas changer le comportement.
+            LOG.log(Level.WARNING, "Lecture du mouvement de caisse " + pkey + " impossible", e);
             return null;
         }
     }
@@ -539,7 +678,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
 
         } else {
-            datas.add("Règlement: ;     " + tTypeReglement.getStrNAME() + "; ;0");
+            datas.add("Règlement: ;     " + (tTypeReglement != null ? tTypeReglement.getStrNAME() : "-") + "; ;0");
         }
 
         if (p.getIntPRICE() > 0 && !fractionnementSansEspeces(venteReglements)) {
@@ -659,14 +798,17 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     clotureVenteParams.getVenteId());
             String idPrevente = oTPreenregistrement.getLgPREENREGISTREMENTID();
             MvtTransaction mvtTransaction = findByPkey(idPrevente);
-            boolean isNotCash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
-                    .equals(Constant.TYPE_REGLEMENT_ESPECE);
+            if (mvtTransaction == null) {
+                return refusVenteSansMouvement(oTPreenregistrement);
+            }
+            boolean isNotCash = mvtTransaction.getReglement() != null
+                    && !mvtTransaction.getReglement().getLgTYPEREGLEMENTID().equals(Constant.TYPE_REGLEMENT_ESPECE);
 
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -797,11 +939,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             String id0 = clotureVenteParams.getVenteId();
             boolean printUniqueTicket = printUniqueTicket();
             MvtTransaction mvtTransaction = findByPkey(id0);
+            if (mvtTransaction == null) {
+                return refusVenteSansMouvement(oTPreenregistrement);
+            }
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -987,7 +1132,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 }
 
             } else {
-                datas.add("Règlement: ;     " + reglement.getStrNAME() + "; ;0");
+                datas.add("Règlement: ;     " + (reglement != null ? reglement.getStrNAME() : "-") + "; ;0");
             }
 
             if (oPreenregistrement.getIntPRICE() >= 0) {
@@ -1129,11 +1274,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         try {
 
             MvtTransaction mvtTransaction = findByPkey(oTPreenregistrement.getLgPREENREGISTREMENTID());
+            if (mvtTransaction == null) {
+                refusVenteSansMouvement(oTPreenregistrement);
+                return;
+            }
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -1233,11 +1382,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class, id);
             String id0 = id;
             MvtTransaction mvtTransaction = findByPkey(id0);
+            if (mvtTransaction == null) {
+                return refusVenteSansMouvement(oTPreenregistrement);
+            }
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -1359,11 +1511,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     clotureVenteParams.getVenteId());
             String idVente = clotureVenteParams.getVenteId();
             MvtTransaction mvtTransaction = findByPkey(idVente);
+            if (mvtTransaction == null) {
+                return refusVenteSansMouvement(oTPreenregistrement);
+            }
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
             PrintService printService = findPrintService();
-            TImprimante imprimante = findImprimanteByName();
+            TImprimante imprimante = findImprimanteByName(printService);
             TOfficine officine = findOfficine();
             if (voirNumTicket) {
                 title = oTPreenregistrement.getStrREF();
@@ -1489,11 +1644,16 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     public TImprimante findImprimanteByName() {
+        return findImprimanteByName(findPrintService());
+    }
+
+    /** Meme recherche, avec le service d'impression deja trouve (evite une seconde interrogation du spouleur). */
+    public TImprimante findImprimanteByName(PrintService printService) {
 
         try {
 
             Query qry = getEntityManager().createQuery("SELECT t FROM TImprimante t WHERE t.strNAME = ?1 ")
-                    .setParameter(1, findPrintService().getName());
+                    .setParameter(1, printService.getName());
             qry.setMaxResults(1);
             return (TImprimante) qry.getSingleResult();
 
@@ -1820,6 +1980,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ticket.setDiffere(montant + ticket.getDiffere());
                 break;
             default:
+                if (util.MobileMoney.est(typeReglement)) {
+                    TicketZDTO.AutreMobile autre = ticket.autreMobile(typeReglement, b.getTypeReglement().getStrNAME());
+                    autre.setVente(autre.getVente() + montant);
+                }
                 break;
             }
         }
@@ -1889,6 +2053,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ticket.setDiffere(b.getMontantRestant() + ticket.getDiffere());
                 break;
             default:
+                // Mode mobile money cree par l'officine : meme traitement que les operateurs historiques.
+                if (util.MobileMoney.est(b.getReglement().getLgTYPEREGLEMENTID())
+                        && !applyVenteReglementDetails(ticket, b)) {
+                    TicketZDTO.AutreMobile autre = ticket.autreMobile(b.getReglement().getLgTYPEREGLEMENTID(),
+                            b.getReglement().getStrNAME());
+                    autre.setVente(autre.getVente() + b.getMontantRegle());
+                }
                 break;
             }
         }
@@ -1996,6 +2167,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 }
                 break;
             default:
+                if (util.MobileMoney.est(b.getReglement().getLgTYPEREGLEMENTID())) {
+                    TicketZDTO.AutreMobile autre = ticket.autreMobile(b.getReglement().getLgTYPEREGLEMENTID(),
+                            b.getReglement().getStrNAME());
+                    if (mvtIsReglement(mvtCaisse)) {
+                        autre.setReglement(autre.getReglement() + b.getMontant());
+                    } else {
+                        autre.setEntree(autre.getEntree() + b.getMontant());
+                    }
+                }
                 break;
 
             }
@@ -2041,6 +2221,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ticket.setMontantSortieDjamo(b.getMontant() + ticket.getMontantSortieDjamo());
                 break;
             default:
+                if (util.MobileMoney.est(b.getReglement().getLgTYPEREGLEMENTID())) {
+                    TicketZDTO.AutreMobile autre = ticket.autreMobile(b.getReglement().getLgTYPEREGLEMENTID(),
+                            b.getReglement().getStrNAME());
+                    autre.setSortie(autre.getSortie() + b.getMontant());
+                }
                 break;
             }
         }
@@ -2163,6 +2348,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (v.getMontantMoov() != 0) {
                 lstData.add("MOOV (vno/vo):;" + NumberUtils.formatLongToString(v.getMontantMoov()) + BREAK_LINE);
             }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getVente() != 0) {
+                    lstData.add(autre.getLibelle() + " (vno/vo):;" + NumberUtils.formatLongToString(autre.getVente())
+                            + BREAK_LINE);
+                }
+            }
             if (totalEspUser != 0) {
                 lstData.add("Total espèce: ;" + NumberUtils.formatLongToString(totalEspUser) + BREAK_LINE2);
             }
@@ -2203,6 +2394,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 lstData.add("Total Entrée MOOV : ;" + NumberUtils.formatLongToString(v.getMontantEntreeMoov())
                         + BREAK_LINE2);
             }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getEntree() != 0) {
+                    lstData.add("Total Entrée " + autre.getLibelle() + " : ;"
+                            + NumberUtils.formatLongToString(autre.getEntree()) + BREAK_LINE2);
+                }
+            }
             if (v.getTotalEntreeCB() != 0) {
                 lstData.add("Total Entrée CB : ;" + NumberUtils.formatLongToString(v.getTotalEntreeCB()) + BREAK_LINE2);
             }
@@ -2233,6 +2430,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (v.getMontantReglementMoov() != 0) {
                 lstData.add("Total.Regl.MOOV: ;" + NumberUtils.formatLongToString(v.getMontantReglementMoov())
                         + BREAK_LINE2);
+            }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getReglement() != 0) {
+                    lstData.add("Total.Regl." + autre.getLibelle() + ": ;"
+                            + NumberUtils.formatLongToString(autre.getReglement()) + BREAK_LINE2);
+                }
             }
             if (v.getTotalReglementCB() != 0) {
                 lstData.add("Total Regl CB: ;" + NumberUtils.formatLongToString(v.getTotalReglementCB()) + BREAK_LINE2);
@@ -2269,6 +2472,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 lstData.add("Total.Sortie.MOOV: ;" + NumberUtils.formatLongToString(v.getMontantSortieMoov())
                         + BREAK_LINE2);
             }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getSortie() != 0) {
+                    lstData.add("Total.Sortie." + autre.getLibelle() + ": ;"
+                            + NumberUtils.formatLongToString(autre.getSortie()) + BREAK_LINE2);
+                }
+            }
             if (v.getTotalSortieVirement() != 0) {
                 lstData.add("Total Sortie Vir: ;" + NumberUtils.formatLongToString(v.getTotalSortieVirement())
                         + BREAK_LINE2);
@@ -2294,6 +2503,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         long montantMoov = 0;
         long montantWave = 0;
         long montantDjamo = 0;
+        Map<String, Long> totauxAutresMobiles = totauxAutresMobiles(tickets);
         for (TicketZDTO v : tickets) {
             totalEsp += (v.getTotalEsp() + v.getTotalEntreeEsp() + v.getTotalReglementEsp() + v.getTotalSortieEsp());
 
@@ -2338,6 +2548,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             lstData.add("TOTAL MOOV: ; " + NumberUtils.formatLongToString(montantMoov) + BREAK_LINE_FOOTER);
         }
+        totauxAutresMobiles.forEach((libelle, montant) -> lstData
+                .add("TOTAL " + libelle + ": ; " + NumberUtils.formatLongToString(montant) + BREAK_LINE_FOOTER));
         if (totalCredit != 0) {
 
             lstData.add("TOTAL (VNO/VO): ;" + NumberUtils.formatLongToString(totalCredit) + BREAK_LINE_FOOTER);
@@ -2358,6 +2570,21 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             lstData.add("TOTAL DIFFERE: ; " + NumberUtils.formatLongToString(differe) + BREAK_LINE_FOOTER);
         }
         return lstData;
+    }
+
+    /**
+     * Totaux globaux (vente + sortie + entree) des modes mobile money sans colonne propre, par libelle, tous vendeurs
+     * confondus ; seuls les libelles a montant non nul sont gardes.
+     */
+    private Map<String, Long> totauxAutresMobiles(Set<TicketZDTO> tickets) {
+        Map<String, Long> totaux = new LinkedHashMap<>();
+        for (TicketZDTO v : tickets) {
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                totaux.merge(autre.getLibelle(), autre.total(), Long::sum);
+            }
+        }
+        totaux.values().removeIf(montant -> montant == 0);
+        return totaux;
     }
 
     private int breakingTicketZParam() {
@@ -2508,6 +2735,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         long montantMoov = 0;
         long montantWave = 0;
         long montantDjamo = 0;
+        Map<String, Long> totauxAutresMobiles = totauxAutresMobiles(tickets);
         List<ModePaymentAmount> totauxGl = new ArrayList<>();
         for (TicketZDTO v : tickets) {
             TicketRecap ticketRecap = new TicketRecap();
@@ -2586,6 +2814,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         NumberUtils.formatLongToString(v.getMontantMoov()));
                 modePaymentAmounts.add(modePaymentAmount);
             }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getVente() != 0) {
+                    modePaymentAmounts.add(new ModePaymentAmount(autre.getLibelle() + " (vno/vo)",
+                            NumberUtils.formatLongToString(autre.getVente())));
+                }
+            }
             if (v.getDiffere() != 0) {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Différé",
                         NumberUtils.formatLongToString(v.getDiffere()));
@@ -2644,6 +2878,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         NumberUtils.formatLongToString(v.getMontantEntreeMoov()));
                 totaux.add(modePaymentAmount);
             }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getEntree() != 0) {
+                    totaux.add(new ModePaymentAmount("Total Entrée " + autre.getLibelle(),
+                            NumberUtils.formatLongToString(autre.getEntree())));
+                }
+            }
             if (v.getTotalEntreeCB() != 0) {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée CB",
                         NumberUtils.formatLongToString(v.getTotalEntreeCB()));
@@ -2683,6 +2923,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Regl.MOOV",
                         NumberUtils.formatLongToString(v.getMontantReglementMoov()));
                 totaux.add(modePaymentAmount);
+            }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getReglement() != 0) {
+                    totaux.add(new ModePaymentAmount("Total.Regl." + autre.getLibelle(),
+                            NumberUtils.formatLongToString(autre.getReglement())));
+                }
             }
             if (v.getTotalReglementCB() != 0) {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Regl CB",
@@ -2730,6 +2976,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         NumberUtils.formatLongToString(v.getMontantSortieMoov()));
                 totaux.add(modePaymentAmount);
             }
+            for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
+                if (autre.getSortie() != 0) {
+                    totaux.add(new ModePaymentAmount("Total.Sortie." + autre.getLibelle(),
+                            NumberUtils.formatLongToString(autre.getSortie())));
+                }
+            }
             if (v.getTotalSortieVirement() != 0) {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Sortie Vir",
                         NumberUtils.formatLongToString(v.getTotalSortieVirement()));
@@ -2774,6 +3026,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     NumberUtils.formatLongToString(montantMoov));
             totauxGl.add(modePaymentAmount);
         }
+        totauxAutresMobiles.forEach((libelle, montant) -> totauxGl
+                .add(new ModePaymentAmount("TOTAL " + libelle, NumberUtils.formatLongToString(montant))));
 
         if (totalCheque != 0) {
             ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL CH",

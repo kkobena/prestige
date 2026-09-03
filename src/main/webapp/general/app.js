@@ -398,6 +398,7 @@ Ext.application({
         'testextjs.view.stockmanagement.etatstock.action.add',
         'testextjs.view.stockmanagement.evolutionstock.EvolutionStock',
         'testextjs.view.vente.SuppressionsVente',
+        'testextjs.view.vente.VentesModifieesManager',
         'testextjs.view.produits.GestionSurstock',
         'testextjs.view.stockmanagement.suivistockvente.SuiviStockVenteManager',
         'testextjs.view.stockmanagement.perime.PerimeManager',
@@ -817,6 +818,8 @@ Ext.application({
         'CashmovementCtr',
         'StatistiqProviderCtr',
         'StatistiqRayonsCtr',
+        'CaZoneGeoCtr',
+        'ModeleMessageCtr',
         'ArticleInvendusCtr',
         'SurStockCtr',
         'ComparaisonCtr',
@@ -1169,7 +1172,10 @@ Ext.define('Prestige.override.GrilleLigneActive', {
     }
 
     // Expose au reste de l'application (ex. ouverture d'ecran depuis le controleur App).
-    window.__prestigeSupport = {push: pushBreadcrumb};
+    // signaler(payload) : remonte un evenement au journal du Centre de Support (memes regles que les
+    // erreurs JS : plafond, deduplication par signature, fil d'Ariane joint) ; utilise par
+    // correctifs-affichage.js quand le moteur de mise en page a du etre debloque.
+    window.__prestigeSupport = {push: pushBreadcrumb, signaler: function (payload) { reportError(payload); }};
 
     function reportError(payload) {
         try {

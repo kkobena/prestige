@@ -87,7 +87,9 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -136,6 +138,16 @@ public class SalesServiceImpl implements SalesService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    /*
+     * Cloture atomique. Les methodes de cloture modifient la vente (statut « terminee », reference, numero de ticket,
+     * reglement) AVANT de creer le mouvement de caisse et de mettre a jour le stock. Si une exception survient entre
+     * les deux, elle est interceptee pour repondre proprement a l'ecran... mais la transaction du conteneur etait quand
+     * meme validee : la vente restait « terminee » sans mouvement de caisse, sans ticket possible (NullPointerException
+     * a chaque impression) et sans sortie de stock. Marquer la transaction pour annulation (setRollbackOnly) remet tout
+     * en l'etat : la vente reste en cours et peut etre validee a nouveau.
+     */
+    @Resource
+    private SessionContext sessionContext;
     @EJB
     private LogService logService;
     @EJB
@@ -169,6 +181,8 @@ public class SalesServiceImpl implements SalesService {
     private LotService lotService;
     @EJB
     private rest.service.VenteSuppressionService venteSuppressionService;
+    @EJB
+    private rest.service.VenteModifieeService venteModifieeService;
     @EJB
     private SupportEventService supportEventService;
 
@@ -1065,6 +1079,7 @@ public class SalesServiceImpl implements SalesService {
             data.put("strREF", preenregistrement.getStrREF());
             data.put("intPRICE", preenregistrement.getIntPRICE());
             data.put("intPRICEREMISE", preenregistrement.getIntPRICEREMISE());
+            data.put("dateHeureCreation", DateCommonUtils.formatDateHeureCreation(preenregistrement.getDtCREATED()));
             json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
             afficheurProduit(dp.getLgFAMILLEID().getStrNAME(), dp.getIntQUANTITY(), dp.getIntPRICEUNITAIR(),
                     dp.getIntPRICE());
@@ -1118,6 +1133,8 @@ public class SalesServiceImpl implements SalesService {
             data.put("lgPREENREGISTREMENTID", op.getLgPREENREGISTREMENTID());
             data.put("strREF", op.getStrREF());
             data.put("intPRICE", op.getIntPRICE());
+            // Date et heure de creation : rappelees en bas de l'ecran de vente, sous la liste des articles.
+            data.put("dateHeureCreation", DateCommonUtils.formatDateHeureCreation(op.getDtCREATED()));
             json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
             afficheurProduit(dt.getLgFAMILLEID().getStrNAME(), dt.getIntQUANTITY(), dt.getIntPRICEUNITAIR(),
                     dt.getIntPRICE());
@@ -1282,6 +1299,7 @@ public class SalesServiceImpl implements SalesService {
             data.put("strREF", tp.getStrREF());
             data.put("intPRICE", tp.getIntPRICE());
             data.put("intPRICEREMISE", tp.getIntPRICEREMISE());
+            data.put("dateHeureCreation", DateCommonUtils.formatDateHeureCreation(tp.getDtCREATED()));
             json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
 
             return json.put("success", true).put("msg", "Opération effectuée avec success");
@@ -2004,6 +2022,10 @@ public class SalesServiceImpl implements SalesService {
                 return json;
             }
 
+            String montantsInvalides = controleMontantsCloture(clotureVenteParams);
+            if (montantsInvalides != null) {
+                return json.put("success", false).put("msg", montantsInvalides).put("codeError", 0);
+            }
             boolean isDiff = false;
             final String venteId = clotureVenteParams.getVenteId();
             /*
@@ -2036,6 +2058,8 @@ public class SalesServiceImpl implements SalesService {
                 // l'annulation automatique de la vente originale est attribuée à l'utilisateur
                 // qui a lancé la modification (porté par la copie), pas au caissier qui clôture
                 annulerVenteAnterieur(tp.getLgUSERID(), venteAsupprimer);
+                // Point 6 : mouchard des ventes modifiées, écart produit par produit
+                venteModifieeService.enregistrerModificationProduits(tp.getLgUSERID(), venteAsupprimer, tp);
             }
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
@@ -2166,7 +2190,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("copy", tp.getCopy()).put("msg", "Opération effectuée avec success")
                     .put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-
+            annulerClotureIncomplete();
             LOG.log(Level.SEVERE, String.format("Erreur a la closture de la vente %s,%s,%s date :: %s",
                     tp.getLgPREENREGISTREMENTID(), tp.getStrREF(), tp.getLgUSERID().getLgUSERID(), LocalDateTime.now()),
                     e);
@@ -2268,6 +2292,10 @@ public class SalesServiceImpl implements SalesService {
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à validation");
                 return json;
             }
+            String montantsInvalides = controleMontantsCloture(clotureVenteParams);
+            if (montantsInvalides != null) {
+                return json.put("success", false).put("msg", montantsInvalides).put("codeError", 0);
+            }
             final String venteId = clotureVenteParams.getVenteId();
             /*
              * Verrou pris AVANT tout, et controle « deja cloturee » AVANT la branche des copies : place dans le sinon,
@@ -2293,6 +2321,8 @@ public class SalesServiceImpl implements SalesService {
                 // l'annulation automatique de la vente originale est attribuée à l'utilisateur
                 // qui a lancé la modification (porté par la copie), pas au caissier qui clôture
                 annulerVenteAnterieur(tp.getLgUSERID(), venteAsupprimer);
+                // Point 6 : mouchard des ventes modifiées, écart produit par produit
+                venteModifieeService.enregistrerModificationProduits(tp.getLgUSERID(), venteAsupprimer, tp);
             }
             String old = tp.getLgTYPEVENTEID().getLgTYPEVENTEID();
             if (!old.equals(clotureVenteParams.getTypeVenteId())) {
@@ -2406,6 +2436,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("msg", "Opération effectuée avec success").put("copy", tp.getCopy())
                     .put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
+            annulerClotureIncomplete();
             LOG.info(String.format("***************   Erreur a la closture de la vente %s,:: %s ***************",
                     clotureVenteParams, LocalDateTime.now()));
             LOG.log(Level.SEVERE,
@@ -3160,10 +3191,46 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref",
                     tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
+            annulerClotureIncomplete();
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
         }
         return json;
+    }
+
+    /**
+     * Cloture interrompue par une exception : la transaction est marquee pour annulation, la vente reste en cours (cf.
+     * commentaire du champ sessionContext).
+     */
+    /**
+     * Montants de la charge de cloture, controles AVANT toute modification de la vente.
+     *
+     * Constate en officine sur une vente especes + mobile money : quand le champ du montant mobile etait vide a la
+     * validation, l'ecran envoyait « null » pour le montant recu et le montant paye ; le serveur plantait APRES le
+     * passage de la vente en terminee (NullPointerException sur ces montants) et AVANT le mouvement de caisse. Le refus
+     * est desormais immediat, avec un message qui dit quoi corriger.
+     *
+     * @return message d'erreur, ou {@code null} si les montants sont exploitables
+     */
+    static String controleMontantsCloture(ClotureVenteParams p) {
+        if (p == null || p.getMontantRecu() == null || p.getMontantPaye() == null) {
+            return "Montant reçu ou montant payé absent : vérifiez le montant en espèces et le montant du mode "
+                    + "mobile, puis validez à nouveau";
+        }
+        if (p.getMontantRecu() < 0 || p.getMontantPaye() < 0) {
+            return "Montant reçu ou montant payé négatif : vérifiez les montants saisis, puis validez à nouveau";
+        }
+        return null;
+    }
+
+    private void annulerClotureIncomplete() {
+        try {
+            if (sessionContext != null) {
+                sessionContext.setRollbackOnly();
+            }
+        } catch (IllegalStateException e) {
+            LOG.log(Level.WARNING, "Impossible de marquer la cloture pour annulation", e);
+        }
     }
 
     private void updateUgData(MontantAPaye data, TPreenregistrement p) {
@@ -3185,6 +3252,10 @@ public class SalesServiceImpl implements SalesService {
                 json.put("success", false);
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à validation");
                 return json;
+            }
+            String montantsInvalides = controleMontantsCloture(clotureVenteParams);
+            if (montantsInvalides != null) {
+                return json.put("success", false).put("msg", montantsInvalides).put("codeError", 0);
             }
             TPreenregistrement tp = emg.find(TPreenregistrement.class, clotureVenteParams.getVenteId());
             tp.setChecked(Boolean.TRUE);
@@ -3250,6 +3321,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref",
                     tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
+            annulerClotureIncomplete();
             LOG.log(Level.SEVERE, null, e);
 
             try {
@@ -3904,6 +3976,8 @@ public class SalesServiceImpl implements SalesService {
         donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
         createNotification("", TypeNotification.MODIFICATION_VENTE, salesParams.getUserId(), donneesMap,
                 tp.getLgPREENREGISTREMENTID());
+        // Point 6 : mouchard des ventes modifiées (informations client / tiers payant)
+        venteModifieeService.enregistrerModificationInfos(salesParams.getUserId(), tp, venteModification);
         return tp;
     }
 
@@ -4740,6 +4814,8 @@ public class SalesServiceImpl implements SalesService {
             LocalDate toDay = LocalDate.parse(param.getDate());
             LocalDateTime venteDateNew = LocalDateTime.of(toDay, LocalTime.parse(param.getHeure()));
             Date venteDate = DateCommonUtils.convertLocalDateTimeToDate(venteDateNew);
+            // Point 6 : mouchard des ventes modifiées (date de vente)
+            venteModifieeService.enregistrerModificationDate(ooTUser, p, initiale, venteDate);
             p.setDtCREATED(venteDate);
             p.setDtUPDATED(venteDate);
             p.setLgUSERID(ooTUser);

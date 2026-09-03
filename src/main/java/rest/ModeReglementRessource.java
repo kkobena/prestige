@@ -44,11 +44,21 @@ public class ModeReglementRessource {
         return Response.ok(modeReglementService.fetch().toString()).build();
     }
 
-    /** Clients standards par defaut des modes mobile money — volet selection rapide de la vente. */
+    /** Clients standards par defaut des modes mobile money (lot 3) — volet selection rapide de la vente. */
     @GET
     @Path("/clients-mobile-money")
     public Response clientsMobileMoney() {
         return Response.ok(modeReglementService.clientsMobileMoney().toString()).build();
+    }
+
+    /** Cree un mode de reglement : corps JSON {name, mobileMoney}. 201 si cree, 400 sinon (msg). */
+    @javax.ws.rs.POST
+    public Response creer(String corps) {
+        org.json.JSONObject entree = new org.json.JSONObject(corps == null || corps.isBlank() ? "{}" : corps);
+        org.json.JSONObject resultat = modeReglementService.creer(entree.optString("name", ""),
+                entree.optBoolean("mobileMoney", false));
+        return Response.status(resultat.optBoolean("success") ? Response.Status.CREATED : Response.Status.BAD_REQUEST)
+                .entity(resultat.toString()).build();
     }
 
     /** Associe (ou retire si clientId vide) le client standard par defaut d'un mode de reglement. */

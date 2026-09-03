@@ -76,7 +76,33 @@ Ext.define('testextjs.controller.VenteCtr', {
     maxChangeAllowed: 9500, // monnaie à rendre max avant alerte (anti scan)
 
     // === Modes de règlement mobile money (cf. typeReglementSelectEvent) ===
+    // Liste de repli (opérateurs historiques) ; complétée au démarrage par le
+    // serveur (point 7 : modes mobile money créés par l'officine).
     mobileModeIds: ['7', '8', '9', '10', '19', '80', '70'],
+
+    chargerModesMobileMoney: function () {
+        const me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/type-reglements/mobile-money',
+            success: function (response) {
+                let json = {};
+                try {
+                    json = Ext.decode(response.responseText);
+                } catch (e) {
+                }
+                if (json.success && Ext.isArray(json.data)) {
+                    const ids = me.mobileModeIds.slice();
+                    json.data.forEach(function (id) {
+                        if (ids.indexOf(String(id)) === -1) {
+                            ids.push(String(id));
+                        }
+                    });
+                    me.mobileModeIds = ids;
+                }
+            }
+        });
+    },
     models: [
         'testextjs.model.caisse.Nature',
         'testextjs.model.caisse.Reglement',
@@ -553,6 +579,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.refreshGridFill();
         }, 150);
         Ext.on('resize', me._onWinResizeFill);
+        me.chargerModesMobileMoney();
         this.control(
                 {
 
@@ -1996,10 +2023,18 @@ Ext.define('testextjs.controller.VenteCtr', {
             let montantExtra = 0;
             const montantExtraCmp = me.getMontantExtra();
             if (!montantExtraCmp?.hidden) {
-                montantExtra = parseInt(montantExtraCmp.getValue());
-
+                // Champ du second mode affiché mais VIDE (effacé par la caissière avant de
+                // ressaisir, ou vidé par un recalcul) : parseInt('') vaut NaN, le montant reçu
+                // devenait NaN, envoyé « null » au serveur, qui plantait APRES le passage de la
+                // vente en terminée : vente terminée sans mouvement de caisse, ticket impossible.
+                // On refuse ici, avec le curseur sur le champ à compléter.
+                if (me.montantExtraVide(montantExtraCmp)) {
+                    me.showMontantExtraRequisMessage();
+                    return false;
+                }
+                montantExtra = parseInt(montantExtraCmp.getValue(), 10) || 0;
             }
-            montantRecu += montantExtra;
+            montantRecu = (parseInt(montantRecu, 10) || 0) + montantExtra;
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
                 if (me.getExtraModeReglementId()) {
                     // un second mode est déjà choisi : le total saisi ne couvre pas le net
@@ -2994,7 +3029,9 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
         const typeVente = me.getSafeComboValue('getTypeVenteCombo', '1');
         const typeRegle = me.getSafeComboValue('getVnotypeReglement', '1');
-        btn.setVisible(typeVente === '1' && typeRegle === '1' && !me.extraModeReglementId);
+        // ... et jamais quand la vente porte deja un client (vente a credit ouverte en
+        // modification, client deja associe) : il n'y a plus rien a associer.
+        btn.setVisible(typeVente === '1' && typeRegle === '1' && !me.extraModeReglementId && !me.client);
     },
     updateClientStandard: function (record) {
         const me = this;
@@ -3578,7 +3615,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                     const reglements = record.reglements;
                     me.current = {
                         'intPRICE': record.intPRICE,
-                        'lgPREENREGISTREMENTID': record.lgPREENREGISTREMENTID
+                        'lgPREENREGISTREMENTID': record.lgPREENREGISTREMENTID,
+                        // rappelee en bas de l'ecran, sous la liste des articles
+                        'dateHeureCreation': record.dateHeureCreation
                     };
                     me.netAmountToPay = null;
                     me.ayantDroit = ayantDroit;
@@ -3600,6 +3639,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                         me.client = new testextjs.model.caisse.ClientLambda(record.client);
                         me.updateClientLambdInfos();
                         me.showAndHideInfosStandardClient(true);
+                        // Vente rappelee avec son client : le bouton « associer un client » n'a plus d'objet
+                        me.refreshBtnClientComptant();
                     }
                     me.refresh();
 
@@ -3834,7 +3875,18 @@ Ext.define('testextjs.controller.VenteCtr', {
             url: url,
             params: Ext.JSON.encode(params),
             success: function (response, options) {
-
+                // Ticket refusé par le serveur (vente incomplète) : le dire, au lieu de laisser la
+                // caissière attendre un ticket qui ne sortira pas.
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result && result.success === false && result.venteIncomplete && result.msg) {
+                    Ext.MessageBox.show({
+                        title: 'Vente incomplète',
+                        width: 560,
+                        msg: result.msg,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
                 me.getVnoproduitCombo()
                         .focus(true, 100);
             },
@@ -5491,6 +5543,44 @@ Ext.define('testextjs.controller.VenteCtr', {
         };
         return cmp;
     },
+    /*
+     * Ticket synthetique de la prevente : montants selon le type de vente et QR code qui rappelle la vente
+     * a la caisse, sans les produits. Propose a l'enregistrement, et disponible en reimpression depuis
+     * la liste des preventes (meme route). L'ecran a deja ete remis a zero quand la question se pose :
+     * l'identifiant est donc capture avant.
+     */
+    proposerTicketPrevente: function (venteId) {
+        if (!venteId) {
+            return;
+        }
+        Ext.MessageBox.confirm('Ticket de prévente', 'Voulez-vous imprimer le ticket de la prévente ?', function (choix) {
+            if (choix !== 'yes') {
+                return;
+            }
+            const attente = Ext.MessageBox.wait('Impression du ticket . . .', 'Veuillez patienter');
+            Ext.Ajax.request({
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/vente/ticket/prevente/' + venteId,
+                success: function (response) {
+                    attente.hide();
+                    const lu = Ext.JSON.decode(response.responseText, true);
+                    if (!lu || !lu.success) {
+                        Ext.MessageBox.show({title: 'Ticket de prévente', width: 420,
+                            msg: (lu && lu.msg) || 'L\'impression n\'a pas abouti.',
+                            buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.ERROR});
+                    }
+                },
+                failure: function (response) {
+                    attente.hide();
+                    Ext.MessageBox.show({title: 'Ticket de prévente', width: 420,
+                        msg: 'Le serveur n\'a pas répondu (' + response.status + ').',
+                        buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.ERROR});
+                }
+            });
+        });
+    },
+
     closePrevente: function () {
         const me = this;
         let venteId = me.getCurrent().lgPREENREGISTREMENTID;
@@ -5507,6 +5597,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     me.resetAll();
                     me.getVnoproduitCombo().focus(false, 100, function () {
                     });
+                    me.proposerTicketPrevente(venteId);
                 } else {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
@@ -5973,9 +6064,15 @@ Ext.define('testextjs.controller.VenteCtr', {
             let montantExtra = 0;
             const montantExtraCmp = me.getMontantExtra();
             if (!montantExtraCmp?.hidden) {
-                montantExtra = parseInt(montantExtraCmp.getValue());
+                // Même garde que la clôture comptant : champ du second mode vide -> refus
+                // explicite plutôt qu'un montant NaN envoyé « null » au serveur.
+                if (me.montantExtraVide(montantExtraCmp)) {
+                    me.showMontantExtraRequisMessage();
+                    return false;
+                }
+                montantExtra = parseInt(montantExtraCmp.getValue(), 10) || 0;
             }
-            montantRecu += montantExtra;
+            montantRecu = (parseInt(montantRecu, 10) || 0) + montantExtra;
 
             let medecinId = me.getMedecinId();
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
@@ -6933,6 +7030,28 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
         });
     },
+
+    /* Champ du second mode de règlement (mobile money) affiché mais sans montant valide. */
+    montantExtraVide: function (champ) {
+        const valeur = champ.getValue();
+        return valeur === null || valeur === undefined || valeur === '' || isNaN(parseInt(valeur, 10));
+    },
+
+    showMontantExtraRequisMessage: function () {
+        const me = this;
+        Ext.MessageBox.show({
+            title: 'Message d\'erreur',
+            width: 550,
+            msg: 'Saisissez le montant du second mode de règlement (mobile money) avant de valider la vente.',
+            buttons: Ext.MessageBox.OK,
+            icon: Ext.MessageBox.ERROR,
+            fn: function (buttonId) {
+                if (buttonId === 'ok') {
+                    me.getMontantExtra().focus(true, 50);
+                }
+            }
+        });
+    },
     handleExtraModePayment: function (netTopay) {
         const me = this;
         // Le fractionnement suppose des espèces réellement reçues : à 0, on ne
@@ -7065,7 +7184,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.extraModeManualAmount = false;
                 me.updateExtraModeLockIndicator(false);
             }
-            const montantExtraValue = netTopay - montantRecu;
+            // montant reçu effacé (champ vide) : complément calculé sur 0, jamais sur NaN
+            const montantExtraValue = netTopay - (parseInt(montantRecu, 10) || 0);
             const montantExtra = me.getMontantExtra();
             me._extraAutoSetting = true;
             if (montantExtraValue <= 0) {

@@ -839,6 +839,12 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             } catch (Exception e) {
                 LOG.log(Level.SEVERE, null, e);
             }
+            // Vue details de la fiche article : date de peremption la plus proche (lot en stock, sinon fiche)
+            // avec le numero du lot et sa quantite en stock
+            Object[] proche = peremptionProche(t);
+            json.put("dt_PEREMPTION_PROCHE", proche[0]);
+            json.put("lot_PEREMPTION_PROCHE", proche[1]);
+            json.put("qte_PEREMPTION_PROCHE", proche[2]);
 
             try {
 
@@ -955,6 +961,34 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
         }
         return date;
+    }
+
+    /**
+     * Date de peremption la plus proche d'un produit : le lot en stock qui perime le premier (perime compris, c'est
+     * justement ce qu'il faut voir), sinon la date de peremption portee par la fiche. Vide s'il n'y en a aucune.
+     */
+    public String datePeremptionProche(TFamille t) {
+        return (String) peremptionProche(t)[0];
+    }
+
+    /** [date jj/mm/aaaa ou "", numero de lot ou "", quantite en stock du lot ou ""]. */
+    public Object[] peremptionProche(TFamille t) {
+        try {
+            List<Object[]> lots = em.createQuery("SELECT l.dtPEREMPTION, l.intNUMLOT, l.currentStock FROM TLot l"
+                    + " WHERE l.lgFAMILLEID.lgFAMILLEID = ?1 AND l.dtPEREMPTION IS NOT NULL AND l.currentStock > 0"
+                    + " ORDER BY l.dtPEREMPTION ASC", Object[].class).setParameter(1, t.getLgFAMILLEID())
+                    .setMaxResults(1).getResultList();
+            java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            if (!lots.isEmpty()) {
+                Object[] l = lots.get(0);
+                return new Object[] { f.format((java.util.Date) l[0]), l[1] == null ? "" : String.valueOf(l[1]),
+                        l[2] == null ? "" : String.valueOf(l[2]) };
+            }
+            return new Object[] { t.getDtPEREMPTION() == null ? "" : f.format(t.getDtPEREMPTION()), "", "" };
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "peremptionProche", e);
+            return new Object[] { "", "", "" };
+        }
     }
 
     public String dateDerniereVente(String lgFAMILLEID, TUser user) {

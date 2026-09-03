@@ -1000,14 +1000,19 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 // touche Entree restent utilisables des le premier caractere.
                                 // Champ vide a nouveau : on ne recharge que si une recherche a deja
                                 // ete lancee, l'ecran restant vide a l'ouverture.
+                                // Recherche partie sur une pause de frappe : le texte n'est PAS
+                                // reselectionne au retour du focus (sinon la frappe suivante
+                                // l'effacerait). Les autres retours dans le champ (bouton, Entree,
+                                // fermeture d'une fenetre, enregistrement...) gardent la
+                                // preselection du texte.
                                 change: {
                                     buffer: 600,
                                     fn: function (field, newValue) {
                                         var texte = (newValue || '').trim();
                                         if (texte.length >= 3) {
-                                            Me_Workflow.onRechClick();
+                                            Me_Workflow.onRechClick(false);
                                         } else if (texte.length === 0 && Me_Workflow.rechercheDejaLancee) {
-                                            Me_Workflow.onRechClick();
+                                            Me_Workflow.onRechClick(false);
                                         }
                                     }
                                 }
@@ -1598,7 +1603,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         return c || FM_NULL_FIELD;
     },
 
-    onRechClick: function () {
+    onRechClick: function (selectionner) {
         const val = Me_Workflow.fmField('rechecher');
 
         // Une recherche a ete demandee au moins une fois : effacer le champ pourra
@@ -1617,6 +1622,18 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             }
         });
 
+        // selectionner === false : recherche partie pendant la frappe (pause) ; on rend le
+        // focus sans selection, curseur en fin, pour que la saisie continue.
+        if (selectionner === false) {
+            val.focus(false, 100, function () {
+                try {
+                    var dom = val.inputEl.dom, fin = (dom.value || '').length;
+                    dom.setSelectionRange(fin, fin);
+                } catch (e) {
+                }
+            });
+            return;
+        }
         Me_Workflow.fmField('rechecher').focus(true, 100, function () {
         });
     },
