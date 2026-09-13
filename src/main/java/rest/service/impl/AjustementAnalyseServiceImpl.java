@@ -337,6 +337,6 @@ public class AjustementAnalyseServiceImpl implements AjustementAnalyseService {
         Map<String, Object> parameters = reportUtil.officineData(user);
         parameters.put("P_H_CLT_INFOS", "PRODUITS LES PLUS AJUSTES - PERIODE " + periode(dtStart, dtEnd).toUpperCase()
                 + motifSuffix(motifId).toUpperCase());
-        return reportUtil.buildReport(parameters, "rp_analyse_ajsur produits ustement", datas);
+        return reportUtil.buildReport(parameters, "Analyse_ajustement", datas);
     }
 }
