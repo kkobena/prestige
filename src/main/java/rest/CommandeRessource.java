@@ -85,6 +85,15 @@ public class CommandeRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    /** Avancement de la cloture en cours (etapes reellement franchies), lu par l'ecran toutes les 300 ms. */
+    @GET
+    @Path("clotureinventaire/{id}/etat")
+    public Response etatClotureInventaire(@PathParam("id") String id) {
+        rest.service.impl.ClotureInventaireSuivi suivi = rest.service.impl.ClotureInventaireSuivi.lire(id);
+        JSONObject json = suivi == null ? new JSONObject().put("inconnu", true) : suivi.etat();
+        return Response.ok().entity(json.toString()).build();
+    }
+
     @POST
     @Path("cip")
     public Response updateCip(Params params) throws JSONException {

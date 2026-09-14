@@ -1,8 +1,5 @@
 package rest.service.impl;
 
-import java.text.DecimalFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,7 +50,9 @@ public class AnalyseInvServiceImpl implements AnalyseInvService {
         response.put("summaryData", summaryData);
         response.put("abcData", buildAbcData(rawData));
         response.put("detailData", buildDetailData(rawData));
-        response.put("summaryHtml", buildSummaryHtml(rawData, summaryData));
+        // Retours du 13/09 : l'onglet « Synthèse & recommandations » est construit par AnalyseInventaireSynthese,
+        // qui sert aussi les editions PDF : l'ecran et le document disent donc la meme chose.
+        response.put("summaryHtml", AnalyseInventaireSynthese.calculer(rawData).html());
         response.put("complianceReport", buildComplianceReport(rawData));
 
         return response;
@@ -93,6 +92,9 @@ public class AnalyseInvServiceImpl implements AnalyseInvService {
                     ? totals.getOrDefault("valeurVenteRayon", 0.0) / totals.getOrDefault("valeurAchatRayon", 0.0) : 0);
             summaryList.add(rowData);
         }
+        // Retours du 13/09 : du plus gros ecart au plus petit, c'est l'ordre dans lequel l'officine doit regarder.
+        summaryList.sort(Comparator
+                .comparingDouble((Map<String, Object> m) -> Math.abs((Double) m.get("ecartValeurAchat"))).reversed());
         return summaryList;
     }
 
@@ -145,61 +147,6 @@ public class AnalyseInvServiceImpl implements AnalyseInvService {
             item.put("ratioVA", dto.getPrixAchat() > 0 ? dto.getPrixVente() / dto.getPrixAchat() : 0);
             return item;
         }).collect(Collectors.toList());
-    }
-
-    private String buildSummaryHtml(List<AnalyseInvDTO> rawData, List<Map<String, Object>> summaryData) {
-        DecimalFormat moneyFormat = new DecimalFormat("#,##0 'FCFA'");
-        DecimalFormat percentFormat = new DecimalFormat("#.00' %'");
-
-        double totalEcartNet = summaryData.stream().mapToDouble(m -> (Double) m.get("ecartValeurAchat")).sum();
-        double totalValeurMachine = rawData.stream().mapToDouble(dto -> dto.getQteInitiale() * dto.getPrixAchat())
-                .sum();
-        double demarquePct = (totalValeurMachine == 0) ? 0 : (totalEcartNet / totalValeurMachine) * 100;
-
-        String emplacementCritique = summaryData.stream()
-                .max(Comparator.comparingDouble(m -> Math.abs((Double) m.get("ecartValeurAchat"))))
-                .map(m -> (String) m.get("emplacement")).orElse("N/A");
-
-        String emplacementFaibleMarge = summaryData.stream().filter(m -> (Double) m.get("ratioVA") > 0)
-                .min(Comparator.comparingDouble(m -> (Double) m.get("ratioVA")))
-                .map(m -> String.format("%s (%.2f)", m.get("emplacement"), m.get("ratioVA"))).orElse("N/A");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("<div style='font-family: Arial, sans-serif; padding: 10px;'>");
-        sb.append("<h3>Synthèse & Recommandations</h3>");
-        sb.append("<p><strong>Date du Rapport:</strong> ")
-                .append(DateTimeFormatter.ofPattern("dd MMMM yyyy").format(LocalDateTime.now())).append("</p>");
-        sb.append("<p><strong>Inventaire:</strong> ").append(rawData.isEmpty() ? "" : rawData.get(0).getInvName())
-                .append("</p>");
-
-        sb.append("<h4>1. Synthèse Globale</h4>");
-        sb.append("<ul>");
-        sb.append("<li>L'inventaire présente un écart global net de <strong>").append(moneyFormat.format(totalEcartNet))
-                .append("</strong>.</li>");
-        sb.append("<li>Cela représente une démarque de <strong>").append(String.format("%.2f %%", demarquePct))
-                .append("</strong>.</li>");
-        sb.append("</ul>");
-
-        sb.append("<h4>2. Performance par Emplacement</h4>");
-        sb.append("<ul>");
-        sb.append("<li><strong>Emplacement Critique :</strong> ").append(emplacementCritique)
-                .append(" (plus forte contribution à l'écart).</li>");
-        sb.append("<li><strong>Marge à surveiller :</strong> ").append(emplacementFaibleMarge)
-                .append(" (plus faible ratio V/A).</li>");
-        sb.append("</ul>");
-
-        sb.append("<h4>3. Recommandations</h4>");
-        sb.append("<ol>");
-        sb.append(
-                "<li><strong>Action Immédiate :</strong> Lancer un contrôle ciblé sur les produits de catégorie A (voir onglet Analyse des Écarts) pour identifier la source des écarts.</li>");
-        sb.append("<li><strong>Audit d'Emplacement :</strong> Mener un audit des procédures sur l'emplacement '")
-                .append(emplacementCritique).append("'.</li>");
-        sb.append(
-                "<li><strong>Revue des Prix :</strong> Analyser la politique de prix des emplacements à faible ratio V/A.</li>");
-        sb.append("</ol>");
-        sb.append("</div>");
-
-        return sb.toString();
     }
 
     private String buildComplianceReport(List<AnalyseInvDTO> rawData) {

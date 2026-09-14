@@ -1372,3 +1372,31 @@ body.x-body,
 .recap-cartes.ventilation-balance.vb-v2 .vb-titre { position: sticky; top: 0; }
 .recap-cartes.ventilation-balance.vb-v2 .vb-table td { padding: 3px 8px; font-size: 12px; }
 .recap-cartes.ventilation-balance.vb-v2 .vb-n, .recap-cartes.ventilation-balance.vb-v2 .vb-p { font-size: 12.5px; white-space: nowrap; }
+
+/* Cloture d'inventaire (13/09) : recapitulatif chiffre. */
+.recap-cloture { font-size: 13px; }
+.recap-cloture .rc-ligne { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid #f0f3f6; }
+.recap-cloture .rc-lib { color: #34495e; }
+.recap-cloture .rc-val { font-weight: bold; font-size: 16px; min-width: 80px; text-align: right; }
+.recap-cloture .rc-pied { margin-top: 10px; color: #7f8c8d; font-size: 11px; line-height: 16px; }
+.recap-cloture .rc-chiffres { display: inline-flex; align-items: baseline; gap: 10px; }
+.recap-cloture .rc-part { color: #7f8c8d; font-size: 11px; min-width: 58px; text-align: right; }
+
+/* Analyse d'inventaire (13/09) : onglet « Synthèse & recommandations ». */
+.synthese-inventaire { font-size: 12px; color: #2c3e50; }
+.synthese-inventaire h3 { color: #2E75B6; font-size: 13px; margin: 14px 0 6px 0; padding-bottom: 3px; border-bottom: 1px solid #dfe6ee; }
+.synthese-inventaire h3:first-child { margin-top: 0; }
+.synthese-inventaire .si-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.synthese-inventaire .si-table th { background: #2E75B6; color: #fff; font-size: 11px; font-weight: bold; text-align: right; padding: 4px 8px; }
+.synthese-inventaire .si-table th:first-child { text-align: left; }
+.synthese-inventaire .si-table td { padding: 3px 8px; border-bottom: 1px solid #f0f3f6; }
+.synthese-inventaire .si-table tr:nth-child(even) td { background: #f7f9fb; }
+.synthese-inventaire .si-n { text-align: right; font-weight: bold; white-space: nowrap; }
+.synthese-inventaire .si-c { color: #7f8c8d; font-size: 11px; }
+.synthese-inventaire .si-fort td { border-top: 2px solid #2E75B6; border-bottom: 2px solid #2E75B6; }
+.synthese-inventaire .si-rouge { color: #B02A37; }
+.synthese-inventaire .si-vert { color: #1E7E34; }
+.synthese-inventaire .si-vide { color: #7f8c8d; font-style: italic; text-align: center; }
+.synthese-inventaire .si-para { margin: 6px 0; line-height: 17px; }
+.synthese-inventaire .si-reco { margin: 4px 0 10px 18px; padding: 0; line-height: 18px; }
+.synthese-inventaire .si-reco li { margin-bottom: 4px; }

@@ -194,11 +194,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                         }]
                 },
                 {
+                    /* Retours du 13/09 : les deux analyses etaient masquees (hidden), donc inaccessibles depuis
+                       la liste. Elles sont a nouveau proposees sur chaque ligne : analyse avancee, puis analyse
+                       simple. */
                     xtype: 'actioncolumn',
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
-                    hidden:true,
                     items: [{
                         icon: 'resources/images/icons/fam/chart_bar.png', // Nouvelle icône
                         tooltip: 'Effectuer une analyse avancée',
@@ -211,7 +213,6 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
-                    hidden:true,
                     items: [{
                         icon: 'resources/images/icons/fam/application_view_list.png',
                         tooltip: 'Effectuer une analyse simple',

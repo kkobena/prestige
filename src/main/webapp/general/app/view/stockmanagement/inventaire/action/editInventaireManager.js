@@ -1529,56 +1529,149 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                 'Confirmer la cloture de l\'inventare',
                 function (btn) {
                     if (btn === 'yes') {
-                        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-                        Ext.Ajax.request({
-                            method: 'PUT',
-                            headers: {'Content-Type': 'application/json'},
-                            url: '../api/v1/commande/clotureinventaire/' + ref,
-                            timeout: 18000000,
-                            success: function (response, options) {
-                                progress.hide();
-                                var result = Ext.JSON.decode(response.responseText, true);
-                                if (result.success) {
-                                    Ext.MessageBox.show({
-                                        title: 'Avertissement',
-                                        width: 320,
-                                        msg: result.msg,
-                                        buttons: Ext.MessageBox.OK,
-                                        icon: Ext.MessageBox.WARNING,
-                                        fn: function (buttonId) {
-                                            if (buttonId === "ok") {
-                                                Me.onbtnback();
-                                            }
-                                        }
-
-
-                                    });
-                                } else {
-                                    Ext.MessageBox.show({
-                                        title: 'Avertissement',
-                                        width: 320,
-                                        msg: result.msg,
-                                        buttons: Ext.MessageBox.OK,
-                                        icon: Ext.MessageBox.ERROR,
-                                        fn: function (buttonId) {
-                                            if (buttonId === "ok") {
-                                                Me.onbtnback();
-                                            }
-                                        }
-
-
-                                    });
-                                }
-
-                            },
-                            failure: function (response, options) {
-                                progress.hide();
-                                Ext.Msg.alert("Message", 'Erreur du serveur ' + response.status);
-                            }
-
-                        });
+                        Me.lancerCloture();
                     }
                 });
+    },
+
+    /* Cloture avec avancement reel (retour du 13/09) : le serveur franchit des etapes (stock rayon, stock par
+       type, ... en-tete) et l'ecran les lit toutes les 300 ms ; rien n'est simule. A la fin, un recapitulatif
+       chiffre remplace le simple message. */
+    lancerCloture: function () {
+        var debut = Date.now();
+        var barre = Ext.create('Ext.ProgressBar', {width: 440, text: 'Démarrage...'});
+        var etat = Ext.create('Ext.Component', {itemId: 'etatCloture', width: 440, margin: '8 0 0 0', style: 'font-size:12px;color:#34495e;', html: 'Préparation de la clôture'});
+        var fenetre = Ext.create('Ext.window.Window', {
+            title: 'Clôture de l\'inventaire',
+            itemId: 'fenetreCloture',
+            modal: true,
+            closable: false,
+            width: 480,
+            bodyPadding: 16,
+            layout: {type: 'vbox', align: 'stretch'},
+            items: [barre, etat]
+        });
+        fenetre.show();
+        var sondage = Ext.TaskManager.start({
+            interval: 300,
+            run: function () {
+                Ext.Ajax.request({
+                    url: '../api/v1/commande/clotureinventaire/' + ref + '/etat',
+                    method: 'GET',
+                    success: function (r) {
+                        var e = Ext.JSON.decode(r.responseText, true);
+                        if (!e || e.inconnu || fenetre.isDestroyed) {
+                            return;
+                        }
+                        var pct = Math.max(0, Math.min(100, e.pourcentage || 0));
+                        barre.updateProgress(pct / 100, 'Étape ' + Math.max(1, e.etape) + ' / ' + e.totalEtapes + '  -  ' + pct + ' %', true);
+                        etat.update('<b>' + Ext.String.htmlEncode(e.libelle || '') + '</b><br/>' + Ext.util.Format.number(e.lignesTraitees || 0, '0,000') + ' ligne(s) traitée(s)');
+                    }
+                });
+            }
+        });
+        Ext.Ajax.request({
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/commande/clotureinventaire/' + ref,
+            timeout: 18000000,
+            callback: function () {
+                Ext.TaskManager.stop(sondage);
+            },
+            success: function (response) {
+                var result = Ext.JSON.decode(response.responseText, true) || {};
+                if (result.success) {
+                    barre.updateProgress(1, 'Terminé  -  100 %', true);
+                    /* dernier etat lu apres la fin : le libelle ne doit pas rester sur une etape intermediaire */
+                    Ext.Ajax.request({
+                        url: '../api/v1/commande/clotureinventaire/' + ref + '/etat',
+                        method: 'GET',
+                        callback: function (o, ok, r) {
+                            var e = ok ? Ext.JSON.decode(r.responseText, true) : null;
+                            if (!fenetre.isDestroyed) {
+                                etat.update('<b>Terminé</b><br/>' + Ext.util.Format.number((e && e.lignesTraitees) || 0, '0,000') + ' ligne(s) traitée(s)');
+                            }
+                            Ext.defer(function () {
+                                fenetre.close();
+                                Me.afficherRecapCloture(result.recap || {}, Date.now() - debut);
+                            }, 500);
+                        }
+                    });
+                } else {
+                    fenetre.close();
+                    Ext.MessageBox.show({
+                        title: 'Avertissement',
+                        width: 320,
+                        msg: result.msg || 'La clôture n\'a pas abouti',
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR,
+                        fn: function () {
+                            Me.onbtnback();
+                        }
+                    });
+                }
+            },
+            failure: function (response) {
+                fenetre.close();
+                Ext.Msg.alert("Message", 'Erreur du serveur ' + response.status);
+            }
+        });
+    },
+
+    /* Recapitulatif de la cloture : les chiffres sont ceux du serveur, l'animation ne fait que les faire monter. */
+    afficherRecapCloture: function (recap, dureeEcranMs) {
+        var duree = recap.dureeMs != null ? recap.dureeMs : dureeEcranMs;
+        var lignes = [
+            {cle: 'lignes', libelle: 'Lignes retenues', valeur: recap.lignes || 0, couleur: '#2E75B6'},
+            {cle: 'ecarts', libelle: 'Écarts appliqués', valeur: recap.ecarts || 0, couleur: '#B02A37',
+                part: recap.pourcentageEcart || 0},
+            {cle: 'sansEcart', libelle: 'Produits sans écart', valeur: recap.sansEcart || 0, couleur: '#1E7E34',
+                part: recap.pourcentageConforme || 0}
+        ];
+        var html = '<div class="recap-cloture">';
+        Ext.each(lignes, function (l) {
+            /* la part que la ligne represente : c'est elle qui dit l'ampleur de l'ecart */
+            var part = l.part === undefined ? '' : '<span class="rc-part">' + Ext.util.Format.number(l.part, '0.00').replace('.', ',') + ' %</span>';
+            html += '<div class="rc-ligne"><span class="rc-lib">' + l.libelle + '</span><span class="rc-chiffres">'
+                    + '<span class="rc-val" data-cle="' + l.cle + '" style="color:' + l.couleur + ';">0</span>' + part + '</span></div>';
+        });
+        html += '<div class="rc-pied">' + (recap.reserve ? 'Inventaire réserve : seul le stock réserve a été mis à jour.' : 'Stock rayon, stock par type, mouvements et historique mis à jour.') + '<br/>Durée : ' + (duree < 1000 ? duree + ' ms' : Ext.util.Format.number(duree / 1000, '0.0') + ' s') + '</div></div>';
+        var fenetre = Ext.create('Ext.window.Window', {
+            title: 'Inventaire clôturé',
+            itemId: 'recapCloture',
+            modal: true,
+            closable: false,
+            width: 480,
+            bodyPadding: 16,
+            html: html,
+            buttons: [{
+                    text: 'OK',
+                    itemId: 'okRecapCloture',
+                    handler: function () {
+                        fenetre.close();
+                        Me.onbtnback();
+                    }
+                }]
+        });
+        fenetre.show();
+        /* montee des compteurs vers leur valeur reelle, en 900 ms */
+        var t0 = Date.now(), dureeAnim = 900;
+        var anim = Ext.TaskManager.start({
+            interval: 40,
+            run: function () {
+                var avancement = Math.min(1, (Date.now() - t0) / dureeAnim);
+                var facteur = 1 - Math.pow(1 - avancement, 3);
+                Ext.each(lignes, function (l) {
+                    var el = fenetre.getEl() && fenetre.getEl().down('.rc-val[data-cle=' + l.cle + ']');
+                    if (el) {
+                        el.dom.textContent = Ext.util.Format.number(Math.round(l.valeur * facteur), '0,000');
+                    }
+                });
+                if (avancement >= 1 || fenetre.isDestroyed) {
+                    Ext.TaskManager.stop(anim);
+                }
+            }
+        });
     },
 
     onPdfClick: function () {

@@ -32,10 +32,13 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import javax.ejb.EJB;
+import rest.report.ReportUtil;
 import rest.service.AnalyseInvExportService;
 import rest.service.AnalyseInvService;
+import rest.service.SessionHelperService;
 import rest.service.dto.AnalyseInvDTO;
-import util.Constant;
+import rest.service.dto.BalanceEditionLigneDTO;
 
 @Stateless
 public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
@@ -44,6 +47,10 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
 
     @Inject
     private AnalyseInvService analyseInvService;
+    @EJB
+    private ReportUtil reportUtil;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     private static class EnhancedExportData {
         final List<Map<String, Object>> detailData;
@@ -60,45 +67,78 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
         }
     }
 
+    /**
+     * Edition de l'analyse simple (retours du 13/09) : en-tete de l'officine, nombre de produits et produits touches,
+     * valorisation du stock avant et apres, cinq emplacements critiques, dix produits a verifier, puis le detail par
+     * emplacement du plus gros ecart au plus petit.
+     *
+     * <p>
+     * Le modele est celui installe sur le site s'il existe, sinon celui embarque dans l'application : l'edition aboutit
+     * donc meme sur une installation neuve. L'ancienne version cherchait le fichier dans un chemin Windows ecrit en dur
+     * (D:/CONF/...) et echouait partout ailleurs.
+     * </p>
+     */
     @Override
     public byte[] generatePdfReport(String inventaireId, String filterType) throws JRException {
-        List<AnalyseInvDTO> rawData = analyseInvService.analyseInventaire(inventaireId);
-        EnhancedExportData exportData = processDataForExport(rawData, filterType);
+        AnalyseInventaireSynthese synthese = AnalyseInventaireSynthese
+                .calculer(analyseInvService.analyseInventaire(inventaireId));
+        return editer("analyse_inventaire", "ANALYSE DE L'INVENTAIRE", synthese,
+                synthese.lignesEditionSimple(EMPLACEMENTS_CRITIQUES, ARTICLES_VIGILANCE, filterType));
+    }
 
-        File reportFile = new File(Constant.REPORT_PATH + "analyse_inventaire.jrxml");
-        if (!reportFile.exists()) {
-            throw new JRException("Jasper report file not found at: " + reportFile.getAbsolutePath());
+    @Override
+    public byte[] generateAdvancedPdfReport(String inventaireId) throws JRException {
+        AnalyseInventaireSynthese synthese = AnalyseInventaireSynthese
+                .calculer(analyseInvService.analyseInventaire(inventaireId));
+        return editer("analyse_inventaire_synthese", "SYNTHÈSE ET RECOMMANDATIONS", synthese,
+                synthese.lignesEditionSynthese());
+    }
+
+    /** Cinq emplacements critiques et dix produits a verifier : ce que l'officine regarde en premier. */
+    private static final int EMPLACEMENTS_CRITIQUES = 5;
+    private static final int ARTICLES_VIGILANCE = 10;
+
+    private byte[] editer(String modele, String titre, AnalyseInventaireSynthese synthese,
+            List<BalanceEditionLigneDTO> lignes) throws JRException {
+        Map<String, Object> parametres = parametresOfficine();
+        parametres.put("P_TITRE", titre);
+        parametres.put("P_INVENTAIRE", synthese.getNomInventaire());
+        parametres.put("P_RESUME", synthese.resumeEnTete());
+        parametres.put("P_ENTETES", AnalyseInventaireSynthese.entetes());
+        try {
+            JasperReport jasperReport = reportUtil.getReport(modele, toolkits.utils.jdom.scr_report_file);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametres,
+                    new JRBeanCollectionDataSource(lignes));
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                JRPdfExporter exporter = new JRPdfExporter();
+                exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+                exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
+                exporter.exportReport();
+                return baos.toByteArray();
+            }
+        } catch (JRException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JRException("Echec de l'edition " + modele, e);
         }
+    }
 
-        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(exportData.detailData);
-
-        Map<String, Object> parameters = new HashMap<>();
-        String inventaireName = rawData.isEmpty() ? "" : rawData.get(0).getInvName();
-        parameters.put("INVENTAIRE_NAME", inventaireName);
-        parameters.put("DATE_RAPPORT", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy")));
-        parameters.put("COMPLIANCE_REPORT", exportData.complianceReport);
-
-        parameters.put("ECART_GLOBAL_NET", exportData.summary.get("ecartGlobalNet"));
-        parameters.put("DEMARQUE_PCT", exportData.summary.get("demarquePct"));
-        parameters.put("EMPLACEMENT_CRITIQUE_1", exportData.summary.get("emplacementCritique_1"));
-        parameters.put("EMPLACEMENT_CRITIQUE_2", exportData.summary.get("emplacementCritique_2"));
-        parameters.put("EMPLACEMENT_CRITIQUE_3", exportData.summary.get("emplacementCritique_3"));
-        parameters.put("EMPLACEMENT_FAIBLE_MARGE", exportData.summary.get("emplacementFaibleMarge"));
-
-        parameters.put("TOP_DISCREPANCIES_DS", new JRBeanCollectionDataSource(exportData.topDiscrepancies));
-
-        JasperReport jasperReport = JasperCompileManager.compileReport(reportFile.getAbsolutePath());
-        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            JRPdfExporter exporter = new JRPdfExporter();
-            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
-            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
-            exporter.exportReport();
-            return baos.toByteArray();
-        } catch (IOException e) {
-            throw new JRException("Error writing PDF to byte array", e);
+    /**
+     * L'en-tete de l'officine : nom, pharmacien, adresse, mentions legales et operateur qui imprime. Les valeurs
+     * manquantes deviennent vides, pour ne jamais laisser « null » sur un document remis a l'officine.
+     */
+    private Map<String, Object> parametresOfficine() {
+        Map<String, Object> parametres = new HashMap<>();
+        try {
+            parametres.putAll(reportUtil.officineData(sessionHelperService.getCurrentUser()));
+        } catch (RuntimeException e) {
+            LOG.log(Level.WARNING, "en-tete de l'officine indisponible pour l'analyse d'inventaire", e);
         }
+        for (String cle : new String[] { "P_H_INSTITUTION", "P_INSTITUTION_ADRESSE", "P_AUTRE_DESC", "P_PRINTED_BY",
+                "P_FOOTER_RC" }) {
+            parametres.putIfAbsent(cle, "");
+        }
+        return parametres;
     }
 
     @Override

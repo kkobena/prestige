@@ -16,4 +16,7 @@ public interface AnalyseInvExportService {
 
     byte[] generateAdvancedExcelReport(String inventaireId) throws IOException;
 
+    /** Edition PDF de l'onglet « Synthèse & recommandations » (retours du 13/09). */
+    byte[] generateAdvancedPdfReport(String inventaireId) throws JRException;
+
 }

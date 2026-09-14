@@ -118,6 +118,83 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                         xtype: 'gridpanel',
                         itemId: 'detailGrid',
                         store: detailStore,
+                        /* Retours du 13/09 : on retrouve un produit, et on isole les ratios hors norme
+                           (operateur + valeur saisie). Les filtres se cumulent. */
+                        dockedItems: [{
+                            xtype: 'toolbar',
+                            dock: 'top',
+                            items: [{
+                                    xtype: 'textfield',
+                                    itemId: 'filtreProduit',
+                                    width: 300,
+                                    emptyText: 'Produit, code CIP ou emplacement',
+                                    enableKeyEvents: true,
+                                    listeners: {
+                                        specialkey: function (champ, e) {
+                                            if (e.getKey() === e.ENTER) {
+                                                me.appliquerFiltresDetail();
+                                            }
+                                        }
+                                    }
+                                }, '-', {
+                                    xtype: 'label',
+                                    text: 'Ratio V/A'
+                                }, {
+                                    xtype: 'combobox',
+                                    itemId: 'operateurRatio',
+                                    width: 190,
+                                    queryMode: 'local',
+                                    editable: false,
+                                    displayField: 'libelle',
+                                    valueField: 'id',
+                                    value: '',
+                                    store: Ext.create('Ext.data.Store', {
+                                        fields: ['id', 'libelle'],
+                                        data: [
+                                            {id: '', libelle: 'Tous les ratios'},
+                                            {id: 'lt', libelle: 'inférieur à'},
+                                            {id: 'le', libelle: 'inférieur ou égal à'},
+                                            {id: 'eq', libelle: 'égal à'},
+                                            {id: 'ge', libelle: 'supérieur ou égal à'},
+                                            {id: 'gt', libelle: 'supérieur à'}
+                                        ]
+                                    })
+                                }, {
+                                    xtype: 'numberfield',
+                                    itemId: 'valeurRatio',
+                                    width: 90,
+                                    step: 0.01,
+                                    decimalSeparator: ',',
+                                    hideTrigger: true,
+                                    emptyText: '1,45',
+                                    enableKeyEvents: true,
+                                    listeners: {
+                                        specialkey: function (champ, e) {
+                                            if (e.getKey() === e.ENTER) {
+                                                me.appliquerFiltresDetail();
+                                            }
+                                        }
+                                    }
+                                }, {
+                                    text: 'Filtrer',
+                                    itemId: 'appliquerFiltresDetail',
+                                    iconCls: 'searchicon',
+                                    handler: function () {
+                                        me.appliquerFiltresDetail();
+                                    }
+                                }, {
+                                    text: 'Effacer',
+                                    itemId: 'effacerFiltresDetail',
+                                    iconCls: 'icon-clear-group',
+                                    handler: function () {
+                                        me.effacerFiltresDetail();
+                                    }
+                                }, '->', {
+                                    xtype: 'tbtext',
+                                    itemId: 'compteDetail',
+                                    text: ''
+                                }]
+                        }],
                         columns: [
                             { text: 'Code CIP', dataIndex: 'codeCip', width: 110 },
                             { text: 'Produit', dataIndex: 'nom', flex: 2 },
@@ -134,10 +211,26 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                 
                 {
                     title: 'Synthèse & Recommandations',
-                    bodyPadding: 10,
-                    itemId: 'summaryPanel',
-                    autoScroll: true,
-                    html: 'Chargement de la synthèse...'
+                    itemId: 'ongletSynthese',
+                    layout: 'fit',
+                    tbar: [{
+                            xtype: 'tbtext',
+                            text: "Récapitulatif global, points de vigilance, articles critiques et recommandations"
+                        }, '->', {
+                            text: 'Imprimer la synthèse (PDF)',
+                            itemId: 'imprimerSynthese',
+                            iconCls: 'icon-pdf',
+                            handler: function () {
+                                me.onPrintClick();
+                            }
+                        }],
+                    items: [{
+                            xtype: 'panel',
+                            bodyPadding: 10,
+                            itemId: 'summaryPanel',
+                            autoScroll: true,
+                            html: 'Chargement de la synthèse...'
+                        }]
                 }
             ]
         });
@@ -163,9 +256,10 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
             ui: 'footer',            
             items: ['->', 
             {
-                text: 'Imprimer (PDF)',
+                text: 'Imprimer la synthèse (PDF)',
+                itemId: 'imprimerSyntheseBas',
                 iconCls: 'icon-pdf',
-                hidden:true,
+                tooltip: "Édition de l'onglet « Synthèse & recommandations »",
                 handler: function() { me.onPrintClick(); }
             },
             {
@@ -197,6 +291,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                 me.down('#summaryGrid').getStore().loadData(data.summaryData);
                 me.down('#abcGrid').getStore().loadData(data.abcData);
                 me.down('#detailGrid').getStore().loadData(data.detailData);
+                me.majCompteDetail();
                 me.down('#summaryPanel').update(data.summaryHtml);
                 me.down('#complianceReport').setValue(data.complianceReport);
             },
@@ -204,6 +299,66 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                 Ext.Msg.alert('Erreur', 'Impossible de charger les données d\'analyse avancée.');
             }
         });
+    },
+
+    /* Filtres de l'onglet « Détail Complet des Produits » : recherche libre et ratio compare a une valeur saisie. */
+    appliquerFiltresDetail: function () {
+        var me = this;
+        var grille = me.down('#detailGrid');
+        var recherche = (me.down('#filtreProduit').getValue() || '').toString().toLowerCase().trim();
+        var operateur = me.down('#operateurRatio').getValue() || '';
+        var valeur = me.down('#valeurRatio').getValue();
+        var store = grille.getStore();
+        if (recherche === '' && (operateur === '' || valeur === null || valeur === '')) {
+            store.clearFilter();
+            me.majCompteDetail();
+            return;
+        }
+        store.clearFilter(true);
+        store.filterBy(function (rec) {
+            if (recherche !== '') {
+                var texte = ((rec.get('nom') || '') + ' ' + (rec.get('codeCip') || '') + ' '
+                        + (rec.get('emplacement') || '')).toLowerCase();
+                if (texte.indexOf(recherche) === -1) {
+                    return false;
+                }
+            }
+            if (operateur !== '' && valeur !== null && valeur !== '') {
+                var ratio = Number(rec.get('ratioVA')) || 0;
+                var seuil = Number(valeur);
+                switch (operateur) {
+                    case 'lt': return ratio < seuil;
+                    case 'le': return ratio <= seuil;
+                    case 'eq': return Math.abs(ratio - seuil) < 0.005;
+                    case 'ge': return ratio >= seuil;
+                    case 'gt': return ratio > seuil;
+                    default: return true;
+                }
+            }
+            return true;
+        });
+        me.majCompteDetail();
+    },
+
+    effacerFiltresDetail: function () {
+        var me = this;
+        me.down('#filtreProduit').setValue('');
+        me.down('#operateurRatio').setValue('');
+        me.down('#valeurRatio').setValue(null);
+        me.down('#detailGrid').getStore().clearFilter();
+        me.majCompteDetail();
+    },
+
+    majCompteDetail: function () {
+        var me = this, grille = me.down('#detailGrid'), texte = me.down('#compteDetail');
+        if (!grille || !texte) {
+            return;
+        }
+        var store = grille.getStore();
+        var affiches = store.getCount();
+        var total = store.getAllCount ? store.getAllCount() : (store.snapshot ? store.snapshot.getCount() : affiches);
+        texte.setText(affiches === total ? (Ext.util.Format.number(total, '0,000') + ' produit(s)')
+                : (Ext.util.Format.number(affiches, '0,000') + ' produit(s) sur ' + Ext.util.Format.number(total, '0,000')));
     },
 
     onPrintClick: function() {

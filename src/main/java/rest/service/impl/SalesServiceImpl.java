@@ -1634,17 +1634,31 @@ public class SalesServiceImpl implements SalesService {
         if (venteEnCours(tp)) {
             return null;
         }
-        return messageVenteNonModifiable(tp.getStrREF(), tp.getDtUPDATED());
+        return messageVenteNonModifiable(tp.getStrREF(), tp.getDtUPDATED(), tp.getStrSTATUT());
     }
 
     /**
-     * Une vente se modifie tant qu'elle est en cours : « is_Process » (vente ordinaire) ou « pending » (prevente, qui
-     * garde ce statut jusqu'a « Terminer la prevente »). Retour des tests du 12/09 : le controle n'acceptait que «
-     * is_Process » et refusait le deuxieme produit d'une prevente en la disant cloturee.
+     * Statuts qui TERMINENT une vente : « is_Closed » (la vente a donne ses mouvements de stock et sa recette), «
+     * cancel » et « delete » (vente annulee ou supprimee). C'est cela, et cela seul, que le controle doit refuser.
+     */
+    private static final java.util.Set<String> STATUTS_VENTE_TERMINEE = java.util.Collections
+            .unmodifiableSet(new java.util.HashSet<>(java.util.Arrays.asList(Constant.STATUT_IS_CLOSED,
+                    Constant.STATUT_CANCEL, Constant.STATUT_DELETE)));
+
+    /**
+     * Une vente se modifie tant qu'elle n'est pas terminee : vente ordinaire (« is_Process »), prevente (« pending »,
+     * jusqu'a « Terminer la prevente »), proforma (« devis », jusqu'a sa transformation en vente).
+     *
+     * <p>
+     * Le controle enumerait au depart les statuts autorises. Chaque parcours qui utilise un autre statut se voyait
+     * alors refuse avec le message d'une vente cloturee : la prevente au deuxieme produit (retour du 12/09), puis la
+     * proforma au deuxieme produit (retour du 14/09). La regle est donc inversee : on refuse les statuts qui terminent
+     * une vente, et tout parcours de composition -- ceux d'aujourd'hui comme ceux de demain -- reste possible. Un
+     * statut absent reste refuse : une vente sans statut n'est pas une vente en cours.
+     * </p>
      */
     static boolean venteEnCours(TPreenregistrement tp) {
-        return tp != null && (Constant.STATUT_IS_PROGRESS.equals(tp.getStrSTATUT())
-                || Constant.STATUT_PENDING.equals(tp.getStrSTATUT()));
+        return tp != null && tp.getStrSTATUT() != null && !STATUTS_VENTE_TERMINEE.contains(tp.getStrSTATUT());
     }
 
     /**
@@ -1666,7 +1680,7 @@ public class SalesServiceImpl implements SalesService {
         if (venteEnCours(tp)) {
             return null;
         }
-        return messageVenteNonModifiable(tp.getStrREF(), tp.getDtUPDATED());
+        return messageVenteNonModifiable(tp.getStrREF(), tp.getDtUPDATED(), tp.getStrSTATUT());
     }
 
     /**
@@ -1810,6 +1824,19 @@ public class SalesServiceImpl implements SalesService {
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Signalement au support d'une annulation refusee", e);
         }
+    }
+
+    /**
+     * Message de refus, selon la raison : une vente cloturee se reprend par « Ventes terminees », une vente annulee ou
+     * supprimee ne se reprend pas du tout. Dire « cloturee » dans tous les cas envoyait la caissiere chercher une vente
+     * qui n'est pas dans cette liste.
+     */
+    static String messageVenteNonModifiable(String reference, Date cloturee, String statut) {
+        if (statut == null || Constant.STATUT_IS_CLOSED.equals(statut)) {
+            return messageVenteNonModifiable(reference, cloturee);
+        }
+        return "Cette vente" + (StringUtils.isBlank(reference) ? "" : " (N° " + reference + ")")
+                + " a été annulée ou supprimée : elle ne peut plus être modifiée. Ouvrez une nouvelle vente.";
     }
 
     /** Message de refus : la vente n'est plus en cours, le retrait passe par les ventes terminees. */

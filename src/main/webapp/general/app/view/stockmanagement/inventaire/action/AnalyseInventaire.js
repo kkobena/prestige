@@ -153,11 +153,14 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
             items: ['->', 
             {
                 text: 'Imprimer (PDF)',
+                itemId: 'imprimerAnalyse',
                 iconCls: 'icon-pdf',
+                tooltip: "Édition de l'analyse : officine, taux d'écart, valorisation avant / après, emplacements critiques et produits à vérifier",
                 handler: function() { me.onPrintClick(); }
             },
             {
                 text: 'Exporter (Excel)',
+                itemId: 'exporterAnalyse',
                 iconCls: 'icon-excel',
                 handler: function() { me.onExcelExportClick(); }
             },
@@ -248,6 +251,11 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
                 ratioVA: ratioVA
             });
         }
+        /* Retours du 13/09 : du plus gros ecart au plus petit, c'est l'ordre dans lequel l'officine regarde ;
+           les colonnes restent triables par un clic sur leur en-tete. */
+        summaryData.sort(function (a, b) {
+            return Math.abs(b.ecartValeurAchat) - Math.abs(a.ecartValeurAchat);
+        });
         me.allData = summaryData;
     },
 

@@ -36,10 +36,29 @@ public class AnalyseInvRessourceDataExport {
             String fileName = "analyse_inventaire_"
                     + (inventaireName != null ? inventaireName.replaceAll("\\s+", "_") : inventaireId) + ".pdf";
 
-            return Response.ok(pdfData, MediaType.APPLICATION_OCTET_STREAM)
-                    .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"").build();
+            // Retour du 13/09 : l'edition s'affiche dans l'onglet ouvert par le clic, comme les autres editions.
+            return Response.ok(pdfData, "application/pdf")
+                    .header("Content-Disposition", "inline; filename=\"" + fileName + "\"").build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Erreur lors de la generation de l'inventaire: " + inventaireId, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("erreur creation pdf: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("analyse-inventaire-avancee-pdf")
+    @Produces("application/pdf")
+    public Response exportAdvancedPdf(@QueryParam("inventaireId") String inventaireId,
+            @QueryParam("inventaireName") String inventaireName) {
+        try {
+            byte[] pdfData = exportService.generateAdvancedPdfReport(inventaireId);
+            String fileName = "synthese_inventaire_"
+                    + (inventaireName != null ? inventaireName.replaceAll("\\s+", "_") : inventaireId) + ".pdf";
+            return Response.ok(pdfData, "application/pdf")
+                    .header("Content-Disposition", "inline; filename=\"" + fileName + "\"").build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Erreur lors de la generation de la synthese de l'inventaire: " + inventaireId, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("erreur creation pdf: " + e.getMessage()).build();
         }
