@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Synthese et recommandations d'un inventaire (retours du 13/09) : recapitulatif global achat / vente,
+  points de vigilance par emplacement, ecarts positifs a verifier, articles les plus critiques et recommandations.
+
+  Un seul jeu de lignes alimente l'etat : chaque ligne porte sa section (cleSection = rang + libelle), son libelle et
+  jusqu'a six valeurs deja mises en forme par AnalyseInventaireSynthese. Les en-tetes de colonnes de chaque section
+  viennent du parametre P_ENTETES. Le modele ne calcule rien : il met en page.
+-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="analyse_inventaire_synthese" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenNoDataType="NoDataSection">
+    <style name="ligne" fontSize="8">
+        <conditionalStyle>
+            <conditionExpression><![CDATA[$V{ligneSection} % 2 == 0]]></conditionExpression>
+            <style mode="Opaque" backcolor="#F5F8FB"/>
+        </conditionalStyle>
+    </style>
+    <parameter name="P_H_INSTITUTION" class="java.lang.String"/>
+    <parameter name="P_INSTITUTION_ADRESSE" class="java.lang.String"/>
+    <parameter name="P_AUTRE_DESC" class="java.lang.String"/>
+    <parameter name="P_PRINTED_BY" class="java.lang.String"/>
+    <parameter name="P_FOOTER_RC" class="java.lang.String"/>
+    <parameter name="P_TITRE" class="java.lang.String"/>
+    <parameter name="P_INVENTAIRE" class="java.lang.String"/>
+    <parameter name="P_RESUME" class="java.lang.String"/>
+    <parameter name="P_ENTETES" class="java.util.Map"/>
+    <field name="section" class="java.lang.String"/>
+    <field name="cleSection" class="java.lang.String"/>
+    <field name="libelle" class="java.lang.String"/>
+    <field name="c1" class="java.lang.String"/>
+    <field name="c2" class="java.lang.String"/>
+    <field name="c3" class="java.lang.String"/>
+    <field name="c4" class="java.lang.String"/>
+    <field name="c5" class="java.lang.String"/>
+    <field name="c6" class="java.lang.String"/>
+    <field name="total" class="java.lang.Boolean"/>
+    <variable name="ligneSection" class="java.lang.Integer" resetType="Group" resetGroup="section" calculation="Count">
+        <variableExpression><![CDATA[$F{libelle}]]></variableExpression>
+    </variable>
+    <group name="section">
+        <groupExpression><![CDATA[$F{cleSection}]]></groupExpression>
+        <groupHeader>
+            <band height="33">
+                <frame>
+                    <reportElement mode="Opaque" x="0" y="5" width="802" height="15" backcolor="#2E75B6"/>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="6" y="0" width="790" height="15" forecolor="#FFFFFF"/>
+                        <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$F{section}]]></textFieldExpression>
+                    </textField>
+                </frame>
+                <frame>
+                    <reportElement mode="Opaque" x="0" y="20" width="802" height="13" backcolor="#E4EAF0"/>
+                    <staticText>
+                        <reportElement x="6" y="0" width="250" height="13"/>
+                        <textElement verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <text><![CDATA[Libellé]]></text>
+                    </staticText>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="260" y="0" width="118" height="13"/>
+                        <textElement textAlignment="Right" verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$P{P_ENTETES} == null || $P{P_ENTETES}.get($F{section}) == null ? "" : ((String[]) $P{P_ENTETES}.get($F{section}))[0]]]></textFieldExpression>
+                    </textField>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="382" y="0" width="118" height="13"/>
+                        <textElement textAlignment="Right" verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$P{P_ENTETES} == null || $P{P_ENTETES}.get($F{section}) == null ? "" : ((String[]) $P{P_ENTETES}.get($F{section}))[1]]]></textFieldExpression>
+                    </textField>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="504" y="0" width="112" height="13"/>
+                        <textElement textAlignment="Right" verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$P{P_ENTETES} == null || $P{P_ENTETES}.get($F{section}) == null ? "" : ((String[]) $P{P_ENTETES}.get($F{section}))[2]]]></textFieldExpression>
+                    </textField>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="620" y="0" width="60" height="13"/>
+                        <textElement textAlignment="Right" verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$P{P_ENTETES} == null || $P{P_ENTETES}.get($F{section}) == null ? "" : ((String[]) $P{P_ENTETES}.get($F{section}))[3]]]></textFieldExpression>
+                    </textField>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="684" y="0" width="55" height="13"/>
+                        <textElement textAlignment="Right" verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$P{P_ENTETES} == null || $P{P_ENTETES}.get($F{section}) == null ? "" : ((String[]) $P{P_ENTETES}.get($F{section}))[4]]]></textFieldExpression>
+                    </textField>
+                    <textField isBlankWhenNull="true">
+                        <reportElement x="743" y="0" width="53" height="13"/>
+                        <textElement textAlignment="Right" verticalAlignment="Middle"><font size="7.5" isBold="true"/></textElement>
+                        <textFieldExpression><![CDATA[$P{P_ENTETES} == null || $P{P_ENTETES}.get($F{section}) == null ? "" : ((String[]) $P{P_ENTETES}.get($F{section}))[5]]]></textFieldExpression>
+                    </textField>
+                </frame>
+            </band>
+        </groupHeader>
+    </group>
+    <title>
+        <band height="86">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="802" height="16"/>
+                <textElement textAlignment="Center"><font size="12" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_H_INSTITUTION}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="16" width="802" height="12"/>
+                <textElement textAlignment="Center"><font size="8"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_AUTRE_DESC}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="28" width="802" height="11" forecolor="#5D6D7E"/>
+                <textElement textAlignment="Center"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_INSTITUTION_ADRESSE}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="42" width="802" height="1" forecolor="#2E75B6"/>
+            </line>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="48" width="802" height="17"/>
+                <textElement textAlignment="Center"><font size="13" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_TITRE}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="65" width="802" height="12"/>
+                <textElement textAlignment="Center"><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_INVENTAIRE}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+                <reportElement x="0" y="77" width="802" height="9" forecolor="#5D6D7E"/>
+                <textElement textAlignment="Center"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_RESUME}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    <detail>
+        <band height="14">
+            <frame>
+                <reportElement style="ligne" x="0" y="0" width="802" height="14"/>
+                <line>
+                    <reportElement positionType="FixRelativeToBottom" x="0" y="13" width="802" height="1" forecolor="#F0F3F6"/>
+                </line>
+                <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+                    <reportElement style="ligne" x="6" y="0" width="250" height="13"/>
+                    <textElement verticalAlignment="Middle"><font isBold="false"/>
+                        <paragraph leftIndent="0"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$F{libelle}]]></textFieldExpression>
+                </textField>
+                <textField isBlankWhenNull="true">
+                    <reportElement style="ligne" x="260" y="0" width="118" height="13"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{c1}]]></textFieldExpression>
+                </textField>
+                <textField isBlankWhenNull="true">
+                    <reportElement style="ligne" x="382" y="0" width="118" height="13"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font isBold="false"/></textElement>
+                    <textFieldExpression><![CDATA[$F{c2}]]></textFieldExpression>
+                </textField>
+                <textField isBlankWhenNull="true">
+                    <reportElement style="ligne" x="504" y="0" width="112" height="13"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font isBold="false"/></textElement>
+                    <textFieldExpression><![CDATA[$F{c3}]]></textFieldExpression>
+                </textField>
+                <textField isBlankWhenNull="true">
+                    <reportElement style="ligne" x="620" y="0" width="60" height="13"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font isBold="false"/></textElement>
+                    <textFieldExpression><![CDATA[$F{c4}]]></textFieldExpression>
+                </textField>
+                <textField isBlankWhenNull="true">
+                    <reportElement style="ligne" x="684" y="0" width="55" height="13"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font isBold="false"/></textElement>
+                    <textFieldExpression><![CDATA[$F{c5}]]></textFieldExpression>
+                </textField>
+                <textField isBlankWhenNull="true">
+                    <reportElement style="ligne" x="743" y="0" width="53" height="13"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font isBold="false"/></textElement>
+                    <textFieldExpression><![CDATA[$F{c6}]]></textFieldExpression>
+                </textField>
+            </frame>
+        </band>
+    </detail>
+    <pageFooter>
+        <band height="16">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="2" width="500" height="12"/>
+                <textElement><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_FOOTER_RC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="502" y="2" width="300" height="12"/>
+                <textElement textAlignment="Right"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA["Imprimé le " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date()) + " par " + ($P{P_PRINTED_BY} == null ? "" : $P{P_PRINTED_BY}) + "   -   page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+    <noData>
+        <band height="90">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="802" height="16"/>
+                <textElement textAlignment="Center"><font size="12" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_H_INSTITUTION}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="40" width="802" height="17"/>
+                <textElement textAlignment="Center"><font size="13" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{P_TITRE}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="0" y="64" width="802" height="14" forecolor="#7F8C8D"/>
+                <textElement textAlignment="Center"><font size="9" isItalic="true"/></textElement>
+                <text><![CDATA[Cet inventaire ne contient aucune ligne retenue.]]></text>
+            </staticText>
+        </band>
+    </noData>
+</jasperReport>
