@@ -88,9 +88,15 @@ function semer() {
     /* ------------------------------------------------------------- API */
     const m = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&limit=0');
     const p1 = par(m.data, 0), p2 = par(m.data, 1), p3 = par(m.data, 2), p4 = par(m.data, 3), p5 = par(m.data, 4);
-    ok('API : la periode libre est reprise (30 jours), 5 produits vendus, seuils = medianes (marge 50 %, rotation 3)',
-      m.success && m.periode && m.periode.jours === 30 && m.totalProduits === 5 && m.seuils.marge === 50 && m.seuils.rotation === 3
-      && m.seuils.medianeMarge === 50 && m.seuils.medianeRotation === 3, JSON.stringify(m.seuils) + ' ' + JSON.stringify(m.periode));
+    /* Depuis le 21/09 la rotation se lit par defaut en JOURS DE COUVERTURE, et les ruptures (P5) ne pesent plus
+       sur les medianes : rotations en stock 5, 0,05, 8, 0,02 -> 2,53 ; couvertures 6, 600, 3,8, 1 500 j -> 303 j ;
+       quantites 10, 1, 8, 1, 3 -> 3. Le seuil par defaut est la mediane des couvertures. */
+    ok('API : la periode libre est reprise (30 jours), 5 produits vendus, seuils = medianes (marge 50 %, couverture 303 j, en mode JOURS)',
+      m.success && m.periode && m.periode.jours === 30 && m.totalProduits === 5 && m.seuils.marge === 50 && m.seuils.rotation === 303
+      && m.seuils.modeRotation === 'JOURS' && m.seuils.medianeMarge === 50 && m.seuils.medianeRotation === 2.53
+      && m.seuils.medianeCouverture === 303 && m.seuils.medianeQuantite === 3
+      && Array.isArray(m.regles) && m.regles.length === 3 && /couverture ≤ 303 j/.test(m.regles[1]) && /quantité vendue ≥ 3/.test(m.regles[2]),
+      JSON.stringify(m.seuils) + ' ' + JSON.stringify(m.regles));
     ok('API : marge et rotation par produit (P1 50 % / 5 ; P2 60 % / 0,05 ; P3 5 % / 8 ; P4 10 % / 0,02 ; P5 epuise : rotation = 3)',
       p1.tauxMarge === 50 && p1.rotation === 5 && p2.tauxMarge === 60 && p2.rotation === 0.05 && p3.tauxMarge === 5 && p3.rotation === 8
       && p4.tauxMarge === 10 && p4.rotation === 0.02 && p5.stock === 0 && p5.rotation === 3, JSON.stringify([p1, p2, p3, p4, p5].map(x => [x.tauxMarge, x.rotation, x.stock])));
@@ -106,7 +112,18 @@ function semer() {
       && resume.every(r => r.decision && r.libelle), JSON.stringify(resume.map(r => [r.libelle, r.produits, r.montant])));
     const filtre = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&quadrant=4&limit=0');
     ok('API : le filtre par quadrant isole (quadrant 4 -> P4 seul)', filtre.total === 1 && filtre.data[0].produitId === PRODUITS[3], JSON.stringify(filtre.total));
-    const seuils = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&seuilMarge=55&seuilRotation=1&limit=0');
+    // En mode RATIO, la lecture d'origine : rotation >= 1 ; et P5 en rupture est juge sur sa quantite (3 >= mediane 3 : elevee)
+    const seuils = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&seuilMarge=55&seuilRotation=1&modeRotation=RATIO&limit=0');
+    // En mode JOURS, un seuil de 10 jours : seuls P1 (6 j) et P3 (3,8 j) tournent, plus P5 en rupture
+    const enJours = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&seuilMarge=55&seuilRotation=10&limit=0');
+    const qj = {}; enJours.data.forEach(x => { qj[x.produitId] = x.quadrant; });
+    ok('API : en jours de couverture, « rotation elevee » = le stock tient PEU de jours (seuil 10 j : P1 6 j et P3 3,8 j tournent ; P2 600 j et P4 1 500 j sont lents ; P5 en rupture est juge sur sa quantite, 3 >= 3)',
+      qj[PRODUITS[0]] === 3 && qj[PRODUITS[1]] === 2 && qj[PRODUITS[2]] === 3 && qj[PRODUITS[3]] === 4 && (qj[PRODUITS[4]] === 1 || qj[PRODUITS[4]] === 3),
+      JSON.stringify(enJours.data.map(x => [x.cip, x.couverture, x.quadrant])));
+    const filtreStock = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&stockOp=%3E%3D&stockVal=1&limit=0');
+    ok('API : le filtre « stock ≥ 1 » ecarte le produit en rupture', filtreStock.total === 4 && filtreStock.data.every(x => x.stock >= 1), filtreStock.total);
+    const filtreQte = await appel('../api/v1/analyse-article/matrice?' + PERIODE + '&qteOp=%3E&qteVal=3&limit=0');
+    ok('API : le filtre « quantite > 3 » ne garde que P1 (10) et P3 (8)', filtreQte.total === 2 && filtreQte.data.every(x => x.quantite > 3), filtreQte.total);
     ok('API : des seuils saisis remplacent les medianes (marge >= 55 : seul P2 en marge elevee ; rotation >= 1 : P1, P3, P5)',
       seuils.seuils.marge === 55 && seuils.seuils.rotation === 1 && par(seuils.data, 0).quadrant === 3 && par(seuils.data, 1).quadrant === 2 && par(seuils.data, 3).quadrant === 4,
       JSON.stringify(seuils.data.map(x => x.quadrant)));
@@ -118,6 +135,18 @@ function semer() {
     const paires2 = await appel('../api/v1/analyse-article/paires?' + PERIODE + '&minimum=1&limite=100');
     ok('API : avec un minimum de 1, les autres paires apparaissent (P1+P2, P1+P3, P1+P4, P2+P5, ...), la plus frequente en tete',
       paires2.total >= 5 && paires2.data[0].tickets === 3 && paires2.data.every(x => x.tickets >= 1), JSON.stringify(paires2.total));
+
+    // AUTOUR D'UN PRODUIT (21/09) : les compagnons de P1, du plus frequent au moins frequent, P1 toujours a gauche
+    const autour = await appel('../api/v1/analyse-article/paires?' + PERIODE + '&minimum=1&limite=2&produit=' + PRODUITS[0]);
+    ok('API : autour de P1 avec 2 compagnons : P5 (3 tickets) en tete puis un autre, P1 toujours en produit 1',
+      autour.total === 2 && autour.data.every(x => x.produit1Id === PRODUITS[0]) && autour.data[0].produit2Id === PRODUITS[4] && autour.data[0].tickets === 3
+      && autour.data[1].tickets === 1, JSON.stringify(autour.data.map(x => [x.libelle2, x.tickets])));
+    const autourVide = await appel('../api/v1/analyse-article/paires?' + PERIODE + '&minimum=1&limite=5&produit=inexistant');
+    ok('API : un produit inconnu ne donne aucune paire, sans erreur', autourVide.success && autourVide.total === 0);
+    const xlsAutour = await octets('../api/v1/analyse-article/paires/excel?' + PERIODE + '&minimum=1&limite=3&produit=' + PRODUITS[0]);
+    fs.writeFileSync(TMP + '/autour.xlsx', Buffer.from(xlsAutour.octets));
+    const cellulesA = execFileSync('python3', ['-c', "import openpyxl,sys; ws=openpyxl.load_workbook(sys.argv[1]).active; print('|'.join(str(c.value) for r in ws.iter_rows() for c in r if c.value is not None))", TMP + '/autour.xlsx'], { encoding: 'utf8' });
+    ok('Excel autour d un produit : le produit choisi est nomme en tete', xlsAutour.statut === 200 && /Autour du produit : .+\(\d+\)/.test(cellulesA), cellulesA.slice(0, 200));
 
     const xls = await octets('../api/v1/analyse-article/matrice/excel?' + PERIODE);
     fs.writeFileSync(TMP + '/matrice.xlsx', Buffer.from(xls.octets));
@@ -167,7 +196,7 @@ function semer() {
         colonnes: e.down('#grilleArticles').headerCt.getGridColumns().map(c => c.text) };
     });
     ok('ecran : l en-tete rappelle la periode, les seuils et les medianes ; chaque case porte ses chiffres et sa decision',
-      /01\/04\/2027 au 30\/04\/2027/.test(analyse.entete) && /50,0 %/.test(analyse.entete) && /3,00/.test(analyse.entete) && analyse.cases.length === 4
+      /01\/04\/2027 au 30\/04\/2027/.test(analyse.entete) && /≥ 50 %/.test(analyse.entete) && /couverture ≤ 303 j/.test(analyse.entete) && /quantité vendue ≥ 3/.test(analyse.entete) && analyse.cases.length === 4
       && /Champions.*2 produit\(s\).*conseil actif/.test(analyse.cases[0]) && /Produits à risque.*1 produit\(s\).*déréférencement/.test(analyse.cases[3]) && analyse.lignes === 5,
       analyse.entete + ' || ' + analyse.cases.join(' || ').slice(0, 300));
     ok('ecran : colonnes Quadrant, CIP, Produit, Qté, Tickets, Chiffre, Marge, Taux %, Stock, Rotation, Couv., Valeur stock, ABC',
@@ -219,6 +248,26 @@ function semer() {
       const e = Ext.ComponentQuery.query('analysearticle')[0];
       return { n: e.paireStore.getCount(), premiere: e.paireStore.getAt(0).getData(), colonnes: e.down('#ongletPaires').headerCt.getGridColumns().map(c => c.text) };
     });
+    // le selecteur « autour du produit » : on pose P1 comme si on l avait choisi dans la liste, puis on efface
+    await p.evaluate((id) => {
+      const e = Ext.ComponentQuery.query('analysearticle')[0];
+      const c = e.down('#produitAutour');
+      c.getStore().loadData([{ lg_FAMILLE_ID: id, str_NAME: 'P1', int_CIP: 'CIP' }]);
+      /* Autour d'un produit, c'est le champ « Compagnons » qui compte (21/09), pas « Paires ». */
+      c.setValue(id); e.down('#minimumTickets').setValue(1); e.down('#nbCompagnons').setValue(3);
+      c.fireEvent('select', c, [c.findRecordByValue(id)]);
+    }, PRODUITS[0]);
+    await p.waitForFunction(() => { const e = Ext.ComponentQuery.query('analysearticle')[0]; return !e.paireStore.isLoading() && e.paireStore.getCount() === 3; }, null, { timeout: 30000 });
+    const autourEcran = await p.evaluate(() => {
+      const e = Ext.ComponentQuery.query('analysearticle')[0];
+      const l = []; e.paireStore.each(r => l.push([r.get('produit1Id'), r.get('tickets')]));
+      return { lignes: l, pairesInactif: e.down('#limitePaires').isDisabled(), compagnonsInactif: e.down('#nbCompagnons').isDisabled() };
+    });
+    ok('ecran : « Autour du produit » P1 avec 3 compagnons : trois lignes, P1 toujours a gauche, la plus frequente en tete, et « Paires » s efface au profit de « Compagnons »',
+      autourEcran.lignes.length === 3 && autourEcran.lignes.every(x => x[0] === PRODUITS[0]) && autourEcran.lignes[0][1] === 3 && autourEcran.pairesInactif && !autourEcran.compagnonsInactif, JSON.stringify(autourEcran));
+    await p.evaluate(() => { const e = Ext.ComponentQuery.query('analysearticle')[0]; e.down('#minimumTickets').setValue(3); e.down('#limitePaires').setValue(100); e.down('#effacerProduitAutour').el.dom.click(); });
+    await p.waitForFunction(() => { const e = Ext.ComponentQuery.query('analysearticle')[0]; return !e.paireStore.isLoading() && e.paireStore.getCount() === 1 && !e.down('#limitePaires').isDisabled(); }, null, { timeout: 30000 });
+    ok('ecran : « Toutes les paires » rend la liste d origine', true);
     ok('ecran : l onglet « Achetés ensemble » montre la paire P1 + P5 (3 tickets, 100 %) avec ses colonnes',
       pairesEcran.n === 1 && pairesEcran.premiere.tickets === 3 && pairesEcran.premiere.part1 === 100 && pairesEcran.colonnes.indexOf('Tickets ensemble') >= 0
       && pairesEcran.colonnes.indexOf('% des tickets du produit 1') >= 0, JSON.stringify(pairesEcran).slice(0, 300));

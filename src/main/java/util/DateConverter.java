@@ -172,6 +172,30 @@ public final class DateConverter {
     public static final String VETERINAIRE = "51217125136245583494";
     public static final String ACTION_DESACTIVE_PRODUIT = "ACTION_DESACTIVE_PRODUIT";
     public static final String P_BTN_DESACTIVER_CLIENT = "P_BTN_DESACTIVER_CLIENT";
+    /** Import de clients depuis un fichier : creation en masse, reservee aux profils qui la portent. */
+    public static final String P_IMPORT_CLIENTS = "P_IMPORT_CLIENTS";
+    /*
+     * « Gestion depots extensions » : un privilege PAR ONGLET.
+     *
+     * Demande de l'officine (retour du 17/09) : l'ecran reunit quatre choses de sensibilite tres differente - ce que le
+     * depot detient, la saisie de ses ventes, son chiffre d'affaires, le point de caisse par caissiere. Un magasinier a
+     * besoin de la premiere ; le chiffre d'affaires, non.
+     *
+     * P_VENTE_DEPOT_EXTENSION existait deja (V6.9.43) : il sert desormais d'autorisation de l'onglet de vente.
+     */
+    public static final String P_DEPOT_EXT_VALORISATION = "P_DEPOT_EXT_VALORISATION";
+    public static final String P_VENTE_DEPOT_EXTENSION = "P_VENTE_DEPOT_EXTENSION";
+    public static final String P_DEPOT_EXT_CA = "P_DEPOT_EXT_CA";
+    public static final String P_DEPOT_EXT_POINT_CAISSE = "P_DEPOT_EXT_POINT_CAISSE";
+    /*
+     * Ordonnances clients (evolution 6, point 2). Deux privileges et non un : consulter une ordonnance et la corriger
+     * ne sont pas le meme geste. Une preparatrice peut avoir besoin de relire une posologie sans pouvoir recrire le
+     * document.
+     */
+    /** Menu de pilotage (evolution 6, point 1) : il donne a lire l'activite et les marges de l'officine. */
+    public static final String P_SM_PILOTAGE = "P_SM_PILOTAGE";
+    public static final String P_ORDONNANCE_CLIENT = "P_ORDONNANCE_CLIENT";
+    public static final String P_ORDONNANCE_CLIENT_MAJ = "P_ORDONNANCE_CLIENT_MAJ";
     public static final String P_BTN_DESACTIVER_TIERS_PAYANT = "P_BTN_DESACTIVER_TIERS_PAYANT";
     public static final String TIERS_PAYANT_CARNET_ID = "2";
     public static final String KEY_PRENDRE_EN_COMPTE_FOND_CAISSE = "KEY_PRENDRE_EN_COMPTE_FOND_CAISSE";

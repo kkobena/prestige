@@ -255,20 +255,30 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
                     }
 
                 }, {
-                    header: 'Stock',
+                    // Anciennement « Stock » : c'etait deja le stock du rayon, le libelle le dit
+                    // maintenant puisque la reserve figure a cote.
+                    header: 'Stock rayon',
                     dataIndex: 'int_NUMBER',
-//                    renderer: amountformat,
                     align: 'right',
                     flex: 0.5,
                     renderer: function (v, m, r) {
-                        var afficherStock = r.data.afficherStock;
-                        if (afficherStock) {
-                            return v;
-
-                        } else {
-                            return '';
-                        }
-
+                        return r.data.afficherStock ? v : '';
+                    }
+                }, {
+                    header: 'Stock réserve',
+                    dataIndex: 'int_NUMBER_RESERVE',
+                    align: 'right',
+                    flex: 0.5,
+                    renderer: function (v, m, r) {
+                        return r.data.afficherStock ? v : '';
+                    }
+                }, {
+                    header: 'Stock total',
+                    dataIndex: 'int_NUMBER_TOTAL',
+                    align: 'right',
+                    flex: 0.5,
+                    renderer: function (v, m, r) {
+                        return r.data.afficherStock ? '<b>' + v + '</b>' : '';
                     }
                 }],
             selModel: {
@@ -438,6 +448,29 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
                         }
                         var linkUrl = "../webservices/stockmanagement/stock/ws_etatstock_pdf.jsp?lg_FAMILLEARTICLE_ID=" + lg_FAMILLEARTICLE_ID + "&lg_GROSSISTE_ID=" + lg_GROSSISTE_ID + "&lg_ZONE_GEO_ID=" + lg_ZONE_GEO_ID + "&search_value=" + val + "&int_NUMBER=" + int_NUMBER + "&str_TYPE_TRANSACTION=" + str_TYPE_TRANSACTION;
                         window.open(linkUrl);
+                    }
+                }, {
+                    // Seconde edition, a cote de l'edition historique qui n'est pas modifiee : celle-ci
+                    // detaille le stock du rayon, celui de la reserve et le total, et valorise le total detenu.
+                    text: 'Imprimer (réserve)',
+                    tooltip: 'Imprimer en détaillant le stock du rayon, celui de la réserve et le total',
+                    itemId: 'imprimerReserve',
+                    iconCls: 'importicon',
+                    scope: this,
+                    handler: function () {
+                        var valeur = function (id) {
+                            var c = Ext.getCmp(id);
+                            return (c && c.getValue() !== null) ? c.getValue() : '';
+                        };
+                        // PDF servi en flux : il s'ouvre une seule fois, dans l'onglet ouvert par le clic.
+                        window.open('../api/v1/etat-stock/pdf-reserve?' + Ext.Object.toQueryString({
+                            search_value: valeur('rechecher'),
+                            str_TYPE_TRANSACTION: valeur('str_TYPE_TRANSACTION'),
+                            lg_FAMILLEARTICLE_ID: valeur('lg_FAMILLEARTICLE_ID'),
+                            lg_ZONE_GEO_ID: valeur('lg_ZONE_GEO_ID'),
+                            lg_GROSSISTE_ID: valeur('lg_GROSSISTE_ID'),
+                            int_NUMBER: valeur('int_NUMBER')
+                        }));
                     }
                 }, '-', {
                     text: 'Cr&eacute;er inventaire',

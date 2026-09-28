@@ -225,6 +225,11 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     hidden: true, // colonne retiree pour elargir l'organisme
                     flex: 0.4
                 }, {
+                    // Pour un client standard, le numero est son seul identifiant : il est donc visible.
+                    header: 'Téléphone',
+                    dataIndex: 'str_TELEPHONE',
+                    flex: 0.7
+                }, {
                     header: 'Adresse',
                     dataIndex: 'str_ADRESSE',
                     hidden: true,
@@ -404,6 +409,15 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     scope: this,
                     iconCls: 'addicon',
                     handler: this.onAddClick
+                }, {
+                    // Creation allegee, a cote du formulaire complet qui ne change pas : un client
+                    // standard n'a besoin que de son nom, de ses prenoms et de son numero.
+                    text: 'Cr&eacute;er client standard',
+                    itemId: 'creerClientStandard',
+                    tooltip: 'Nom, pr&eacute;noms et num&eacute;ro de t&eacute;l&eacute;phone',
+                    scope: this,
+                    iconCls: 'addicon',
+                    handler: this.onAddStandardClick
                 }, '-', {
                     xtype: 'combobox',
                     fieldLabel: 'Type Client',
@@ -452,12 +466,27 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     iconCls: 'printable',
                     handler: this.onPrintClick
                 }, '-', {
+                    // Retour du 17/09 (point 5) : cet import cree lui aussi des clients en masse.
+                    // Il passe donc sous le meme privilege que l'import « colonnes au choix »
+                    // (P_IMPORT_CLIENTS). Le service ws_transaction.jsp le reverifie : masquer un
+                    // bouton n'est pas un controle d'acces.
                     text: 'Importer',
                     tooltip: 'Importer',
                     id: 'btn_import',
                     iconCls: 'importicon',
+                    hidden: true, // visible seulement avec le privilege, voir plus bas
                     scope: this,
                     handler: this.onbtnimport
+                }, {
+                    // Import avec choix des colonnes et controle des lignes, sous privilege
+                    // (P_IMPORT_CLIENTS). L'import historique reste accessible par le bouton ci-dessus.
+                    text: 'Importer (colonnes au choix)',
+                    tooltip: 'Choisir les colonnes du fichier et contr&ocirc;ler les lignes avant d\'importer',
+                    itemId: 'btnImportClientStandard',
+                    iconCls: 'importicon',
+                    hidden: true, // visible seulement avec le privilege, voir onAfterRender
+                    scope: this,
+                    handler: this.onbtnImportStandard
                 }, '-',
                 {
                     text: 'Exporter CSV',
@@ -528,10 +557,37 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 }
             }
         });
+
+        // L'import avec choix des colonnes cree des clients en masse : le bouton n'apparait
+        // qu'aux profils portant le privilege P_IMPORT_CLIENTS. Les services le reverifient.
+        var ecran = this;
+        Ext.Ajax.request({
+            url: '../api/v1/client/import/autorise',
+            method: 'GET',
+            success: function (response) {
+                var objet = Ext.JSON.decode(response.responseText, true);
+                var autorise = !!(objet && objet.authorize === true);
+                // Les DEUX imports de clients suivent le meme privilege : l'un sans l'autre
+                // laisserait une porte ouverte sur la meme operation.
+                Ext.Array.each(['#btnImportClientStandard', '#btn_import'], function (selecteur) {
+                    var bouton = ecran.down(selecteur);
+                    if (bouton && autorise) {
+                        bouton.show();
+                    }
+                });
+            }
+        });
     },
      loadStore: function () {
         this.getStore().load();
     },
+    /** Import avec choix des colonnes : reserve aux profils portant le privilege P_IMPORT_CLIENTS. */
+    onbtnImportStandard: function () {
+        new testextjs.view.configmanagement.client.action.importClientStandard({
+            parentview: this
+        });
+    },
+
     onbtnimport: function () {
         new testextjs.view.configmanagement.famille.action.importOrder({
             odatasource: 'TABLE_CLIENT',
@@ -555,6 +611,13 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
         var extension = "xls";
         window.location = '../MigrationServlet?table_name=TABLE_CLIENT' + "&extension=" + extension;
     },
+    /** Ouvre la fenetre de creation allegee d'un client standard. */
+    onAddStandardClick: function () {
+        new testextjs.view.configmanagement.client.action.addClientStandard({
+            parentview: this
+        });
+    },
+
     onAddClick: function () {
         new testextjs.view.configmanagement.client.action.addClientLast({
             odatasource: "",

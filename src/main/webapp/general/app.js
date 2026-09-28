@@ -394,6 +394,7 @@ Ext.application({
         'testextjs.view.configmanagement.grilleremise.action.add',
         //gestion de stock
         'testextjs.model.FamilleStock',
+        'testextjs.view.stockmanagement.depotextension.DepotExtensionManager',
         'testextjs.view.stockmanagement.etatstock.EtatStockManager',
         'testextjs.view.stockmanagement.etatstock.action.add',
         'testextjs.view.stockmanagement.evolutionstock.EvolutionStock',
@@ -639,6 +640,8 @@ Ext.application({
         'testextjs.view.sm_user.mvtcaisse.action.add',
         'testextjs.model.TypeEcartMvt',
         'testextjs.view.configmanagement.client.action.addClientLast',
+        'testextjs.view.configmanagement.client.action.addClientStandard',
+        'testextjs.view.configmanagement.client.action.importClientStandard',
         'testextjs.view.sm_user.dovente.action.associateTiersPayantItem',
         'testextjs.view.sm_user.parameter.ParameterManager',
         'testextjs.view.sm_user.parameter.action.add',
@@ -775,6 +778,10 @@ Ext.application({
         'VisualisationCtr',
         'ListeCaisseCtr',
         'VenteCtr',
+        // Ecran « vente en depot » : duplication de l'ecran de vente, oriente « je suis dans le depot ».
+        'VenteEnDepotCtr',
+        // Analyse Posos : l'ecran ne parle qu'au serveur, jamais a Posos directement.
+        'PososCtr',
         'PendingCtr',
         'PreVentesCtr',
         'ProduitDesactivesCtr',
@@ -854,6 +861,9 @@ Ext.application({
         'CautionCtr',
         'BalanceSaleCashDepotController',
         'PointCaisseController',
+        'DepotExtensionCtr',
+        'OrdonnanceClientCtr',
+        'PilotageCtr',
         'ArticleMvtController',
         'SupportContactCtr',
         'SupportTicketsCtr',

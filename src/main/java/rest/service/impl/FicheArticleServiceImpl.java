@@ -45,9 +45,11 @@ import static enumeration.MargeEnum.STOCK_LESS_THAN_SEUIL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -736,10 +738,34 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         }
     }
 
+    /**
+     * Comparaison de stock sans aucune lecture ligne a ligne : on rend les articles retenus avec leurs stocks rayon et
+     * reserve, et rien d'autre.
+     *
+     * <p>
+     * L'enrichissement de comparaisonStock (consommation des six derniers mois, bons de livraison, inventaires,
+     * derniere vente) coute SIX requetes PAR ARTICLE. Sur un catalogue entier cela fait des dizaines de milliers de
+     * requetes : l'officine a vu l'edition de la reserve bloquer un fil HTTP pendant 327 secondes. Cette edition
+     * n'affiche aucun de ces champs - elle ne doit donc pas les payer.
+     */
+    @Override
+    public List<ArticleDTO> comparaisonStockSansEnrichissement(TUser u, String query, MargeEnum filtreStock,
+            MargeEnum filtreSeuil, String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) {
+        return comparaisonStock(u, query, filtreStock, filtreSeuil, codeFamile, codeRayon, codeGrossiste, stock, seuil,
+                0, 0, true, false);
+    }
+
     @Override
     public List<ArticleDTO> comparaisonStock(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
             String codeFamile, String codeRayon, String codeGrossiste, int qty, int seuil, int start, int limit,
             boolean all) {
+        return comparaisonStock(u, query, filtreStock, filtreSeuil, codeFamile, codeRayon, codeGrossiste, qty, seuil,
+                start, limit, all, true);
+    }
+
+    private List<ArticleDTO> comparaisonStock(TUser u, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
+            String codeFamile, String codeRayon, String codeGrossiste, int qty, int seuil, int start, int limit,
+            boolean all, boolean enrichir) {
 
         try {
             final String emId = u.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
@@ -779,7 +805,13 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 typedQuery.setFirstResult(start);
                 typedQuery.setMaxResults(limit);
             }
-            List<ArticleDTO> resultList = typedQuery.getResultList();
+            // avecStockReserve : une seule requete pour toute la page (ou tout l'export), plutot qu'une
+            // lecture par ligne. Le stock deja porte par resultList est le stock RAYON.
+            List<ArticleDTO> resultList = avecStockReserve(typedQuery.getResultList(), emId);
+            if (!enrichir) {
+                // Aucune lecture ligne a ligne : c'est tout l'objet de cette variante.
+                return resultList;
+            }
             if (all) {
                 return resultList.stream().map(x -> {
                     Map<String, Integer> conso = consomationArticle(x.getId() + "", emId, 6);
@@ -817,6 +849,67 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             return Collections.emptyList();
         }
 
+    }
+
+    /** Type de stock « reserve » dans t_type_stock (1 = rayon, 2 = reserve, 3 = depot). */
+    private static final String TYPE_STOCK_RESERVE = "2";
+
+    /** Au-dela, la clause IN est decoupee : certains pilotes refusent des listes de parametres trop longues. */
+    private static final int TAILLE_LOT_IN = 500;
+
+    /**
+     * Stock de reserve des articles donnes, en UNE requete par lot de 500 plutot qu'une par article : l'export de
+     * l'ecran porte sur plusieurs milliers de lignes, et une lecture par ligne y couterait plus cher que toute la
+     * requete principale.
+     *
+     * <p>
+     * Un article sans ligne de reserve n'apparait pas dans le resultat : il vaut zero, ce qui est le cas de la grande
+     * majorite des articles d'une officine qui n'utilise pas la reserve.
+     * </p>
+     */
+    private Map<String, Integer> stocksReserve(Collection<String> articleIds, String emplacementId) {
+        Map<String, Integer> reserves = new HashMap<>();
+        List<String> ids = articleIds.stream().filter(StringUtils::isNotBlank).distinct().collect(Collectors.toList());
+        for (int debut = 0; debut < ids.size(); debut += TAILLE_LOT_IN) {
+            List<String> lot = ids.subList(debut, Math.min(debut + TAILLE_LOT_IN, ids.size()));
+            try {
+                // Les identifiants sont ecrits un par un dans la clause IN, et restent des parametres lies :
+                // un parametre unique portant la collection n'est pas eclate par tous les fournisseurs JPA.
+                StringBuilder places = new StringBuilder();
+                for (int i = 0; i < lot.size(); i++) {
+                    places.append(i == 0 ? "" : ", ").append('?').append(i + 3);
+                }
+                javax.persistence.Query requete = getEntityManager()
+                        .createNativeQuery("SELECT t.lg_FAMILLE_ID, t.int_NUMBER FROM t_type_stock_famille t"
+                                + " WHERE t.lg_TYPE_STOCK_ID = ?1 AND t.lg_EMPLACEMENT_ID = ?2"
+                                + " AND t.str_STATUT = 'enable' AND t.lg_FAMILLE_ID IN (" + places + ")")
+                        .setParameter(1, TYPE_STOCK_RESERVE).setParameter(2, emplacementId);
+                for (int i = 0; i < lot.size(); i++) {
+                    requete.setParameter(i + 3, lot.get(i));
+                }
+                @SuppressWarnings("unchecked")
+                List<Object[]> lignes = requete.getResultList();
+                for (Object[] ligne : lignes) {
+                    if (ligne[0] != null) {
+                        reserves.put(String.valueOf(ligne[0]), ligne[1] == null ? 0 : ((Number) ligne[1]).intValue());
+                    }
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Lecture du stock de reserve impossible, zero utilise", e);
+            }
+        }
+        return reserves;
+    }
+
+    /** Reporte le stock de reserve sur les lignes retournees. Le stock total s'en deduit dans le DTO. */
+    private List<ArticleDTO> avecStockReserve(List<ArticleDTO> lignes, String emplacementId) {
+        if (lignes.isEmpty()) {
+            return lignes;
+        }
+        Map<String, Integer> reserves = stocksReserve(
+                lignes.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()), emplacementId);
+        lignes.forEach(x -> x.setStockReserve(reserves.getOrDefault(String.valueOf(x.getId()), 0)));
+        return lignes;
     }
 
     public Long comparaisonStock(MargeEnum stockFiltre, MargeEnum filtreSeuil, String query, String codeFamile,
@@ -1628,8 +1721,8 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         String title = "Comparaison stock du " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-        String[] headers = new String[] { "CIP", "Libellé", "Prix vente", "Prix achat", "Stock", "Stock moyen",
-                "Seuil réappro", "Rayon", "Famille", "Dernière vente" };
+        String[] headers = new String[] { "CIP", "Libellé", "Prix vente", "Prix achat", "Stock rayon", "Stock réserve",
+                "Stock total", "Stock moyen", "Seuil réappro", "Rayon", "Famille", "Dernière vente" };
 
         try {
             return reportExcelExportService.createExcelReport(title, headers, datas, (row, dto) -> {
@@ -1639,6 +1732,8 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 row.createCell(col++).setCellValue(dto.getPrixVente());
                 row.createCell(col++).setCellValue(dto.getPrixAchat());
                 row.createCell(col++).setCellValue(dto.getStock());
+                row.createCell(col++).setCellValue(dto.getStockReserve());
+                row.createCell(col++).setCellValue(dto.getStockTotal());
                 row.createCell(col++).setCellValue(dto.getStockMoyen());
                 row.createCell(col++).setCellValue(dto.getSeuiRappro());
                 row.createCell(col++).setCellValue(dto.getFilterLibelle());
@@ -1664,13 +1759,14 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
         String title = "Comparaison stock du " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-        String[] headers = new String[] { "CIP", "Libellé", "Prix vente", "Prix achat", "Stock", "Stock moyen",
-                "Seuil réappro", "Rayon", "Famille", "Dernière vente" };
+        String[] headers = new String[] { "CIP", "Libellé", "Prix vente", "Prix achat", "Stock rayon", "Stock réserve",
+                "Stock total", "Stock moyen", "Seuil réappro", "Rayon", "Famille", "Dernière vente" };
 
         try {
             byte[] raw = csvExportService.createCsvReport(title, headers, datas,
                     dto -> new String[] { dto.getCode(), dto.getLibelle(), String.valueOf(dto.getPrixVente()),
                             String.valueOf(dto.getPrixAchat()), String.valueOf(dto.getStock()),
+                            String.valueOf(dto.getStockReserve()), String.valueOf(dto.getStockTotal()),
                             String.valueOf(dto.getStockMoyen()), String.valueOf(dto.getSeuiRappro()),
                             dto.getFilterLibelle(), dto.getFamilleLibelle(),
                             dto.getLastDateVente() != null ? dto.getLastDateVente() : "" });

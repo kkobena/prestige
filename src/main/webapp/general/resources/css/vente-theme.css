@@ -1355,6 +1355,9 @@ body.x-body,
 /* ---------------------------------------------------------------- analyse article : matrice marge x rotation */
 .analyse-article-quadrants { padding: 6px 8px 2px 8px; background: #f7f9fb; }
 .analyse-article-quadrants .aa-entete { font-size: 12px; color: #333; margin-bottom: 6px; }
+/* Les trois regles de classement, en clair sous la periode : marge, rotation, ruptures. */
+.analyse-article-quadrants .aa-regles { display: inline-block; margin-top: 3px; padding: 2px 8px; font-size: 12px;
+    color: #1E3A5F; background: #EEF3FA; border-left: 3px solid #b7791f; border-radius: 3px; }
 .analyse-article-quadrants .aa-grille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .analyse-article-quadrants .aa-quadrant { background: #fff; border: 1px solid #d5dde5; border-radius: 3px; padding: 6px 10px; cursor: pointer; min-height: 96px; }
 .analyse-article-quadrants .aa-quadrant:hover { box-shadow: 0 0 0 2px #b8c6d4 inset; }
@@ -1400,3 +1403,551 @@ body.x-body,
 .synthese-inventaire .si-para { margin: 6px 0; line-height: 17px; }
 .synthese-inventaire .si-reco { margin: 4px 0 10px 18px; padding: 0; line-height: 18px; }
 .synthese-inventaire .si-reco li { margin-bottom: 4px; }
+
+/* Rapport d'import de clients (evolution 5, point 3) : une ligne rejetee doit se voir d'un coup d'oeil,
+   sans avoir a lire la colonne du motif. */
+.import-client-rejet .x-grid-cell {
+    background-color: #fdecea !important;
+}
+.import-client-cree .x-grid-cell {
+    background-color: #eafaf1 !important;
+}
+
+/* Valorisation d'un depot d'extension (evolution 5, point 1) : elle doit se lire d'un coup d'oeil,
+   au-dessus de la liste. */
+.depot-valorisation {
+    padding: 4px 6px;
+    font-size: 12px;
+    color: #1f3864;
+}
+
+/* ================= CHAMP IMPOSE PAR L'ECRAN PORTEUR =================
+ * Dans « Gestion depots extensions », le depot de la saisie de vente n'est plus saisissable : il est choisi
+ * une fois en haut de l'ecran et ce champ n'en est que le reflet. On le grise pour que personne ne cherche a
+ * le modifier ici, tout en gardant sa valeur LISIBLE - un champ desactive devient trop pale pour qu'on voie
+ * sur quel depot on saisit, et c'est precisement ce qu'il faut voir. */
+.vp-champ-impose .x-form-text {
+    background-color: #eceff1 !important;
+    background-image: none !important;
+    color: #37474f !important;
+    font-weight: bold;
+    cursor: default;
+}
+.vp-champ-impose .x-form-trigger {
+    display: none !important;
+}
+
+/* =====================================================================================
+ * « Gestion depots extensions » - liste des articles : stock negatif en ROUGE, stock a
+ * zero en VIOLET (retour du 17/09).
+ *
+ * La couleur est portee par la LIGNE et non par la seule cellule du stock : c'est
+ * l'article entier qui est en anomalie, et on doit le reperer en parcourant la colonne
+ * des designations. Trois precautions :
+ *
+ *  1. le selecteur descend jusqu'a .x-grid-cell-inner, sinon la couleur du theme, posee
+ *     plus bas dans la cascade, l'emporterait sur la couleur de la ligne ;
+ *  2. un fond tres pale accompagne la couleur du texte : sur un ecran de comptoir mal
+ *     regle, un rouge seul se distingue mal d'un noir ;
+ *  3. la ligne SELECTIONNEE garde sa couleur. Sans cette regle, cliquer sur la ligne qui
+ *     intrigue effacerait justement l'information que l'on venait verifier.
+ * ===================================================================================== */
+.depot-stock-negatif .x-grid-cell-inner {
+    color: #c0392b !important;
+    background-color: #fdf0ee;
+}
+.depot-stock-negatif.x-grid-item-selected .x-grid-cell-inner,
+.depot-stock-negatif.x-grid-row-selected .x-grid-cell-inner {
+    color: #96281b !important;
+    font-weight: bold;
+}
+.depot-stock-zero .x-grid-cell-inner {
+    color: #7b3fa0 !important;
+    background-color: #f6f0fa;
+}
+.depot-stock-zero.x-grid-item-selected .x-grid-cell-inner,
+.depot-stock-zero.x-grid-row-selected .x-grid-cell-inner {
+    color: #5b2e78 !important;
+    font-weight: bold;
+}
+
+/* Legende, au pied de la liste : une couleur sans legende se devine, elle ne se lit pas. */
+.depot-legende-negatif,
+.depot-legende-zero {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+}
+.depot-legende-negatif {
+    color: #c0392b;
+    background-color: #fdf0ee;
+}
+.depot-legende-zero {
+    color: #7b3fa0;
+    background-color: #f6f0fa;
+}
+
+/* =====================================================================================
+ * « Gestion depots extensions » : une couleur par ONGLET (retour du 18/09).
+ *
+ * Correction du 18/09 : « j'ai demandé les onglets en couleur, pas les textes ». La
+ * premiere version ne colorait que le libelle et posait un filet de 3 px sur le bord
+ * superieur — de loin, les quatre onglets restaient gris. C'est l'ONGLET qui porte
+ * desormais la couleur, en fond plein, sur toute sa surface.
+ *
+ * Trois precautions :
+ *  1. le libelle passe en BLANC sur le fond colore, sinon il devient illisible ;
+ *  2. l'onglet ACTIF est le seul en couleur pleine et soutenue ; les inactifs gardent la
+ *     meme teinte en clair. Sans cette difference, on ne sait plus lequel est ouvert -
+ *     c'est la fonction premiere d'un onglet, avant sa couleur ;
+ *  3. les selecteurs descendent jusqu'a .x-tab-inner pour la couleur du texte, et le fond
+ *     est pose a la fois sur l'element de l'onglet et sur son enveloppe interne : le theme
+ *     Neptune dessine le fond d'un onglet en plusieurs couches, et n'en peindre qu'une
+ *     laisse des bandes grises sur les bords.
+ * ===================================================================================== */
+.depot-onglet-vente,
+.depot-onglet-valorisation,
+.depot-onglet-ca,
+.depot-onglet-caisse {
+    border-width: 1px !important;
+    border-style: solid !important;
+}
+.depot-onglet-vente .x-tab-inner,
+.depot-onglet-valorisation .x-tab-inner,
+.depot-onglet-ca .x-tab-inner,
+.depot-onglet-caisse .x-tab-inner {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+/* Onglet inactif : la meme teinte, en clair, pour qu'on lise quel onglet est ouvert. */
+.depot-onglet-vente,
+.depot-onglet-vente .x-tab-wrap { background: #7cc6a0 !important; }
+.depot-onglet-valorisation,
+.depot-onglet-valorisation .x-tab-wrap { background: #8fb8dd !important; }
+.depot-onglet-ca,
+.depot-onglet-ca .x-tab-wrap { background: #dcb87a !important; }
+.depot-onglet-caisse,
+.depot-onglet-caisse .x-tab-wrap { background: #b493cd !important; }
+
+/* Onglet actif : couleur pleine et soutenue. */
+.depot-onglet-vente.x-tab-active,
+.depot-onglet-vente.x-tab-active .x-tab-wrap {
+    background: #1e8449 !important;
+    border-color: #146235 !important;
+}
+.depot-onglet-valorisation.x-tab-active,
+.depot-onglet-valorisation.x-tab-active .x-tab-wrap {
+    background: #2e75b6 !important;
+    border-color: #205888 !important;
+}
+.depot-onglet-ca.x-tab-active,
+.depot-onglet-ca.x-tab-active .x-tab-wrap {
+    background: #b9770e !important;
+    border-color: #8c5a0a !important;
+}
+.depot-onglet-caisse.x-tab-active,
+.depot-onglet-caisse.x-tab-active .x-tab-wrap {
+    background: #7b3fa0 !important;
+    border-color: #5b2e78 !important;
+}
+
+/* =====================================================================================
+ * Bouton « ÉCLATER » de la liste des suggestions (retour du 17/09, point 8).
+ *
+ * Il n'existe pas d'icone d'eclatement dans le jeu d'images du theme - seule mix.png,
+ * celle de la fusion. Plutot que d'ajouter un fichier image a installer, l'icone est
+ * DESSINEE en CSS : trois barres qui s'ecartent, l'inverse visuel de la fusion. Elle
+ * suit la taille des autres icones de barre d'outils (16 px).
+ * ===================================================================================== */
+.eclatericon {
+    background-image: none !important;
+    position: relative;
+}
+.eclatericon::before,
+.eclatericon::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    width: 12px;
+    height: 2px;
+    background-color: #1b2a3a;
+}
+.eclatericon::before {
+    top: 4px;
+    transform: rotate(-16deg);
+}
+.eclatericon::after {
+    bottom: 4px;
+    transform: rotate(16deg);
+}
+
+/* =====================================================================================
+ * Gestion des surstocks : les deux grandeurs que l'on vient chercher dans cet écran
+ * (demande du 18/09 — moyenne mensuelle en bleu, quantité de surplus en vert).
+ *
+ * La moyenne mensuelle commande tout le reste de la ligne (coefficient, mois de stock,
+ * surplus) ; la quantité de surplus en est la conclusion, ce qu'on peut retirer du stock.
+ * Les deux sont mises en gras en plus de la couleur : sur une liste de dix-sept colonnes,
+ * la couleur seule ne suffit pas à accrocher l'œil, et elle disparaît à l'impression en
+ * noir et blanc.
+ *
+ * Le mois EN COURS est grisé et en italique : il est incomplet et n'entre ni dans la
+ * quantité vendue ni dans la moyenne. Le confondre avec les trois mois complets est
+ * précisément ce qui a fait chercher un écart de 34 contre 35.
+ * ===================================================================================== */
+.surstock-moyenne .x-grid-cell-inner {
+    color: #1f4e9c !important;
+    font-weight: 700;
+}
+.surstock-surplus .x-grid-cell-inner {
+    color: #1e7a3c !important;
+    font-weight: 700;
+}
+.surstock-mois-encours .x-grid-cell-inner {
+    color: #7a7a7a !important;
+    font-style: italic;
+}
+
+/* =====================================================================================
+ * MENU DE PILOTAGE (evolution 6, point 1).
+ *
+ * Habillage CLAIR, celui du logiciel : un ecran sombre au milieu de Prestige ferait tache
+ * et fatiguerait a la lecture d'un tableau de chiffres. La structure, elle, est celle de
+ * la maquette : des tuiles, leur variation, puis la courbe et le detail.
+ * ===================================================================================== */
+.pilotage-tuiles {
+    background: transparent;
+}
+.pilotage-tuile {
+    display: inline-block;
+    vertical-align: top;
+    /* Elargie le 20/09 : la note du bas (« part non payee au comptoir sur les... ») etait coupee, alors
+       qu'il restait de la place a droite de la bande. On s'etend en largeur, pas vers le bas. Resserree
+       ensuite a 215 pixels pour que SEPT tuiles - le compte de l'onglet Stock - tiennent sur une seule
+       rangee aux largeurs d'ecran courantes. */
+    width: 215px;
+    min-height: 74px;
+    margin: 4px 8px 4px 0;
+    padding: 8px 10px;
+    border: 1px solid #d4dde6;
+    border-radius: 4px;
+    background: #ffffff;
+}
+.pilotage-tuile-libelle {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7b8c;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.pilotage-tuile-valeur {
+    font-size: 21px;
+    font-weight: 700;
+    color: #1f3b57;
+    margin-top: 2px;
+}
+/* La variation, la seule couleur de l'ecran : verte a la hausse, rouge a la baisse. */
+.pilotage-tuile-variation {
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+.pilotage-tuile-variation.hausse {
+    color: #1e7a3c;
+}
+.pilotage-tuile-variation.baisse {
+    color: #c0392b;
+}
+.pilotage-tuile-ecart {
+    font-weight: 400;
+    color: #6b7b8c;
+}
+.pilotage-tuile-sous {
+    font-size: 10px;
+    line-height: 12px;
+    color: #6b7b8c;
+    margin-top: 3px;
+}
+/* La part d'un mode de reglement dans le chiffre d'affaires du mois, sous le montant :
+   une colonne de pourcentage par mode doublerait la largeur de la grille. */
+.pilotage-part {
+    font-size: 10px;
+    color: #6b7b8c;
+    line-height: 12px;
+}
+/* La valeur de la periode comparee, sous celle de la periode choisie : « si je compare
+   2 valeurs les 2 doivent se retrouver », y compris dans les tuiles. */
+.pilotage-tuile-comparee {
+    font-size: 11px;
+    color: #55677a;
+    margin-top: 2px;
+}
+.pilotage-tuile-comparee b {
+    color: #2e3f50;
+}
+.pilotage-vide {
+    padding: 24px;
+    color: #6b7b8c;
+    font-style: italic;
+}
+/* Le mois en cours est incomplet : il se lit en italique pour qu'on ne le compare pas
+   naivement aux mois pleins qui le precedent. */
+.pilotage-mois-encours .x-grid-cell-inner {
+    font-style: italic;
+    color: #55677a;
+}
+
+/* ================================================================= pilotage : détail mensuel enrichi
+ *
+ * Chaque cellule de montant porte, sous le chiffre, DEUX lectures que l'officine demandait le 20/09 :
+ * l'évolution par rapport au mois précédent, et la part que ce montant prend dans le chiffre d'affaires
+ * du mois. Les deux se calculent dans le navigateur, sur des lignes déjà chargées : aucune requête de
+ * plus, donc aucun coût de temps.
+ */
+.pilotage-seconde-ligne {
+    font-size: 10px;
+    line-height: 12px;
+    color: #6b7b8c;
+    white-space: nowrap;
+}
+.pilotage-evol {
+    font-weight: 700;
+}
+.pilotage-evol.hausse {
+    color: #1e7a3c;
+}
+.pilotage-evol.baisse {
+    color: #c0392b;
+}
+.pilotage-evol.plat {
+    color: #8a99a8;
+}
+/*
+ * LES TROIS DERNIERS MOIS SE REPÈRENT SANS LIRE LA COLONNE MOIS.
+ *
+ * « Mettre le mois en cours en vert et gras bien visible, le mois précédent en orange gras, le 3e mois
+ * en violet gras » — le détail étant trié du mois actuel au plus ancien, ce sont les trois premières
+ * lignes. Le fond légèrement teinté les tient ensemble quand la grille défile horizontalement.
+ */
+.pilotage-mois-1 .x-grid-cell-inner {
+    color: #1b5e20;
+    font-weight: 700;
+}
+.pilotage-mois-1 .x-grid-cell {
+    background-color: #f1f8f1;
+}
+.pilotage-mois-2 .x-grid-cell-inner {
+    color: #bf5700;
+    font-weight: 700;
+}
+.pilotage-mois-2 .x-grid-cell {
+    background-color: #fdf6ef;
+}
+.pilotage-mois-3 .x-grid-cell-inner {
+    color: #6a1b9a;
+    font-weight: 700;
+}
+.pilotage-mois-3 .x-grid-cell {
+    background-color: #f8f4fb;
+}
+/* Les péremptions proches : une alerte se voit ou ne sert à rien. */
+.pilotage-alerte {
+    color: #c0392b;
+    font-weight: 700;
+    animation: pilotage-clignote 1.1s ease-in-out infinite;
+}
+@keyframes pilotage-clignote {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* =================================================================== pilotage : habillage « ardoise & ambre »
+ *
+ * « Le menu est trop bleu ExtJS, on ne sent pas le changement » (20/09). Habillage retenu par l'officine
+ * parmi quatre propositions : en-tetes ardoise, liseré ambre sur les tuiles, contraste eleve pour lire des
+ * colonnes de chiffres toute la journee sous neon.
+ *
+ * TOUT EST SOUS « .pilotage-ardoise », la classe posee sur le seul panneau du menu de pilotage. Aucun autre
+ * ecran du logiciel n'est touche - et surtout pas l'ecran de vente.
+ */
+.pilotage-ardoise .x-panel-header,
+.pilotage-ardoise .x-panel-header-default,
+.pilotage-ardoise .x-panel-header-default-top {
+    background-color: #334155;
+    background-image: none;
+    border-color: #1e293b;
+}
+.pilotage-ardoise .x-panel-header-text,
+.pilotage-ardoise .x-panel-header-text-default {
+    color: #f1f5f9;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+/* Les en-tetes de colonnes : c'est la que le bleu ExtJS sautait le plus aux yeux. */
+.pilotage-ardoise .x-grid-header-ct,
+.pilotage-ardoise .x-column-header {
+    background-color: #334155;
+    background-image: none;
+    border-color: #1e293b;
+}
+.pilotage-ardoise .x-column-header-text,
+.pilotage-ardoise .x-column-header-inner {
+    color: #f1f5f9;
+}
+.pilotage-ardoise .x-column-header-over,
+.pilotage-ardoise .x-column-header-sort-ASC,
+.pilotage-ardoise .x-column-header-sort-DESC {
+    background-color: #475569;
+    background-image: none;
+}
+/* Le pied de total : il porte les sommes, il doit se detacher du corps sans crier. */
+.pilotage-ardoise .x-grid-row-summary .x-grid-cell {
+    background-color: #f1f5f9;
+    border-top: 2px solid #cbd5e1;
+    color: #1e293b;
+}
+/* Les barres d'outils : la barre de periode et les filtres. */
+.pilotage-ardoise .x-toolbar,
+.pilotage-ardoise .x-toolbar-default {
+    background-color: #f8fafc;
+    background-image: none;
+    border-color: #dde4ec;
+}
+/*
+ * LES ONGLETS SE DISTINGUENT AU PREMIER COUP D'OEIL.
+ *
+ * L'onglet ouvert etait blanc avec un fin liseré, les autres gris pale : deux clairs cote a cote, on ne
+ * voyait plus ou l'on etait (« je veux qu'ils soient bien visibles et distingues », 20/09). Les onglets
+ * FERMES passent donc en ardoise avec le texte clair, et l'onglet OUVERT ressort en blanc, en gras, coiffe
+ * d'un bandeau ambre epais. Le contraste se lit de loin, et l'onglet ouvert semble avance vers le lecteur.
+ */
+.pilotage-ardoise .x-tab-default {
+    background-color: #45566b;
+    background-image: none;
+    border-color: #334155;
+}
+.pilotage-ardoise .x-tab-default .x-tab-inner {
+    color: #dbe4ee;
+    font-weight: 600;
+}
+.pilotage-ardoise .x-tab-default.x-tab-over {
+    background-color: #55697f;
+    background-image: none;
+}
+.pilotage-ardoise .x-tab-default.x-tab-over .x-tab-inner {
+    color: #ffffff;
+}
+.pilotage-ardoise .x-tab-active {
+    background-color: #ffffff;
+    background-image: none;
+    border-color: #334155;
+    border-bottom-color: #ffffff;
+    box-shadow: inset 0 5px 0 #b7791f;
+}
+.pilotage-ardoise .x-tab-active .x-tab-inner {
+    color: #1e293b;
+    font-weight: 700;
+}
+/* La tuile porte son liseré ambre : c'est le seul accent de couleur de l'ecran, la variation gardant
+   le vert et le rouge qui lui appartiennent. */
+.pilotage-ardoise .pilotage-tuile {
+    border-color: #dde4ec;
+    border-left: 4px solid #b7791f;
+    border-radius: 6px;
+}
+.pilotage-ardoise .pilotage-tuile-libelle {
+    color: #64748b;
+}
+.pilotage-ardoise .pilotage-tuile-valeur {
+    color: #1e293b;
+}
+/* Une tuile en ALERTE prend le rouge jusque dans son liseré : on ne peut pas la manquer. */
+.pilotage-ardoise .pilotage-tuile:has(.pilotage-alerte) {
+    border-left-color: #c0392b;
+}
+.pilotage-ardoise .x-grid-row-over .x-grid-cell {
+    background-color: #fdf8ef;
+}
+/* La barre qui porte les onglets : sans elle, une bande bleue ExtJS restait a droite du dernier onglet. */
+.pilotage-ardoise .x-tab-bar,
+.pilotage-ardoise .x-tab-bar-default,
+.pilotage-ardoise .x-tab-bar-body,
+.pilotage-ardoise .x-tab-bar-body-default,
+.pilotage-ardoise .x-tab-bar-strip,
+.pilotage-ardoise .x-tab-bar-strip-default {
+    background-color: #e8edf3;
+    background-image: none;
+    border-color: #cbd5e1;
+}
+/* Les tuiles de l'onglet Achats / Ventes : quatre seulement, mais des libelles longs et des montants a
+   dix chiffres. Plus larges, leur contenu tient sur moins de lignes et la bande reste basse. */
+.pilotage-tuiles-larges .pilotage-tuile {
+    width: 330px;
+}
+/* Une tuile en ALERTE porte sa couleur jusque dans son libelle et sa note : le rouge ne doit pas se
+   limiter au chiffre, sans quoi on lit « peremptions » en gris et le nombre en rouge sans faire le lien. */
+.pilotage-tuile-alerte .pilotage-tuile-libelle,
+.pilotage-tuile-alerte .pilotage-tuile-sous {
+    color: #c0392b;
+}
+.pilotage-ardoise .pilotage-tuile-alerte {
+    border-color: #e6b0aa;
+    border-left-color: #c0392b;
+}
+/* Les chiffres du detail mensuel gagnent un point : ils sont ce qu'on vient lire (21/09). */
+.pilotage-ardoise .x-grid-cell-inner {
+    font-size: 13px;
+}
+.pilotage-ardoise .pilotage-seconde-ligne {
+    font-size: 11px;
+    line-height: 13px;
+}
+
+/* L'infobulle des valeurs de la matrice marge x rotation : bleue, lisible en entier (21/09). */
+.aa-bulle.x-tip { background: #1E5FA8 !important; border-color: #1E5FA8 !important; border-radius: 6px; }
+.aa-bulle .x-tip-body, .aa-bulle .x-tip-body * { color: #FFFFFF !important; font-size: 13px !important; line-height: 1.45; }
+.aa-bulle .x-tip-anchor { border-color: #1E5FA8 !important; }
+
+/* ------------------------------------------------------------------ Ordonnances clients (22/09) */
+/* Une ordonnance annulee reste visible, barree et grisee. */
+.ordonnance-annulee .x-grid-cell-inner { color: #999 !important; text-decoration: line-through; }
+.ordonnance-annulee .x-action-col-cell .x-grid-cell-inner { text-decoration: none; }
+/* Boutons : un seul geste principal en vert, l'analyse Posos en bleu, le reste sobre. */
+.x-btn.ordo-btn-primaire { background: #17987e !important; background-image: none !important;
+    border-color: #12806a !important; border-radius: 4px; }
+.x-btn.ordo-btn-primaire .x-btn-inner { color: #fff !important; font-weight: bold; }
+.x-btn.ordo-btn-primaire.x-btn-over { background: #12806a !important; }
+.x-btn.ordo-btn-posos { background: #1E5FA8 !important; background-image: none !important;
+    border-color: #174c87 !important; border-radius: 4px; }
+.x-btn.ordo-btn-posos .x-btn-inner { color: #fff !important; font-weight: bold; }
+.x-btn.ordo-btn { border-radius: 4px; }
+/* Icones d'action de chaque ligne : espacees, et visiblement cliquables. */
+.x-action-col-icon.ordo-act { margin: 0 4px; cursor: pointer; }
+.x-action-col-icon.ordo-act.x-item-disabled { opacity: .25; cursor: default; }
+/* Pastilles d'etat de service. */
+.ordo-etat { display: inline-block; padding: 1px 8px; border-radius: 9px; font-size: 11px; color: #fff; }
+.ordo-etat-servie { background: #17987e; }
+.ordo-etat-partielle { background: #e67e22; }
+.ordo-etat-non_servie { background: #c0392b; }
+.ordo-etat-a_renseigner { background: #95a5a6; }
+/* Recherche de produit : stock et prix alignes a droite de la ligne. */
+.ordo-article { white-space: nowrap; }
+.ordo-article-infos { float: right; margin-left: 16px; }
+/* Alertes Posos majeures. */
+.ordo-alerte-majeure .x-grid-cell-inner { color: #c0392b; font-weight: bold; }
+/* Tuiles de l'analyse des ordonnances. */
+.ordo-tuiles { display: flex; flex-wrap: wrap; gap: 8px; }
+.ordo-tuile { flex: 1 1 180px; border: 1px solid #d6dde5; border-left: 4px solid #1E5FA8; border-radius: 4px;
+    padding: 6px 10px; background: #fff; }
+.ordo-tuile-rouge { border-left-color: #c0392b; }
+.ordo-tuile-verte { border-left-color: #17987e; }
+.ordo-tuile-grise { border-left-color: #95a5a6; }
+.ordo-tuile-titre { font-size: 11px; color: #666; text-transform: uppercase; }
+.ordo-tuile-valeur { font-size: 22px; font-weight: bold; color: #222; line-height: 28px; }
+.ordo-tuile-detail { font-size: 11px; color: #555; }
+.ordo-resume { font-size: 13px; }
+/* Mode DEMONSTRATION de l'analyse Posos (provisoire) : impossible a confondre avec une vraie analyse. */
+.posos-demo { background: #c0392b; color: #fff; font-weight: bold; padding: 4px 8px; margin: 2px 0 4px 0;
+    border-radius: 3px; }
+.ordo-etat-proposition { background: #1E5FA8; }

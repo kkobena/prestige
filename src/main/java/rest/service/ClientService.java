@@ -92,6 +92,23 @@ public interface ClientService {
      * ligne. actifs=true : statut enable (comportement historique) ; false : les desactives. btnDelete / btnDesactiver
      * : privileges de l'utilisateur connecte (calcules dans la ressource depuis la session).
      */
+    /**
+     * Import de clients standards depuis un fichier, en trois etapes selon {@code ecrire} : analyse des colonnes
+     * ({@code null}), controle ligne a ligne sans ecriture ({@code FALSE}), puis ecriture des lignes retenues
+     * ({@code TRUE}).
+     */
+    JSONObject importerClients(dal.TUser operateur, String nomFichier, byte[] contenu,
+            java.util.Map<String, String> champs, Boolean ecrire, boolean avecCorrespondance);
+
+    /**
+     * Nom du client standard portant deja ce numero, ou {@code null} si le numero est libre. Le numero attendu est deja
+     * normalise (format local a dix chiffres).
+     */
+    String clientStandardPortantLeNumero(String telephoneLocal);
+
+    /** Pose le numero de telephone normalise sur un client. */
+    void enregistrerTelephone(String clientId, String telephoneLocal);
+
     JSONObject listClients(String search, String typeClientId, boolean actifs, boolean btnDelete, boolean btnDesactiver,
             int start, int limit);
 

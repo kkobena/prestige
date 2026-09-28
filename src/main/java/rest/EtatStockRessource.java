@@ -52,7 +52,8 @@ public class EtatStockRessource {
     private static final DateTimeFormatter FMT_NOM = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter FMT_FICHIER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private static final String[] ENTETES_EXPORT = new String[] { "CIP", "Designation", "TVA", "Fournisseur",
-            "Seuil reappro", "Prix vente TTC", "Prix achat HT", "Code emplacement", "Stock" };
+            "Seuil reappro", "Prix vente TTC", "Prix achat HT", "Code emplacement", "Stock rayon", "Stock reserve",
+            "Stock total" };
 
     @Inject
     private HttpServletRequest servletRequest;
@@ -60,6 +61,8 @@ public class EtatStockRessource {
     private EtatStockService etatStockService;
     @EJB
     private InventaireService inventaireService;
+    @EJB
+    private rest.service.impl.StockReserveEditionService stockReserveEditionService;
     @EJB
     private ReportExcelExportService reportExcelExportService;
 
@@ -261,7 +264,62 @@ public class EtatStockRessource {
                 row.optString("str_CODE_TVA", ""), row.optString("lg_GROSSISTE_ID", ""),
                 row.optString("int_STOCK_REAPROVISONEMENT", ""), row.optString("int_PRICE", ""),
                 row.optString("int_NUMBER_ENTREE", ""), row.optString("CODEEMPLACEMENT", ""),
-                row.optBoolean("afficherStock", false) ? row.optString("int_NUMBER", "") : "" };
+                // Les trois quantites suivent le meme masquage que la grille : le parametre
+                // AFFICHER_STOCK cache le stock a l'utilisateur, l'export ne doit pas le contourner.
+                row.optBoolean("afficherStock", false) ? row.optString("int_NUMBER", "") : "",
+                row.optBoolean("afficherStock", false) ? row.optString("int_NUMBER_RESERVE", "") : "",
+                row.optBoolean("afficherStock", false) ? row.optString("int_NUMBER_TOTAL", "") : "" };
+    }
+
+    /**
+     * Edition « avec reserve » : nouvelle edition, servie a cote de l'edition historique de l'ecran
+     * (ws_etatstock_pdf.jsp et son modele rp_etatdestock installe sur site), qui n'est pas modifiee. Le PDF part en
+     * flux dans l'onglet ouvert par le clic : aucune fenetre intermediaire, aucun fichier temporaire.
+     */
+    @GET
+    @Path("pdf-reserve")
+    @Produces("application/pdf")
+    public Response pdfReserve(@QueryParam("search_value") String searchValue,
+            @DefaultValue("") @QueryParam("str_TYPE_TRANSACTION") String typeTransaction,
+            @DefaultValue("") @QueryParam("lg_FAMILLEARTICLE_ID") String familleArticleId,
+            @DefaultValue("") @QueryParam("lg_ZONE_GEO_ID") String zoneGeoId,
+            @DefaultValue("") @QueryParam("lg_GROSSISTE_ID") String grossisteId,
+            @DefaultValue("") @QueryParam("int_NUMBER") String nombreStock) {
+        TUser sessionUser = currentUser();
+        if (sessionUser == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        try {
+            JSONArray lignes = lignesRecherche(sessionUser, searchValue, typeTransaction, familleArticleId, zoneGeoId,
+                    grossisteId, nombreStock);
+            byte[] pdf = stockReserveEditionService.editer(sessionUser, "ETAT DE STOCK - RAYON, RESERVE ET TOTAL",
+                    criteresEtatStock(searchValue, familleArticleId, zoneGeoId, grossisteId),
+                    stockReserveEditionService.lignesEtatStock(lignes));
+            return Response.ok(pdf, "application/pdf")
+                    .header("Content-Disposition", "inline; filename=\"etat_stock_reserve.pdf\"").build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "edition etat de stock avec reserve", e);
+            return Response.serverError().build();
+        }
+    }
+
+    /** Rappel des criteres en sous-titre : une edition sans ses criteres n'est pas relisible un mois plus tard. */
+    private static String criteresEtatStock(String searchValue, String familleArticleId, String zoneGeoId,
+            String grossisteId) {
+        StringBuilder sb = new StringBuilder();
+        if (StringUtils.isNotBlank(searchValue)) {
+            sb.append("Recherche : ").append(searchValue);
+        }
+        if (StringUtils.isNotBlank(familleArticleId)) {
+            sb.append(sb.length() > 0 ? " - " : "").append("Famille : ").append(familleArticleId);
+        }
+        if (StringUtils.isNotBlank(zoneGeoId)) {
+            sb.append(sb.length() > 0 ? " - " : "").append("Emplacement : ").append(zoneGeoId);
+        }
+        if (StringUtils.isNotBlank(grossisteId)) {
+            sb.append(sb.length() > 0 ? " - " : "").append("Fournisseur : ").append(grossisteId);
+        }
+        return sb.length() == 0 ? "Tous les articles" : sb.toString();
     }
 
     /** Export CSV du resultat de la recherche en cours. */

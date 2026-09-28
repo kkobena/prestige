@@ -496,6 +496,134 @@ public class ClientRessource {
                 .build();
     }
 
+    /**
+     * Import de clients standards : analyse du fichier, puis controle, puis ecriture - trois etapes distinctes.
+     *
+     * <p>
+     * L'import historique lisait les colonnes par leur position, figee dans le code, sans aucun controle. Ici
+     * l'operateur DESIGNE la colonne du nom, des prenoms et du telephone, chaque ligne est jugee separement, et le
+     * rapport est connu avant toute ecriture. Les reponses sont servies en text/html : l'envoi de fichier ExtJS passe
+     * par une iframe cachee, qui n'accepte pas application/json.
+     * </p>
+     */
+    /**
+     * Dit si l'operateur connecte peut importer des clients. L'ecran s'en sert pour n'afficher le bouton qu'aux profils
+     * concernes ; le controle qui compte est celui des trois services d'import, qui le refont chacun.
+     */
+    @GET
+    @Path("import/autorise")
+    public Response importAutorise() {
+        if (utilisateurSession() == null) {
+            return reponseDeconnecte();
+        }
+        boolean autorise = CommonUtils.hasAuthorityByName(privilegesSession(), DateConverter.P_IMPORT_CLIENTS);
+        return Response.ok().entity(new JSONObject().put("authorize", autorise).toString()).build();
+    }
+
+    /**
+     * Etape 1 : lecture du fichier. Il n'est envoye QU'ICI, et garde quelques minutes sous un jeton que les deux etapes
+     * suivantes reprennent - le navigateur vide le champ fichier apres chaque envoi, le faire rechoisir a chaque etape
+     * serait absurde. La reponse est servie en text/html : l'envoi de fichier ExtJS passe par une iframe cachee, qui
+     * n'accepte pas application/json.
+     */
+    @POST
+    @Path("import/analyse")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_HTML)
+    public Response importAnalyse() {
+        TUser sessionUser = utilisateurSession();
+        Response refus = refusImport(sessionUser);
+        if (refus != null) {
+            return refus;
+        }
+        try {
+            org.apache.commons.fileupload.servlet.ServletFileUpload upload = new org.apache.commons.fileupload.servlet.ServletFileUpload(
+                    new org.apache.commons.fileupload.disk.DiskFileItemFactory());
+            java.util.List<org.apache.commons.fileupload.FileItem> items = upload.parseRequest(servletRequest);
+            String nomFichier = null;
+            byte[] contenu = null;
+            java.util.Map<String, String> champs = new java.util.HashMap<>();
+            for (org.apache.commons.fileupload.FileItem item : items) {
+                if (item.isFormField()) {
+                    champs.put(item.getFieldName(), item.getString("UTF-8"));
+                } else if (contenu == null) {
+                    nomFichier = item.getName();
+                    contenu = item.get();
+                }
+            }
+            if (contenu == null || contenu.length == 0) {
+                return Response.ok()
+                        .entity(new JSONObject().put("success", false).put("message", "Aucun fichier reçu.").toString())
+                        .build();
+            }
+            return Response.ok().entity(
+                    clientService.importerClients(sessionUser, nomFichier, contenu, champs, null, false).toString())
+                    .build();
+        } catch (Exception e) {
+            LOG_GESTION.log(java.util.logging.Level.SEVERE, "import de clients : analyse", e);
+            return Response.ok()
+                    .entity(new JSONObject().put("success", false)
+                            .put("message", "Lecture du fichier impossible. Formats acceptés : CSV, TXT, XLS ou XLSX.")
+                            .toString())
+                    .build();
+        }
+    }
+
+    /** Etape 2 : controle ligne a ligne, sans aucune ecriture. */
+    @POST
+    @Path("import/controle")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response importControle(@FormParam("jeton") String jeton, @FormParam("colonneNom") String colonneNom,
+            @FormParam("colonnePrenoms") String colonnePrenoms, @FormParam("colonneTelephone") String colonneTelephone,
+            @FormParam("entete") String entete) {
+        return etapeImport(jeton, colonneNom, colonnePrenoms, colonneTelephone, entete, Boolean.FALSE);
+    }
+
+    /** Etape 3 : ecriture des seules lignes retenues. */
+    @POST
+    @Path("import/executer")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response importExecuter(@FormParam("jeton") String jeton, @FormParam("colonneNom") String colonneNom,
+            @FormParam("colonnePrenoms") String colonnePrenoms, @FormParam("colonneTelephone") String colonneTelephone,
+            @FormParam("entete") String entete) {
+        return etapeImport(jeton, colonneNom, colonnePrenoms, colonneTelephone, entete, Boolean.TRUE);
+    }
+
+    private Response etapeImport(String jeton, String colonneNom, String colonnePrenoms, String colonneTelephone,
+            String entete, Boolean ecrire) {
+        TUser sessionUser = utilisateurSession();
+        Response refus = refusImport(sessionUser);
+        if (refus != null) {
+            return refus;
+        }
+        java.util.Map<String, String> champs = new java.util.HashMap<>();
+        champs.put("jeton", org.apache.commons.lang3.StringUtils.trimToEmpty(jeton));
+        champs.put("colonneNom", org.apache.commons.lang3.StringUtils.trimToEmpty(colonneNom));
+        champs.put("colonnePrenoms", org.apache.commons.lang3.StringUtils.trimToEmpty(colonnePrenoms));
+        champs.put("colonneTelephone", org.apache.commons.lang3.StringUtils.trimToEmpty(colonneTelephone));
+        champs.put("entete", org.apache.commons.lang3.StringUtils.trimToEmpty(entete));
+        return Response.ok()
+                .entity(clientService.importerClients(sessionUser, null, new byte[0], champs, ecrire, true).toString())
+                .build();
+    }
+
+    /**
+     * Le privilege est verifie a CHAQUE etape, et pas seulement a l'affichage du bouton : masquer un bouton n'est pas
+     * un controle d'acces.
+     */
+    private Response refusImport(TUser sessionUser) {
+        if (sessionUser == null) {
+            return Response.ok().entity(
+                    new JSONObject().put("success", false).put("message", Constant.DECONNECTED_MESSAGE).toString())
+                    .build();
+        }
+        if (!CommonUtils.hasAuthorityByName(privilegesSession(), DateConverter.P_IMPORT_CLIENTS)) {
+            return Response.ok().entity(new JSONObject().put("success", false)
+                    .put("message", "Votre profil ne permet pas d'importer des clients.").toString()).build();
+        }
+        return null;
+    }
+
     @GET
     @Path("gestion")
     public Response listeGestion(@QueryParam("search_value") String searchValue, @QueryParam("query") String query,
@@ -514,6 +642,80 @@ public class ClientRessource {
                 .ok().entity(clientService
                         .listClients(search, typeClientId, actifs, btnDelete, btnDesactiver, start, limit).toString())
                 .build();
+    }
+
+    /**
+     * Creation d'un client standard : nom, prenoms et numero de telephone, rien d'autre. Le formulaire complet
+     * (assurance, carnet, ayants droit...) reste disponible par ailleurs et n'est pas modifie.
+     *
+     * <p>
+     * Le numero est normalise au format local a dix chiffres avant enregistrement, et il est UNIQUE parmi les clients
+     * standards : un numero deja porte est refuse en nommant le client qui le detient, de sorte que l'operateur
+     * retrouve la fiche existante au lieu d'en creer une seconde.
+     * </p>
+     */
+    @POST
+    @Path("gestion/create-standard")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response creerClientStandard(@FormParam("str_FIRST_NAME") String nom,
+            @FormParam("str_LAST_NAME") String prenoms, @FormParam("str_TELEPHONE") String telephone) {
+        TUser sessionUser = utilisateurSession();
+        if (sessionUser == null) {
+            return reponseDeconnecte();
+        }
+        rest.service.impl.ClientStandardSaisie saisie = rest.service.impl.ClientStandardSaisie.controler(nom, prenoms,
+                telephone);
+        if (!saisie.estValide()) {
+            return Response.ok().entity(new JSONObject().put("success", false).put("errors", saisie.message())
+                    .put("champ", saisie.getTelephone().isEmpty() ? "str_TELEPHONE" : "str_FIRST_NAME").toString())
+                    .build();
+        }
+        dataManager odm = new dataManager();
+        odm.initEntityManager();
+        try {
+            String occupePar = clientService.clientStandardPortantLeNumero(saisie.getTelephone());
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(occupePar)) {
+                return Response.ok()
+                        .entity(new JSONObject().put("success", false).put("champ", "str_TELEPHONE")
+                                .put("errors",
+                                        "Ce numéro est déjà celui du client " + occupePar
+                                                + ". Retrouvez sa fiche plutôt que d'en créer une seconde.")
+                                .toString())
+                        .build();
+            }
+            TUser user = odm.getEm().find(TUser.class, sessionUser.getLgUSERID());
+            clientManagement ocm = new clientManagement(odm, user);
+            // Meme chemin de creation que le formulaire complet : toutes les regles metier historiques
+            // s'appliquent (code interne genere, compte client cree). Seuls les champs utiles sont poses.
+            TCompteClient compte = ocm.createClient(saisie.getNom(), saisie.getPrenoms(), "", null, "", "", "", "", "",
+                    "", "", 0.0, 0.0, 0, rest.service.impl.ClientStandardSaisie.TYPE_CLIENT_STANDARD,
+                    CATEGORIE_AYANT_DROIT_DEFAUT, RISQUE_DEFAUT, "", 0, 1, "", 0.0, "", 0, false, null);
+            if (compte == null) {
+                return Response.ok()
+                        .entity(new JSONObject().put("success", false)
+                                .put("errors", org.apache.commons.lang3.StringUtils.defaultIfBlank(
+                                        ocm.getDetailmessage(), "La création du client n'a pas abouti."))
+                                .toString())
+                        .build();
+            }
+            // Le numero est pose apres la creation : la colonne generee qui porte l'unicite suit cette
+            // ecriture, et un doublon concurrent serait refuse ici par l'index unique.
+            String clientId = compte.getLgCLIENTID().getLgCLIENTID();
+            clientService.enregistrerTelephone(clientId, saisie.getTelephone());
+            return Response.ok()
+                    .entity(new JSONObject().put("success", true).put("lg_CLIENT_ID", clientId)
+                            .put("str_TELEPHONE", saisie.getTelephone()).put("message", "Client standard créé : "
+                                    + saisie.getNom() + " " + saisie.getPrenoms() + " (" + saisie.getTelephone() + ")")
+                            .toString())
+                    .build();
+        } catch (Exception e) {
+            LOG_GESTION.log(java.util.logging.Level.SEVERE, "creation d un client standard", e);
+            return Response.ok().entity(new JSONObject().put("success", false)
+                    .put("errors", "Ce numéro est peut-être déjà utilisé. Vérifiez la liste des clients.").toString())
+                    .build();
+        } finally {
+            odm.closeEntityManager();
+        }
     }
 
     @POST
