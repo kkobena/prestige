@@ -497,8 +497,61 @@ public class BalanceServiceImpl implements BalanceService {
         } else {
             sql = sql.replace("{excludeStatement}", EXCLUDE_STATEMENT);
         }
+        sql = appliquerPerimetreDeVente(sql, balanceParams);
 
         return sql;
+    }
+
+    /**
+     * Pose le perimetre de vente sur toutes les requetes de vente de la balance, en un seul endroit : chacune passe par
+     * replacePlaceHolder. Les requetes purement caisse (achats, autres mouvements) n'ont pas de vente a leur cote et
+     * gardent leur predicat tel quel - elles n'ont pas de « p » a interroger.
+     */
+    private String appliquerPerimetreDeVente(String sql, BalanceParamsDTO balanceParams) {
+        String emplacementId = balanceParams.getEmplacementId();
+        boolean depot = estDepotExtension(emplacementId);
+        return PerimetreVenteSql.appliquer(sql, depot, depot && desMouvementsSurCeMagasin(emplacementId));
+    }
+
+    /**
+     * Vrai s'il existe au moins un mouvement de caisse portant cet emplacement comme magasin.
+     *
+     * <p>
+     * C'est le cas d'un utilisateur rattache au depot, qui encaisse sur place. Quand il ne s'en est jamais produit - la
+     * situation courante, ou toutes les ventes du depot viennent de l'officine - la branche correspondante est retiree
+     * du perimetre : un OR entre deux tables empeche l'usage de l'index (lg_EMPLACEMENT_ID, createdAt), et l'officine a
+     * mesure 6,8 secondes pour un depot sans aucune vente.
+     *
+     * <p>
+     * Le controle est une lecture indexee bornee a une ligne. Rien n'est perdu : si un tel mouvement existe, ne
+     * serait-ce qu'un seul et ancien, la branche est conservee.
+     */
+    private boolean desMouvementsSurCeMagasin(String emplacementId) {
+        try {
+            return !em.createNativeQuery("SELECT 1 FROM mvttransaction m WHERE m.lg_EMPLACEMENT_ID = ?1 LIMIT 1")
+                    .setParameter(1, emplacementId).getResultList().isEmpty();
+        } catch (Exception e) {
+            // Dans le doute on garde la branche : mieux vaut une requete lente qu'un chiffre incomplet.
+            LOG.log(Level.SEVERE, "controle des mouvements du magasin " + emplacementId, e);
+            return true;
+        }
+    }
+
+    /** Vrai si l'emplacement demande est un depot d'extension (t_typedepot = 2), faux pour l'officine. */
+    private boolean estDepotExtension(String emplacementId) {
+        if (emplacementId == null || emplacementId.isEmpty() || "ALL".equalsIgnoreCase(emplacementId)) {
+            return false;
+        }
+        try {
+            Number n = (Number) em
+                    .createNativeQuery("SELECT COUNT(1) FROM t_emplacement e WHERE e.lg_EMPLACEMENT_ID = ?1"
+                            + " AND e.lg_TYPEDEPOT_ID = '2'")
+                    .setParameter(1, emplacementId).getSingleResult();
+            return n != null && n.intValue() > 0;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "type de l'emplacement " + emplacementId, e);
+            return false;
+        }
     }
 
     /**
@@ -932,7 +985,10 @@ public class BalanceServiceImpl implements BalanceService {
         }
 
         try {
-            Query query = em.createNativeQuery(AMOUNT_TO_REMOVE, Tuple.class)
+            // Cette requete ne portait pas de {excludeStatement} et ne passait donc pas par
+            // replacePlaceHolder : elle serait restee sur l'ancien perimetre, et le montant a retirer aurait
+            // compte les ventes de depot alors que le reste de la balance ne les compte plus.
+            Query query = em.createNativeQuery(appliquerPerimetreDeVente(AMOUNT_TO_REMOVE, balanceParams), Tuple.class)
                     .setParameter(4, balanceParams.getEmplacementId()).setParameter(3, DateConverter.DEPOT_EXTENSION)
                     .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -1380,7 +1436,11 @@ public class BalanceServiceImpl implements BalanceService {
         LocalDate now = LocalDate.now();
         try {
 
-            Query query = em.createNativeQuery(STAT_LAST_THREE_YEARS, Tuple.class)
+            // Etat de l'officine (emplacement « 1 » en dur) : les ventes jouees dans un depot en sont retirees,
+            // comme partout ailleurs dans la balance.
+            Query query = em
+                    .createNativeQuery(appliquerPerimetreDeVente(STAT_LAST_THREE_YEARS,
+                            BalanceParamsDTO.builder().emplacementId("1").build()), Tuple.class)
                     .setParameter(1, DateConverter.DEPOT_EXTENSION).setParameter(2, now.minusYears(2).getYear())
                     .setParameter(3, now.getYear()).setParameter(4, "1");
             return (List<Tuple>) query.getResultList();
@@ -1501,7 +1561,25 @@ public class BalanceServiceImpl implements BalanceService {
         return venteReglement;
     }
 
-    private BalanceDTO buildVenteBalance(List<BalanceVenteItemDTO> values, boolean checkUg, boolean showAllAmount,
+    /**
+     * Totaux d'un type de vente : les montants, la marge, et la ventilation par mode de reglement.
+     *
+     * <p>
+     * DEFAUT PRE-EXISTANT CORRIGE ICI (constate en mesurant la balance du depot le 16/09, signale alors, corrige
+     * aujourd'hui). Deux valeurs nulles faisaient tomber la methode en NullPointerException, et avec elle tout l'ecran
+     * de balance :
+     * <ol>
+     * <li>{@code reglementReports} vaut NULL quand aucune vente de ce type n'a de ligne dans {@code vente_reglement} -
+     * ce qui arrive des qu'une vente est cloturee sans reglement enregistre, cas rare mais reel. L'appelant passe le
+     * resultat d'un {@code Map.remove()}, qui rend null pour une cle absente ;</li>
+     * <li>{@code getTypeReglement()} peut etre null sur une ligne de reglement sans mode, et un {@code switch} sur une
+     * chaine nulle leve la meme exception.</li>
+     * </ol>
+     * Dans les deux cas la bonne reponse n'est pas de tomber : une vente sans reglement enregistre compte dans le
+     * chiffre d'affaires, elle ne compte simplement dans aucun mode de reglement. C'est ce que fait le code ci-dessous,
+     * et le total des modes est alors inferieur au net - ce qui est l'information exacte.
+     */
+    BalanceDTO buildVenteBalance(List<BalanceVenteItemDTO> values, boolean checkUg, boolean showAllAmount,
             List<VenteReglementReportDTO> reglementReports) {
         long montantTTC = 0;
         long montantNet = 0;
@@ -1550,14 +1628,19 @@ public class BalanceServiceImpl implements BalanceService {
             // montantPaye += montantPaye1;
 
         }
-        for (VenteReglementReportDTO reglementReport : reglementReports) {
+        // Liste nulle : aucune vente de ce type n'a de ligne de reglement. On ne ventile rien, on ne tombe pas.
+        for (VenteReglementReportDTO reglementReport : reglementReports == null
+                ? java.util.Collections.<VenteReglementReportDTO> emptyList() : reglementReports) {
             long ugNetAmount = checkUg ? reglementReport.getUgNetAmount() : 0;
             // long amount = ((reglementReport.getMontant() - reglementReport.getFlagedAmount()) - ugNetAmount)
             // - reglementReport.getAmountNonCa();
             long amount = ((reglementReport.getMontantAttentu() - reglementReport.getFlagedAmount()) - ugNetAmount)
                     - reglementReport.getAmountNonCa();
             totalModeReglement += amount;
-            switch (reglementReport.getTypeReglement()) {
+            // Mode absent : le montant compte dans le total encaisse, mais dans aucune colonne de mode -
+            // un switch sur une chaine nulle levait une NullPointerException.
+            String modeReglement = StringUtils.defaultString(reglementReport.getTypeReglement());
+            switch (modeReglement) {
 
             case Constant.MODE_ESP:
                 montantEsp += amount;
@@ -1594,7 +1677,7 @@ public class BalanceServiceImpl implements BalanceService {
 
                 break;
             default:
-                if (util.MobileMoney.est(reglementReport.getTypeReglement())) {
+                if (util.MobileMoney.est(modeReglement)) {
                     montantAutresMobile += amount;
                 }
                 break;

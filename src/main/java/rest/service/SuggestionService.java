@@ -43,6 +43,9 @@ public interface SuggestionService {
      */
     JSONObject makeSuggestionDepuisGarde(java.util.Map<String, Long> quantitesParProduit, TUser tu);
 
+    /** La meme, avec le commentaire porte par chaque suggestion creee (200 caracteres au plus). */
+    JSONObject makeSuggestionDepuisGarde(java.util.Map<String, Long> quantitesParProduit, TUser tu, String commentaire);
+
     JSONObject makeSuggestion(Set<VenteDetailsDTO> datas) throws JSONException;
 
     JSONObject findCHDetailStock(String idProduit, String emplacement);
@@ -102,5 +105,15 @@ public interface SuggestionService {
      * l'ecran fasse choisir.
      */
     JSONObject mergeSuggestionSelection(List<String> suggestionIds, String grossisteCibleId);
+
+    /**
+     * Eclate une suggestion en {@code nombre} suggestions manuelles, decoupees par nombre de lignes.
+     *
+     * <p>
+     * L'inverse de la fusion : une commande trop grande en nombre de lignes pour etre traitee d'un seul coup est
+     * decoupee en morceaux egaux. Aucune ligne n'est perdue ni dupliquee, et la suggestion de depart garde sa reference
+     * en devenant le premier morceau.
+     */
+    JSONObject eclaterSuggestion(String suggestionId, int nombre);
 
 }

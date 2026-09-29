@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -2021,7 +2022,68 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
-    private void computeVenteTicketZDataByUser(TicketZDTO ticket, List<MvtTransaction> list) {
+    /**
+     * Ventile, par caissier et par depot, la part des encaissements qui vient d'une vente jouee dans un depot
+     * d'extension. UNE seule requete pour tout le ticket.
+     *
+     * <p>
+     * La premiere version parcourait les entites ({@code mvt.getPreenregistrement().getEmplacementVente()}), ce qui
+     * forcait un chargement par vente : mesure sur 300 ventes, 2 a 4 secondes pour un ticket Z qui doit etre
+     * instantane, et bien davantage sur une vraie journee. L'agregat ci-dessous coute une requete, quel que soit le
+     * nombre de ventes.
+     *
+     * <p>
+     * L'argent de ces ventes est dans le tiroir du caissier et compte donc dans ses totaux : on ne touche a aucun
+     * total, on ajoute une lecture.
+     */
+    private void ventilerVentesEnDepot(Set<TicketZDTO> tickets, Params params) {
+        if (tickets == null || tickets.isEmpty()) {
+            return;
+        }
+        try {
+            StringBuilder sql = new StringBuilder("SELECT m.caisse AS caissier, e.str_NAME AS depot,"
+                    + " COALESCE(SUM(m.montantRegle), 0) AS montant" + " FROM mvttransaction m"
+                    + " JOIN t_preenregistrement p ON p.lg_PREENREGISTREMENT_ID = m.pkey"
+                    + " JOIN t_emplacement e ON e.lg_EMPLACEMENT_ID = p.lg_EMPLACEMENT_VENTE_ID"
+                    + " WHERE m.createdAt BETWEEN ?1 AND ?2 AND m.checked = TRUE"
+                    + " AND m.lg_EMPLACEMENT_ID = ?3 AND m.typeTransaction IN (?4, ?5)");
+            boolean unSeulUtilisateur = StringUtils.isNotEmpty(params.getUserId()) && !"ALL".equals(params.getUserId());
+            if (unSeulUtilisateur) {
+                sql.append(" AND m.caisse = ?6");
+            }
+            sql.append(" GROUP BY m.caisse, e.str_NAME");
+            LocalDateTime debut = LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE)
+                    .atTime(LocalTime.parse(params.getHrStart()));
+            LocalDateTime fin = LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE)
+                    .atTime(LocalTime.parse(params.getHrEnd().concat(":59")));
+            javax.persistence.Query q = getEntityManager().createNativeQuery(sql.toString(), Tuple.class)
+                    .setParameter(1, java.sql.Timestamp.valueOf(debut)).setParameter(2, java.sql.Timestamp.valueOf(fin))
+                    .setParameter(3, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .setParameter(4, TypeTransaction.VENTE_COMPTANT.ordinal())
+                    .setParameter(5, TypeTransaction.VENTE_CREDIT.ordinal());
+            if (unSeulUtilisateur) {
+                q.setParameter(6, params.getUserId());
+            }
+            for (Object o : q.getResultList()) {
+                Tuple t = (Tuple) o;
+                String caissier = t.get("caissier", String.class);
+                String depot = t.get("depot", String.class);
+                Number montant = (Number) t.get("montant");
+                for (TicketZDTO ticket : tickets) {
+                    if (ticket.getUserId() != null && ticket.getUserId().equals(caissier)) {
+                        ticket.ajouterVenteEnDepot(depot, montant == null ? 0L : montant.longValue());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Une ventilation illisible ne doit jamais empecher l'edition du ticket Z : le caissier doit
+            // pouvoir fermer sa caisse.
+            LOG.log(Level.WARNING, "ventilation des ventes en depot du ticket Z", e);
+        }
+    }
+
+    private void computeVenteTicketZDataByUser(TicketZDTO ticket, List<MvtTransaction> list,
+            Map<String, List<VenteReglement>> reglementsParVente) {
 
         for (MvtTransaction b : list) {
             if (b.getTypeTransaction() == TypeTransaction.VENTE_CREDIT) {
@@ -2039,7 +2101,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 if (Objects.nonNull(b.getMontantRestant()) && b.getMontantRestant() > 0) {
                     ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
                 }
-                if (!applyVenteReglementDetails(ticket, b)) {
+                if (!applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
                 }
 
@@ -2057,27 +2119,27 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
                 break;
             case DateConverter.MODE_MOOV:
-                if (!applyVenteReglementDetails(ticket, b)) {
+                if (!applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     ticket.setMontantMoov(b.getMontantRegle() + ticket.getMontantMoov());
                 }
                 break;
             case DateConverter.MODE_MTN:
-                if (!applyVenteReglementDetails(ticket, b)) {
+                if (!applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     ticket.setMontantMtn(b.getMontantRegle() + ticket.getMontantMtn());
                 }
                 break;
             case DateConverter.TYPE_REGLEMENT_ORANGE:
-                if (!applyVenteReglementDetails(ticket, b)) {
+                if (!applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     ticket.setMontantOrange(b.getMontantRegle() + ticket.getMontantOrange());
                 }
                 break;
             case DateConverter.MODE_WAVE:
-                if (!applyVenteReglementDetails(ticket, b)) {
+                if (!applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     ticket.setMontantWave(b.getMontantRegle() + ticket.getMontantWave());
                 }
                 break;
             case DateConverter.MODE_DJAMO:
-                if (!applyVenteReglementDetails(ticket, b)) {
+                if (!applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     ticket.setMontantDjamo(b.getMontantRegle() + ticket.getMontantDjamo());
                 }
                 break;
@@ -2087,7 +2149,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             default:
                 // Mode mobile money cree par l'officine : meme traitement que les operateurs historiques.
                 if (util.MobileMoney.est(b.getReglement().getLgTYPEREGLEMENTID())
-                        && !applyVenteReglementDetails(ticket, b)) {
+                        && !applyVenteReglementDetails(ticket, b, reglementsParVente)) {
                     TicketZDTO.AutreMobile autre = ticket.autreMobile(b.getReglement().getLgTYPEREGLEMENTID(),
                             b.getReglement().getStrNAME());
                     autre.setVente(autre.getVente() + b.getMontantRegle());
@@ -2104,13 +2166,68 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
      *
      * @return true si la vente était multi-règlements et a été ventilée
      */
-    private boolean applyVenteReglementDetails(TicketZDTO ticket, MvtTransaction b) {
-        List<VenteReglement> venteReglements = this.venteReglementService.getByVenteId(b.getPkey());
+    /**
+     * Ventes reglees en plusieurs modes : le detail est lu dans les reglements DEJA CHARGES, jamais interroge ici.
+     *
+     * <p>
+     * DEFAUT PRE-EXISTANT CORRIGE (signale le 16/09 en mesurant le ticket Z, corrige aujourd'hui) : cette methode
+     * lancait UNE REQUETE PAR VENTE. Sur 300 ventes, 300 requetes ; sur une journee chargee, des milliers. Le
+     * chargement etait la premiere depense du ticket Z, et elle grandissait avec l'activite de l'officine - c'est
+     * exactement le genre de cout qui ne se voit pas au banc et se voit au comptoir.
+     *
+     * <p>
+     * Les reglements sont maintenant lus en UNE requete pour toute la periode, puis retrouves en memoire. La regle
+     * metier est inchangee : un detail n'est applique que lorsque la vente porte PLUS D'UN reglement.
+     */
+    private boolean applyVenteReglementDetails(TicketZDTO ticket, MvtTransaction b,
+            Map<String, List<VenteReglement>> reglementsParVente) {
+        List<VenteReglement> venteReglements = reglementsParVente == null ? null : reglementsParVente.get(b.getPkey());
         if (CollectionUtils.isNotEmpty(venteReglements) && venteReglements.size() > 1) {
             updateTicket(ticket, venteReglements);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Tous les reglements des ventes du ticket, en UNE requete, groupes par vente.
+     *
+     * <p>
+     * Les identifiants sont decoupes en paquets : une clause IN de plusieurs milliers de valeurs est refusee par
+     * certaines bases et devient de toute facon plus lente qu'un enchainement de paquets.
+     */
+    private Map<String, List<VenteReglement>> reglementsDesVentes(List<MvtTransaction> mouvements) {
+        Map<String, List<VenteReglement>> parVente = new HashMap<>();
+        if (mouvements == null || mouvements.isEmpty()) {
+            return parVente;
+        }
+        List<String> ids = new ArrayList<>();
+        for (MvtTransaction m : mouvements) {
+            if (StringUtils.isNotBlank(m.getPkey())) {
+                ids.add(m.getPkey());
+            }
+        }
+        final int paquet = 500;
+        try {
+            for (int debut = 0; debut < ids.size(); debut += paquet) {
+                List<String> lot = ids.subList(debut, Math.min(debut + paquet, ids.size()));
+                List<VenteReglement> reglements = getEntityManager().createQuery(
+                        "SELECT o FROM VenteReglement o WHERE o.preenregistrement.lgPREENREGISTREMENTID" + " IN :ids",
+                        VenteReglement.class).setParameter("ids", lot).getResultList();
+                for (VenteReglement r : reglements) {
+                    String venteId = r.getPreenregistrement() == null ? null
+                            : r.getPreenregistrement().getLgPREENREGISTREMENTID();
+                    if (venteId != null) {
+                        parVente.computeIfAbsent(venteId, k -> new ArrayList<>()).add(r);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Sans ce detail, le ticket reste juste : les ventes a un seul mode de reglement sont comptees
+            // comme avant. On ne fait pas tomber un ticket Z pour une ventilation.
+            LOG.log(Level.SEVERE, "lecture groupee des reglements du ticket Z", e);
+        }
+        return parVente;
     }
 
     private boolean mvtIsReglement(TTypeMvtCaisse mvtCaisse) {
@@ -2299,28 +2416,35 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
         }
 
-        ticketZVenteData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
-                .forEach((user, trans) -> {
-                    TicketZDTO userData = null;
-                    ListIterator<TicketZDTO> listIterator = tickes.listIterator();
-                    while (listIterator.hasNext()) {
-                        TicketZDTO oldValue = listIterator.next();
-                        if (oldValue.getUserId().equals(user.getLgUSERID())) {
-                            userData = oldValue;
-                            break;
-                        }
+        List<MvtTransaction> ventes = ticketZVenteData(params);
+        // UNE lecture des reglements pour tout le ticket, avant la boucle des caissiers : la meme
+        // information etait lue vente par vente, ce qui faisait une requete par vente.
+        Map<String, List<VenteReglement>> reglementsParVente = reglementsDesVentes(ventes);
+        ventes.stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse)).forEach((user, trans) -> {
+            TicketZDTO userData = null;
+            ListIterator<TicketZDTO> listIterator = tickes.listIterator();
+            while (listIterator.hasNext()) {
+                TicketZDTO oldValue = listIterator.next();
+                if (oldValue.getUserId().equals(user.getLgUSERID())) {
+                    userData = oldValue;
+                    break;
+                }
 
-                    }
-                    if (Objects.isNull(userData)) {
-                        userData = addUserInfo(user);
-                    }
+            }
+            if (Objects.isNull(userData)) {
+                userData = addUserInfo(user);
+            }
 
-                    computeVenteTicketZDataByUser(userData, trans);
-                    tickes.add(userData);
+            computeVenteTicketZDataByUser(userData, trans, reglementsParVente);
+            tickes.add(userData);
 
-                });
+        });
 
-        return tickes.stream().collect(Collectors.toSet());
+        Set<TicketZDTO> resultat = tickes.stream().collect(Collectors.toSet());
+        // Ventilation « dont vente depot » : UNE requete pour tout le ticket, une fois les
+        // caissiers connus. Jamais dans la boucle des mouvements, ce serait un chargement par vente.
+        ventilerVentesEnDepot(resultat, params);
+        return resultat;
 
     }
 
@@ -2845,6 +2969,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("MOOV (vno/vo)",
                         NumberUtils.formatLongToString(v.getMontantMoov()));
                 modePaymentAmounts.add(modePaymentAmount);
+            }
+            // « dont vente dépôt » : une ventilation, pas un total de plus. Absente quand il n'y a pas eu de
+            // vente en dépôt, donc invisible pour qui n'en fait pas.
+            for (java.util.Map.Entry<String, Long> depot : v.getVentesEnDepot().entrySet()) {
+                if (depot.getValue() != null && depot.getValue() != 0) {
+                    modePaymentAmounts.add(new ModePaymentAmount("dont vente dépôt " + depot.getKey(),
+                            NumberUtils.formatLongToString(depot.getValue())));
+                }
             }
             for (TicketZDTO.AutreMobile autre : v.getAutresMobiles().values()) {
                 if (autre.getVente() != 0) {

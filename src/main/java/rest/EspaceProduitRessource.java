@@ -41,28 +41,56 @@ public class EspaceProduitRessource {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
+    /**
+     * Recherche par texte, par DCI, ou les deux.
+     *
+     * <p>
+     * Le selecteur de DCI (21/09) : « afficher les produits concernes par la DCI selectionnee ». Une DCI seule suffit a
+     * chercher - on n'exige pas les deux caracteres du texte, puisque le choix dans la liste est deja precis. Un texte
+     * ET une DCI restreignent l'un l'autre : les produits de cette DCI dont le nom contient le texte.
+     *
+     * @param q
+     *            texte cherche dans le CIP, le nom ou l'EAN ; facultatif si une DCI est donnee
+     * @param dci
+     *            identifiant d'une DCI de {@link #dci()} ; facultatif
+     */
     @GET
     @Path("recherche")
-    public Response rechercher(@QueryParam("q") String q) {
+    public Response rechercher(@QueryParam("q") String q, @QueryParam("dci") String dci) {
         JSONObject reponse = new JSONObject();
         JSONArray lignes = new JSONArray();
         String texte = StringUtils.trimToEmpty(q);
-        if (texte.length() < LONGUEUR_MINIMALE) {
+        String dciChoisie = StringUtils.trimToEmpty(dci);
+        boolean parTexte = texte.length() >= LONGUEUR_MINIMALE;
+        if (!parTexte && dciChoisie.isEmpty()) {
             return Response.ok().entity(reponse.put("total", 0).put("data", lignes).toString()).build();
         }
         String motif = "%" + texte + "%";
         // Stock rayon = stock total moins la reserve : la table des stocks par type n'est pas
         // entretenue sur toutes les bases, seul le couple (total, reserve) est fiable partout.
-        @SuppressWarnings("unchecked")
-        List<Object[]> resultats = em.createNativeQuery("SELECT f.int_CIP, f.str_NAME, z.str_LIBELLEE, f.int_PRICE,"
+        String sql = "SELECT f.int_CIP, f.str_NAME, z.str_LIBELLEE, f.int_PRICE,"
                 + " COALESCE(reserve.int_NUMBER, 0), s.int_NUMBER_AVAILABLE, f.lg_FAMILLE_ID" + " FROM t_famille f"
                 + " INNER JOIN t_famille_stock s ON s.lg_FAMILLE_ID = f.lg_FAMILLE_ID AND s.str_STATUT = 'enable'"
                 + " LEFT JOIN t_zone_geographique z ON z.lg_ZONE_GEO_ID = f.lg_ZONE_GEO_ID"
                 + " LEFT JOIN t_type_stock_famille reserve ON reserve.lg_FAMILLE_ID = f.lg_FAMILLE_ID"
                 + "   AND reserve.lg_TYPE_STOCK_ID = '2' AND reserve.lg_EMPLACEMENT_ID = s.lg_EMPLACEMENT_ID"
                 + " WHERE f.str_STATUT = 'enable'"
-                + " AND (f.int_CIP LIKE ?1 OR f.str_NAME LIKE ?1 OR f.int_EAN13 LIKE ?1)" + " ORDER BY f.str_NAME")
-                .setParameter(1, motif).setMaxResults(MAX_RESULTATS).getResultList();
+                + (parTexte ? " AND (f.int_CIP LIKE ?1 OR f.str_NAME LIKE ?1 OR f.int_EAN13 LIKE ?1)" : "")
+                /* La DCI est portee par la table de liaison : un produit peut en avoir plusieurs. */
+                + (dciChoisie.isEmpty() ? ""
+                        : " AND EXISTS (SELECT 1 FROM t_famille_dci fd"
+                                + " WHERE fd.lg_FAMILLE_ID = f.lg_FAMILLE_ID AND fd.lg_DCI_ID = ?2"
+                                + " AND fd.str_STATUT = 'enable')")
+                + " ORDER BY f.str_NAME";
+        javax.persistence.Query requete = em.createNativeQuery(sql);
+        if (parTexte) {
+            requete.setParameter(1, motif);
+        }
+        if (!dciChoisie.isEmpty()) {
+            requete.setParameter(2, dciChoisie);
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> resultats = requete.setMaxResults(MAX_RESULTATS).getResultList();
 
         for (Object[] r : resultats) {
             long reserve = nombreDe(r[4]);
@@ -75,6 +103,36 @@ public class EspaceProduitRessource {
                     .put("id", texteDe(r[6])));
         }
         return Response.ok().entity(reponse.put("total", lignes.length()).put("data", lignes).toString()).build();
+    }
+
+    /**
+     * Les DCI qui contiennent le texte saisi (nom ou code), TOUTES les DCI actives - pas seulement celles qui ont des
+     * produits : « on doit rechercher sur toutes les DCI existantes, s'il n'y a pas de produit on informe » (21/09).
+     * Trente au plus, du nom le plus court au plus long parmi ceux qui correspondent : un nom de molecule et le nombre
+     * de produits rattaches, rien d'autre.
+     */
+    @GET
+    @Path("dci")
+    public Response dci(@QueryParam("q") String q) {
+        JSONArray lignes = new JSONArray();
+        String texte = StringUtils.trimToEmpty(q);
+        if (texte.isEmpty()) {
+            return Response.ok().entity(new JSONObject().put("total", 0).put("data", lignes).toString()).build();
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> resultats = em.createNativeQuery(
+                "SELECT d.lg_DCI_ID, d.str_NAME," + " (SELECT COUNT(DISTINCT fd.lg_FAMILLE_ID) FROM t_famille_dci fd"
+                        + "   JOIN t_famille f ON f.lg_FAMILLE_ID = fd.lg_FAMILLE_ID AND f.str_STATUT = 'enable'"
+                        + "   WHERE fd.lg_DCI_ID = d.lg_DCI_ID AND fd.str_STATUT = 'enable') AS produits"
+                        + " FROM t_dci d WHERE d.str_STATUT = 'enable' AND (d.str_NAME LIKE ?1 OR d.str_CODE LIKE ?1)"
+                        + " ORDER BY d.str_NAME")
+                .setParameter(1, "%" + texte + "%").setMaxResults(30).getResultList();
+        for (Object[] r : resultats) {
+            lignes.put(new JSONObject().put("id", texteDe(r[0])).put("nom", texteDe(r[1])).put("produits",
+                    nombreDe(r[2])));
+        }
+        return Response.ok().entity(new JSONObject().put("total", lignes.length()).put("data", lignes).toString())
+                .build();
     }
 
     /**

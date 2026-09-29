@@ -16,6 +16,11 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
             'analysearticle #analyser': {click: this.doAnalyser},
             'analysearticle #seuilMarge': {change: {fn: this.doAnalyser, buffer: 700}},
             'analysearticle #seuilRotation': {change: {fn: this.doAnalyser, buffer: 700}},
+            'analysearticle #modeRotation': {select: this.surChangementMode},
+            'analysearticle #filtreStockOp': {select: this.doAnalyser},
+            'analysearticle #filtreStockVal': {change: {fn: this.doAnalyser, buffer: 600}},
+            'analysearticle #filtreQteOp': {select: this.doAnalyser},
+            'analysearticle #filtreQteVal': {change: {fn: this.doAnalyser, buffer: 600}},
             'analysearticle #filtreQuadrant': {select: this.doAnalyser},
             'analysearticle #filtreRayon': {select: this.doAnalyser},
             'analysearticle #filtreFamille': {select: this.doAnalyser},
@@ -29,6 +34,9 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
             'analysearticle #imprimer': {click: this.doImprimer},
             'analysearticle #ongletPaires': {activate: this.doChargerPaires},
             'analysearticle #actualiserPaires': {click: this.doChargerPaires},
+            'analysearticle #produitAutour': {select: this.doChargerPaires},
+            'analysearticle #nbCompagnons': {change: {fn: this.doChargerPaires, buffer: 600}},
+            'analysearticle #effacerProduitAutour': {click: this.doEffacerProduitAutour},
             'analysearticle #exporterPaires': {click: this.doExporterPaires}
         });
     },
@@ -50,6 +58,11 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
             dtEnd: libre ? ecran.down('#dtEnd').getSubmitValue() : '',
             seuilMarge: valeur('seuilMarge'),
             seuilRotation: valeur('seuilRotation'),
+            modeRotation: valeur('modeRotation') || 'JOURS',
+            stockOp: valeur('filtreStockOp'),
+            stockVal: valeur('filtreStockVal'),
+            qteOp: valeur('filtreQteOp'),
+            qteVal: valeur('filtreQteVal'),
             quadrant: valeur('filtreQuadrant') || 0,
             rayon: valeur('filtreRayon'),
             famille: valeur('filtreFamille'),
@@ -74,6 +87,19 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
         if (!libre) {
             this.doAnalyser();
         }
+    },
+
+    /* Changer de lecture change le sens du seuil : on le vide, la mediane du nouveau mode s'applique. */
+    surChangementMode: function (combo) {
+        var ecran = this.getEcran();
+        var jours = combo.getValue() !== 'RATIO';
+        var seuil = ecran.down('#seuilRotation');
+        seuil.setFieldLabel(jours ? 'Élevée si couv. ≤' : 'Élevée si ratio ≥');
+        ecran.down('#uniteRotation').setValue(jours ? 'j' : '');
+        seuil.suspendEvents();
+        seuil.setValue(null);
+        seuil.resumeEvents();
+        this.doAnalyser();
     },
 
     /* ------------------------------------------------------------------ matrice */
@@ -120,12 +146,28 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
         var n = function (v) {
             return Ext.util.Format.number(v || 0, '0,000');
         };
+        /*
+         * LES REGLES EN CLAIR (21/09) : « qu'entends-tu par marge elevee ? a quoi compares-tu ? ». Le serveur
+         * enonce les trois regles - marge, rotation, ruptures - avec le seuil retenu et la mediane, et l'en-tete
+         * les affiche telles quelles : ce qu'on lit est exactement ce qui a classe les produits.
+         */
+        var regles = Ext.Array.map(brut.regles || [], Ext.String.htmlEncode).join(' &nbsp;·&nbsp; ');
         var entete = 'Période <b>' + Ext.String.htmlEncode(periode.libelle || '') + '</b> (' + (periode.jours || 0)
-                + ' jours) · <b>' + n(brut.totalProduits) + '</b> produit(s) vendu(s) · seuils : taux de marge <b>'
-                + Ext.util.Format.number(seuils.marge || 0, '0.0') + ' %</b>, rotation <b>'
-                + Ext.util.Format.number(seuils.rotation || 0, '0.00') + '</b> (médianes de l\'assortiment : '
-                + Ext.util.Format.number(seuils.medianeMarge || 0, '0.0') + ' % et '
-                + Ext.util.Format.number(seuils.medianeRotation || 0, '0.00') + ')';
+                + ' jours) · <b>' + n(brut.totalProduits) + '</b> produit(s) vendu(s)'
+                + '<br><span class="aa-regles">' + regles + '</span>';
+        var rappel = ecran.down('#rappelFiltres');
+        if (rappel) {
+            var c = this.criteres();
+            var morceaux = [];
+            if (c.stockOp && c.stockVal !== '') {
+                morceaux.push('stock ' + c.stockOp + ' ' + c.stockVal);
+            }
+            if (c.qteOp && c.qteVal !== '') {
+                morceaux.push('quantité ' + c.qteOp + ' ' + c.qteVal);
+            }
+            rappel.setText(morceaux.length ? '<b>' + n(store.getTotalCount()) + '</b> produit(s) avec '
+                    + Ext.String.htmlEncode(morceaux.join(' et ')) : '');
+        }
         panneau.update({
             entete: entete,
             quadrants: Ext.Array.map(ecran.QUADRANTS, function (q) {
@@ -158,6 +200,12 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
         });
         ecran.down('#filtreQuadrant').setValue(0);
         ecran.down('#recherche').setValue('');
+        Ext.each(['filtreStockOp', 'filtreQteOp'], function (id) {
+            ecran.down('#' + id).setValue('');
+        });
+        Ext.each(['filtreStockVal', 'filtreQteVal'], function (id) {
+            ecran.down('#' + id).setValue(null);
+        });
         this.doAnalyser();
     },
 
@@ -231,15 +279,34 @@ Ext.define('testextjs.controller.AnalyseArticleCtr', {
         return {
             typePeriode: c.typePeriode, dtStart: c.dtStart, dtEnd: c.dtEnd,
             minimum: ecran.down('#minimumTickets').getValue() || 3,
-            limite: ecran.down('#limitePaires').getValue() || 100
+            /* Autour d'un produit, c'est le champ « Compagnons » qui compte ; sinon « Paires ». */
+            limite: ecran.down('#produitAutour').getValue()
+                    ? (ecran.down('#nbCompagnons').getValue() || 5) : (ecran.down('#limitePaires').getValue() || 100),
+            produit: ecran.down('#produitAutour').getValue() || ''
         };
+    },
+
+    doEffacerProduitAutour: function () {
+        var ecran = this.getEcran();
+        ecran.down('#produitAutour').clearValue();
+        this.doChargerPaires();
     },
 
     doChargerPaires: function () {
         var ecran = this.getEcran();
         var onglet = ecran.down('#ongletPaires');
         var store = ecran.paireStore;
-        Ext.apply(store.getProxy().extraParams, this.criteresPaires());
+        var criteres = this.criteresPaires();
+        /* Autour d'un produit, c'est « Compagnons » qui compte : « Paires » s'efface pour ne pas tromper. */
+        var limite = ecran.down('#limitePaires');
+        if (limite) {
+            limite.setDisabled(!!criteres.produit);
+        }
+        var compagnons = ecran.down('#nbCompagnons');
+        if (compagnons) {
+            compagnons.setDisabled(!criteres.produit);
+        }
+        Ext.apply(store.getProxy().extraParams, criteres);
         if (onglet.rendered) {
             onglet.setLoading('Recherche des paires...');
         }

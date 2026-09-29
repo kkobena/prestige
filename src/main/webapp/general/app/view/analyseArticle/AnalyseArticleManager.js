@@ -114,9 +114,23 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                 }, {
                     xtype: 'displayfield', value: '%', margin: '0 8 0 2'
                 }, {
-                    xtype: 'numberfield', itemId: 'seuilRotation', fieldLabel: 'Rotation élevée ≥', labelWidth: 110,
-                    width: 190, minValue: 0, allowDecimals: true, decimalPrecision: 2, emptyText: 'médiane',
+                    /*
+                     * LA ROTATION SE LIT EN JOURS DE COUVERTURE PAR DEFAUT (21/09) : « lent = plus de N jours
+                     * de stock », ce qu'un pharmacien lit sans calcul. Le ratio vendu / stock reste au choix.
+                     * Le seuil suit le mode : une couverture maximale en jours, ou une rotation minimale.
+                     */
+                    xtype: 'combobox', itemId: 'modeRotation', fieldLabel: 'Rotation', labelWidth: 55, width: 175,
+                    store: Ext.create('Ext.data.ArrayStore', {
+                        fields: ['code', 'libelle'],
+                        data: [['JOURS', 'en jours de couv.'], ['RATIO', 'en ratio vendu/stock']]
+                    }),
+                    valueField: 'code', displayField: 'libelle', queryMode: 'local', editable: false, value: 'JOURS'
+                }, {
+                    xtype: 'numberfield', itemId: 'seuilRotation', fieldLabel: 'Élevée si couv. ≤', labelWidth: 105,
+                    width: 185, minValue: 0, allowDecimals: true, decimalPrecision: 2, emptyText: 'médiane',
                     hideTrigger: true
+                }, {
+                    xtype: 'displayfield', itemId: 'uniteRotation', value: 'j', margin: '0 8 0 2'
                 }, {
                     text: 'Analyser', itemId: 'analyser', iconCls: 'x-tbar-loading'
                 }, '->', {
@@ -145,13 +159,24 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
         };
         var combo = function (itemId, libelle, store) {
             return {
-                xtype: 'combobox', itemId: itemId, fieldLabel: libelle, labelWidth: 70, width: 220,
+                xtype: 'combobox', itemId: itemId, fieldLabel: libelle, labelWidth: 70, width: 200,
                 store: store, pageSize: 999, valueField: 'id', displayField: 'libelle', typeAhead: true,
                 queryMode: 'remote', minChars: 2, emptyText: 'Tous'
             };
         };
         var nombre = function (v) {
             return Ext.util.Format.number(v || 0, '0,000');
+        };
+        var operateur = function (itemId, libelle) {
+            return {
+                xtype: 'combobox', itemId: itemId, fieldLabel: libelle, labelWidth: libelle.length > 6 ? 68 : 36,
+                width: libelle.length > 6 ? 128 : 96,
+                store: Ext.create('Ext.data.ArrayStore', {
+                    fields: ['code', 'libelle'],
+                    data: [['', '—'], ['>=', '≥'], ['<=', '≤'], ['=', '='], ['>', '>'], ['<', '<'], ['!=', '≠']]
+                }),
+                valueField: 'code', displayField: 'libelle', queryMode: 'local', editable: false, value: ''
+            };
         };
         return {
             title: 'Matrice marge × rotation',
@@ -163,7 +188,7 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                     xtype: 'panel',
                     itemId: 'quadrants',
                     border: false,
-                    height: 150,
+                    height: 168,
                     cls: 'analyse-article-quadrants',
                     tpl: new Ext.XTemplate(
                         '<div class="aa-entete">{entete}</div>',
@@ -195,11 +220,25 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                         combo('filtreFamille', 'Famille', filtreDistant('../api/v1/common/famillearticles')),
                         combo('filtreGrossiste', 'Grossiste', filtreDistant('../api/v1/common/grossiste')),
                         {
-                            xtype: 'textfield', itemId: 'recherche', fieldLabel: 'Produit', labelWidth: 50, width: 240,
+                            xtype: 'textfield', itemId: 'recherche', fieldLabel: 'Produit', labelWidth: 50, width: 200,
                             emptyText: 'CIP ou libellé', enableKeyEvents: true
+                        },
+                        /*
+                         * FILTRES A OPERATEURS sur le stock et la quantite vendue (21/09), sur la meme ligne que les
+                         * autres filtres. Un produit vendu le matin meme peut etre a stock zero au moment ou l'on
+                         * regarde ; « stock ≥ 1 » l'ecarte d'un geste, « quantite ≥ 5 » ecarte l'anecdotique.
+                         */
+                        operateur('filtreStockOp', 'Stock'), {
+                            xtype: 'numberfield', itemId: 'filtreStockVal', width: 70, minValue: -99999, hideTrigger: true,
+                            emptyText: 'valeur', enableKeyEvents: true
+                        }, operateur('filtreQteOp', 'Qté vendue'), {
+                            xtype: 'numberfield', itemId: 'filtreQteVal', width: 70, minValue: 0, hideTrigger: true,
+                            emptyText: 'valeur', enableKeyEvents: true
                         }, {
                             text: 'Effacer les filtres', itemId: 'effacerFiltres'
                         }, '->', {
+                            xtype: 'tbtext', itemId: 'rappelFiltres', text: '', margin: '0 8 0 0'
+                        }, {
                             xtype: 'tbtext', itemId: 'compteCoches', text: ''
                         }]
                 }, {
@@ -228,21 +267,35 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                         },
                         {header: 'CIP', dataIndex: 'cip', width: 85},
                         {header: 'Produit', dataIndex: 'libelle', flex: 1},
-                        {header: 'Qté', dataIndex: 'quantite', width: 60, align: 'right'},
-                        {header: 'Tickets', dataIndex: 'tickets', width: 65, align: 'right'},
-                        {header: 'Chiffre', dataIndex: 'montant', width: 95, align: 'right', xtype: 'numbercolumn', format: '0,000.'},
-                        {header: 'Marge', dataIndex: 'marge', width: 90, align: 'right', xtype: 'numbercolumn', format: '0,000.'},
-                        {header: 'Taux %', dataIndex: 'tauxMarge', width: 65, align: 'right', xtype: 'numbercolumn', format: '0.0'},
-                        {header: 'Stock', dataIndex: 'stock', width: 60, align: 'right'},
+                        {header: 'Qté', dataIndex: 'quantite', width: 60, align: 'right',
+                            tooltip: 'Quantité vendue sur la période analysée'},
+                        {header: 'Tickets', dataIndex: 'tickets', width: 65, align: 'right',
+                            tooltip: 'Nombre de ventes distinctes contenant le produit'},
+                        {header: 'Chiffre', dataIndex: 'montant', width: 95, align: 'right', xtype: 'numbercolumn', format: '0,000.',
+                            tooltip: 'Montant TTC vendu sur la période'},
+                        {header: 'Marge', dataIndex: 'marge', width: 90, align: 'right', xtype: 'numbercolumn', format: '0,000.',
+                            tooltip: 'Marge = (TTC − remise − TVA) − prix d\'achat × quantité'},
+                        {header: 'Taux %', dataIndex: 'tauxMarge', width: 65, align: 'right', xtype: 'numbercolumn', format: '0.0',
+                            tooltip: 'Taux de marge = marge ÷ montant HT'},
+                        {header: 'Stock', dataIndex: 'stock', width: 60, align: 'right',
+                            tooltip: 'Stock disponible au moment de l\'analyse'},
                         {
                             header: 'Rotation', dataIndex: 'rotation', width: 70, align: 'right',
-                            tooltip: 'Quantité vendue sur la période / stock actuel',
-                            xtype: 'numbercolumn', format: '0.00'
+                            tooltip: 'Rotation = quantité vendue sur la période ÷ stock actuel',
+                            /*
+                             * L'INFOBULLE SUR LA VALEUR (21/09) : la formule AVEC les nombres de la ligne et la
+                             * periode, en bleu, sans troncature, tant que le curseur est sur la cellule.
+                             */
+                            renderer: function (v, meta, ligne) {
+                                meta.tdAttr = me.infobulleCellule(me.expliquerRotation(ligne));
+                                return Ext.util.Format.number(v, '0.00');
+                            }
                         },
                         {
                             header: 'Couv. (j)', dataIndex: 'couverture', width: 70, align: 'right',
-                            tooltip: 'Jours de couverture du stock actuel au rythme de vente de la période',
-                            renderer: function (v) {
+                            tooltip: 'Couverture = stock actuel × jours de la période ÷ quantité vendue',
+                            renderer: function (v, meta, ligne) {
+                                meta.tdAttr = me.infobulleCellule(me.expliquerCouverture(ligne));
                                 return v < 0 ? '∞' : Ext.util.Format.number(v, '0.0');
                             }
                         },
@@ -256,6 +309,64 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                     ]
                 }]
         };
+    },
+
+    /* ------------------------------------------------------------------ infobulles des valeurs */
+
+    /** L'attribut d'infobulle d'une cellule : bleue, large, et qui suit la cellule. */
+    infobulleCellule: function (html) {
+        return 'data-qtip="' + Ext.String.htmlEncode(html) + '" data-qclass="aa-bulle" data-qwidth="440"';
+    },
+
+    /**
+     * La periode et les seuils de la derniere analyse, lus dans la REPONSE que le magasin vient de recevoir : la
+     * grille se dessine avant que le controleur n'ait range cette reponse, et lire une copie plus ancienne
+     * donnait « sur ? jours » dans les premieres infobulles.
+     */
+    contexteAnalyse: function () {
+        var lecteur = this.articleStore && this.articleStore.getProxy() ? this.articleStore.getProxy().getReader() : null;
+        var d = (lecteur && lecteur.rawData) || this.derniereAnalyse || {};
+        return {periode: d.periode || {}, seuils: d.seuils || {}};
+    },
+
+    expliquerRotation: function (ligne) {
+        var n = function (v, f) { return Ext.util.Format.number(v || 0, f || '0,000'); };
+        var c = this.contexteAnalyse();
+        var q = ligne.get('quantite'), stock = ligne.get('stock'), rotation = ligne.get('rotation');
+        var texte = '<b>Rotation ' + n(rotation, '0.00') + '</b><br>';
+        if (stock > 0) {
+            texte += '= ' + n(q) + ' vendu(s) ÷ ' + n(stock) + ' en stock, sur ' + (c.periode.jours || '?') + ' jours ('
+                    + Ext.String.htmlEncode(c.periode.libelle || '') + ').<br>Le stock actuel s\'est vendu '
+                    + n(rotation, '0.00') + ' fois sur la période.';
+        } else {
+            texte += 'Produit EN RUPTURE (stock 0) : il n\'a pas de rotation, la valeur affichée est sa quantité vendue ('
+                    + n(q) + ' sur ' + (c.periode.jours || '?') + ' jours).<br>Il est jugé « rotation élevée » si cette quantité atteint '
+                    + n(c.seuils.medianeQuantite, '0.0') + ' (médiane des quantités vendues).';
+        }
+        if (c.seuils.modeRotation === 'RATIO') {
+            texte += '<br><i>Seuil : rotation élevée si ≥ ' + n(c.seuils.rotation, '0.00') + '.</i>';
+        }
+        return texte;
+    },
+
+    expliquerCouverture: function (ligne) {
+        var n = function (v, f) { return Ext.util.Format.number(v || 0, f || '0,000'); };
+        var c = this.contexteAnalyse();
+        var q = ligne.get('quantite'), stock = ligne.get('stock'), couv = ligne.get('couverture');
+        var texte = '<b>Couverture ' + (couv < 0 ? '∞' : n(couv, '0.0') + ' jour(s)') + '</b><br>';
+        if (stock <= 0) {
+            texte += 'Stock 0 : rien à couvrir, le produit est en rupture.';
+        } else if (couv < 0) {
+            texte += n(stock) + ' en stock et aucune vente sur la période : le stock ne s\'écoule pas (couverture infinie).';
+        } else {
+            texte += '= ' + n(stock) + ' en stock × ' + (c.periode.jours || '?') + ' jours ÷ ' + n(q) + ' vendu(s) ('
+                    + Ext.String.htmlEncode(c.periode.libelle || '') + ').<br>Au rythme de vente de la période, le stock tient encore '
+                    + n(couv, '0.0') + ' jour(s).';
+        }
+        if (c.seuils.modeRotation !== 'RATIO') {
+            texte += '<br><i>Seuil : rotation élevée si la couverture est ≤ ' + n(c.seuils.rotation, '0.0') + ' jours.</i>';
+        }
+        return texte;
     },
 
     /* ------------------------------------------------------------------ produits achetes ensemble */
@@ -276,14 +387,50 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                     xtype: 'toolbar',
                     dock: 'top',
                     items: [{
-                            xtype: 'tbtext',
-                            text: 'Produits présents sur les mêmes tickets, du plus fréquent au moins fréquent.'
+                            /*
+                             * AUTOUR D'UN PRODUIT (21/09) : « choisir un produit et voir les N produits les plus
+                             * souvent achetes avec lui ». Vide, l'onglet montre toutes les paires comme avant.
+                             */
+                            xtype: 'combobox', itemId: 'produitAutour', fieldLabel: 'Autour du produit', labelWidth: 105,
+                            width: 640, emptyText: 'CIP ou nom (2 caractères) — vide : toutes les paires',
+                            /* Assez large pour qu'un nom de produit tienne sur UNE ligne (21/09). */
+                            listConfig: {minWidth: 640, maxHeight: 360},
+                            store: Ext.create('Ext.data.Store', {
+                                fields: ['lg_FAMILLE_ID', 'str_NAME', 'int_CIP'],
+                                pageSize: 20,
+                                proxy: {
+                                    type: 'ajax', url: '../api/v1/produit-search/fiche',
+                                    reader: {type: 'json', root: 'results', totalProperty: 'total'}
+                                }
+                            }),
+                            valueField: 'lg_FAMILLE_ID', displayField: 'str_NAME', queryMode: 'remote',
+                            queryParam: 'search_value', minChars: 2, typeAhead: false, forceSelection: true,
+                            tpl: Ext.create('Ext.XTemplate', '<tpl for="."><div class="x-boundlist-item">'
+                                    + '<b>{int_CIP}</b> {str_NAME}</div></tpl>')
+                        }, {
+                            /* « Je ne vois pas où mettre la valeur N compagnons » (21/09) : le champ est la, nomme. */
+                            xtype: 'numberfield', itemId: 'nbCompagnons', fieldLabel: 'Compagnons', labelWidth: 80,
+                            width: 145, minValue: 1, maxValue: 100, allowDecimals: false, value: 5,
+                            tooltip: 'Nombre de produits les plus souvent achetés avec le produit choisi'
+                        }, {
+                            text: 'Toutes les paires', itemId: 'effacerProduitAutour',
+                            tooltip: 'Revenir à toutes les paires de la période'
                         }, '-', {
                             xtype: 'numberfield', itemId: 'minimumTickets', fieldLabel: 'Minimum de tickets ensemble',
                             labelWidth: 170, width: 240, minValue: 1, allowDecimals: false, value: 3
                         }, {
                             xtype: 'numberfield', itemId: 'limitePaires', fieldLabel: 'Paires', labelWidth: 45, width: 120,
                             minValue: 1, maxValue: 1000, allowDecimals: false, value: 100
+                        }, {
+                            xtype: 'tbtext', itemId: 'explicationPaires', margin: '0 0 0 8',
+                            text: '<span style="color:#5A6B80" data-qtip="'
+                                    + '<b>Minimum de tickets ensemble</b> : une paire vue moins de N fois n\'est pas montrée, '
+                                    + 'pour que les coïncidences ne noient pas les vraies associations.<br>'
+                                    + '<b>Paires</b> : le nombre de lignes affichées, les plus fréquentes d\'abord — '
+                                    + 'ou, autour d\'un produit, le nombre de compagnons voulus.<br>'
+                                    + '<b>% des tickets du produit 1</b> : parmi les tickets qui contiennent le produit 1, '
+                                    + 'la part qui contient aussi le produit 2. Et inversement pour le produit 2 : '
+                                    + '80 % des acheteurs de A prennent B n\'implique pas l\'inverse.">ⓘ Que veulent dire ces réglages ?</span>'
                         }, {
                             text: 'Actualiser', itemId: 'actualiserPaires', iconCls: 'x-tbar-loading'
                         }, '->', {
@@ -296,7 +443,8 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                 {header: 'Produit 1', dataIndex: 'libelle1', flex: 1},
                 {header: 'CIP', dataIndex: 'cip2', width: 85},
                 {header: 'Produit 2', dataIndex: 'libelle2', flex: 1},
-                {header: 'Tickets ensemble', dataIndex: 'tickets', width: 120, align: 'right'},
+                {header: 'Tickets ensemble', dataIndex: 'tickets', width: 120, align: 'right',
+                    tooltip: 'Nombre de tickets de la période portant les deux produits à la fois'},
                 {
                     header: '% des tickets du produit 1', dataIndex: 'part1', width: 160, align: 'right',
                     tooltip: 'Part des tickets contenant le produit 1 qui contiennent aussi le produit 2',
@@ -304,6 +452,7 @@ Ext.define('testextjs.view.analyseArticle.AnalyseArticleManager', {
                 },
                 {
                     header: '% des tickets du produit 2', dataIndex: 'part2', width: 160, align: 'right',
+                    tooltip: 'Part des tickets contenant le produit 2 qui contiennent aussi le produit 1',
                     xtype: 'numbercolumn', format: '0.0'
                 }
             ]

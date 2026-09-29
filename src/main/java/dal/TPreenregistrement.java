@@ -172,6 +172,30 @@ public class TPreenregistrement implements Serializable {
     private Integer intREMISEPARA;
     @Column(name = "PK_BRAND")
     private String pkBrand;
+    /**
+     * Depot d'extension ou la vente a lieu. NULL pour une vente d'officine : le code retombe alors sur l'emplacement de
+     * l'utilisateur de la vente, comme avant l'introduction de ce champ. A ne pas confondre avec pkBrand, qui designe
+     * le depot CLIENT d'une vente a un depot.
+     */
+    /*
+     * PAS DE « fetch = LAZY » ICI, ET C'EST DELIBERE.
+     *
+     * Cette association avait ete declaree paresseuse le 17/09 pour alleger le ticket Z, qui chargeait une vente par
+     * mouvement de caisse. EclipseLink n'applique pourtant le chargement paresseux d'un @ManyToOne que si le TISSAGE
+     * des classes est actif ; il ne l'est pas dans ce deploiement. L'annotation etait donc ignoree, et EclipseLink
+     * l'annoncait a chaque demarrage : « Reverting the lazy setting ... since weaving was not enabled ».
+     *
+     * LE TICKET Z N'EN DEPEND PAS. Le gain mesure ce jour-la - de quatre secondes et demie a deux secondes et demie -
+     * venait de l'autre correction du meme commit : la ventilation « dont vente depot » ne parcourt plus les entites,
+     * elle tient en UNE requete agregee par ticket. C'est elle qui porte le gain, et elle est intacte. L'annotation,
+     * elle, n'apportait rien qu'un avertissement dans le journal de l'officine.
+     *
+     * Si le tissage est active un jour, ce sera un chantier a lui : il change le comportement de TOUTES les entites du
+     * logiciel et demande son propre banc d'essai.
+     */
+    @JoinColumn(name = "lg_EMPLACEMENT_VENTE_ID", referencedColumnName = "lg_EMPLACEMENT_ID")
+    @ManyToOne
+    private TEmplacement emplacementVente;
     @JoinColumn(name = "lg_REGLEMENT_ID", referencedColumnName = "lg_REGLEMENT_ID")
     @ManyToOne
     private TReglement lgREGLEMENTID;
@@ -295,6 +319,14 @@ public class TPreenregistrement implements Serializable {
 
     public String getPkBrand() {
         return pkBrand;
+    }
+
+    public TEmplacement getEmplacementVente() {
+        return emplacementVente;
+    }
+
+    public void setEmplacementVente(TEmplacement emplacementVente) {
+        this.emplacementVente = emplacementVente;
     }
 
     public void setPkBrand(String pkBrand) {
