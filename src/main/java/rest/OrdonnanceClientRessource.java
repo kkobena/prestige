@@ -57,6 +57,24 @@ public class OrdonnanceClientRessource {
     @EJB
     private rest.service.impl.SubstitutionService substitutionService;
 
+    @EJB
+    private rest.service.impl.OrdonnancePreventeService preventeService;
+
+    @EJB
+    private rest.service.impl.TerrainCliniqueService terrainService;
+
+    @EJB
+    private rest.service.impl.OrdonnanceRenouvellementService renouvellementService;
+
+    @EJB
+    private rest.service.SmsService smsService;
+
+    @EJB
+    private rest.service.impl.OrdonnanceScanService scanService;
+
+    @EJB
+    private rest.service.impl.DossierClientService dossierService;
+
     private TUser utilisateur() {
         return (TUser) servletRequest.getSession().getAttribute(commonparameter.AIRTIME_USER);
     }
@@ -113,6 +131,8 @@ public class OrdonnanceClientRessource {
             @QueryParam("typeClientId") String typeClientId, @QueryParam("medecinId") String medecinId,
             @QueryParam("dtStart") String debut, @QueryParam("dtEnd") String fin,
             @QueryParam("annulees") @DefaultValue("false") boolean annulees,
+            @QueryParam("reste") @DefaultValue("false") boolean reste,
+            @QueryParam("renouveler") @DefaultValue("false") boolean renouveler,
             @QueryParam("start") @DefaultValue("0") int start, @QueryParam("limit") @DefaultValue("50") int limit) {
         if (utilisateur() == null) {
             return deconnecte();
@@ -120,10 +140,12 @@ public class OrdonnanceClientRessource {
         if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
             return refusConsultation();
         }
+        /* Preventes cloturees a la caisse depuis la derniere lecture : leur service est reporte d'abord (30/09). */
+        preventeService.reporterServices(null);
         return Response.ok()
-                .entity(ordonnanceService
-                        .liste(criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees), start, limit)
-                        .toString())
+                .entity(ordonnanceService.liste(
+                        criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees, reste, renouveler),
+                        start, limit).toString())
                 .build();
     }
 
@@ -137,6 +159,7 @@ public class OrdonnanceClientRessource {
         if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
             return refusConsultation();
         }
+        preventeService.reporterServices(id);
         return Response.ok().entity(ordonnanceService.detail(id).toString()).build();
     }
 
@@ -313,6 +336,119 @@ public class OrdonnanceClientRessource {
         return Response.ok().entity(ordonnanceService.purgerPiecesOrphelines().toString()).build();
     }
 
+    /**
+     * Prevente depuis l'ordonnance (30/09) : ce qui serait cree, sans rien creer. L'ecran le montre avant de demander
+     * confirmation.
+     */
+    @GET
+    @Path("prevente/{id}/apercu")
+    public Response apercuPrevente(@PathParam("id") String id) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        return Response.ok().entity(preventeService.apercu(id).toString()).build();
+    }
+
+    /** Cree la prevente : une vente en attente, reprise ensuite a la caisse. Droit d'ecriture des ordonnances. */
+    @POST
+    @Path("prevente/{id}")
+    public Response creerPrevente(@PathParam("id") String id) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        return Response.ok().entity(preventeService.creer(id, utilisateur()).toString()).build();
+    }
+
+    /** Les preventes deja nees de l'ordonnance, avec leur etat a la caisse. */
+    @GET
+    @Path("prevente/{id}")
+    public Response preventes(@PathParam("id") String id) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        preventeService.reporterServices(id);
+        return Response.ok()
+                .entity(new JSONObject().put("success", true).put("data", preventeService.preventes(id)).toString())
+                .build();
+    }
+
+    /**
+     * Renouvellement (30/09) : une NOUVELLE ordonnance liee a l'origine, datee du jour, avec les memes produits. Droit
+     * d'ecriture des ordonnances.
+     */
+    @POST
+    @Path("renouvellement/{id}")
+    public Response renouveler(@PathParam("id") String id) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        return Response.ok().entity(renouvellementService.renouveler(id, utilisateur()).toString()).build();
+    }
+
+    /**
+     * Rappel SMS du renouvellement, tout de suite (bouton de la fiche). La notification est enregistree et validee par
+     * le service, PUIS envoyee par le module SMS : il la relit dans sa propre transaction.
+     */
+    @POST
+    @Path("renouvellement/{id}/rappel")
+    public Response rappelRenouvellement(@PathParam("id") String id) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        JSONObject r = renouvellementService.preparerRappel(id, utilisateur());
+        if (r.optBoolean("success", false)) {
+            smsService.sendSMSByNotificationIdAsync(r.getString("notificationId"));
+        }
+        return Response.ok().entity(r.toString()).build();
+    }
+
+    /** Terrains cliniques (30/09) : actifs pour la fiche, tous (?tous=true) pour le parametrage. */
+    @GET
+    @Path("terrains")
+    public Response terrains(@QueryParam("tous") @DefaultValue("false") boolean tous) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(terrainService.lister(tous).toString()).build();
+    }
+
+    /** Ajout ou modification d'un terrain clinique : droit d'ecriture des ordonnances. */
+    @POST
+    @Path("terrains")
+    public Response enregistrerTerrain(String corps) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        JSONObject requete;
+        try {
+            requete = new JSONObject(corps == null ? "{}" : corps);
+        } catch (RuntimeException e) {
+            return refus("La saisie n'a pas pu être lue.");
+        }
+        return Response.ok().entity(terrainService.enregistrer(requete).toString()).build();
+    }
+
     /** Creation rapide d'un prescripteur depuis la fiche (23/09) : droit d'ecriture des ordonnances. */
     @POST
     @Path("medecins/creer")
@@ -367,6 +503,7 @@ public class OrdonnanceClientRessource {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
         try {
+            preventeService.reporterServices(id);
             byte[] pdf = ordonnanceService.pdfFiche(operateur, id);
             return Response.ok(pdf).type("application/pdf")
                     .header("Content-Disposition", "inline; filename=\"ordonnance.pdf\"").build();
@@ -390,6 +527,8 @@ public class OrdonnanceClientRessource {
             @QueryParam("typeClientId") String typeClientId, @QueryParam("medecinId") String medecinId,
             @QueryParam("dtStart") String debut, @QueryParam("dtEnd") String fin,
             @QueryParam("annulees") @DefaultValue("false") boolean annulees,
+            @QueryParam("reste") @DefaultValue("false") boolean reste,
+            @QueryParam("renouveler") @DefaultValue("false") boolean renouveler,
             @QueryParam("clientLibelle") String clientLibelle, @QueryParam("typeLibelle") String typeLibelle,
             @QueryParam("medecinLibelle") String medecinLibelle) {
         TUser operateur = utilisateur();
@@ -400,9 +539,10 @@ public class OrdonnanceClientRessource {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
         try {
+            preventeService.reporterServices(null);
             byte[] pdf = ordonnanceService.pdfHistorique(operateur,
-                    criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees), clientLibelle,
-                    typeLibelle, medecinLibelle);
+                    criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees, reste, renouveler),
+                    clientLibelle, typeLibelle, medecinLibelle);
             return Response.ok(pdf).type("application/pdf")
                     .header("Content-Disposition", "inline; filename=\"ordonnances_historique.pdf\"").build();
         } catch (Exception e) {
@@ -418,7 +558,9 @@ public class OrdonnanceClientRessource {
     public Response historiqueExcel(@QueryParam("query") String query, @QueryParam("clientId") String clientId,
             @QueryParam("typeClientId") String typeClientId, @QueryParam("medecinId") String medecinId,
             @QueryParam("dtStart") String debut, @QueryParam("dtEnd") String fin,
-            @QueryParam("annulees") @DefaultValue("false") boolean annulees) {
+            @QueryParam("annulees") @DefaultValue("false") boolean annulees,
+            @QueryParam("reste") @DefaultValue("false") boolean reste,
+            @QueryParam("renouveler") @DefaultValue("false") boolean renouveler) {
         if (utilisateur() == null) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
@@ -426,8 +568,9 @@ public class OrdonnanceClientRessource {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
         try {
-            byte[] classeur = ordonnanceService
-                    .excelHistorique(criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees));
+            preventeService.reporterServices(null);
+            byte[] classeur = ordonnanceService.excelHistorique(
+                    criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees, reste, renouveler));
             return Response.ok(classeur).type("application/vnd.ms-excel")
                     .header("Content-Disposition", "attachment; filename=\"ordonnances_clients.xls\"").build();
         } catch (Exception e) {
@@ -451,6 +594,7 @@ public class OrdonnanceClientRessource {
         if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
             return refusConsultation();
         }
+        preventeService.reporterServices(null);
         return Response
                 .ok().entity(ordonnanceService
                         .analyse(criteres(query, clientId, typeClientId, medecinId, debut, fin, true)).toString())
@@ -492,6 +636,7 @@ public class OrdonnanceClientRessource {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
         try {
+            preventeService.reporterServices(null);
             byte[] pdf = ordonnanceService.pdfAnalyse(operateur,
                     criteres(null, null, typeClientId, medecinId, debut, fin, true), typeLibelle, medecinLibelle);
             return Response.ok(pdf).type("application/pdf")
@@ -500,6 +645,281 @@ public class OrdonnanceClientRessource {
             LOG.log(java.util.logging.Level.SEVERE, "edition de l'analyse des ordonnances", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /*
+     * ============================================================================================= SCAN D'UNE
+     * ORDONNANCE PAPIER (retour du 30/09) : ecran en 3 parties.
+     * =============================================================================================
+     */
+
+    /** Depot d'un scan (photo ou PDF). Reponse en text/html : envoi par iframe cachee, comme les pieces. */
+    @POST
+    @Path("scans")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_HTML)
+    public Response deposerScan(@QueryParam("source") String source) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        try {
+            ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
+            for (FileItem item : upload.parseRequest(servletRequest)) {
+                if (!item.isFormField()) {
+                    return Response.ok()
+                            .entity(scanService
+                                    .deposer(item.getName(), item.getInputStream(), item.getSize(), source, operateur)
+                                    .toString())
+                            .build();
+                }
+            }
+            return refus("Aucun fichier reçu.");
+        } catch (Exception e) {
+            LOG.log(java.util.logging.Level.SEVERE, "depot d'un scan d'ordonnance", e);
+            return refus("Le fichier n'a pas pu être lu.");
+        }
+    }
+
+    /** Les scans a traiter (poste et application mobile). */
+    @GET
+    @Path("scans")
+    public Response scans() {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(scanService.aTraiter().toString()).build();
+    }
+
+    @GET
+    @Path("scans/{scanId}")
+    public Response scan(@PathParam("scanId") String scanId) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(scanService.detail(scanId).toString()).build();
+    }
+
+    /** L'image ou le PDF du scan, EN FLUX (inline) : il s'affiche dans la partie gauche de l'ecran. */
+    @GET
+    @Path("scans/{scanId}/fichier")
+    @Produces(MediaType.WILDCARD)
+    public Response fichierScan(@PathParam("scanId") String scanId) {
+        if (utilisateur() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+        java.nio.file.Path fichier = scanService.fichier(scanId);
+        if (fichier == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        String nom = rest.service.impl.OrdonnancePieces.assainir(scanService.nomDuScan(scanId));
+        return Response.ok(fichier.toFile()).type(rest.service.impl.OrdonnancePieces.typeMime(nom))
+                .header("Content-Disposition", "inline; filename=\"" + nom + "\"")
+                .header("Cache-Control", "private, no-store").build();
+    }
+
+    /** Lecture automatique (Posos, si elle est branchee) et propositions pour l'ecran. */
+    @POST
+    @Path("scans/{scanId}/lire")
+    public Response lireScan(@PathParam("scanId") String scanId,
+            @QueryParam("relancer") @DefaultValue("false") boolean relancer) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        String emplacement = operateur.getLgEMPLACEMENTID() == null ? null
+                : operateur.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        return Response.ok().entity(scanService.lire(scanId, emplacement, relancer).toString()).build();
+    }
+
+    @POST
+    @Path("scans/{scanId}/ecarter")
+    public Response ecarterScan(@PathParam("scanId") String scanId) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        return Response.ok().entity(scanService.ecarter(scanId, operateur).toString()).build();
+    }
+
+    /** Validation : l'ordonnance est creee (et le client standard s'il est nouveau), le scan y est joint. */
+    @POST
+    @Path("scans/{scanId}/valider")
+    public Response validerScan(@PathParam("scanId") String scanId, String corps) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        JSONObject requete;
+        try {
+            requete = new JSONObject(corps);
+        } catch (RuntimeException e) {
+            return refus("La saisie n'a pas pu être lue.");
+        }
+        return Response.ok().entity(scanService.valider(scanId, requete, operateur).toString()).build();
+    }
+
+    /** Ce que le patient a deja eu sur ordonnance ; {@code memeDci} : seulement les memes DCI que {@code articles}. */
+    @GET
+    @Path("client/{clientId}/historique-produits")
+    public Response historiqueProduits(@PathParam("clientId") String clientId, @QueryParam("articles") String articles,
+            @QueryParam("memeDci") @DefaultValue("false") boolean memeDci) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        List<String> ids = new java.util.ArrayList<>();
+        for (String a : org.apache.commons.lang3.StringUtils.defaultString(articles).split(",")) {
+            if (!a.trim().isEmpty()) {
+                ids.add(a.trim());
+            }
+        }
+        return Response.ok().entity(scanService.historiqueProduits(clientId, ids, memeDci).toString()).build();
+    }
+
+    /*
+     * ============================================================================================= FICHE CLIENT
+     * (retour du 30/09) : dossier, parametres suivis et mesures. Lecture : P_ORDONNANCE_CLIENT ; saisie :
+     * P_ORDONNANCE_CLIENT_MAJ, le meme droit que la saisie des ordonnances.
+     * =============================================================================================
+     */
+
+    private static JSONObject lireCorps(String corps) {
+        try {
+            return new JSONObject(corps == null || corps.trim().isEmpty() ? "{}" : corps);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    @GET
+    @Path("parametres")
+    public Response parametres(@QueryParam("tous") @DefaultValue("false") boolean tous) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(dossierService.parametres(tous).toString()).build();
+    }
+
+    @POST
+    @Path("parametres")
+    public Response enregistrerParametre(String corps) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        JSONObject r = lireCorps(corps);
+        return r == null ? refus("La saisie n'a pas pu être lue.")
+                : Response.ok().entity(dossierService.enregistrerParametre(r).toString()).build();
+    }
+
+    @GET
+    @Path("client/{clientId}/dossier")
+    public Response dossier(@PathParam("clientId") String clientId) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(dossierService.dossier(clientId).toString()).build();
+    }
+
+    @POST
+    @Path("client/{clientId}/dossier")
+    public Response enregistrerDossier(@PathParam("clientId") String clientId, String corps) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        JSONObject r = lireCorps(corps);
+        return r == null ? refus("La saisie n'a pas pu être lue.")
+                : Response.ok().entity(dossierService.enregistrerDossier(clientId, r, operateur).toString()).build();
+    }
+
+    @GET
+    @Path("client/{clientId}/mesures")
+    public Response mesures(@PathParam("clientId") String clientId, @QueryParam("parametreId") String parametreId) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(dossierService.mesures(clientId, parametreId).toString()).build();
+    }
+
+    @POST
+    @Path("client/{clientId}/mesures")
+    public Response ajouterMesures(@PathParam("clientId") String clientId, String corps) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        JSONObject r = lireCorps(corps);
+        return r == null ? refus("La saisie n'a pas pu être lue.")
+                : Response.ok().entity(dossierService.ajouterMesures(clientId, r, null, operateur).toString()).build();
+    }
+
+    @POST
+    @Path("mesures/{mesureId}/retirer")
+    public Response retirerMesure(@PathParam("mesureId") String mesureId) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT_MAJ)) {
+            return refusEcriture();
+        }
+        return Response.ok().entity(dossierService.supprimerMesure(mesureId).toString()).build();
+    }
+
+    /** Reste a delivrer d'un client (30/09) : ses ordonnances encore dues, la plus ancienne d'abord. */
+    @GET
+    @Path("client/{clientId}/reste")
+    public Response resteClient(@PathParam("clientId") String clientId, @QueryParam("sauf") String sauf) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        /* Une prevente cloturee depuis la derniere lecture change le reste : on la reporte d'abord. */
+        preventeService.reporterServices(null);
+        return Response.ok().entity(ordonnanceService.resteClient(clientId, sauf).toString()).build();
     }
 
     /**
@@ -521,6 +941,39 @@ public class OrdonnanceClientRessource {
                 : operateur.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         return Response.ok().entity(ordonnanceService.consommationClient(clientId, debut, fin, emplacement).toString())
                 .build();
+    }
+
+    /**
+     * Recherche d'un client (30/09) : par le nom, ou par le telephone en « contient ». Type et telephone sont rendus
+     * pour la liste deroulante de la fiche et du filtre de l'historique.
+     */
+    @GET
+    @Path("clients")
+    public Response clients(@QueryParam("query") String query, @QueryParam("start") @DefaultValue("0") int start,
+            @QueryParam("limit") @DefaultValue("30") int limit) {
+        if (utilisateur() == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        return Response.ok().entity(ordonnanceService.clients(query, start, limit).toString()).build();
+    }
+
+    /** Recherche de produit des ordonnances (30/09) : legere, stock de l'emplacement de l'operateur. */
+    @GET
+    @Path("produits")
+    public Response produits(@QueryParam("query") String query, @QueryParam("limit") @DefaultValue("15") int limit) {
+        TUser operateur = utilisateur();
+        if (operateur == null) {
+            return deconnecte();
+        }
+        if (!autorise(DateConverter.P_ORDONNANCE_CLIENT)) {
+            return refusConsultation();
+        }
+        String emplacement = operateur.getLgEMPLACEMENTID() == null ? null
+                : operateur.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        return Response.ok().entity(ordonnanceService.produits(query, emplacement, limit).toString()).build();
     }
 
     /** Types de client (carnet, assurance, standard) pour le filtre de l'historique. */
@@ -551,8 +1004,14 @@ public class OrdonnanceClientRessource {
 
     private static OrdonnanceClientSql.Criteres criteres(String query, String clientId, String typeClientId,
             String medecinId, String debut, String fin, boolean annulees) {
+        return criteres(query, clientId, typeClientId, medecinId, debut, fin, annulees, false, false);
+    }
+
+    private static OrdonnanceClientSql.Criteres criteres(String query, String clientId, String typeClientId,
+            String medecinId, String debut, String fin, boolean annulees, boolean reste, boolean renouveler) {
         LocalDate d = OrdonnanceClientSaisie.date(debut);
         LocalDate f = OrdonnanceClientSaisie.date(fin);
-        return new OrdonnanceClientSql.Criteres(query, clientId, typeClientId, medecinId, d, f, annulees);
+        return new OrdonnanceClientSql.Criteres(query, clientId, typeClientId, medecinId, d, f, annulees, reste,
+                renouveler);
     }
 }

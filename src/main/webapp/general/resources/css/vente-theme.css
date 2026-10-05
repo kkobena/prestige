@@ -1951,3 +1951,430 @@ body.x-body,
 .posos-demo { background: #c0392b; color: #fff; font-weight: bold; padding: 4px 8px; margin: 2px 0 4px 0;
     border-radius: 3px; }
 .ordo-etat-proposition { background: #1E5FA8; }
+
+/* ------------------------------------------------------------------ Fiche ordonnance, presentation B (30/09) */
+/* Libelles en capitales, comme les sections « Informations avoir ». */
+.ordo-fiche .x-form-item-label { text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: .04em;
+    color: #1e3a5f; }
+.ordo-fiche .x-fieldset-header-text { text-transform: uppercase; font-weight: bold; letter-spacing: .08em;
+    color: #1e3a5f; }
+.ordo-sous-titre { text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: .06em; color: #1e3a5f; }
+.ordo-aide { font-size: 11px; color: #6b7b8c; }
+.ordo-pastille { display: inline-block; padding: 2px 10px; border-radius: 10px; background: #e3edf7; color: #1e3a5f;
+    font-size: 11px; font-weight: bold; }
+.ordo-titre-annulee { color: #c0392b; margin-left: 8px; letter-spacing: 0; }
+.ordo-titre-ok { color: #17987e; margin-left: 8px; letter-spacing: 0; text-transform: none; }
+/* Bouton « + » de creation rapide : carre, de la hauteur du champ voisin. */
+.x-btn.ordo-btn-plus { min-width: 26px; }
+.x-btn.ordo-btn-plus .x-btn-inner { font-size: 16px; font-weight: bold; }
+/* Fenetres de creation rapide : bandeau bleu marine, pied separe. */
+.ordo-fenetre.x-window { border-radius: 6px; border-color: #1e3a5f !important; box-shadow: 0 12px 40px rgba(0, 0, 0, .3); }
+.ordo-fenetre .x-window-header { background: #1e3a5f !important; background-image: none !important;
+    border-color: #1e3a5f !important; padding: 10px 14px !important; }
+.ordo-fenetre .x-window-header-text { color: #fff !important; text-transform: uppercase; letter-spacing: .06em;
+    font-weight: bold; font-size: 13px; }
+.ordo-fenetre .x-window-body { background: #fff !important; }
+.ordo-fenetre .x-form-item-label { text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: .04em;
+    color: #1e3a5f; }
+.ordo-fenetre .ordo-fenetre-pied { background: #f4f7fa !important; border-top: 1px solid #d6dde5 !important;
+    padding: 8px 12px !important; }
+/* Boutons harmonises (30/09) : tous les boutons secondaires de l'ecran ont le style de « Retour a l'historique »,
+   seul le geste principal (Enregistrer, Creer) est vert et l'analyse bleue. Dans une barre ou hors barre, meme rendu. */
+.x-btn.ordo-btn { background: #f4f7fa !important; background-image: none !important; border: 1px solid #c3cfdb !important;
+    border-radius: 4px; }
+.x-btn.ordo-btn .x-btn-inner { color: #1e3a5f !important; font-weight: bold; }
+.x-btn.ordo-btn.x-btn-over { background: #e3edf7 !important; border-color: #9fb3c8 !important; }
+.x-btn.ordo-btn.x-btn-pressed, .x-btn.ordo-btn.x-btn-menu-active { background: #d3e2f1 !important; }
+.x-btn.ordo-btn.x-item-disabled .x-btn-inner { color: #8a99a8 !important; }
+.x-btn.ordo-btn-plus .x-btn-inner { color: #1E5FA8 !important; }
+/* Prevente depuis l'ordonnance (30/09) : recapitulatif avant creation. */
+.ordo-prevente ul { margin: 4px 0 0 18px; padding: 0; list-style: disc; }
+.ordo-prevente-ecartees li { color: #8a5a00; }
+.ordo-prevente-alerte { margin-top: 8px; padding: 4px 8px; background: #fff4e0; border-left: 3px solid #e07b18;
+    color: #7a4500; }
+.ordo-prevente-ecartees { margin: 4px 0 0 18px; padding: 0; list-style: disc; }
+/* Info-bulles de l'ecran des ordonnances (30/09) : elles restent affichees mais laissent passer le clic. */
+.x-tip.ordo-bulle-traversante, .x-tip.ordo-bulle-traversante * { pointer-events: none !important; }
+.ordo-prevente-partiel { color: #b35900; }
+/* Reste a delivrer (30/09). */
+.ordo-etat-reste { background: #e67e22; }
+.ordo-reste-client { padding: 5px 8px; background: #fff4e0; border-left: 3px solid #e67e22; color: #7a4500; font-size: 12px; }
+.ordo-reste-client a { color: #1E5FA8; font-weight: bold; }
+.ordo-info-renouv { color: #1e3a5f; font-size: 12px; }
+
+/* ------------------------------------------------------------------ Ecran de vente : suivi de consommation (30/09) */
+/* Bouton de la ligne du client standard : discret, dans le style des champs voisins. */
+.x-btn.vc-ouvrir { background: #e3edf7 !important; background-image: none !important; border: 1px solid #9fb3c8 !important;
+    border-radius: 4px; }
+.x-btn.vc-ouvrir .x-btn-inner { color: #1e3a5f !important; font-weight: bold; }
+.x-btn.vc-ouvrir.x-btn-over { background: #d3e2f1 !important; }
+/* Fenetre : dessin propre, sans barre ni boutons ExtJS. */
+.vc-fenetre.x-window { border: 0 !important; border-radius: 10px; box-shadow: 0 24px 60px rgba(15, 30, 50, .35); overflow: hidden; }
+.vc-fenetre .x-window-body { background: #f6f8fb !important; border: 0 !important; }
+.vc { display: flex; flex-direction: column; height: 100%; font-family: inherit; color: #1e2a36; }
+.vc-tete { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px;
+    background: linear-gradient(135deg, #1e3a5f, #2E75B6); color: #fff; }
+.vc-sur { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; opacity: .8; }
+.vc-nom { font-size: 20px; font-weight: bold; margin-top: 2px; }
+.vc-croix { border: 0; background: rgba(255, 255, 255, .15); color: #fff; width: 34px; height: 34px; border-radius: 50%;
+    font-size: 22px; line-height: 30px; cursor: pointer; }
+.vc-croix:hover { background: rgba(255, 255, 255, .3); }
+.vc-periodes { display: flex; gap: 8px; padding: 12px 22px 4px; }
+.vc-puce { border: 1px solid #c3cfdb; background: #fff; color: #1e3a5f; border-radius: 16px; padding: 5px 14px;
+    font-weight: bold; cursor: pointer; font-size: 12px; }
+.vc-puce:hover { border-color: #2E75B6; }
+.vc-puce-active { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.vc-corps { flex: 1; overflow: auto; padding: 8px 22px 12px; }
+.vc-tuiles { display: flex; gap: 10px; margin-bottom: 12px; }
+.vc-tuile { flex: 1; background: #fff; border: 1px solid #e0e7ef; border-radius: 8px; padding: 10px 14px; }
+.vc-tuile-valeur { font-size: 20px; font-weight: bold; color: #1e3a5f; font-variant-numeric: tabular-nums; }
+.vc-tuile-libelle { font-size: 11px; color: #6b7b8c; text-transform: uppercase; letter-spacing: .06em; }
+.vc-tableau { background: #fff; border: 1px solid #e0e7ef; border-radius: 8px; overflow: hidden; }
+.vc-tableau table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.vc-tableau th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7b8c;
+    background: #f4f7fa; padding: 8px 10px; border-bottom: 1px solid #e0e7ef; }
+.vc-tableau td { padding: 7px 10px; border-bottom: 1px solid #eef2f6; }
+.vc-tableau tr:last-child td { border-bottom: 0; }
+.vc-tableau tbody tr:hover { background: #f4f8fc; }
+.vc-n { text-align: right !important; }
+.vc-produit { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; }
+.vc-cip { color: #8a99a8; font-weight: normal; }
+.vc-stock { color: #1E5FA8; font-weight: bold; }
+.vc-rupture { color: #c0392b; font-weight: bold; }
+.vc-habitude { background: #e3edf7; color: #1e3a5f; border-radius: 10px; padding: 1px 8px; font-size: 11px; }
+.vc-vide, .vc-chargement { padding: 40px; text-align: center; color: #6b7b8c; }
+.vc-pied { display: flex; justify-content: space-between; align-items: center; padding: 12px 22px; background: #fff;
+    border-top: 1px solid #e0e7ef; color: #6b7b8c; font-size: 12px; }
+.vc-bouton { border: 0; background: #1e3a5f; color: #fff; border-radius: 6px; padding: 8px 22px; font-weight: bold;
+    cursor: pointer; }
+.vc-bouton:hover { background: #2E75B6; }
+.vc-croix:focus-visible, .vc-puce:focus-visible, .vc-bouton:focus-visible { outline: 2px solid #f0a23a; outline-offset: 2px; }
+
+/* Recherche du client des ordonnances (30/09) : nom, type et telephone sur chaque ligne. */
+.ordo-client-ligne { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.ordo-client-nom { flex: 1; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.ordo-client-type { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #eef2f7; color: #475569; }
+.ordo-client-type-1 { background: #e0ecff; color: #1d4ed8; }
+.ordo-client-type-2 { background: #fdf0d5; color: #92400e; }
+.ordo-client-type-6 { background: #e7f6ec; color: #166534; }
+.ordo-client-tel { min-width: 110px; text-align: right; color: #64748b; font-variant-numeric: tabular-nums; }
+
+/* Modifier le client standard depuis la caisse (30/09) : meme dessin que le suivi de consommation. */
+.vc-bouton-second { background: #fff; color: #1e3a5f; border: 1px solid #c3cfdb; }
+.vc-bouton-second:hover { background: #e3edf7; }
+.vc-message { min-height: 18px; color: #6b7b8c; }
+.vc-message .vc-erreur { color: #c0392b; font-weight: bold; }
+.vc-fenetre .x-form-item-label { color: #6b7b8c; font-weight: bold; }
+.vc-pied span + span, .vc-pied > span:last-child { white-space: nowrap; }
+
+/* ===== Historique des ordonnances, presentation revue (30/09, maquette validee) ===== */
+/* Onglets en boutons segmentes. */
+.ordo-onglets > .x-tab-bar { background: transparent !important; border: 0 !important; padding: 6px 8px 8px !important; }
+.ordo-onglets > .x-tab-bar .x-tab-bar-body { background: #eef2f7; border-radius: 8px; padding: 3px !important;
+    display: inline-block; width: auto !important; }
+.ordo-onglets > .x-tab-bar .x-tab-bar-strip { display: none !important; }
+.ordo-onglets .x-tab-default-top { background: transparent !important; background-image: none !important; border: 0 !important;
+    border-radius: 6px !important; box-shadow: none !important; margin-right: 2px; }
+.ordo-onglets .x-tab-default-top .x-tab-inner { color: #6b7b8c !important; font-weight: bold; font-size: 13px; }
+/* Onglet actif au style du menu Vente (demande du 30/09) : bleu fonce, texte blanc. */
+.ordo-onglets .x-tab-default-top.x-tab-active { background: #1e3a5f !important; box-shadow: 0 1px 3px rgba(30, 58, 95, .35) !important; }
+.ordo-onglets .x-tab-default-top.x-tab-active .x-tab-inner, .ordo-onglets .x-tab-default-top.x-tab-active.x-tab-over .x-tab-inner { color: #fff !important; }
+.ordo-onglets .x-tab-default-top.x-tab-over:not(.x-tab-active) { background: #dde5ee !important; }
+.ordo-onglets .x-tab-default-top.x-tab-over:not(.x-tab-active) .x-tab-inner { color: #1e3a5f !important; }
+.ordo-onglets > .x-panel-body { border: 0 !important; }
+/* Carte des criteres. */
+.ordo-criteres { background: #eef2f7; border: 1px solid #d5dee8; border-radius: 6px; }
+.ordo-criteres .x-form-item-label, .ordo-lib { font-size: 11px; font-weight: bold; letter-spacing: .06em; text-transform: uppercase;
+    color: #6b7b8c; padding-bottom: 4px; }
+.x-btn.ordo-puce { background: #fff !important; background-image: none !important; border: 1px solid #c3cfdb !important;
+    border-radius: 14px !important; box-shadow: none !important; }
+.x-btn.ordo-puce .x-btn-inner { color: #1e2a36 !important; font-weight: normal; padding: 0 6px; }
+.x-btn.ordo-puce.x-btn-over { border-color: #2E75B6 !important; }
+.x-btn.ordo-puce.x-btn-pressed { background: #1e3a5f !important; border-color: #1e3a5f !important; }
+.x-btn.ordo-puce.x-btn-pressed .x-btn-inner { color: #fff !important; }
+/* Filtres « afficher seulement » : des cases dessinees en puces, toujours cliquables par leur libelle. */
+.ordo-puce-case .x-form-checkbox { display: none; }
+.ordo-puce-case .x-form-cb-label { margin: 0 !important; padding: 3px 12px; border: 1px solid #c3cfdb; border-radius: 14px; background: #fff;
+    cursor: pointer; color: #1e2a36; white-space: nowrap; }
+.ordo-puce-case .x-form-cb-label:hover { border-color: #2E75B6; }
+.ordo-puce-case.x-form-cb-checked .x-form-cb-label { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+/* Barre d'actions et compteurs cliquables. */
+.ordo-barre-actions { background: #fff !important; border: 0 !important; padding: 4px 0 8px !important; }
+.ordo-compteurs { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.ordo-compteur { display: inline-block; padding: 5px 12px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #1e2a36;
+    text-decoration: none; white-space: nowrap; }
+.ordo-compteur b { font-size: 15px; font-variant-numeric: tabular-nums; margin-right: 2px; }
+a.ordo-compteur:hover { border-color: #2E75B6; }
+.ordo-compteur-reste b { color: #b86e00; }
+.ordo-compteur-renouveler b { color: #2E75B6; }
+.ordo-compteur-actif { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.ordo-compteur-actif b { color: #fff !important; }
+/* Cellules sur deux lignes. */
+.ordo-cellule { display: flex; flex-direction: column; gap: 2px; line-height: 1.3; white-space: normal; }
+.ordo-cellule small { color: #6b7b8c; font-size: 11px; }
+.ordo-num { font-family: Consolas, "Courier New", monospace; font-size: 12px; }
+.ordo-type-assurance { background: #e0ecff; color: #1d4ed8; }
+.ordo-type-carnet { background: #fdf0d5; color: #92400e; }
+.ordo-type-standard { background: #e7f6ec; color: #166534; }
+.ordo-etat-annulee { background: #eceff3; color: #6b7b8c; }
+
+/* ===== Scan d'une ordonnance, ecran en 3 parties (30/09, maquette validee) ===== */
+.ordo-scan .x-panel-body { background: #fff; }
+.ordo-scan-col { border: 1px solid #d5dee8; border-radius: 6px; overflow: hidden; }
+.ordo-scan-col .x-panel-header { background: #f6f8fb !important; background-image: none !important; border: 0 !important;
+    border-bottom: 1px solid #d5dee8 !important; }
+.ordo-scan-col .x-panel-header-text { color: #1e3a5f !important; font-size: 12px !important; letter-spacing: .08em;
+    text-transform: uppercase; font-weight: bold; }
+.ordo-scan-visu { background: #eef2f7; }
+.ordo-scan-vide { padding: 30px 18px; color: #6b7b8c; text-align: center; line-height: 1.5; }
+.ordo-scan-cadre { padding: 12px; min-height: 100%; box-sizing: border-box; display: flex; justify-content: center;
+    align-items: flex-start; }
+.ordo-scan-image { max-width: 100%; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); transform-origin: top center;
+    transition: transform .15s; background: #fff; }
+.ordo-scan-pdf { width: 100%; height: 100%; min-height: 520px; border: 0; display: block; }
+.ordo-scan-doute .x-grid-cell { background: #fdf0d5 !important; }
+.ordo-scan-coche { display: inline-block; width: 20px; height: 20px; line-height: 20px; border-radius: 50%;
+    background: #17987e; color: #fff; font-weight: bold; text-align: center; }
+.ordo-scan-coche-doute { background: #b86e00; }
+.ordo-scan-lu { font-style: italic; color: #1d2a6b; }
+.ordo-scan-manuel { color: #9aa8b6; font-size: 11px; }
+.ordo-qte { display: inline-flex; align-items: center; border: 1px solid #c3cfdb; border-radius: 4px; background: #fff; }
+.ordo-qte button { width: 24px; height: 22px; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: center;
+    color: #1e3a5f; font-weight: bold; font-size: 14px; }
+.ordo-qte button:hover { background: #e3edf7; }
+.ordo-qte b { min-width: 26px; text-align: center; font-variant-numeric: tabular-nums; }
+.ordo-scan-erreur { color: #c0392b; font-weight: bold; }
+.ordo-puce-scan { display: inline-block; margin-right: 6px; padding: 5px 12px; border: 1px solid #c3cfdb; border-radius: 14px;
+    background: #fff; color: #1e2a36; text-decoration: none; white-space: nowrap; }
+.ordo-puce-scan:hover { border-color: #2E75B6; }
+.ordo-puce-scan-active { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.ordo-scan-patient-lu { background: #eef2f7; border-radius: 6px; padding: 6px 8px; }
+.ordo-scan-client { padding: 2px 0 4px; color: #6b7b8c; }
+.ordo-hist { border: 1px solid #d5dee8; border-radius: 6px; padding: 7px 8px; margin-bottom: 6px; }
+.ordo-hist-l1 { display: flex; justify-content: space-between; gap: 6px; font-weight: bold; }
+.ordo-hist small { color: #6b7b8c; display: block; margin: 2px 0 4px; }
+.ordo-hist-bt a { display: inline-block; margin-right: 6px; padding: 2px 10px; border: 1px solid #c3cfdb; border-radius: 4px;
+    color: #1e3a5f; text-decoration: none; font-size: 12px; }
+.ordo-hist-bt a:hover { background: #e3edf7; }
+
+/* Consultation d'une ordonnance (30/09) : le contexte clinique en lecture, seulement ce qui est renseigne. */
+.ordo-resume-ligne { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid #eef2f6; }
+.ordo-resume-ligne span { color: #6b7b8c; }
+.ordo-resume-puces { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ordo-resume-puce { background: #fdf0d5; color: #92400e; border-radius: 12px; padding: 3px 10px; font-weight: bold; font-size: 12px; }
+
+/* ===== Carte (theme commun, 30/09) : un panneau ou une grille sans le bandeau bleu ExtJS. ===== */
+.ordo-carte, .ordo-carte.x-panel { border: 1px solid #d5dee8 !important; border-radius: 8px; overflow: hidden; background: #fff; }
+.ordo-carte > .x-panel-header, .ordo-carte .x-panel-header-default { background: #fff !important; background-image: none !important;
+    border: 0 !important; border-bottom: 1px solid #e3e9f0 !important; padding: 10px 14px !important; }
+.ordo-carte .x-panel-header-text, .ordo-carte .x-panel-header-text-default { color: #1e3a5f !important; font-size: 12px !important;
+    letter-spacing: .08em; text-transform: uppercase; font-weight: bold; }
+.ordo-carte .x-grid-header-ct, .ordo-carte .x-column-header { background: #f6f8fb !important; background-image: none !important;
+    border-color: #e3e9f0 !important; }
+.ordo-carte .x-column-header-inner .x-column-header-text { color: #6b7b8c; font-size: 11px; letter-spacing: .05em; }
+.ordo-carte .x-panel-body { border: 0 !important; }
+.ordo-carte .x-grid-row-over .x-grid-td { background: #f4f8fc !important; }
+.ordo-barre-analyse { background: #eef2f7 !important; border: 1px solid #d5dee8 !important; border-radius: 6px; margin: 6px; padding: 8px 10px !important; }
+/* Tuiles de l'analyse : cartes blanches, chiffre marine. */
+
+/* Allergies du client, rappelees sur la fiche ordonnance (30/09). */
+.ordo-allergies { background: #fdecea; color: #8e2a1f; border: 1px solid #f3c2bb; border-radius: 6px; padding: 6px 10px; }
+
+/* ===== Fiche client (2e onglet, 30/09) ===== */
+.fc-vide { padding: 40px 20px; text-align: center; color: #6b7b8c; font-size: 14px; }
+.fc-vide-petit { padding: 18px; text-align: center; color: #6b7b8c; }
+.fc-ok { color: #17987e; font-weight: bold; }
+.fc-carte { background: #fff; border: 1px solid #d5dee8; border-radius: 8px; padding: 12px 14px; }
+.fc-nom { font-size: 18px; font-weight: bold; color: #1e3a5f; }
+.fc-sous { color: #6b7b8c; margin: 4px 0 8px; }
+.fc-ligne { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid #eef2f6; }
+.fc-ligne span { color: #6b7b8c; }
+.fc-puces { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.fc-puce { border: 1px solid #c3cfdb; background: #fff; color: #1e2a36; border-radius: 14px; padding: 4px 11px; cursor: pointer;
+    font: inherit; font-size: 12px; }
+.fc-puce:hover { border-color: #2E75B6; }
+.fc-puce-on.fc-puce-terrain { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.fc-puce-on.fc-puce-allergie { background: #c0392b; border-color: #c0392b; color: #fff; }
+.fc-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.fc-tuile { text-align: left; background: #fff; border: 1px solid #d5dee8; border-radius: 8px; padding: 10px 12px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 4px; font: inherit; color: #1e2a36; }
+.fc-tuile:hover { border-color: #2E75B6; }
+.fc-tuile-active { border-color: #1e3a5f; box-shadow: inset 0 0 0 1px #1e3a5f; }
+.fc-tuile-calcul { cursor: default; background: #f6f8fb; }
+.fc-tuile-libelle { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6b7b8c; font-weight: bold; }
+.fc-tuile-valeur { font-size: 20px; font-weight: bold; color: #1e3a5f; font-variant-numeric: tabular-nums; }
+.fc-tuile-valeur small { font-size: 12px; color: #6b7b8c; font-weight: normal; }
+.fc-tuile-pied { display: flex; justify-content: space-between; align-items: center; color: #6b7b8c; font-size: 11px; }
+.fc-etat { display: inline-block; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: bold; }
+.fc-etat-normal { background: #e3f4ef; color: #0f6e5a; }
+.fc-etat-haut { background: #fbe4e1; color: #b0352a; }
+.fc-etat-bas { background: #fdf0d5; color: #9a5b00; }
+.fc-etat-inconnu { background: #eceff3; color: #6b7b8c; }
+.fc-svg { width: 100%; height: auto; display: block; }
+.fc-bande { fill: #e3f4ef; }
+.fc-bande2 { fill: #d5eee6; opacity: .7; }
+.fc-grille { stroke: #eef2f6; stroke-width: 1; }
+.fc-axe { fill: #8a99a8; font-size: 11px; }
+.fc-ligne-courbe { fill: none; stroke-width: 2; }
+.fc-sys { stroke: #1e3a5f; }
+.fc-dia { stroke: #2E75B6; stroke-dasharray: 5 4; }
+.fc-droit { opacity: .75; }
+.fc-point { stroke: #fff; stroke-width: 1.5; }
+.fc-point-normal { fill: #17987e; }
+.fc-point-haut { fill: #c0392b; }
+.fc-point-bas { fill: #d97f06; }
+.fc-point-inconnu { fill: #8a99a8; }
+.fc-legende { display: flex; flex-wrap: wrap; gap: 14px; color: #6b7b8c; font-size: 12px; margin-top: 4px; }
+.fc-legende i { display: inline-block; width: 18px; height: 0; vertical-align: middle; margin-right: 5px; border-top: 2px solid #1e3a5f; }
+.fc-legende .fc-l-dia { border-top: 2px dashed #2E75B6; }
+.fc-legende .fc-l-bande { height: 10px; border: 0; background: #e3f4ef; }
+.fc-saisie { background: #f6f8fb; border-radius: 6px; padding: 8px 10px; }
+.fc-retirer { border: 0; background: transparent; color: #c0392b; cursor: pointer; font-weight: bold; }
+
+/* ===== Ventes en attente (30/09, maquette validee) ===== */
+.va .vc-tete { flex: none; }
+.va-corps { flex: 1; display: flex; gap: 14px; padding: 14px 18px; min-height: 0; background: #f6f8fb; }
+.va-gauche { width: 400px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.va-champ { height: 36px; border: 1px solid #c3cfdb; border-radius: 6px; padding: 0 12px; font: inherit; width: 100%;
+    box-sizing: border-box; background: #fff; }
+.va-champ:focus { outline: 2px solid #2E75B6; outline-offset: 1px; }
+.va-liste { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+.va-carte { text-align: left; font: inherit; color: #1e2a36; background: #fff; border: 1px solid #d5dee8; border-radius: 8px;
+    padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
+.va-carte:hover { border-color: #2E75B6; }
+.va-carte-active { border-color: #1e3a5f; box-shadow: inset 0 0 0 1px #1e3a5f; background: #f4f8fc; }
+.va-l1, .va-l2 { display: flex; justify-content: space-between; gap: 8px; }
+.va-l2 { color: #6b7b8c; font-size: 12px; }
+.va-ticket, .va-mono { font-family: Consolas, "Courier New", monospace; }
+.va-montant { font-variant-numeric: tabular-nums; }
+.va-droite { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
+.va-droite .vc-tuiles { margin: 0; }
+.va-droite .vc-tuile-valeur { font-size: 18px; }
+.va-client { background: #fff; border: 1px solid #e0e7ef; border-radius: 8px; padding: 8px 12px; color: #1e2a36; }
+.va-articles { flex: 1; overflow-y: auto; min-height: 0; }
+.va-pied { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.va-aide { color: #6b7b8c; font-size: 12px; }
+.va-rappeler { background: #17987e !important; padding: 10px 22px; font-size: 14px; }
+.va-rappeler:hover { background: #12806a !important; }
+.va-pill { display: inline-block; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: bold; }
+.va-p-ok { background: #e3f4ef; color: #0f6e5a; }
+.va-p-info { background: #e0ecff; color: #1d4ed8; }
+.va-p-att { background: #fdf0d5; color: #92400e; }
+.va-p-gris { background: #eceff3; color: #6b7b8c; }
+.va-vide { padding: 30px 16px; text-align: center; color: #6b7b8c; display: flex; justify-content: center; }
+/* Chargement moderne (theme commun) : un anneau qui tourne, a la place du « Chargement… » d'ExtJS. */
+.rond-chargement { width: 24px; height: 24px; border-radius: 50%; border: 3px solid #e3e9f0; border-top-color: #17987e;
+    animation: rond-tourne .8s linear infinite; }
+@keyframes rond-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .rond-chargement { animation: none; } }
+
+/* ===== Theme commun : icones d'action au trait, tableau, pagination (maquette validee le 30/09) ===== */
+.act-ico { width: 26px !important; height: 26px !important; margin: 0 3px; border: 1px solid #d5dee8; border-radius: 6px;
+    background-color: #fff; background-repeat: no-repeat; background-position: center; background-size: 15px 15px; cursor: pointer;
+    vertical-align: middle; }
+.act-ico:hover { border-color: #2E75B6; background-color: #eef4fb; }
+.act-modifier { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E"); }
+.act-voir { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E"); }
+.act-supprimer { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b42318' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3C/svg%3E"); }
+.act-imprimer { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9V2h12v7'/%3E%3Crect x='6' y='14' width='12' height='8'/%3E%3Cpath d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/%3E%3C/svg%3E"); }
+.theme-grille .x-grid-header-ct { background: #f5f8fb !important; border-color: #e0e7ef !important; }
+.theme-grille .x-column-header { background: transparent !important; border-color: transparent !important; }
+.theme-grille .x-column-header-inner { color: #6b7b8c; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: bold; }
+.theme-grille .x-grid-row .x-grid-cell { border-color: #eef2f6 !important; background: #fff; height: 38px; vertical-align: middle; }
+.theme-grille .x-grid-row-over .x-grid-cell { background: #f5f8fb !important; }
+.theme-grille .x-grid-row-selected .x-grid-cell { background: #e8f0fa !important; }
+.theme-pagination { background: #fff !important; border-top: 1px solid #e0e7ef !important; }
+.theme-pagination .x-toolbar-text { color: #6b7b8c; }
+/* Chargement moderne : barre fine qui court en haut du bloc. */
+.theme-chargement { position: relative; }
+.theme-chargement::before { content: ""; position: absolute; left: 0; top: 0; height: 3px; width: 30%; background: #2E75B6; z-index: 20;
+    animation: theme-course 1s ease-in-out infinite; }
+@keyframes theme-course { 0% { left: -30%; } 100% { left: 100%; } }
+
+/* ===== Boutons segmentes poses sur un combo (plugin segments) : ligne type / nature / vendeur de l'ecran de vente ===== */
+.seg-ligne { background: #fff; border: 1px solid #e0e7ef; border-radius: 8px; }
+.seg-lib { font-size: 11px; font-weight: bold; letter-spacing: .06em; text-transform: uppercase; color: #6b7b8c; line-height: 16px; }
+.seg-combo .x-form-trigger-wrap { display: none !important; }
+.seg-groupe { display: inline-flex; background: #eef2f7; border-radius: 8px; padding: 3px; gap: 2px; white-space: nowrap; }
+.seg-bouton { border: 0; background: transparent; border-radius: 6px; padding: 6px 16px; font: bold 13px/18px inherit; font-family: inherit;
+    color: #6b7b8c; cursor: pointer; }
+.seg-bouton:hover:not([disabled]):not(.seg-actif) { color: #1e3a5f; background: #dde5ee; }
+.seg-bouton.seg-actif:hover { color: #fff; background: #26497a; }
+.seg-bouton:focus-visible { outline: 2px solid #2E75B6; outline-offset: 1px; }
+.seg-bouton.seg-actif { background: #1e3a5f; color: #fff; box-shadow: 0 1px 3px rgba(30, 58, 95, .35); }
+.seg-point { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2ee6a8; margin-right: 7px;
+    vertical-align: 1px; box-shadow: 0 0 0 0 rgba(46, 230, 168, .7); animation: seg-clignote 1.2s ease-in-out infinite; }
+@keyframes seg-clignote { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(46, 230, 168, .7); }
+    50% { opacity: .35; box-shadow: 0 0 0 4px rgba(46, 230, 168, 0); } }
+.seg-bouton[disabled] { cursor: default; opacity: .6; }
+.seg-bouton.seg-actif[disabled] { opacity: 1; }
+
+/* ===== Suivi de consommation : fiche du client en tete (maquette validee le 30/09) ===== */
+.sc-fiche { margin: 0 18px 10px; border: 1px solid #e0e7ef; border-radius: 8px; background: #f8fafc; padding: 8px 12px; }
+.sc-ligne { display: flex; gap: 18px; flex-wrap: wrap; }
+.sc-ligne + .sc-ligne { border-top: 1px dashed #d5dee8; margin-top: 8px; padding-top: 8px; }
+.sc-champ { display: flex; flex-direction: column; min-width: 120px; }
+.sc-clinique .sc-champ:last-child { flex: 1; }
+.sc-lib { font-size: 10px; font-weight: bold; letter-spacing: .06em; text-transform: uppercase; color: #6b7b8c; }
+.sc-val { font-size: 13px; color: #1e2a36; margin-top: 2px; }
+.sc-puce { display: inline-block; background: #e0ecff; color: #1d4ed8; border-radius: 10px; padding: 1px 8px; font-size: 11px;
+    font-weight: bold; margin: 0 4px 2px 0; }
+.sc-puce-allergie, .sc-allergies { background: #fdecea; color: #b42318; }
+.sc-allergies { display: inline-block; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: bold; }
+.sc-mesure { display: inline-block; border: 1px solid #d5dee8; border-radius: 6px; padding: 1px 7px; font-size: 12px; margin: 0 4px 2px 0;
+    background: #fff; }
+.sc-mesure-alerte { border-color: #f0b4ad; background: #fff5f4; color: #b42318; }
+
+/* ===== Pagination numerotee (plugin paginationnumerotee) et raccourcis de periode ===== */
+.pg-zone { display: inline-flex; align-items: center; gap: 3px; margin: 0 4px; }
+.pg-num { min-width: 28px; height: 26px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #1e3a5f;
+    font: bold 12px/24px inherit; font-family: inherit; cursor: pointer; padding: 0 6px; }
+.pg-num:hover:not([disabled]) { border-color: #2E75B6; background: #eef4fb; }
+.pg-num.pg-actif { background: #1e3a5f; border-color: #1e3a5f; color: #fff; cursor: default; }
+.pg-trou { color: #9aa8b6; padding: 0 2px; }
+.periode-menu .x-menu-item-text { font-size: 13px; }
+
+/* ===== Menu Vente, presentation revue (retour du 30/09) : fond clair, une barre arrondie, boutons compacts ===== */
+.mv-panneau > .x-panel-body, .mv-panneau .x-panel-body-default-framed { background: #eef2f7 !important; border-color: #d5dee8 !important; }
+.mv-panneau.x-panel-default-framed, .mv-panneau .x-panel-default-framed { background: #eef2f7 !important; border-color: #d5dee8 !important; }
+.x-toolbar.mv-barre { background: #fff !important; background-image: none !important; border: 1px solid #d5dee8 !important;
+    border-radius: 10px !important; box-shadow: 0 1px 3px rgba(30, 58, 95, .08); }
+.mv-barre .x-btn { border-radius: 6px !important; }
+.mv-barre .x-btn.ordo-btn { background: #f4f7fa !important; }
+.mv-barre .x-btn.ordo-btn-primaire { border-radius: 6px !important; }
+.mv-barre .x-btn .x-btn-inner { font-size: 12px !important; }
+.mv-recherche .x-form-text { border-radius: 6px; border-color: #c3cfdb; height: 26px; padding-left: 10px; }
+.mv-panneau .ordo-carte { border-radius: 10px; overflow: hidden; border: 1px solid #d5dee8; background: #fff; }
+
+/* ===== Style du menu Vente pose sur les anciens ecrans (habillerStyleVente, correctifs-affichage.js) ===== */
+.act-pdf { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b42318' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M8 15h8M8 18h5'/%3E%3C/svg%3E"); }
+.act-excel { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f6e5a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 12l6 7M15 12l-6 7'/%3E%3C/svg%3E"); }
+.act-word { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d4ed8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M8 12l1.5 7 2.5-5 2.5 5L16 12'/%3E%3C/svg%3E"); }
+.act-dupliquer { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='12' height='12' rx='2'/%3E%3Cpath d='M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'/%3E%3C/svg%3E"); }
+.act-transformer { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f6e5a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='M13 6l6 6-6 6'/%3E%3C/svg%3E"); }
+.act-reglage { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z'/%3E%3C/svg%3E"); }
+.theme-liste .x-toolbar.mv-barre .x-btn.ordo-btn-primaire { background: #17987e !important; border-color: #17987e !important; }
+.theme-liste .x-toolbar.mv-barre .x-btn.ordo-btn-primaire .x-btn-inner { color: #fff !important; }
+.theme-liste .x-toolbar.mv-barre .x-form-text { border-radius: 6px; border-color: #c3cfdb; }
+.theme-liste .x-toolbar.mv-barre .x-toolbar-separator { display: none; }
+.theme-liste .x-grid-cell .act-ico { margin: 0 2px; }
+
+/* Ventes en attente : Fermer et Rappeler sur une meme ligne (retour du 30/09). */
+.va-pied .va-boutons { display: flex; gap: 8px; flex-shrink: 0; white-space: nowrap; }
+.va-pied .va-aide { min-width: 0; }
+.theme-liste .x-toolbar.mv-barre .x-form-item-label, .theme-liste .x-toolbar.mv-barre .x-toolbar-text { line-height: 24px; padding-top: 0 !important;
+    margin-top: 0 !important; color: #6b7b8c; font-weight: bold; }
+.theme-liste .x-action-col-cell .x-grid-cell-inner { padding: 5px 1px !important; text-overflow: clip; }
+.theme-liste .x-grid-cell .act-ico { width: 24px !important; height: 24px !important; background-size: 14px 14px; }
+.theme-liste .x-grid-cell { border-right: 0 !important; }
+.act-imprimer-vert { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f8a4a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9V2h12v7'/%3E%3Crect x='6' y='14' width='12' height='8'/%3E%3Cpath d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/%3E%3C/svg%3E"); }
+.act-valider { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f6e5a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E"); }
+/* Mouvements de caisse : totaux du bas en pastilles insecables (retour du 30/09). */
+.mc-totaux { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; line-height: 18px; padding: 2px 0; }
+.mc-total { white-space: nowrap; background: #f4f7fa; border: 1px solid #d5dee8; border-radius: 10px; padding: 1px 8px; font-size: 12px;
+    color: #1d4ed8; font-weight: bold; }
+.mc-total-lib { color: #6b7b8c; font-weight: normal; }
+.mc-total-general { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.mc-total-general .mc-total-lib { color: #c9d6e6; }
+.act-telecharger { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f6e5a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3Cpath d='M5 21h14'/%3E%3C/svg%3E"); }
+.act-date { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E"); }

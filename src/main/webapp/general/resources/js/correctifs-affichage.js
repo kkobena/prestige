@@ -802,8 +802,138 @@ window.PrestigeAffichage.ECRANS_COLLES = [
     // pilotage et ordonnances (retour de l'officine du 19/09)
     'pilotage', 'ordonnanceclient',
     // Analyse posologie (Posos) : ajoute a la demande de l'officine du 22/09.
-    'pososmanager'
+    'pososmanager',
+    // preventes et devis (demande de l'officine du 30/09, style du menu Vente)
+    'preenregistrementmanager', 'devismanager'
 ];
+
+/**
+ * Ecrans habilles au STYLE DU MENU VENTE (demande de l'officine du 30/09), par leur xtype.
+ *
+ * Meme principe que la liste ci-dessus : un xtype par ecran, et l'habillage se pose tout seul a l'ouverture
+ * (habillerStyleVente). Il ne touche qu'a la presentation : aucun itemId, aucun gestionnaire, aucun store n'est
+ * change, les controleurs lisent et ecoutent les memes composants qu'avant.
+ */
+window.PrestigeAffichage.ECRANS_STYLE_VENTE = [
+    // lot 1
+    'preenregistrementmanager', 'devismanager',
+    // lot 2 : ventes, ventes annulees, suppressions de vente, ordonnancier
+    'ventemanager', 'venteannuler', 'suppressionsvente', 'ordonnancier',
+    // lot 3 : Posos, articles vendus (recapitulatif), gestion de caisse, mouvements de caisse
+    'pososmanager', 'articlevendurecapitulatif', 'gestcaissemanager', 'mvtcaissemanager',
+    // lot 4 : facture subrogatoire, ventes ratees, mouchard des prix de vente
+    'facturesubrogatoireother', 'ventesrateesmanager', 'mouvementprixvente'
+];
+
+/**
+ * Ecrans qui prennent seulement les COULEURS du menu Vente (fond clair, cadre gris-bleu), sans autre habillage :
+ * leur presentation est deja au theme commun (ordonnances clients, demande du 30/09).
+ */
+window.PrestigeAffichage.ECRANS_FOND_VENTE = ['ordonnanceclient'];
+
+/**
+ * Icones d'action au trait du theme commun, reconnues par le nom de l'image d'origine. Une icone absente de
+ * cette table garde son image.
+ */
+window.PrestigeAffichage.ICONES_TRAIT = [
+    [/page_white_edit|pencil|edit|modif/i, 'act-modifier'],
+    // ticket modifie (imprimante verte) : garde sa couleur pour rester distinct du ticket ordinaire
+    [/printergreen/i, 'act-imprimer-vert'],
+    [/delete|trash|remove|cross|poubelle/i, 'act-supprimer'],
+    [/printer|print|imprim/i, 'act-imprimer'],
+    [/pdf/i, 'act-pdf'],
+    [/excel|xls|csv/i, 'act-excel'],
+    [/docx|word/i, 'act-word'],
+    [/duplicate|copy|copie/i, 'act-dupliquer'],
+    [/application_go|arrow|go\.png|transform/i, 'act-transformer'],
+    [/folder_wrench|wrench|cog|config/i, 'act-reglage'],
+    [/book\.png|valid|accept|tick|check/i, 'act-valider'],
+    [/download|telecharg/i, 'act-telecharger'],
+    [/table_refresh|calendar/i, 'act-date'],
+    [/detail|view|eye|loupe|search|zoom|information|info|grid\.png|paste_plain/i, 'act-voir']
+];
+
+/**
+ * Habille un ecran au style du menu Vente, AVANT son rendu : fond clair, barres du haut arrondies, boutons
+ * compacts (le bouton de creation en vert), tableau du theme commun, pagination numerotee, icones d'action au trait.
+ *
+ * @param {Ext.Component} ecran ecran qui vient d'etre cree
+ */
+window.PrestigeAffichage.habillerStyleVente = function (ecran) {
+    'use strict';
+
+    ecran.addCls('mv-panneau theme-liste');
+    Ext.each(ecran.query('toolbar'), function (barre) {
+        if (barre.isXType('pagingtoolbar')) {
+            barre.addCls('theme-pagination');
+            // Chargee a la demande (Ext.Loader) si aucun ecran ne l'a encore demandee.
+            Ext.create('testextjs.view.commun.PaginationNumerotee').init(barre);
+            return;
+        }
+        if (barre.dock !== 'top') {
+            return;
+        }
+        barre.addCls('mv-barre');
+        // Marges posees avant le rendu : la mise en page les compte (une marge CSS deborderait).
+        if (barre.margin === undefined) {
+            barre.margin = '10 10 8 10';
+        }
+        // Champs de date a largeur fixe : etires, ils repoussaient la recherche et les boutons.
+        // (largeur MAXIMALE seulement : le champ garde sa souplesse et se resserre si la barre est pleine)
+        Ext.each(barre.query('datefield'), function (champ) {
+            if (champ.flex && !champ.maxWidth) {
+                champ.maxWidth = (champ.hideLabel || !champ.fieldLabel ? 0 : (champ.labelWidth || 100) + 5) + 130;
+            }
+        });
+        // Listes de choix (filtres) a largeur fixe elles aussi ; la recherche texte garde la place restante.
+        Ext.each(barre.query('combobox'), function (champ) {
+            if (champ.flex && !champ.maxWidth && !champ.isXType('datefield')) {
+                champ.maxWidth = (champ.hideLabel || !champ.fieldLabel ? 0 : (champ.labelWidth || 100) + 5) + 240;
+            }
+        });
+        Ext.each(barre.query('button'), function (b) {
+            var texte = String(b.text || '');
+            b.addCls(/^(nouveau|nouvelle|ajouter|cr[ée]er)/i.test(texte) ? 'ordo-btn-primaire' : 'ordo-btn');
+        });
+    });
+    // Onglets en boutons segmentes, l'actif en bleu fonce (meme dessin que l'historique des ordonnances).
+    Ext.each(ecran.isXType('tabpanel') ? [ecran].concat(ecran.query('tabpanel')) : ecran.query('tabpanel'), function (onglets) {
+        onglets.addCls('ordo-onglets');
+    });
+    // L'ecran peut etre lui-meme la grille (articles vendus, mouvements de caisse).
+    Ext.each(ecran.isXType('gridpanel') ? [ecran].concat(ecran.query('gridpanel')) : ecran.query('gridpanel'), function (grille) {
+        grille.addCls(grille === ecran ? 'theme-grille' : 'ordo-carte theme-grille');
+        if (grille.ownerCt === ecran && grille.margin === undefined) {
+            grille.margin = '0 10 10 10';
+        }
+        Ext.each(grille.query('actioncolumn'), function (col) {
+            Ext.each(col.items || [], function (item) {
+                var image = String(item.icon || '');
+                if (!image) {
+                    return;
+                }
+                Ext.each(window.PrestigeAffichage.ICONES_TRAIT, function (regle) {
+                    if (regle[0].test(image)) {
+                        var trait = 'act-ico ' + regle[1];
+                        if (Ext.isFunction(item.getClass)) {
+                            // getClass remplace iconCls au rendu : on garde sa reponse (ex. x-hide-display pour
+                            // masquer l'icone sur certaines lignes) et on y ajoute le dessin au trait.
+                            var origine = item.getClass;
+                            item.getClass = function () {
+                                var cls = origine.apply(this, arguments);
+                                return Ext.String.trim((cls || '') + ' ' + trait);
+                            };
+                        } else {
+                            item.iconCls = Ext.String.trim((item.iconCls || '') + ' ' + trait);
+                        }
+                        item.icon = null;
+                        return false;
+                    }
+                });
+            });
+        });
+    });
+};
 
 /**
  * Applique la presentation "collee" a un ecran s'il figure dans la liste ci-dessus.
@@ -824,6 +954,17 @@ window.PrestigeAffichage.appliquerSiConcerne = function (ecran) {
     });
     if (concerne) {
         window.PrestigeAffichage.collerAuConteneur(ecran);
+    }
+    var styleVente = Ext.Array.some(window.PrestigeAffichage.ECRANS_STYLE_VENTE, function (xtype) {
+        return ecran.isXType(xtype);
+    });
+    if (styleVente) {
+        window.PrestigeAffichage.habillerStyleVente(ecran);
+    }
+    if (Ext.Array.some(window.PrestigeAffichage.ECRANS_FOND_VENTE, function (xtype) {
+        return ecran.isXType(xtype);
+    })) {
+        ecran.addCls('mv-panneau');
     }
     // Retours des tests du 12/09 (point 5) : sur un videoprojecteur, la resolution change en cours de
     // session sans que le navigateur envoie toujours un redimensionnement ; l'ecran suivant s'ouvrait

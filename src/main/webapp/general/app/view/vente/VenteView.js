@@ -4,7 +4,7 @@ Ext.define('testextjs.view.vente.VenteView', {
     extend: 'Ext.panel.Panel',
     xtype: 'doventemanager',
     requires: [
-        'testextjs.view.vente.VenteVNO'
+        'testextjs.view.vente.VenteVNO', 'testextjs.view.vente.Segments'
     ],
     config: {
         data: null
@@ -272,73 +272,57 @@ Ext.define('testextjs.view.vente.VenteView', {
 
             items: [
                 {
-                    xtype: 'fieldset',
-                    title: '<span style="color:blue;">CHOISIR LE TYPE /LA NATURE DE VENTE ET LE VENDEUR</span>',
-                    collapsible: false,
-                    defaultType: 'textfield',
-                    cls: 'background_gray',
-                    layout: 'anchor',
-                    defaults: {
-                        anchor: '100%'
-                    },
-
+                    /* Ligne type / nature / vendeur (maquette validee le 30/09) : type et nature en boutons segmentes
+                       poses sur les combos d'origine (plugin segments : memes itemId, meme 'select'), vendeur en combo. */
+                    xtype: 'container',
+                    itemId: 'ligneTypeVente',
+                    cls: 'seg-ligne',
+                    layout: {type: 'hbox', align: 'middle'},
+                    padding: '8 12',
+                    margin: '0 0 6 0',
                     items: [
+                        {xtype: 'component', cls: 'seg-lib', html: 'Type', margin: '0 10 0 0'},
                         {
-                            xtype: 'container',
-                            layout: 'hbox',
-                            margin: '0 0 5 0',
-                            height: 35,
-                            style: 'padding-bottom:3px;',
-                            defaultType: 'textfield',
-                            items: [
-                                {
-                                    xtype: 'combobox',
-                                    itemId: 'typeVente',
-                                    store: typeventeStore,
-                                    editable:false,
-                                    flex: 2,
-                                    margin: '0 15 0 0',
-                                    height: 30,
-                                    valueField: 'lgTYPEVENTEID',
-                                    displayField: 'strNAME',
-                                    typeAhead: false,
-                                    queryMode: 'remote',
-                                    emptyText: 'Choisir un type de vente...'
-
-                                },
-
-                                {
-                                    xtype: 'combobox',
-                                    itemId: 'nature',
-                                    store: natureventeStore,
-                                    editable:false,
-                                    flex: 2,
-                                    height: 30,
-                                    margin: '0 15 0 0',
-                                    valueField: 'lgNATUREVENTEID',
-                                    displayField: 'strLIBELLE',
-                                    typeAhead: false,
-                                    queryMode: 'remote',
-                                    emptyText: 'Selectionner la nature ...'
-
-                                },
-                                {
-                                    xtype: 'combobox',
-                                    itemId: 'user',
-                                    store: storeUser,
-                                    pageSize: null,
-                                    valueField: 'lgUSERID',
-                                    displayField: 'fullName',
-                                    typeAhead: false,
-                                    flex: 2,
-                                    height: 30,
-                                    minChars: 2,
-                                    queryMode: 'remote',
-                                    emptyText: 'Choisir un vendeur...'
-
-                                }
-
-                            ]
+                            xtype: 'combobox',
+                            itemId: 'typeVente',
+                            store: typeventeStore,
+                            editable: false,
+                            margin: '0 32 0 0',
+                            valueField: 'lgTYPEVENTEID',
+                            displayField: 'strNAME',
+                            typeAhead: false,
+                            queryMode: 'remote',
+                            plugins: [{ptype: 'segments', pastille: true, libelles: {'1': 'Au comptant', '2': 'Assurance', '3': 'Carnet'}}],
+                            emptyText: 'Choisir un type de vente...'
+                        },
+                        {xtype: 'component', cls: 'seg-lib', html: 'Nature', margin: '0 10 0 32'},
+                        {
+                            xtype: 'combobox',
+                            itemId: 'nature',
+                            store: natureventeStore,
+                            editable: false,
+                            margin: '0 32 0 0',
+                            valueField: 'lgNATUREVENTEID',
+                            displayField: 'strLIBELLE',
+                            typeAhead: false,
+                            queryMode: 'remote',
+                            plugins: [{ptype: 'segments', libelles: {'3': 'Dépôt'}}],
+                            emptyText: 'Selectionner la nature ...'
+                        },
+                        {xtype: 'component', cls: 'seg-lib', html: 'Vendeur', margin: '0 10 0 32'},
+                        {
+                            xtype: 'combobox',
+                            itemId: 'user',
+                            store: storeUser,
+                            pageSize: null,
+                            valueField: 'lgUSERID',
+                            displayField: 'fullName',
+                            typeAhead: false,
+                            width: 300,
+                            height: 30,
+                            minChars: 2,
+                            queryMode: 'remote',
+                            emptyText: 'Choisir un vendeur...'
                         }
                     ]
                 },

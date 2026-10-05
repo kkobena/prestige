@@ -26,6 +26,7 @@ import javax.persistence.Tuple;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import util.Constant;
 import rest.service.impl.OrdonnanceClientSql.Criteres;
 
 /**
@@ -53,6 +54,12 @@ public class OrdonnanceClientService {
 
     @javax.ejb.EJB
     private rest.report.ReportUtil reportUtil;
+
+    @javax.ejb.EJB
+    private TerrainCliniqueService terrainService;
+
+    @javax.ejb.EJB
+    private DossierClientService dossierService;
 
     @javax.ejb.EJB
     private rest.service.utils.ReportExcelExportService excelService;
@@ -87,7 +94,34 @@ public class OrdonnanceClientService {
             return new JSONObject().put("success", false).put("total", 0).put("data", new JSONArray()).put("message",
                     "L'historique des ordonnances n'a pas pu être lu.");
         }
-        return new JSONObject().put("success", true).put("total", total).put("data", data);
+        return new JSONObject().put("success", true).put("total", total).put("data", data).put("compteurs",
+                compteurs(criteres));
+    }
+
+    /**
+     * Compteurs cliquables de l'historique (30/09) : parmi les ordonnances des memes criteres, combien ont un reste a
+     * delivrer et combien sont a renouveler sous 7 jours. Un compteur illisible vaut -1 (non affiche), sans empecher la
+     * liste.
+     */
+    private JSONObject compteurs(Criteres c) {
+        JSONObject r = new JSONObject();
+        Criteres reste = new Criteres(c.recherche, c.clientId, c.typeClientId, c.medecinId, c.debut, c.fin,
+                c.inclureAnnulees, true, false);
+        Criteres renouveler = new Criteres(c.recherche, c.clientId, c.typeClientId, c.medecinId, c.debut, c.fin,
+                c.inclureAnnulees, false, true);
+        r.put("reste", compter(reste)).put("renouveler", compter(renouveler));
+        return r;
+    }
+
+    private long compter(Criteres c) {
+        try {
+            Query q = em.createNativeQuery(OrdonnanceClientSql.compte(c));
+            OrdonnanceClientSql.lier(q, c);
+            return ((Number) q.getSingleResult()).longValue();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "compteur de l'historique des ordonnances", e);
+            return -1;
+        }
     }
 
     private static JSONObject ligne(Tuple t) {
@@ -101,11 +135,24 @@ public class OrdonnanceClientService {
                 .put("client", StringUtils.trimToEmpty(t.get("client", String.class)))
                 .put("typeClient", StringUtils.defaultString(t.get("typeClient", String.class)))
                 .put("telephone", StringUtils.defaultString(t.get("telephone", String.class)))
+                /*
+                 * Le numero a montrer sous le nom (30/09) : le normalise, sinon l'ancien champ s'il a forme de numero.
+                 */
+                .put("telephoneAffiche",
+                        RechercheClientOrdonnance.telephone(t.get("telephone", String.class),
+                                t.get("adresse", String.class)))
                 .put("medecinId", StringUtils.defaultString(t.get("medecinId", String.class)))
                 .put("medecin", StringUtils.trimToEmpty(t.get("medecin", String.class)))
                 .put("nbProduits", entier(t.get("nbProduits"))).put("nbPieces", entier(t.get("nbPieces")))
                 .put("nbRenseignees", entier(t.get("nbRenseignees"))).put("nbServies", entier(t.get("nbServies")))
-                .put("qteServie", entier(t.get("qteServie")))
+                .put("qteServie", entier(t.get("qteServie"))).put("nbReste", entier(t.get("nbReste")))
+                .put("qteReste", entier(t.get("qteReste")))
+                .put("origineId", StringUtils.defaultString(t.get("origineId", String.class)))
+                .put("origineNumero", StringUtils.defaultString(t.get("origineNumero", String.class)))
+                .put("rang", entier(t.get("rang"))).put("renouvAutorises", entier(t.get("renouvAutorises")))
+                .put("renouvFaits", entier(t.get("renouvFaits")))
+                .put("periodicite", t.get("periodicite") == null ? JSONObject.NULL : entier(t.get("periodicite")))
+                .put("prochainRenouvellement", prochainRenouvellement(t))
                 .put("etatService",
                         OrdonnanceClientSaisie.etatService(entier(t.get("nbProduits")), entier(t.get("nbRenseignees")),
                                 entier(t.get("nbServies")), entier(t.get("qteServie"))))
@@ -118,6 +165,45 @@ public class OrdonnanceClientService {
                 .put("creePar", StringUtils.trimToEmpty(t.get("creePar", String.class)))
                 .put("modifieLe", horodatage(t.get("modifieLe")))
                 .put("modifiePar", StringUtils.trimToEmpty(t.get("modifiePar", String.class)));
+    }
+
+    /**
+     * Reste a delivrer d'un client (retour du 30/09) : ses ordonnances non annulees ayant au moins une ligne servie en
+     * partie ou non servie, la plus ancienne d'abord. La fiche le signale des que le client est choisi.
+     */
+    @SuppressWarnings("unchecked")
+    public JSONObject resteClient(String clientId, String saufOrdonnanceId) {
+        JSONArray data = new JSONArray();
+        int qte = 0;
+        try {
+            boolean sauf = StringUtils.isNotBlank(saufOrdonnanceId);
+            Query q = em.createNativeQuery(OrdonnanceClientSql.resteClient(sauf), Tuple.class).setParameter("client",
+                    StringUtils.defaultString(clientId));
+            if (sauf) {
+                q.setParameter("sauf", saufOrdonnanceId);
+            }
+            for (Tuple t : (List<Tuple>) q.getResultList()) {
+                int reste = entier(t.get("qteReste"));
+                qte += reste;
+                data.put(new JSONObject().put("id", t.get("id", String.class))
+                        .put("numero", t.get("numero", String.class))
+                        .put("dateOrdonnance", jour(t.get("dateOrdonnance"))).put("nbReste", entier(t.get("nbReste")))
+                        .put("qteReste", reste));
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "reste a delivrer d'un client", e);
+            return new JSONObject().put("success", false).put("total", 0).put("data", new JSONArray());
+        }
+        return new JSONObject().put("success", true).put("total", data.length()).put("qteReste", qte).put("data", data);
+    }
+
+    /** Echeance du renouvellement suivant de la chaine (AAAA-MM-JJ), ou vide s'il n'en reste pas. */
+    private static String prochainRenouvellement(Tuple t) {
+        String derniere = jour(t.get("derniereDelivrance"));
+        LocalDate prochaine = RenouvellementOrdonnance.prochaine(entier(t.get("renouvAutorises")),
+                entier(t.get("renouvFaits")), derniere.isEmpty() ? null : LocalDate.parse(derniere.substring(0, 10)),
+                t.get("periodicite") == null ? null : entier(t.get("periodicite")));
+        return prochaine == null ? "" : prochaine.toString();
     }
 
     /** Une ordonnance et ses produits, pour la fiche de consultation. */
@@ -150,6 +236,16 @@ public class OrdonnanceClientService {
                         .put("ordre", entier(t.get("ordre")))
                         .put("qteServie", t.get("qteServie") == null ? JSONObject.NULL : entier(t.get("qteServie"))));
             }
+            entete.put("terrains", terrainService.deLOrdonnance(ordonnanceId));
+            Object poids = em
+                    .createNativeQuery("SELECT int_POIDS_PATIENT FROM t_ordonnance_client WHERE lg_ORDONNANCE_ID = ?1")
+                    .setParameter(1, ordonnanceId).getSingleResult();
+            entete.put("poidsPatient", poids == null ? JSONObject.NULL : entier(poids));
+            Object naissance = em
+                    .createNativeQuery(
+                            "SELECT dt_NAISSANCE_PATIENT FROM t_ordonnance_client WHERE lg_ORDONNANCE_ID = ?1")
+                    .setParameter(1, ordonnanceId).getSingleResult();
+            entete.put("dateNaissance", StringUtils.left(jour(naissance), 10));
             return new JSONObject().put("success", true).put("ordonnance", entete).put("produits", produits);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "detail d'une ordonnance client", e);
@@ -170,7 +266,21 @@ public class OrdonnanceClientService {
      * des lignes fantomes au moindre ecart.
      */
     public JSONObject enregistrer(JSONObject requete, TUser operateur) {
-        List<String> refus = OrdonnanceClientSaisie.valider(requete, LocalDate.now());
+        List<String> refus = new ArrayList<>(OrdonnanceClientSaisie.valider(requete, LocalDate.now()));
+        if (requete.has("renouvellements")) {
+            String motif = RenouvellementOrdonnance.valider(requete.optInt("renouvellements", 0), periodicite(requete));
+            if (motif != null) {
+                refus.add(motif);
+            }
+        }
+        String motifNaissance = DateNaissance.valider(requete.optString("dateNaissance", null), LocalDate.now());
+        if (motifNaissance != null) {
+            refus.add(motifNaissance);
+        }
+        Integer poids = poids(requete);
+        if (poids != null && (poids < 1 || poids > MAX_POIDS)) {
+            refus.add("Le poids du patient va de 1 à " + MAX_POIDS + " kg.");
+        }
         if (!refus.isEmpty()) {
             return new JSONObject().put("success", false).put("message", String.join(" ", refus));
         }
@@ -213,7 +323,12 @@ public class OrdonnanceClientService {
             ordonnance.setStrETABLISSEMENT(OrdonnanceClientSaisie.tronquer(requete.optString("etablissement", null),
                     OrdonnanceClientSaisie.MAX_ETABLISSEMENT));
             ordonnance.setStrOBSERVATIONS(StringUtils.trimToNull(requete.optString("observations", null)));
-            ordonnance.setIntAGEPATIENT(OrdonnanceClientSaisie.agePatient(requete));
+            /*
+             * Date de naissance (30/09) : l'age en est DEDUIT, au jour de l'ordonnance ; il ne peut pas la contredire.
+             */
+            LocalDate naissance = DateNaissance.lire(requete.optString("dateNaissance", null));
+            ordonnance.setIntAGEPATIENT(naissance != null ? Integer.valueOf(DateNaissance.age(naissance, jour))
+                    : OrdonnanceClientSaisie.agePatient(requete));
             ordonnance.setStrSEXEPATIENT(OrdonnanceClientSaisie.sexePatient(requete));
             ordonnance.setBoolGROSSESSE(requete.optBoolean("grossesse", false));
             ordonnance.setBoolALLAITEMENT(requete.optBoolean("allaitement", false));
@@ -225,6 +340,56 @@ public class OrdonnanceClientService {
             }
             remplacerProduits(ordonnance, requete.optJSONArray("produits"));
             em.flush();
+            /*
+             * Terrains cliniques et poids (30/09) : seulement s'ils sont envoyes (les anciens appels n'y touchent pas).
+             */
+            if (requete.has("terrains")) {
+                terrainService.remplacer(ordonnance.getLgORDONNANCEID(), requete.optJSONArray("terrains"));
+            }
+            if (requete.has("dateNaissance")) {
+                em.createNativeQuery(
+                        "UPDATE t_ordonnance_client SET dt_NAISSANCE_PATIENT = ?1 WHERE lg_ORDONNANCE_ID = ?2")
+                        .setParameter(1, naissance == null ? null : java.sql.Date.valueOf(naissance))
+                        .setParameter(2, ordonnance.getLgORDONNANCEID()).executeUpdate();
+                /*
+                 * Reportee sur la fiche du client STANDARD (30/09), pour etre reprise aux ordonnances suivantes. Un
+                 * client assurance ou carnet a deja sa date dans sa fiche, geree par son propre ecran : on n'y touche
+                 * pas.
+                 */
+                if (naissance != null && client.getLgTYPECLIENTID() != null
+                        && Constant.STANDART_CLIENT_ID.equals(client.getLgTYPECLIENTID().getLgTYPECLIENTID())) {
+                    em.createNativeQuery("UPDATE t_client SET dt_NAISSANCE = ?1 WHERE lg_CLIENT_ID = ?2")
+                            .setParameter(1, java.sql.Date.valueOf(naissance)).setParameter(2, client.getLgCLIENTID())
+                            .executeUpdate();
+                }
+            }
+            if (requete.has("poidsPatient")) {
+                em.createNativeQuery(
+                        "UPDATE t_ordonnance_client SET int_POIDS_PATIENT = ?1 WHERE lg_ORDONNANCE_ID = ?2")
+                        .setParameter(1, poids(requete)).setParameter(2, ordonnance.getLgORDONNANCEID())
+                        .executeUpdate();
+            }
+            /*
+             * Fiche client (30/09) : le poids saisi rejoint le suivi des parametres du client, les terrains coches
+             * enrichissent son dossier (sans rien en retirer).
+             */
+            if (requete.has("poidsPatient") || requete.has("terrains")) {
+                dossierService.depuisOrdonnance(client.getLgCLIENTID(), ordonnance.getLgORDONNANCEID(), jour,
+                        requete.has("poidsPatient"), poids(requete), requete.optJSONArray("terrains"), operateur);
+            }
+            /*
+             * Renouvellements (30/09) : portes par l'ordonnance d'ORIGINE seulement. Un renouvellement herite des
+             * reglages de son origine ; les champs arrivant de sa fiche sont ignores.
+             */
+            if (requete.has("renouvellements")) {
+                int nb = requete.optInt("renouvellements", 0);
+                Integer periodicite = periodicite(requete);
+                em.createNativeQuery(
+                        "UPDATE t_ordonnance_client SET int_RENOUVELLEMENTS = ?1, int_PERIODICITE_JOURS = ?2"
+                                + " WHERE lg_ORDONNANCE_ID = ?3 AND lg_ORDONNANCE_ORIGINE_ID IS NULL")
+                        .setParameter(1, nb).setParameter(2, nb > 0 ? periodicite : null)
+                        .setParameter(3, ordonnance.getLgORDONNANCEID()).executeUpdate();
+            }
             return new JSONObject().put("success", true).put("id", ordonnance.getLgORDONNANCEID())
                     .put("numero", ordonnance.getStrNUMERO())
                     .put("message", creation ? "Ordonnance " + ordonnance.getStrNUMERO() + " enregistrée."
@@ -233,6 +398,16 @@ public class OrdonnanceClientService {
             LOG.log(Level.SEVERE, "enregistrement d'une ordonnance client", e);
             return new JSONObject().put("success", false).put("message", "L'ordonnance n'a pas pu être enregistrée.");
         }
+    }
+
+    static final int MAX_POIDS = 400;
+
+    private static Integer poids(JSONObject requete) {
+        return !requete.has("poidsPatient") || requete.isNull("poidsPatient") ? null : requete.optInt("poidsPatient");
+    }
+
+    private static Integer periodicite(JSONObject requete) {
+        return !requete.has("periodicite") || requete.isNull("periodicite") ? null : requete.optInt("periodicite");
     }
 
     private void remplacerProduits(TOrdonnanceClient ordonnance, JSONArray produits) {
@@ -307,6 +482,11 @@ public class OrdonnanceClientService {
             ordonnance.setLgUSERUPDATED(operateur == null ? null : operateur.getLgUSERID());
             ordonnance.setDtUPDATED(new Date());
             em.flush();
+            /*
+             * Une ordonnance annulee ne compte plus : le poids qu'elle avait verse au suivi du client en sort (30/09).
+             */
+            em.createNativeQuery("DELETE FROM t_client_mesure WHERE lg_ORDONNANCE_ID = ?1")
+                    .setParameter(1, ordonnance.getLgORDONNANCEID()).executeUpdate();
             return new JSONObject().put("success", true).put("message",
                     "Ordonnance " + ordonnance.getStrNUMERO() + " annulée.");
         } catch (Exception e) {
@@ -858,6 +1038,104 @@ public class OrdonnanceClientService {
         return new JSONObject().put("success", true).put("total", data.length()).put("data", data);
     }
 
+    /**
+     * Recherche d'un client pour la fiche et le filtre de l'historique (30/09) : par le nom (« commence par », comme
+     * v1/client/list) ou par le telephone (« contient »). Chaque ligne porte le type et le telephone du client, et sa
+     * date de naissance pour la fiche.
+     */
+    @SuppressWarnings("unchecked")
+    public JSONObject clients(String saisie, int start, int limit) {
+        JSONArray data = new JSONArray();
+        String nom = RechercheClientOrdonnance.nom(saisie);
+        String chiffres = RechercheClientOrdonnance.chiffres(saisie);
+        StringBuilder filtre = new StringBuilder(" FROM t_client c LEFT JOIN t_type_client t"
+                + " ON t.lg_TYPE_CLIENT_ID = c.lg_TYPE_CLIENT_ID WHERE c.str_STATUT = 'enable'");
+        if (!nom.isEmpty()) {
+            // Espaces parasites en tete ou en fin de nom ignores (fiches saisies avec une espace de trop).
+            filtre.append(" AND (TRIM(c.str_FIRST_NAME) LIKE :nom OR TRIM(c.str_LAST_NAME) LIKE :nom").append(
+                    " OR CONCAT(TRIM(COALESCE(c.str_FIRST_NAME, '')), ' ', TRIM(COALESCE(c.str_LAST_NAME, ''))) LIKE :nom")
+                    .append(" OR CONCAT(TRIM(COALESCE(c.str_LAST_NAME, '')), ' ', TRIM(COALESCE(c.str_FIRST_NAME, ''))) LIKE :nom")
+                    .append(" OR c.str_CODE_INTERNE LIKE :nom");
+            if (chiffres != null) {
+                filtre.append(" OR REGEXP_REPLACE(COALESCE(c.str_TELEPHONE, ''), '[^0-9]', '') LIKE :chiffres")
+                        .append(" OR REGEXP_REPLACE(COALESCE(c.str_ADRESSE, ''), '[^0-9]', '') LIKE :chiffres");
+            }
+            filtre.append(")");
+        }
+        int total = 0;
+        try {
+            Query compte = em.createNativeQuery("SELECT COUNT(*)" + filtre);
+            Query q = em.createNativeQuery(
+                    "SELECT c.lg_CLIENT_ID AS id, c.str_FIRST_NAME AS prenom,"
+                            + " c.str_LAST_NAME AS nom, c.str_TELEPHONE AS telephone, c.str_ADRESSE AS adresse,"
+                            + " c.lg_TYPE_CLIENT_ID AS typeId, t.str_NAME AS type, c.dt_NAISSANCE AS naissance,"
+                            + " c.str_SEXE AS sexe" + filtre + " ORDER BY c.str_FIRST_NAME, c.str_LAST_NAME",
+                    Tuple.class);
+            for (Query x : new Query[] { compte, q }) {
+                if (!nom.isEmpty()) {
+                    x.setParameter("nom", nom + "%");
+                    if (chiffres != null) {
+                        x.setParameter("chiffres", "%" + chiffres + "%");
+                    }
+                }
+            }
+            total = ((Number) compte.getSingleResult()).intValue();
+            q.setFirstResult(Math.max(start, 0)).setMaxResults(limit > 0 ? Math.min(limit, 100) : 30);
+            for (Tuple t : (List<Tuple>) q.getResultList()) {
+                Object naissance = t.get("naissance");
+                data.put(new JSONObject().put("lgCLIENTID", t.get("id", String.class))
+                        .put("strFIRSTNAME", StringUtils.defaultString(t.get("prenom", String.class)))
+                        .put("strLASTNAME", StringUtils.defaultString(t.get("nom", String.class)))
+                        .put("strTELEPHONE",
+                                RechercheClientOrdonnance.telephone(t.get("telephone", String.class),
+                                        t.get("adresse", String.class)))
+                        .put("typeClient", StringUtils.defaultString(t.get("typeId", String.class)))
+                        .put("libelleTypeClient", StringUtils.defaultString(t.get("type", String.class)))
+                        .put("dtNAISSANCE", StringUtils.left(jour(naissance), 10))
+                        .put("strSEXE", StringUtils.defaultString(t.get("sexe", String.class))));
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recherche de client (ordonnances)", e);
+            return new JSONObject().put("success", false).put("total", 0).put("data", new JSONArray());
+        }
+        return new JSONObject().put("success", true).put("total", total).put("data", data);
+    }
+
+    /**
+     * Recherche de produit des ordonnances (retour du 30/09) : nom, CIP, EAN ou code article, « commence par », avec le
+     * stock de l'emplacement de l'operateur et le prix. Une seule requete legere : la recherche de la caisse
+     * (v1/vente/search) prepare des lignes de vente completes et prenait pres d'une seconde. Elle n'est pas touchee.
+     */
+    @SuppressWarnings("unchecked")
+    public JSONObject produits(String saisie, String emplacementId, int limit) {
+        JSONArray data = new JSONArray();
+        String q = StringUtils.trimToEmpty(saisie);
+        if (q.isEmpty() || StringUtils.isBlank(emplacementId)) {
+            return new JSONObject().put("success", true).put("total", 0).put("data", data);
+        }
+        try {
+            List<Tuple> lignes = em.createNativeQuery("SELECT f.lg_FAMILLE_ID AS id, f.int_CIP AS cip,"
+                    + " TRIM(f.str_NAME) AS nom, f.int_PRICE AS prix, s.int_NUMBER_AVAILABLE AS stock"
+                    + " FROM t_famille f JOIN t_famille_stock s ON s.lg_FAMILLE_ID = f.lg_FAMILLE_ID"
+                    + " AND s.lg_EMPLACEMENT_ID = :emplacement WHERE f.str_STATUT = 'enable' AND (f.str_NAME LIKE :q"
+                    + " OR f.int_CIP LIKE :q OR f.int_EAN13 LIKE :q OR f.code_ean_fabriquant LIKE :q"
+                    + " OR EXISTS (SELECT 1 FROM t_famille_grossiste g WHERE g.lg_FAMILLE_ID = f.lg_FAMILLE_ID"
+                    + " AND g.str_CODE_ARTICLE LIKE :q)) ORDER BY f.str_NAME", Tuple.class)
+                    .setParameter("emplacement", emplacementId).setParameter("q", q + "%")
+                    .setMaxResults(limit > 0 ? Math.min(limit, 50) : 15).getResultList();
+            for (Tuple t : lignes) {
+                data.put(new JSONObject().put("lgFAMILLEID", t.get("id", String.class))
+                        .put("intCIP", t.get("cip") == null ? "" : String.valueOf(t.get("cip")))
+                        .put("strNAME", StringUtils.defaultString(t.get("nom", String.class)))
+                        .put("intPRICE", entier(t.get("prix"))).put("intNUMBERAVAILABLE", entier(t.get("stock"))));
+            }
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "recherche de produit (ordonnances)", e);
+            return new JSONObject().put("success", false).put("total", 0).put("data", new JSONArray());
+        }
+        return new JSONObject().put("success", true).put("total", data.length()).put("data", data);
+    }
+
     /** Les prescripteurs actifs, pour le choix de l'ecran : le referentiel medecins existant, pas un nouveau. */
     @SuppressWarnings("unchecked")
     public JSONObject medecins(String query) {
@@ -1016,6 +1294,13 @@ public class OrdonnanceClientService {
     private rest.service.ClientConsommationService consommationService;
 
     @SuppressWarnings("unchecked")
+    /** Nom et prenom d'un client, ou null s'il n'existe pas (suivi de consommation depuis la caisse, 30/09). */
+    public String nomClient(String clientId) {
+        TClient client = StringUtils.isBlank(clientId) ? null : em.find(TClient.class, clientId);
+        return client == null ? null : StringUtils.normalizeSpace(StringUtils.defaultString(client.getStrFIRSTNAME())
+                + " " + StringUtils.defaultString(client.getStrLASTNAME()));
+    }
+
     public JSONObject consommationClient(String clientId, String debut, String fin, String emplacementId) {
         if (StringUtils.isBlank(clientId)) {
             return new JSONObject().put("success", false).put("total", 0).put("data", new JSONArray()).put("message",
