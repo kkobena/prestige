@@ -34,7 +34,8 @@ const MARQUE = 'E2E-2209';
 
     /* Un client qui a des achats (pour le suivi), un produit en stock (pour la recherche). */
     const client = q("SELECT c.lg_CLIENT_ID FROM t_client c JOIN t_preenregistrement p ON p.lg_CLIENT_ID=c.lg_CLIENT_ID"
-      + " WHERE c.str_STATUT='enable' AND p.str_STATUT='is_Closed' AND p.b_IS_CANCEL=0 AND LENGTH(TRIM(c.str_LAST_NAME))>=6"
+      /* nom sans espace parasite en tete : la recherche est « commence par » */
+      + " WHERE c.str_STATUT='enable' AND p.str_STATUT='is_Closed' AND p.b_IS_CANCEL=0 AND LENGTH(TRIM(c.str_LAST_NAME))>=6 AND c.str_LAST_NAME = TRIM(c.str_LAST_NAME)"
       /* Un nom que personne d'autre ne porte : la liste des clients est paginee, un nom courant l'y noierait. */
       + " AND (SELECT COUNT(*) FROM t_client x WHERE x.str_LAST_NAME LIKE CONCAT('%', LEFT(TRIM(c.str_LAST_NAME), 6), '%')"
       + "      OR x.str_FIRST_NAME LIKE CONCAT('%', LEFT(TRIM(c.str_LAST_NAME), 6), '%')) = 1"
@@ -56,14 +57,20 @@ const MARQUE = 'E2E-2209';
     const place = await p.evaluate(() => {
       const e = Ext.ComponentQuery.query('ordonnanceclient')[0];
       const g = e.down('#grilleOrdonnances'); const n = g.down('button[itemId=nouvelle]');
-      return { droite: n.getEl().getRight(), grille: g.getEl().getRight(), clientCritere: e.down('#barreCriteres #client').getWidth(),
-        clientFiche: e.down('#vueFiche #ficheClient').width, liste: e.down('#vueFiche #ficheClient').listConfig.minWidth };
+      const x = g.down('button[itemId=exporterExcel]');
+      return { gauche: n.getEl().getLeft(), grilleGauche: g.getEl().getLeft(), exporterDroite: x.getEl().getRight(), droite: n.getEl().getRight(), grille: g.getEl().getRight(), clientCritere: e.down('#barreCriteres #client').getWidth(),
+        liste: e.down('#vueFiche #ficheClient').listConfig.minWidth };
     });
-    ok('« Nouvelle ordonnance » est à DROITE de l historique', place.grille - place.droite < 40, JSON.stringify(place));
-    ok('Zones client élargies (critère 360, fiche 520, liste 480 au moins)', place.clientCritere >= 360 && place.clientFiche >= 520 && place.liste >= 480, JSON.stringify(place));
+    /* Permute le 30/09 : « Nouvelle ordonnance » a GAUCHE, Imprimer et Exporter a droite. */
+    ok('« Nouvelle ordonnance » est à GAUCHE de l historique, Exporter à droite', place.gauche - place.grilleGauche < 40 && place.grille - place.exporterDroite < 40, JSON.stringify(place));
+    ok('Zones client élargies (critère 360, liste 480 au moins)', place.clientCritere >= 360 && place.liste >= 480, JSON.stringify(place));
 
     /* ------------------------------------------------------------------ saisie d une ordonnance */
     await clic('ordonnanceclient #grilleOrdonnances button[itemId=nouvelle]');
+    /* Presentation B (30/09) : le client est dans la colonne patient ; mesure faite fiche affichee, le champ y fait au
+       moins 360 px, comme le critere de l'historique. */
+    const largeurFiche = await p.evaluate(() => Ext.ComponentQuery.query('ordonnanceclient #vueFiche #ficheClient')[0].getWidth());
+    ok('Champ client de la fiche : 360 px au moins', largeurFiche >= 360, largeurFiche);
     ok('La fiche neuve s ouvre', (await vue()) === 'vueFiche');
     const focusClient = await p.evaluate(() => document.activeElement && document.activeElement.id === Ext.ComponentQuery.query('ordonnanceclient #vueFiche #ficheClient')[0].getId() + '-inputEl');
     ok('Fiche neuve : le curseur est dans le CLIENT', focusClient);
@@ -114,7 +121,7 @@ const MARQUE = 'E2E-2209';
     await p.keyboard.type(MARQUE);
     await clic('ordonnanceclient #vueFiche button[itemId=enregistrer]');
     await p.waitForTimeout(1000);
-    const titre = await p.evaluate(() => Ext.ComponentQuery.query('ordonnanceclient #titreFiche')[0].getValue());
+    const titre = await p.evaluate(() => Ext.ComponentQuery.query('ordonnanceclient #enteteOrdonnance')[0].title);
     const numero = (titre.match(/ORD-\d{6}-\d{4}/) || [''])[0];
     const enBase = q("SELECT CONCAT_WS('|', o.int_AGE_PATIENT, o.bool_GROSSESSE, d.int_QUANTITE, d.int_QTE_SERVIE, d.str_POSOLOGIE) FROM t_ordonnance_client o JOIN t_ordonnance_client_detail d ON d.lg_ORDONNANCE_ID=o.lg_ORDONNANCE_ID WHERE o.str_NUMERO='" + numero + "'");
     ok('Enregistrée : âge 34, grossesse, 2 prescrits, 1 servi, posologie tapée', enBase === '34|1|2|1|1 cp matin et soir', numero + ' -> ' + enBase);
