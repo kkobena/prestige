@@ -745,6 +745,15 @@ window.PrestigeAffichage.isolerEcouteursRedimensionnement = function () {
  * d'oeil lesquels sont concernes. App.onLoadNewComponent la consulte a l'ouverture d'un menu.
  */
 window.PrestigeAffichage.ECRANS_COLLES = [
+    // retours du 05/10 (lot A)
+    'facturesubrogatoire', 'modelfacture', 'modelfacturedynamique', 'factureenattenteedition',
+    // lot B
+    'promotionhistorymanager', 'promotionmanager', 'balanceagee_detail', 'balanceagee', 'remisemanager', 'groupetierspayant',
+    // lot C
+    'reservemanager',
+    // lot D
+    'info_officine', 'grossistemanager', 'smsfournisseur', 'dcimanager', 'tvastat', 'menunotification', 'rolemanager',
+    'myaccountmanager',
     // facturation
     'facturemanager', 'facturesubrogatoireother', 'groupeInvoices', 'factureprovisoire',
     'recapOrganisme',
@@ -822,7 +831,21 @@ window.PrestigeAffichage.ECRANS_STYLE_VENTE = [
     // lot 3 : Posos, articles vendus (recapitulatif), gestion de caisse, mouvements de caisse
     'pososmanager', 'articlevendurecapitulatif', 'gestcaissemanager', 'mvtcaissemanager',
     // lot 4 : facture subrogatoire, ventes ratees, mouchard des prix de vente
-    'facturesubrogatoireother', 'ventesrateesmanager', 'mouvementprixvente'
+    'facturesubrogatoireother', 'ventesrateesmanager', 'mouvementprixvente',
+    // retours du 05/10, lot A : facturation et caisse
+    'facturemanager', 'listecaissemanager', 'visualisercaissemanager', 'caisserecetterecap', 'facturesubrogatoire', 'delayed',
+    'factureprovisoire', 'groupeInvoices', 'recapOrganisme', 'modelfacture', 'modelfacturedynamique', 'factureenattenteedition',
+    // lot B : clients, tiers payants, promotions, remises
+    'promotionhistorymanager', 'promotionmanager', 'logfile', 'ventesmodifieesmanager', 'tierspayantmanager', 'clientmanager',
+    'groupetierspayant', 'reglementdepot', 'balanceagee', 'balanceagee_detail', 'remisemanager', 'suiviremise',
+    // lot C : achats et stock
+    'etatscontrolemanager', 'bonlivraisonmanager', 'i_order_manager', 'retourfrsmanager', 'detailsmanager', 'ajustementmanager',
+    'inventaire', 'peremptionquery', 'monitoringarticlecomplet', 'etatstock', 'evaluationventemoyenne', 'reservemanager',
+    'saisieperime', 'gestionsurstock', 'i_sugg_manager',
+    // lot D : statistiques, parametres, administration
+    'info_officine', 'parametermanager', 'grossistemanager', 'smsfournisseur', 'dcimanager', 'cazonegeomanager', 'gardemanager',
+    'tvastat', 'margeproducts', 'abcmanager', 'feuilledematch', 'recap', 'usermanager', 'rolemanager', 'myaccountmanager',
+    'menunotification', 'evolutionstock', 'stockmort', 'articlemvtgrid'
 ];
 
 /**
@@ -835,7 +858,26 @@ window.PrestigeAffichage.ECRANS_FOND_VENTE = ['ordonnanceclient'];
  * Icones d'action au trait du theme commun, reconnues par le nom de l'image d'origine. Une icone absente de
  * cette table garde son image.
  */
+/**
+ * Regles lues sur l'INFO-BULLE de l'icone, avant celles de l'image : une meme image sert a des actions differentes
+ * (cog_edit = « Reinitialiser le mot de passe » chez les utilisateurs, retour du 05/10 : deux crayons identiques).
+ */
+window.PrestigeAffichage.ICONES_TRAIT_INFOBULLE = [
+    [/mot de passe|password/i, 'act-motdepasse']
+];
+
 window.PrestigeAffichage.ICONES_TRAIT = [
+    // engrenage + crayon : reglage, distinct du crayon « Modifier » (regle suivante)
+    [/cog_edit/i, 'act-reglage'],
+    // ajoutees le 05/10 ; « disable » avant « enable » (qu'il contient)
+    [/chart/i, 'act-stat'],
+    [/disable/i, 'act-desactiver'],
+    [/enable/i, 'act-activer'],
+    [/order_tracking|envoi|send/i, 'act-envoyer'],
+    [/connect/i, 'act-tester'],
+    [/upload|import/i, 'act-importer'],
+    [/inventaire/i, 'act-inventaire'],
+    [/\/add\.(png|gif)|ajout/i, 'act-ajouter'],
     [/page_white_edit|pencil|edit|modif/i, 'act-modifier'],
     // ticket modifie (imprimante verte) : garde sa couleur pour rester distinct du ticket ordinaire
     [/printergreen/i, 'act-imprimer-vert'],
@@ -847,10 +889,13 @@ window.PrestigeAffichage.ICONES_TRAIT = [
     [/duplicate|copy|copie/i, 'act-dupliquer'],
     [/application_go|arrow|go\.png|transform/i, 'act-transformer'],
     [/folder_wrench|wrench|cog|config/i, 'act-reglage'],
-    [/book\.png|valid|accept|tick|check/i, 'act-valider'],
+    [/book\.png|valid|accept|tick|check|coches/i, 'act-valider'],
     [/download|telecharg/i, 'act-telecharger'],
     [/table_refresh|calendar/i, 'act-date'],
-    [/detail|view|eye|loupe|search|zoom|information|info|grid\.png|paste_plain/i, 'act-voir']
+    [/detail|view|eye|loupe|search|zoom|information|info|grid\.png|paste_plain/i, 'act-voir'],
+    [/cart|panier/i, 'act-ventes'],
+    // en dernier : user_edit reste un « modifier » (regle plus haut)
+    [/user|client/i, 'act-client']
 ];
 
 /**
@@ -893,7 +938,29 @@ window.PrestigeAffichage.habillerStyleVente = function (ecran) {
         });
         Ext.each(barre.query('button'), function (b) {
             var texte = String(b.text || '');
+            // Bouton deja au dessin du theme (puces « Par jour / Par mois », segments...) : laisse tel quel.
+            if (/(^|\s)(ordo-|seg-|vc-|mv-)/.test(String(b.cls || ''))) {
+                return;
+            }
             b.addCls(/^(nouveau|nouvelle|ajouter|cr[ée]er)/i.test(texte) ? 'ordo-btn-primaire' : 'ordo-btn');
+        });
+        // Barre trop chargee (le dernier bouton sortait deja de l'ecran sur certains postes, ex. suggestions) : elle passe
+        // en mode serre (boutons plus compacts), une seule fois, puis la mise en page est refaite. Dessin seulement.
+        barre.on('afterlayout', function () {
+            if (barre.hasCls('mv-barre-serree') || !barre.rendered || !barre.isVisible(true)) {
+                return;
+            }
+            var droite = barre.getEl().getRight(), deborde = barre.items.getRange().some(function (i) {
+                return i.rendered && i.isVisible() && i.getEl().getRight() > droite + 1;
+            });
+            if (deborde) {
+                barre.addCls('mv-barre-serree');
+                Ext.defer(function () {
+                    if (!barre.isDestroyed) {
+                        barre.updateLayout();
+                    }
+                }, 1);
+            }
         });
     });
     // Onglets en boutons segmentes, l'actif en bleu fonce (meme dessin que l'historique des ordonnances).
@@ -909,10 +976,28 @@ window.PrestigeAffichage.habillerStyleVente = function (ecran) {
         Ext.each(grille.query('actioncolumn'), function (col) {
             Ext.each(col.items || [], function (item) {
                 var image = String(item.icon || '');
+                var parInfoBulle = null;
+                Ext.each(window.PrestigeAffichage.ICONES_TRAIT_INFOBULLE, function (regle) {
+                    if ((image || (item.iconCls && !/act-ico/.test(item.iconCls))) && regle[0].test(String(item.tooltip || ''))) {
+                        parInfoBulle = regle[1];
+                        return false;
+                    }
+                });
+                // Icone donnee par une classe CSS seule (ex. « detailclients », « edit ») : reconnue par les memes regles,
+                // la classe d'origine (qui ne porte que l'image) est remplacee par le dessin au trait.
+                if (!image && item.iconCls && !/act-ico/.test(item.iconCls) && !Ext.isFunction(item.getClass)) {
+                    Ext.each(parInfoBulle ? [[/./, parInfoBulle]] : window.PrestigeAffichage.ICONES_TRAIT, function (regle) {
+                        if (regle[0].test(item.iconCls)) {
+                            item.iconCls = 'act-ico ' + regle[1];
+                            return false;
+                        }
+                    });
+                    return;
+                }
                 if (!image) {
                     return;
                 }
-                Ext.each(window.PrestigeAffichage.ICONES_TRAIT, function (regle) {
+                Ext.each(parInfoBulle ? [[/./, parInfoBulle]] : window.PrestigeAffichage.ICONES_TRAIT, function (regle) {
                     if (regle[0].test(image)) {
                         var trait = 'act-ico ' + regle[1];
                         if (Ext.isFunction(item.getClass)) {
@@ -1046,6 +1131,21 @@ Ext.onReady(function () {
             return;
         }
         boite.correctifTexteTronque = true;
+        /* Ecran de vente (demande du 05/10) : les boites ouvertes pendant la vente (attente, impression du ticket,
+           caisse fermee...) prennent le dessin du theme. Seule une classe est posee : memes boutons, meme focus,
+           memes touches. */
+        boite.on('beforeshow', function () {
+            var vente = Ext.Array.some(Ext.ComponentQuery.query('doventemanager'), function (c) {
+                return c.isVisible(true);
+            });
+            this[vente ? 'addCls' : 'removeCls']('mb-theme');
+            // Oui / OK en bouton principal (les boutons caches restent dans la barre : pas de :first-child).
+            Ext.Object.each(this.msgButtons || {}, function (nom, b) {
+                if (b && b.addCls) {
+                    b[vente && (nom === 'yes' || nom === 'ok') ? 'addCls' : 'removeCls']('mb-principal');
+                }
+            });
+        });
         boite.on('show', function () {
             var fenetre = this;
             // meme raison que pour les info-bulles : la mise en page n'est pas encore

@@ -1635,7 +1635,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
             }
         }
-        if (!StringUtils.isEmpty(param.getStockFiltre()) && param.getQteVendu() != null) {
+        // Historique : quantite de CHAQUE ligne, avec l'operateur du stock. Remplace par le filtre sur le total vendu
+        // (filtreQteVendue, en HAVING) quand l'ecran envoie son propre operateur.
+        if (StringUtils.isEmpty(param.getQteVenduFiltre()) && !StringUtils.isEmpty(param.getStockFiltre())
+                && param.getQteVendu() != null) {
             switch (param.getStockFiltre()) {
             case Constant.LESS:
                 predicates.add(cb.lessThan(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
@@ -1669,6 +1672,36 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         return predicates;
 
+    }
+
+    /**
+     * Filtre sur la quantite TOTALE vendue par produit (demande du 05/10), pour les requetes groupees par produit :
+     * condition HAVING sur la somme, avec l'operateur choisi a l'ecran. Null si l'ecran n'en demande pas.
+     */
+    javax.persistence.criteria.Predicate filtreQteVendue(CriteriaBuilder cb, Root<TPreenregistrementDetail> root,
+            SalesStatsParams param) {
+        if (StringUtils.isEmpty(param.getQteVenduFiltre()) || param.getQteVendu() == null) {
+            return null;
+        }
+        javax.persistence.criteria.Expression<Long> total = cb
+                .sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY));
+        long valeur = param.getQteVendu();
+        switch (param.getQteVenduFiltre()) {
+        case Constant.LESS:
+            return cb.lessThan(total, valeur);
+        case Constant.EQUAL:
+            return cb.equal(total, valeur);
+        case Constant.DIFF:
+            return cb.notEqual(total, valeur);
+        case Constant.MORE:
+            return cb.greaterThan(total, valeur);
+        case Constant.MOREOREQUAL:
+            return cb.greaterThanOrEqualTo(total, valeur);
+        case Constant.LESSOREQUAL:
+            return cb.lessThanOrEqualTo(total, valeur);
+        default:
+            return null;
+        }
     }
 
     @Override
@@ -1768,6 +1801,96 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     }
 
+    /*
+     * Lecture des ventes par la date (OrdreLectureVentes) : seuils mesures le 05/10 sur le banc. Le gain est net tant
+     * que la periode ne couvre qu'une partie des ventes (un an sur trois : liste 8,5 s -> 6 s, resume 7,8 s -> 3,2 s,
+     * un an pour un caissier 7,5 s -> 2,6 s, memes resultats) ; au-dela (liste vers la moitie des ventes, resume vers
+     * les trois quarts), l'ordre choisi par MariaDB redevient meilleur et on le laisse.
+     */
+    private static final double PART_MAX_LISTE = 0.40;
+    private static final double PART_MAX_RESUME = 0.60;
+    private static volatile LocalDateTime premiereVente;
+    private static volatile long premiereVenteLue = 0;
+    private static volatile Boolean indexVentesPresent;
+
+    /**
+     * Part (estimee par les dates) de l'historique des ventes couverte par la periode (0 a 1), ou -1 si la lecture par
+     * la date ne doit pas etre imposee : filtre produit, recherche, rayon ou grossiste (l'optimiseur part alors d'un
+     * petit nombre de produits, a bon escient), index absent, ou lecture impossible.
+     */
+    double partDesVentesDeLaPeriode(SalesStatsParams params) {
+        try {
+            // Uniquement sans filtre selectif sur les produits : avec un produit, une recherche, un rayon, un
+            // grossiste,
+            // un filtre de stock, de seuil ou de prix d'achat, l'optimiseur part a bon escient des produits retenus
+            // (mesure : stock = 0 sur un an, 4 s par les produits).
+            if (!StringUtils.isEmpty(params.getProduitId()) || !StringUtils.isEmpty(params.getQuery())
+                    || (!StringUtils.isEmpty(params.getRayonId()) && !"ALL".equals(params.getRayonId()))
+                    || (!StringUtils.isEmpty(params.getGrossisteId()) && !"ALL".equals(params.getGrossisteId()))
+                    || !StringUtils.isEmpty(params.getStockFiltre())
+                    || !StringUtils.isEmpty(params.getTypeTransaction())
+                    || !StringUtils.isEmpty(params.getPrixachatFiltre())) {
+                return -1;
+            }
+            if (indexVentesPresent == null) {
+                indexVentesPresent = ((Number) getEntityManager()
+                        .createNativeQuery(
+                                "SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE()"
+                                        + " AND TABLE_NAME = 't_preenregistrement' AND INDEX_NAME = ?1")
+                        .setParameter(1, OrdreLectureVentes.INDEX).getSingleResult()).longValue() > 0;
+            }
+            if (!indexVentesPresent) {
+                return -1;
+            }
+            // Part estimee par les DATES (aucune requete par appel : un comptage des ventes de la periode coutait
+            // jusqu'a
+            // plusieurs secondes sur tout l'historique) : duree de la periode rapportee a celle de l'historique, depuis
+            // la premiere vente (lue une fois par heure, par l'index de date).
+            long maintenant = System.currentTimeMillis();
+            if (premiereVente == null || maintenant - premiereVenteLue > 60 * 60 * 1000L) {
+                Object min = getEntityManager().createNativeQuery("SELECT MIN(dt_UPDATED) FROM t_preenregistrement")
+                        .getSingleResult();
+                if (min == null) {
+                    return -1;
+                }
+                premiereVente = ((java.sql.Timestamp) min).toLocalDateTime();
+                premiereVenteLue = maintenant;
+            }
+            LocalDateTime fin = LocalDateTime.now();
+            LocalDateTime debut = LocalDateTime.of(params.getDtStart(), params.gethStart());
+            LocalDateTime finPeriode = LocalDateTime.of(params.getDtEnd(), params.gethEnd());
+            if (debut.isBefore(premiereVente)) {
+                debut = premiereVente;
+            }
+            if (finPeriode.isAfter(fin)) {
+                finPeriode = fin;
+            }
+            double historique = java.time.Duration.between(premiereVente, fin).toMinutes();
+            if (historique <= 0) {
+                return -1;
+            }
+            double periode = Math.max(0, java.time.Duration.between(debut, finPeriode).toMinutes());
+            return Math.min(1d, periode / historique);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "part des ventes de la periode", e);
+            return -1;
+        }
+    }
+
+    /** Execute la lecture en imposant l'ordre « ventes d'abord » si la periode le justifie (seuil donne). */
+    private <T> T lireVentesParDate(SalesStatsParams params, double seuil, java.util.function.Supplier<T> lecture) {
+        double part = partDesVentesDeLaPeriode(params);
+        if (part < 0 || part > seuil) {
+            return lecture.get();
+        }
+        OrdreLectureVentes.activer();
+        try {
+            return lecture.get();
+        } finally {
+            OrdreLectureVentes.desactiver();
+        }
+    }
+
     @Override
     public List<VenteDetailsDTO> getArticlesVendusRecap(SalesStatsParams params) {
         try {
@@ -1789,12 +1912,16 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .orderBy(cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            javax.persistence.criteria.Predicate totalVendu = filtreQteVendue(cb, root, params);
+            if (totalVendu != null) {
+                cq.having(totalVendu);
+            }
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
                 q.setMaxResults(params.getLimit());
             }
-            List<VenteDetailsDTO> resultats = q.getResultList();
+            List<VenteDetailsDTO> resultats = lireVentesParDate(params, PART_MAX_LISTE, q::getResultList);
             enrichirStockReserve(resultats, params);
             return resultats;
         } catch (Exception e) {
@@ -1803,8 +1930,39 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
+    /**
+     * Nombre de produits et montant du recapitulatif quand le filtre porte sur la quantite TOTALE vendue : la condition
+     * est un HAVING, on compte donc les groupes retenus (un par produit).
+     */
+    @SuppressWarnings("unchecked")
+    private long[] resumeRecapParTotalVendu(SalesStatsParams params) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
+        Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+        Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+        Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+        Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+        List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+        cq.multiselect(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID).alias("produit"),
+                cb.coalesce(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)), 0L).alias("montant"))
+                .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+        cq.having(filtreQteVendue(cb, root, params));
+        long nombre = 0;
+        long montant = 0;
+        TypedQuery<Tuple> requete = getEntityManager().createQuery(cq);
+        for (Tuple t : lireVentesParDate(params, PART_MAX_LISTE, requete::getResultList)) {
+            nombre++;
+            montant += t.get("montant", Long.class);
+        }
+        return new long[] { nombre, montant };
+    }
+
     private long[] getArticlesVendusRecapSummary(SalesStatsParams params) {
         try {
+            if (!StringUtils.isEmpty(params.getQteVenduFiltre()) && params.getQteVendu() != null) {
+                return resumeRecapParTotalVendu(params);
+            }
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             // CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -1817,7 +1975,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             cq.multiselect(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)).alias("count"),
                     cb.coalesce(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)), 0L).alias("montantTotal"));
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            Tuple tuple = getEntityManager().createQuery(cq).getSingleResult();
+            TypedQuery<Tuple> requete = getEntityManager().createQuery(cq);
+            Tuple tuple = lireVentesParDate(params, PART_MAX_RESUME, requete::getSingleResult);
             return new long[] { tuple.get("count", Long.class), tuple.get("montantTotal", Long.class) };
 
         } catch (Exception e) {
@@ -1869,6 +2028,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     jf.get(TFamille_.lgFAMILLEPARENTID))).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            javax.persistence.criteria.Predicate totalVendu = filtreQteVendue(cb, root, params);
+            if (totalVendu != null) {
+                cq.having(totalVendu);
+            }
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             datas = q.getResultList();
             List<VenteDetailsDTO> details = new ArrayList<>();
@@ -3115,6 +3278,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            javax.persistence.criteria.Predicate totalVendu = filtreQteVendue(cb, root, params);
+            if (totalVendu != null) {
+                cq.having(totalVendu);
+            }
             TypedQuery<String> q = getEntityManager().createQuery(cq);
 
             return q.getResultList();
